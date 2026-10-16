@@ -1,0 +1,188 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens mirrored from Figma (KurwaDROP → Variables).
+ * Figma is the source of truth: when a variable changes there, change it here.
+ * Default Tailwind palette is cleared so only project tokens are available.
+ */
+@theme {
+  --color-*: initial;
+
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* neutral */
+  --color-neutral-1: #0c0d10;
+  --color-neutral-2: #111317;
+  --color-neutral-3: #16181d;
+  --color-neutral-4: #1b1e24;
+  --color-neutral-5: #20232a;
+  --color-neutral-6: #252930;
+  --color-neutral-7: #2c3038;
+  --color-neutral-8: #444a56;
+  --color-neutral-10: #525863;
+  --color-neutral-11: #727782;
+  --color-neutral-12: #8a8f99;
+  --color-neutral-13: #adb1b9;
+  --color-neutral-14: #e6e7ea;
+  --color-neutral-15: #ffffff;
+
+  /* brand */
+  --color-brand-base: #ff5f1f;
+  --color-brand-light: #ff7d20;
+  --color-brand-bright: #ff9721;
+
+  /* status */
+  --color-coin: #fdb022;
+  --color-success: #12b76a;
+  --color-danger: #f04438;
+
+  /* item rarity */
+  --color-item-covert: #eb4b4b;
+  --color-item-classified: #d32ce6;
+  --color-item-restricted: #8847ff;
+  --color-item-milspec: #4b69ff;
+  --color-item-industrial: #5e98d9;
+  --color-item-gold: #e4ae39;
+
+  /* alpha */
+  --color-white-8: rgb(255 255 255 / 0.08);
+  --color-white-12: rgb(255 255 255 / 0.24);
+  --color-black-32: rgb(12 13 16 / 0.32);
+  --color-black-60: rgb(12 13 16 / 0.64);
+  --color-brand-24: rgb(255 95 31 / 0.24);
+  --color-success-24: rgb(18 183 106 / 0.24);
+  --color-danger-24: rgb(240 68 56 / 0.24);
+
+  --font-sans: 'Rubik', ui-sans-serif, system-ui, sans-serif;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+  --radius-3xl: 16px;
+  --radius-4xl: 20px;
+  --radius-5xl: 24px;
+
+  --shadow-elevation-2: 0 8px 12px rgb(0 0 0 / 0.64);
+  --shadow-inner-primary: inset 0 2px 0 rgb(255 255 255 / 0.24), inset 0 -2px 0 rgb(12 13 16 / 0.32);
+
+  --container-content: 1232px;
+}
+
+/* Text styles from Figma (size/weight[ caps]). Figma letter-spacing is in %, so 3 → 0.03em. */
+@utility type-10-caps {
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+@utility type-12 {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}
+@utility type-12-regular {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+}
+@utility type-12-caps {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+@utility type-14 {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+@utility type-14-regular {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+@utility type-14-caps {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+@utility type-16-medium {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+}
+@utility type-16-caps {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+@utility type-20-caps {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+@utility type-28 {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
+}
+@utility type-48-caps {
+  font-size: 48px;
+  line-height: 52px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+@utility bg-brand-gradient {
+  background-image: linear-gradient(90deg, var(--color-brand-base), var(--color-brand-bright));
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/*
+ * Page ground, kept outside @layer on purpose: hosts that wrap the page (the claude.ai artifact
+ * viewer) inject an unlayered reset, and unlayered rules always beat layered ones.
+ */
+html:root {
+  color-scheme: dark;
+  background: var(--color-neutral-1);
+  -webkit-tap-highlight-color: transparent;
+}
+html body {
+  margin: 0;
+  background: var(--color-neutral-1);
+  color: var(--color-neutral-15);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+  button {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand-light);
+    outline-offset: 2px;
+  }
+}

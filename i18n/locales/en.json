@@ -1,0 +1,107 @@
+{
+  "nav": {
+    "cases": "Cases",
+    "upgrade": "Upgrade",
+    "pvp": "PvP",
+    "bonuses": "Bonuses",
+    "bonus": "Bonus",
+    "provablyFair": "Provably Fair",
+    "menu": "Menu",
+    "faq": "FAQ",
+    "contact": "Contact us",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "aml": "AML Policy",
+    "refund": "Refund Policy",
+    "new": "New"
+  },
+  "auth": {
+    "signInToPlay": "Sign in to play",
+    "signIn": "Sign in",
+    "logOut": "Log out"
+  },
+  "wallet": {
+    "deposit": "Deposit",
+    "depositFunds": "Deposit funds",
+    "withdraw": "Withdraw",
+    "balance": "Balance",
+    "skins": "Skins"
+  },
+  "profile": {
+    "profile": "Profile",
+    "inventory": "Inventory",
+    "gameHistory": "Game history",
+    "settings": "Settings",
+    "level": "LVL {from} → {to}",
+    "steamId": "Steam ID {id}",
+    "openMenu": "Open profile menu"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "currency": "Currency",
+    "sound": "Sound",
+    "soundHint": "Case spins, drops and wins.",
+    "volume": "Volume",
+    "streamerMode": "Streamer mode",
+    "streamerModeHint": "Shows coins instead of real currency and hides sensitive info on stream."
+  },
+  "feed": {
+    "live": "Live",
+    "top": "Top",
+    "highlight": "Highlight",
+    "dropBy": "{item} dropped by {user}"
+  },
+  "hero": {
+    "eyebrow": "Provably Fair isn’t enough",
+    "title": "Stop getting scammed, play KurwaDrop",
+    "cta": "Start playing",
+    "howItWorks": "How it works"
+  },
+  "filters": {
+    "price": "Price",
+    "volatility": "Volatility",
+    "sort": "Sort",
+    "any": "Any",
+    "allLevels": "All levels",
+    "affordable": "Affordable for my balance",
+    "reset": "Reset filters",
+    "sortOptions": {
+      "default": "Default",
+      "priceAsc": "Price: low to high",
+      "priceDesc": "Price: high to low",
+      "newest": "Newest"
+    }
+  },
+  "risk": {
+    "label": "Risk",
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "extreme": "Extreme"
+  },
+  "cases": {
+    "hide": "Hide",
+    "show": "Show",
+    "empty": "No cases match these filters.",
+    "tag": {
+      "new": "🔥 Brand new",
+      "hot": "🔥 Hot"
+    }
+  },
+  "footer": {
+    "play": "Play",
+    "info": "Info",
+    "legal": "Legal",
+    "about": "KurwaDROP is operated by Company Ltd (REG 000000), Street 1, City, Country. Play responsibly — gambling can be addictive.",
+    "adult": "18+",
+    "provablyFair": "Provably fair",
+    "copyright": "© {year} KurwaDROP. All rights reserved"
+  },
+  "common": {
+    "close": "Close",
+    "comingSoon": "Coming soon",
+    "comingSoonText": "This page is not built yet.",
+    "backHome": "Back to cases"
+  }
+}

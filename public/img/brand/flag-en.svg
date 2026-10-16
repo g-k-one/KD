@@ -1,0 +1,27 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="20" height="14" viewBox="0 0 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Flag">
+<g clip-path="url(#clip0_0_483)">
+<rect width="20" height="14" rx="1.66667" fill="white"/>
+<rect id="Stripe" y="12" width="20" height="2" fill="#B22234"/>
+<rect id="Stripe_2" y="8" width="20" height="2" fill="#B22234"/>
+<rect id="Stripe_3" y="4" width="20" height="2" fill="#B22234"/>
+<rect id="Stripe_4" width="20" height="2" fill="#B22234"/>
+<rect id="Canton" width="9" height="8" fill="#3C3B6E"/>
+<circle id="Star" cx="2" cy="2" r="0.5" fill="white"/>
+<circle id="Star_2" cx="4.75" cy="2" r="0.5" fill="white"/>
+<circle id="Star_3" cx="7.5" cy="2" r="0.5" fill="white"/>
+<circle id="Star_4" cx="2" cy="4.4" r="0.5" fill="white"/>
+<circle id="Star_5" cx="4.75" cy="4.4" r="0.5" fill="white"/>
+<circle id="Star_6" cx="7.5" cy="4.4" r="0.5" fill="white"/>
+<circle id="Star_7" cx="2" cy="6.8" r="0.5" fill="white"/>
+<circle id="Star_8" cx="4.75" cy="6.8" r="0.5" fill="white"/>
+<circle id="Star_9" cx="7.5" cy="6.8" r="0.5" fill="white"/>
+<rect id="Edge" x="0.416667" y="0.416667" width="19.1667" height="13.1667" rx="1.25" stroke="black" stroke-opacity="0.12" stroke-width="0.833333"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_483">
+<rect width="20" height="14" rx="1.66667" fill="white"/>
+</clipPath>
+</defs>
+</svg>

@@ -1,0 +1,43 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kurwadrop-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "4317"
+      ],
+      "port": 4317,
+      "autoPort": false
+    },
+    {
+      "name": "kurwadrop-prod",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        ".output/server/index.mjs"
+      ],
+      "env": {
+        "PORT": "4319"
+      },
+      "port": 4319,
+      "autoPort": false
+    },
+    {
+      "name": "kurwadrop-artifact",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4320",
+        "--directory",
+        "artifact"
+      ],
+      "port": 4320,
+      "autoPort": false
+    }
+  ]
+}
