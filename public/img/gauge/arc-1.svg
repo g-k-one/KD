@@ -1,0 +1,12 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="316" height="316" viewBox="0 0 316 316" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle id="Chance arc" cx="158" cy="158" r="158" fill="url(#paint0_linear_0_6)"/>
+<defs>
+<linearGradient id="paint0_linear_0_6" x1="158.073" y1="0" x2="158.073" y2="316" gradientUnits="userSpaceOnUse">
+<stop stop-color="#12B76A"/>
+<stop offset="0.25" stop-color="#A3E635"/>
+<stop offset="0.5" stop-color="#FDB022"/>
+<stop offset="0.75" stop-color="#FF6628"/>
+<stop offset="1" stop-color="#E92657"/>
+</linearGradient>
+</defs>
+</svg>

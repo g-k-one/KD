@@ -2,7 +2,7 @@
 // Figma "ProfileMenu" head + balance block. compact = MobileMenu version (Deposit + Withdraw, no skins row).
 import type { User } from '#shared/types/api'
 
-const props = defineProps<{ user: User; compact?: boolean }>()
+const props = withDefaults(defineProps<{ user: User; compact?: boolean; actions?: boolean }>(), { actions: true })
 const streamer = computed(() => useSettingsStore().settings.streamerMode)
 
 const maskedSteamId = computed(() => `${props.user.steamId.slice(0, 4)}…${props.user.steamId.slice(-4)}`)
@@ -31,7 +31,7 @@ const maskedSteamId = computed(() => `${props.user.steamId.slice(0, 4)}…${prop
       </div>
     </div>
 
-    <div class="flex flex-col gap-3 rounded-xl bg-neutral-3 p-3">
+    <div class="flex flex-col gap-3 rounded-[10px] bg-neutral-3 p-3">
       <div class="flex items-center justify-between">
         <span class="type-12-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
         <UiPrice :amount="user.balance" size="l" :tone="compact ? 'coin' : 'default'" />
@@ -40,11 +40,11 @@ const maskedSteamId = computed(() => `${props.user.steamId.slice(0, 4)}…${prop
         <span class="type-12-caps text-neutral-11">{{ $t('wallet.skins') }}</span>
         <UiPrice :amount="user.skinsValue" size="l" tone="coin" />
       </div>
-      <div v-if="compact" class="flex gap-2">
+      <div v-if="compact && actions" class="flex gap-2">
         <UiButton size="s" icon="plus" class="flex-1" to="/deposit">{{ $t('wallet.deposit') }}</UiButton>
         <UiButton size="s" variant="secondary" icon="arrow-up" class="flex-1" to="/withdraw">{{ $t('wallet.withdraw') }}</UiButton>
       </div>
-      <UiButton v-else size="l" icon="plus" block to="/deposit">{{ $t('wallet.depositFunds') }}</UiButton>
+      <UiButton v-else-if="!compact" size="l" icon="plus" block to="/deposit">{{ $t('wallet.depositFunds') }}</UiButton>
     </div>
   </div>
 </template>

@@ -24,7 +24,7 @@ const tabClass = (active: boolean) => (active ? 'text-brand-light' : 'text-neutr
         :class="tabClass(!ui.mobileMenuOpen && isNavActive(route, t.to))"
         @click="ui.mobileMenuOpen = false"
       >
-        <UiIcon :name="t.icon" :size="20" />
+        <UiIcon :name="t.icon" :size="20" class="kd-icon" />
         {{ $t(t.label) }}
       </NuxtLink>
       <button
@@ -40,3 +40,6 @@ const tabClass = (active: boolean) => (active ? 'text-brand-light' : 'text-neutr
     </div>
   </nav>
 </template>
+
+<style scoped>
+</style>

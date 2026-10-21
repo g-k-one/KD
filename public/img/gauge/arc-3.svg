@@ -1,0 +1,12 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="316" height="316" viewBox="0 0 316 316" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Chance arc" style="mix-blend-mode:plus-darker">
+<circle cx="158" cy="158" r="158" fill="url(#paint0_radial_0_4)"/>
+</g>
+<defs>
+<radialGradient id="paint0_radial_0_4" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(158 158) rotate(90) scale(164)">
+<stop offset="0.331731"/>
+<stop offset="0.576923" stop-color="#363636"/>
+<stop offset="0.884615" stop-color="white" stop-opacity="0"/>
+</radialGradient>
+</defs>
+</svg>

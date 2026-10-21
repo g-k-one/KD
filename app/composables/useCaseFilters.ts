@@ -20,12 +20,15 @@ export function useCaseFilters() {
   const risks = ref<RiskLevel[]>([])
   const affordable = ref(false)
   const sort = ref<CaseSort>('default')
+  const query = ref('')
   const session = useSessionStore()
 
-  const isActive = computed(() => price.value !== 'any' || risks.value.length > 0 || affordable.value || sort.value !== 'default')
+  const isActive = computed(() => !!query.value.trim() || price.value !== 'any' || risks.value.length > 0 || affordable.value || sort.value !== 'default')
 
   function apply(list: CaseSummary[]) {
+    const q = query.value.trim().toLowerCase()
     let out = list.filter((c) => {
+      if (q && !c.name.toLowerCase().includes(q)) return false
       if (price.value !== 'any') {
         const [min, max] = RANGES[price.value]
         if (c.price < min || c.price >= max) return false
@@ -45,7 +48,8 @@ export function useCaseFilters() {
     risks.value = []
     affordable.value = false
     sort.value = 'default'
+    query.value = ''
   }
 
-  return { price, risks, affordable, sort, isActive, apply, reset }
+  return { price, risks, affordable, sort, query, isActive, apply, reset }
 }

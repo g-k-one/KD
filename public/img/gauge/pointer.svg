@@ -1,0 +1,13 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="360" height="360" viewBox="0 0 360 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="1">
+<path id="Pointer" d="M180 311L197 349L180 343.748L163 349L180 311Z" fill="#0C0D10" fill-opacity="0.32"/>
+<path id="Pointer_2" d="M180 309L190 345L180 340.024L170 345L180 309Z" fill="white"/>
+<path id="Pointer_3" d="M180 333L186 343L180 341.618L174 343L180 333Z" fill="url(#paint0_linear_0_4)" fill-opacity="0.24"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_4" x1="180" y1="333" x2="180" y2="343" gradientUnits="userSpaceOnUse">
+<stop stop-color="#0C0D10"/>
+<stop offset="1" stop-color="#656F8E"/>
+</linearGradient>
+</defs>
+</svg>

@@ -1,0 +1,55 @@
+{
+  "formula": "hmac = HMAC_SHA256(key=server_seed, msg=client_seed + \":\" + nonce) hex; number = parseInt(hmac[0:8], 16); ticket = number % 1000000 + 1; upgradeRoll = (number % 10000) / 100",
+  "vectors": [
+    {
+      "serverSeed": "kurwadrop-test-server-seed-0001",
+      "clientSeed": "pierogi",
+      "nonce": 1,
+      "serverSeedHash": "6c4184d28367d010c8a41197db26244e3dd8f0dfd790cbd80c6c1e06c59f737b",
+      "hmac": "d80714f4efd625c553c59f1171617078bedd8e61b6ab3c76cc8cb4377fa431a7",
+      "number": 3624342772,
+      "ticket": 342773,
+      "upgradeRoll": 27.72
+    },
+    {
+      "serverSeed": "kurwadrop-test-server-seed-0001",
+      "clientSeed": "pierogi",
+      "nonce": 2,
+      "serverSeedHash": "6c4184d28367d010c8a41197db26244e3dd8f0dfd790cbd80c6c1e06c59f737b",
+      "hmac": "643974da9ec3cde70a1a8edcdce07ca788318f6fd289c1b16ae72216855ef14f",
+      "number": 1681487066,
+      "ticket": 487067,
+      "upgradeRoll": 70.66
+    },
+    {
+      "serverSeed": "kurwadrop-test-server-seed-0001",
+      "clientSeed": "pierogi",
+      "nonce": 1000,
+      "serverSeedHash": "6c4184d28367d010c8a41197db26244e3dd8f0dfd790cbd80c6c1e06c59f737b",
+      "hmac": "2c6893f0743d7a4bef90963e18a153e83f52771687585a43a9ef62194289f5db",
+      "number": 745051120,
+      "ticket": 51121,
+      "upgradeRoll": 11.2
+    },
+    {
+      "serverSeed": "9f2c1e7a4b0d3e8f6a5c2b1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f",
+      "clientSeed": "f3a9c1d27b",
+      "nonce": 1284,
+      "serverSeedHash": "e94c4dced8277cc4b0a416d727ce2449a4aab9f22b4aab12d464cf59fe80c430",
+      "hmac": "47b79f924b985bc06b79182da7812202e79d635a0d6cfef15a282262e9556736",
+      "number": 1203216274,
+      "ticket": 216275,
+      "upgradeRoll": 62.74
+    },
+    {
+      "serverSeed": "zażółć gęślą jaźń",
+      "clientSeed": "Kraków:42",
+      "nonce": 0,
+      "serverSeedHash": "ab4e973a71cf9dd8a6d0d9b8030029b219b6e162d1dbdf0ad0ebf0dd698d6057",
+      "hmac": "b4dc50163b85df06dfcbe3569beb2528ab16f1d6a742167a3be99a26c8a32ae2",
+      "number": 3034337302,
+      "ticket": 337303,
+      "upgradeRoll": 73.02
+    }
+  ]
+}

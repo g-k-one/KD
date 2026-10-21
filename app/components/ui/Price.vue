@@ -16,7 +16,7 @@ const spec = computed(
       m: { coin: 16, gap: 'gap-1.5', text: 'type-14' },
       l: { coin: 20, gap: 'gap-2', text: 'type-16-caps' },
       xl: { coin: 24, gap: 'gap-2', text: 'text-xl leading-6 font-bold' },
-      xxl: { coin: 28, gap: 'gap-2', text: 'type-28' },
+      xxl: { coin: 28, gap: 'gap-3', text: 'type-28' },
     })[props.size],
 )
 

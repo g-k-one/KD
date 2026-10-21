@@ -16,7 +16,7 @@ const SOCIAL = [
   { key: 'telegram', label: 'Telegram', hover: 'hover:bg-[#229ed9]' },
   { key: 'kick', label: 'Kick', hover: 'hover:bg-[#53fc18] hover:text-neutral-1' },
 ]
-const PAYMENTS = ['visa', 'mastercard', 'googlepay', 'blik', 'crypto', 'skrill']
+const PAYMENTS = ['visa', 'mastercard', 'applepay', 'googlepay', 'blik', 'crypto', 'skrill']
 const year = new Date().getFullYear()
 
 const { locale, locales, setLocale } = useI18n()

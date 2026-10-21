@@ -28,7 +28,7 @@ async function pushDrop(r: Rarity) {
   await refreshFeed()
 }
 
-const ENDPOINTS = ['/api/me', '/api/cases', '/api/feed']
+const ENDPOINTS = ['/api/me', '/api/cases', '/api/cases/warsaw-nights', '/api/feed', '/api/inventory', '/api/market', '/api/seeds', '/api/deposit/methods']
 async function callApi(url: string) {
   apiOut.value = JSON.stringify(await $fetch(url), null, 2)
 }
@@ -204,7 +204,7 @@ const TYPE_STYLES = [
 @reference '~/assets/css/main.css';
 
 .dbg-card {
-  @apply flex flex-col gap-3 rounded-3xl border border-neutral-4 bg-neutral-2 p-4;
+  @apply flex min-w-0 flex-col gap-3 overflow-hidden rounded-3xl border border-neutral-4 bg-neutral-2 p-4;
 }
 .dbg-pre {
   @apply overflow-auto rounded-lg bg-neutral-1 p-3 font-mono text-xs leading-5 text-neutral-13;

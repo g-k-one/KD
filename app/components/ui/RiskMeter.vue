@@ -20,7 +20,7 @@ const spec = computed(() => RISK[props.level])
       <span
         v-for="i in 4"
         :key="i"
-        class="h-full flex-1 rounded-full"
+        class="h-full flex-1 rounded-full transition-colors duration-300"
         :class="i <= spec.bars ? spec.bar : 'bg-neutral-7'"
       />
     </div>

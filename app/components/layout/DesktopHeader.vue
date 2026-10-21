@@ -13,10 +13,10 @@ const desktopNav = MAIN_NAV
 
 const PROFILE_MENU = [
   { key: 'profile', label: 'profile.profile', icon: 'user', to: '/profile' },
-  { key: 'inventory', label: 'profile.inventory', icon: 'inventory', to: '/inventory' },
-  { key: 'history', label: 'profile.gameHistory', icon: 'history', to: '/history' },
+  { key: 'inventory', label: 'profile.inventory', icon: 'inventory', to: '/profile?tab=inventory' },
+  { key: 'history', label: 'profile.gameHistory', icon: 'history', to: '/profile?tab=history' },
   { key: 'fair', label: 'nav.provablyFair', icon: 'shield', to: '/fairness' },
-  { key: 'settings', label: 'profile.settings', icon: 'sliders', to: '/settings' },
+  { key: 'settings', label: 'profile.settings', icon: 'sliders', to: '/profile?tab=settings' },
 ]
 
 async function logout() {
@@ -27,21 +27,22 @@ async function logout() {
 
 <template>
   <header class="relative flex h-18 items-center gap-2 border-b border-neutral-4 bg-neutral-1 px-4">
-    <NuxtLink to="/" class="mr-4 shrink-0" aria-label="KurwaDROP">
+    <NuxtLink to="/" class="kd-press mr-6 w-[118px] shrink-0" aria-label="KurwaDROP">
       <UiLogo :height="40" />
     </NuxtLink>
 
-    <nav class="flex items-center gap-6">
+    <nav class="relative -ml-3 flex items-center">
       <NuxtLink
         v-for="item in desktopNav"
         :key="item.key"
         :to="item.to"
-        class="group type-14-caps flex h-10 items-center gap-2 transition-colors"
+        class="group type-14-caps relative flex h-10 items-center gap-2 rounded-full px-3 transition-colors duration-200"
         :class="isNavActive(route, item.to) ? 'text-neutral-15' : 'text-neutral-12 hover:text-neutral-15'"
       >
         <UiIcon
           :name="item.icon"
           :size="20"
+          class="kd-icon transition-colors duration-200"
           :class="isNavActive(route, item.to) ? 'text-brand-light' : 'text-neutral-12 group-hover:text-neutral-15'"
         />
         {{ $t(`nav.${item.key}`) }}
@@ -60,12 +61,14 @@ async function logout() {
         :aria-expanded="ui.popover === 'settings'"
         @click="ui.togglePopover('settings')"
       />
-      <div
-        v-if="ui.popover === 'settings'"
-        class="absolute top-full right-0 z-40 mt-2 w-80 rounded-3xl border border-neutral-5 bg-neutral-2 p-4 shadow-elevation-2"
-      >
-        <LayoutSettingsPanel />
-      </div>
+      <Transition name="kd-pop">
+        <div
+          v-if="ui.popover === 'settings'"
+          class="kd-popover absolute top-full right-0 z-40 mt-2 w-80 rounded-3xl border border-neutral-5 bg-neutral-2 p-4"
+        >
+          <LayoutSettingsPanel />
+        </div>
+      </Transition>
     </div>
 
     <template v-if="session.user">
@@ -73,8 +76,8 @@ async function logout() {
         ref="profileRoot"
         class="relative flex h-11 items-center gap-2 rounded-2xl border border-neutral-4 bg-neutral-3 py-1 pr-1.5 pl-4"
       >
-        <UiPrice :amount="session.user.balance" size="m" />
-        <UiButton size="s" icon="plus" to="/deposit" class="ml-0.5">{{ $t('wallet.deposit') }}</UiButton>
+        <LayoutBalance />
+        <UiButton size="s" icon="plus" to="/deposit" class="ml-2.5">{{ $t('wallet.deposit') }}</UiButton>
         <span class="h-6 w-px bg-neutral-7" />
         <button
           type="button"
@@ -89,9 +92,10 @@ async function logout() {
           </span>
         </button>
 
+        <Transition name="kd-pop">
         <div
           v-if="ui.popover === 'profile'"
-          class="absolute top-full right-0 z-40 mt-2 flex w-80 flex-col gap-4 rounded-3xl border border-neutral-5 bg-neutral-2 p-4 shadow-elevation-2"
+          class="kd-popover absolute top-full right-0 z-40 mt-2 flex w-80 flex-col gap-4 rounded-3xl border border-neutral-5 bg-neutral-2 p-4"
         >
           <LayoutProfileCard :user="session.user" />
           <nav class="flex flex-col gap-0.5">
@@ -100,7 +104,7 @@ async function logout() {
               :key="m.key"
               :to="m.to"
               class="type-14-caps flex h-12 items-center gap-3 rounded-md px-3 transition-colors"
-              :class="route.path === m.to ? 'bg-neutral-3 text-neutral-15' : 'text-neutral-12 hover:bg-neutral-3 hover:text-neutral-15'"
+              :class="route.fullPath === m.to ? 'bg-neutral-3 text-neutral-15' : 'text-neutral-12 hover:bg-neutral-3 hover:text-neutral-15'"
               @click="ui.popover = null"
             >
               <UiIcon :name="m.icon" :size="20" />
@@ -117,8 +121,33 @@ async function logout() {
             {{ $t('auth.logOut') }}
           </button>
         </div>
+        </Transition>
       </div>
     </template>
-    <UiButton v-else icon="sign-in" @click="session.login()">{{ $t('auth.signInToPlay') }}</UiButton>
+    <UiButton v-else icon="sign-in" @click="ui.openSignIn()">{{ $t('auth.signInToPlay') }}</UiButton>
   </header>
 </template>
+
+<style scoped>
+
+/* Figma popovers: 0 8 12 black/64 shadow; they open from the corner they hang off */
+.kd-popover {
+  box-shadow: 0 8px 12px rgb(0 0 0 / 0.64);
+  transform-origin: top right;
+}
+.kd-pop-enter-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+.kd-pop-leave-active {
+  transition:
+    opacity var(--dur-fast) var(--ease-in),
+    transform var(--dur-fast) var(--ease-in);
+}
+.kd-pop-enter-from,
+.kd-pop-leave-to {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.97);
+}
+</style>

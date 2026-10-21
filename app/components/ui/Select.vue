@@ -56,7 +56,7 @@ const isSelected = (o: SelectOption<T>) => (props.multiple ? many.value.includes
     <span v-if="label" class="type-12-caps text-neutral-12">{{ label }}</span>
     <button
       type="button"
-      class="flex h-10 w-full items-center gap-2 rounded-lg border bg-neutral-1 px-3 text-left transition-colors"
+      class="flex h-10 w-full items-center gap-2 rounded-lg border bg-neutral-1 px-3 text-left transition-colors duration-200"
       :class="open ? 'border-brand-base' : 'border-neutral-4 hover:border-neutral-7'"
       :aria-expanded="open"
       aria-haspopup="listbox"
@@ -64,28 +64,23 @@ const isSelected = (o: SelectOption<T>) => (props.multiple ? many.value.includes
     >
       <slot name="leading" />
       <span class="type-14 min-w-0 flex-1 truncate text-neutral-15">{{ display }}</span>
-      <UiIcon name="chevron-down" :size="20" class="text-neutral-12 transition-transform" :class="open && 'rotate-180'" />
+      <UiIcon name="chevron-down" :size="20" class="text-neutral-12 transition-transform duration-300 ease-[var(--ease-spring)]" :class="open && 'rotate-180'" />
     </button>
 
-    <Transition
-      enter-from-class="opacity-0 -translate-y-1"
-      enter-active-class="transition duration-150"
-      leave-to-class="opacity-0"
-      leave-active-class="transition duration-100"
-    >
+    <Transition name="kd-menu">
       <ul
         v-if="open"
         role="listbox"
         :aria-multiselectable="multiple"
-        class="absolute top-full z-30 mt-2 flex max-h-80 flex-col gap-0.5 overflow-auto rounded-2xl border border-neutral-5 bg-neutral-2 p-1 shadow-elevation-2"
+        class="kd-menu absolute top-full z-30 mt-2 flex max-h-80 origin-top flex-col gap-0.5 overflow-auto rounded-2xl border border-neutral-5 bg-neutral-2 p-1 shadow-[0_8px_12px_rgb(0_0_0/0.64)]"
         :class="menuWidth === 'trigger' ? 'inset-x-0' : 'left-0 w-54'"
       >
-        <li v-for="o in options" :key="o.value">
+        <li v-for="(o, i) in options" :key="o.value" :style="{ '--i': i }">
           <button
             type="button"
             role="option"
             :aria-selected="isSelected(o)"
-            class="flex h-9 w-full items-center gap-2 rounded-md px-3 text-left hover:bg-white-8"
+            class="flex h-9 w-full items-center gap-2 rounded-md px-3 text-left transition-colors duration-150 hover:bg-white-8 active:bg-white-12"
             @click="pick(o)"
           >
             <span
@@ -107,3 +102,32 @@ const isSelected = (o: SelectOption<T>) => (props.multiple ? many.value.includes
     </Transition>
   </div>
 </template>
+
+<style scoped>
+/* Menu unfolds from the trigger, rows follow with a short stagger. */
+.kd-menu-enter-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+.kd-menu-leave-active {
+  transition:
+    opacity var(--dur-fast) var(--ease-in),
+    transform var(--dur-fast) var(--ease-in);
+}
+.kd-menu-enter-from,
+.kd-menu-leave-to {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.97);
+}
+.kd-menu-enter-active li {
+  animation: kd-row-in var(--dur-slow) var(--ease-out) both;
+  animation-delay: calc(var(--i) * 18ms);
+}
+@keyframes kd-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+</style>

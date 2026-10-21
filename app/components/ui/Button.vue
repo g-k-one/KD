@@ -2,8 +2,9 @@
 import type { RouteLocationRaw } from 'vue-router'
 
 // Figma "Button": Primary = main CTA, Secondary = neutral, Ghost = nav actions,
-// Light = on banners, Success = promo, Gold = rewards.
-type Variant = 'primary' | 'secondary' | 'ghost' | 'light' | 'success' | 'gold'
+// Light = on banners, Success = promo, Gold = rewards, Danger = destructive.
+// States (hover / active / disabled) live in main.css → .kd-btn-*.
+type Variant = 'primary' | 'secondary' | 'ghost' | 'light' | 'success' | 'gold' | 'danger'
 type Size = 's' | 'm' | 'l'
 
 const props = withDefaults(
@@ -11,10 +12,12 @@ const props = withDefaults(
     variant?: Variant
     size?: Size
     icon?: string
+    iconRight?: string
     iconOnly?: boolean
     block?: boolean
     to?: RouteLocationRaw
     disabled?: boolean
+    loading?: boolean
     type?: 'button' | 'submit'
   }>(),
   { variant: 'primary', size: 'm', type: 'button' },
@@ -31,18 +34,6 @@ const sizeClass = computed(() => {
   }[props.size]
 })
 
-const variantClass = computed(
-  () =>
-    ({
-      primary: 'bg-brand-gradient text-neutral-1 shadow-inner-primary hover:brightness-110',
-      secondary: 'bg-neutral-6 text-neutral-15 hover:bg-neutral-7',
-      ghost: 'text-neutral-12 hover:text-neutral-15 hover:bg-white-8',
-      light: 'bg-neutral-15 text-neutral-1 hover:bg-neutral-14',
-      success: 'bg-success text-neutral-1 shadow-inner-primary hover:brightness-110',
-      gold: 'bg-coin text-neutral-1 shadow-inner-primary hover:brightness-110',
-    })[props.variant],
-)
-
 const iconSize = computed(() => ({ s: 16, m: 18, l: 20 })[props.size])
 </script>
 
@@ -51,11 +42,15 @@ const iconSize = computed(() => ({ s: 16, m: 18, l: 20 })[props.size])
     :is="to ? resolveComponent('NuxtLink') : 'button'"
     :to="to"
     :type="to ? undefined : type"
-    :disabled="disabled"
-    class="inline-flex shrink-0 items-center justify-center whitespace-nowrap transition active:opacity-80 disabled:pointer-events-none disabled:opacity-40"
-    :class="[sizeClass, variantClass, block && 'w-full']"
+    :disabled="to ? undefined : disabled || loading"
+    :aria-disabled="disabled || loading || undefined"
+    :aria-busy="loading || undefined"
+    class="kd-btn kd-press kd-icon-nudge inline-flex shrink-0 items-center justify-center whitespace-nowrap select-none"
+    :class="[sizeClass, `kd-btn-${variant}`, block && 'w-full']"
   >
-    <UiIcon v-if="icon" :name="icon" :size="iconSize" />
+    <span v-if="loading" class="kd-icon size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+    <UiIcon v-else-if="icon" :name="icon" :size="iconSize" class="kd-icon" />
     <slot />
+    <UiIcon v-if="iconRight" :name="iconRight" :size="iconSize" class="kd-icon" />
   </component>
 </template>

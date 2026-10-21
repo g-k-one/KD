@@ -20,5 +20,8 @@ watch(() => route.fullPath, () => (ui.popover = null))
 
     <LayoutBottomNav class="lg:hidden" />
     <LayoutMobileMenu />
+    <LayoutSignInModal />
+    <UiToaster />
+    <LayoutDebugDock />
   </div>
 </template>

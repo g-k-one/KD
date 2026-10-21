@@ -8,13 +8,12 @@ export default defineNuxtPlugin({
     const { handleMockRequest } = await import('~/mock/client-api')
     const original = globalThis.$fetch
 
-    const patched = ((request: unknown, options?: { method?: string; body?: unknown }) => {
+    const patched = ((request: unknown, options?: { method?: string; body?: unknown; query?: Record<string, unknown> }) => {
       const url = typeof request === 'string' ? request : (request as Request)?.url
       if (url?.startsWith('/api/')) return handleMockRequest(url, options)
       return original(request as string, options as never)
     }) as typeof $fetch
     patched.raw = original.raw
-    patched.native = original.native
     patched.create = original.create
 
     globalThis.$fetch = patched
