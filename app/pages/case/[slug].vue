@@ -163,6 +163,7 @@ if (import.meta.client) {
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
     <div class="flex flex-col gap-4">
       <UiPageBar
+        fixed-sides
         :left="[
           { label: $t('case.allCases'), icon: 'arrow-left', to: '/' },
           { label: $t('case.share'), icon: 'share', onClick: share },
@@ -174,23 +175,25 @@ if (import.meta.client) {
             : { label: $t('case.fairness'), icon: 'shield', to: '/fairness' },
         ]"
       >
-        <div class="flex min-w-0 items-center gap-1 md:gap-3">
+        <!-- Phones: the arrows sit at the ends of the centre, the name between them; desktop: a fixed-width name
+             between the arrows. Either way the arrows stay put from case to case. -->
+        <div class="flex w-full min-w-0 items-center gap-0.5 md:w-auto md:gap-3">
           <NuxtLink
             v-if="prevCase"
             :to="`/case/${prevCase.slug}`"
             :aria-label="$t('case.prevCase', { name: prevCase.name })"
             :title="prevCase.name"
-            class="kd-press kd-nb grid size-8 shrink-0 place-items-center rounded-lg text-neutral-12 hover:text-neutral-15"
+            class="kd-press kd-nb grid size-6 shrink-0 place-items-center rounded-md text-neutral-12 hover:text-neutral-15 md:size-8 md:rounded-lg"
           >
             <UiIcon name="chevron-left" :size="18" />
           </NuxtLink>
-          <h1 class="type-16-caps md:type-20-caps truncate">{{ cs.name }}</h1>
+          <h1 class="type-14-caps md:type-20-caps min-w-0 flex-1 truncate text-center md:w-60 md:flex-none" :title="cs.name">{{ cs.name }}</h1>
           <NuxtLink
             v-if="nextCase"
             :to="`/case/${nextCase.slug}`"
             :aria-label="$t('case.nextCase', { name: nextCase.name })"
             :title="nextCase.name"
-            class="kd-press kd-nb grid size-8 shrink-0 place-items-center rounded-lg text-neutral-12 hover:text-neutral-15"
+            class="kd-press kd-nb grid size-6 shrink-0 place-items-center rounded-md text-neutral-12 hover:text-neutral-15 md:size-8 md:rounded-lg"
           >
             <UiIcon name="chevron-right" :size="18" />
           </NuxtLink>

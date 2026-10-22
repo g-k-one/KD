@@ -65,6 +65,33 @@ const driftItems = computed(() => {
   return [...pick, ...pick]
 })
 
+// Idle: as many cases as will open. Desktop x2–x5: one case over each reel column (it shows which case
+// spins where); phones (and x1): a fan, smaller the more there are, the middle one in front.
+const STACK_SCALE = [1, 0.8, 0.72, 0.66, 0.6]
+const stack = computed(() => {
+  const n = props.count
+  const columns = n > 1 && !isMobile.value
+  const size = columns ? 160 : (isMobile.value ? 160 : 196) * STACK_SCALE[n - 1]!
+  const step = size * 0.55
+  return Array.from({ length: n }, (_, k) => {
+    const rel = k - (n - 1) / 2
+    const depth = Math.abs(rel)
+    if (columns) return { key: k, style: { left: `${((k + 0.5) / n) * 100}%`, width: `${size}px`, height: `${size}px`, animationDelay: `${k * -0.45}s` } }
+    return {
+      key: k,
+      style: {
+        left: `calc(50% + ${rel * step}px)`,
+        width: `${size}px`,
+        height: `${size}px`,
+        zIndex: 10 - Math.ceil(depth),
+        opacity: 1 - depth * 0.12,
+        rotate: `${rel * 5}deg`,
+        animationDelay: `${k * -0.45}s`,
+      },
+    }
+  })
+})
+
 const STRIP = computed(() => (props.count === 1 ? 56 : 36))
 const WIN = computed(() => STRIP.value - 7)
 const START = 3
@@ -533,17 +560,24 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
           />
         </div>
         </div>
-        <img
-          :src="data.image"
-          :alt="data.name"
-          class="kd-reel-case absolute top-[46%] left-1/2 size-40 -translate-x-1/2 -translate-y-1/2 object-contain sm:size-[196px]"
-        />
+        <!-- One case per opening: x2–x5 fan out a smaller stack, the middle one in front -->
+        <TransitionGroup name="kd-stack">
+          <img
+            v-for="c in stack"
+            :key="c.key"
+            :src="data.image"
+            :alt="c.key === 0 ? data.name : ''"
+            class="kd-reel-case absolute top-[44%] -translate-x-1/2 -translate-y-1/2 object-contain"
+            :style="c.style"
+          />
+        </TransitionGroup>
       </div>
     </Transition>
 
     <!-- Demo spin, on the stage while the case waits (free, nothing is charged) -->
     <Transition name="kd-idle">
-      <div v-if="phase === 'idle' && !breathing" class="absolute inset-x-0 bottom-3 z-10 flex justify-center sm:bottom-4">
+      <!-- bottom-6: clears the bottom marker (it reaches 18px into the frame) -->
+      <div v-if="phase === 'idle' && !breathing" class="absolute inset-x-0 bottom-6 z-10 flex justify-center">
         <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
       </div>
     </Transition>
@@ -591,6 +625,18 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 .kd-try-stage {
   background: rgb(12 13 16 / 0.7);
   backdrop-filter: blur(6px);
+}
+/* Switching x1–x5: cases pop in and out of the stack, the rest glide to their new spots */
+.kd-stack-enter-active,
+.kd-stack-leave-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    scale var(--dur-slow) var(--ease-spring);
+}
+.kd-stack-enter-from,
+.kd-stack-leave-to {
+  opacity: 0;
+  scale: 0.6;
 }
 /* Phone grid: the outer frame steps aside and every mini reel gets its own */
 .kd-reel.is-grid {
@@ -715,6 +761,13 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   /* static shadow (an animated drop-shadow repaints every frame); the case stays clear of the frame */
   filter: drop-shadow(0 12px 14px rgb(0 0 0 / 0.6));
   animation: kd-case-float 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  /* the stack re-fans when the amount changes */
+  transition:
+    left var(--dur-slow) var(--ease-spring),
+    width var(--dur-slow) var(--ease-spring),
+    height var(--dur-slow) var(--ease-spring),
+    rotate var(--dur-slow) var(--ease-spring),
+    opacity var(--dur-base) var(--ease-out);
 }
 /* Centring comes from Tailwind's `translate` property, so the float only touches `transform` */
 @keyframes kd-case-float {

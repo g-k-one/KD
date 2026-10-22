@@ -12,7 +12,9 @@ export interface PageBarLink {
   onClick?: () => void
 }
 
-defineProps<{ title?: string; logo?: boolean; subtitle?: string; left?: PageBarLink[]; right?: PageBarLink[] }>()
+/** fixedSides (phones): both link groups get the width of two icons and the centre takes the rest, so whatever
+ *  sits in the centre (e.g. ‹ title ›) stays put and is centred on the page */
+defineProps<{ title?: string; logo?: boolean; subtitle?: string; left?: PageBarLink[]; right?: PageBarLink[]; fixedSides?: boolean }>()
 </script>
 
 <template>
@@ -20,7 +22,7 @@ defineProps<{ title?: string; logo?: boolean; subtitle?: string; left?: PageBarL
     <div v-for="(side, s) in [left, right]" :key="s" class="contents">
       <div
         class="flex min-w-0 flex-1 items-center gap-1 overflow-hidden md:gap-4"
-        :class="[s === 0 ? 'order-1' : 'order-3 justify-end']"
+        :class="[s === 0 ? 'order-1' : 'order-3 justify-end', fixedSides && 'max-md:w-[76px] max-md:flex-none']"
       >
         <template v-for="(l, i) in side" :key="l.label">
           <span v-if="i" class="hidden h-5 w-px bg-neutral-5 md:block" />
@@ -38,7 +40,7 @@ defineProps<{ title?: string; logo?: boolean; subtitle?: string; left?: PageBarL
         </template>
       </div>
     </div>
-    <div class="order-2 flex min-w-0 shrink justify-center">
+    <div class="order-2 flex min-w-0 shrink justify-center" :class="fixedSides && 'max-md:flex-1'">
       <!-- default slot replaces the logo / title (e.g. a custom centre) -->
       <slot>
       <!-- Figma PageBar logo: gradient mark tile + one-line wordmark (242×28) -->
