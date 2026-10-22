@@ -7,6 +7,10 @@ const { t } = useI18n()
 const session = useSessionStore()
 const ui = useUiStore()
 const toast = useToast()
+const settingsStore = useSettingsStore()
+// Sound sits in the bar (CSGOGem, Casehug): three icons a side on phones — back · share · ‹ | › · sound · fairness
+const soundOn = computed(() => settingsStore.settings.sound)
+const toggleSound = () => settingsStore.update({ sound: !soundOn.value })
 
 const { data, error } = await useFetch<CaseResponse>(() => `/api/cases/${slug.value}`, { key: `case-${slug.value}` })
 if (error.value) throw createError({ statusCode: 404, statusMessage: 'Case not found', fatal: true })
@@ -169,6 +173,7 @@ if (import.meta.client) {
           { label: $t('case.share'), icon: 'share', onClick: share },
         ]"
         :right="[
+          { label: $t('settings.sound'), icon: soundOn ? 'sound' : 'sound-off', onClick: toggleSound },
           // after a drop the same spot checks this roll; before, it explains fairness
           phase === 'result' && !demo
             ? { label: $t('case.checkRoll'), icon: 'shield', onClick: () => (rollsOpen = true) }

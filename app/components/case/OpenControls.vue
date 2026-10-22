@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Figma "OpenControls" (desktop) and "Mobile/OpenControls", laid out like the upgrade's centre column so both
-// game screens share one control block: the main button (48px, 56px on desktop) with a row of two equal 40px
-// chips under it (here Fast · KURWADROP, there Reset · Fast). The amount sits above it. Desktop: a centred
-// 320px column; phones: the same stack across the width on a panel.
+// Figma "OpenControls" (desktop) and "Mobile/OpenControls". One panel across the content width.
+// Desktop: one row — amount on the left, the main button (56px, like the upgrade's) dead centre, Fast ·
+// KURWADROP on the right. Phones: the same pieces stacked — amount, main button, the two chips under it
+// (as the upgrade stacks Reset · Fast under its button).
 // One spot for the repeated action (docs/motion.md → "One thumb"): the main button never moves and changes role —
 // Open → Skip (while the reel spins) → Open again — so open, skip, open again is tap, tap, tap in one place.
 // "Sell all" gets a slot of its own (desktop: the middle card of the row under the dock, right below the main
@@ -45,12 +45,12 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
 </script>
 
 <template>
-  <div class="kd-dock mx-auto flex w-full flex-col gap-2 lg:w-80">
+  <div class="kd-dock flex flex-col gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-3">
     <!-- Amount: the kit's segmented control -->
-    <UiSegmented v-model="count" :options="COUNT_OPTIONS" :disabled="phase === 'spinning'" block class="mb-1" />
+    <UiSegmented v-model="count" :options="COUNT_OPTIONS" :disabled="phase === 'spinning'" block class="mb-1 lg:mb-0 lg:w-60" />
 
     <div class="flex flex-col">
-      <UiButton size="l" class="kd-main w-full lg:h-14" :variant="phase === 'spinning' ? 'secondary' : 'primary'" @click="main">
+      <UiButton size="l" class="kd-main w-full lg:h-14 lg:w-80" :variant="phase === 'spinning' ? 'secondary' : 'primary'" @click="main">
         <UiTextSwap :text="label" />
         <span v-if="phase !== 'spinning'" class="flex items-center gap-0.5">
           <span v-if="short" class="type-14">+</span>
@@ -70,11 +70,12 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
       </div>
     </div>
 
-    <!-- Switches: two equal chips under the main button (pressed = tinted fill), the hint lives in the tooltip -->
-    <div class="grid grid-cols-2 gap-2">
-      <UiChip size="m" tone="coin" icon="fast" class="w-full" :active="fast" @click="fast = !fast">{{ $t('upgrade.fast') }}</UiChip>
+    <!-- Switches (pressed = tinted fill, the hint lives in the tooltip): phones, two equal chips under the main
+         button; desktop, the right end of the row -->
+    <div class="grid grid-cols-2 gap-2 lg:flex lg:justify-end">
+      <UiChip size="m" tone="coin" icon="fast" class="w-full lg:!h-12 lg:w-auto lg:px-4" :active="fast" @click="fast = !fast">{{ $t('upgrade.fast') }}</UiChip>
       <UiTooltip :text="$t('case.kurwaHint')" class="min-w-0">
-        <UiChip size="m" tone="gold" icon="chicken" class="w-full" :active="kurwadrop" @click="kurwadrop = !kurwadrop">
+        <UiChip size="m" tone="gold" icon="chicken" class="w-full lg:!h-12 lg:px-4" :active="kurwadrop" @click="kurwadrop = !kurwadrop">
           <span :class="kurwadrop && 'kd-kurwa-word'">{{ $t('case.kurwadrop') }}</span>
         </UiChip>
       </UiTooltip>
@@ -83,13 +84,10 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
 </template>
 
 <style scoped>
-/* Phones: one panel around the stack; desktop: the column stands on the page, like the upgrade's */
-@media (width < 64rem) {
-  .kd-dock {
-    border-radius: 24px;
-    background: var(--color-neutral-2);
-    padding: 12px;
-  }
+.kd-dock {
+  border-radius: 24px;
+  background: var(--color-neutral-2);
+  padding: 12px;
 }
 .kd-kurwa-word {
   background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light) 45%, var(--color-item-gold));

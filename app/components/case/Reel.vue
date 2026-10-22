@@ -561,16 +561,16 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
         </div>
         </div>
         <!-- One case per opening: x2–x5 fan out a smaller stack, the middle one in front -->
-        <TransitionGroup name="kd-stack">
-          <img
-            v-for="c in stack"
-            :key="c.key"
-            :src="data.image"
-            :alt="c.key === 0 ? data.name : ''"
-            class="kd-reel-case absolute top-[44%] -translate-x-1/2 -translate-y-1/2 object-contain"
-            :style="c.style"
-          />
-        </TransitionGroup>
+        <!-- No TransitionGroup: a new case pops in with a keyframe, a removed one just goes, the rest glide
+             (a leave transition that never ended left ghost cases on the stage) -->
+        <img
+          v-for="c in stack"
+          :key="c.key"
+          :src="data.image"
+          :alt="c.key === 0 ? data.name : ''"
+          class="kd-reel-case absolute top-[44%] -translate-x-1/2 -translate-y-1/2 object-contain"
+          :style="c.style"
+        />
       </div>
     </Transition>
 
@@ -625,18 +625,6 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 .kd-try-stage {
   background: rgb(12 13 16 / 0.7);
   backdrop-filter: blur(6px);
-}
-/* Switching x1–x5: cases pop in and out of the stack, the rest glide to their new spots */
-.kd-stack-enter-active,
-.kd-stack-leave-active {
-  transition:
-    opacity var(--dur-base) var(--ease-out),
-    scale var(--dur-slow) var(--ease-spring);
-}
-.kd-stack-enter-from,
-.kd-stack-leave-to {
-  opacity: 0;
-  scale: 0.6;
 }
 /* Phone grid: the outer frame steps aside and every mini reel gets its own */
 .kd-reel.is-grid {
@@ -760,7 +748,9 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 .kd-reel-case {
   /* static shadow (an animated drop-shadow repaints every frame); the case stays clear of the frame */
   filter: drop-shadow(0 12px 14px rgb(0 0 0 / 0.6));
-  animation: kd-case-float 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation:
+    kd-case-float 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite,
+    kd-stack-in 420ms var(--ease-spring) both;
   /* the stack re-fans when the amount changes */
   transition:
     left var(--dur-slow) var(--ease-spring),
@@ -768,6 +758,13 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     height var(--dur-slow) var(--ease-spring),
     rotate var(--dur-slow) var(--ease-spring),
     opacity var(--dur-base) var(--ease-out);
+}
+/* A case joining the stack pops in */
+@keyframes kd-stack-in {
+  from {
+    scale: 0.6;
+    opacity: 0;
+  }
 }
 /* Centring comes from Tailwind's `translate` property, so the float only touches `transform` */
 @keyframes kd-case-float {

@@ -12,8 +12,8 @@ export interface PageBarLink {
   onClick?: () => void
 }
 
-/** fixedSides (phones): both link groups get the width of two icons and the centre takes the rest, so whatever
- *  sits in the centre (e.g. ‹ title ›) stays put and is centred on the page */
+/** fixedSides (phones): the link groups take just their icons and the centre takes the rest, so whatever sits at
+ *  the centre's ends (e.g. ‹ title ›) stays put from page to page with an even gap to the icons */
 defineProps<{ title?: string; logo?: boolean; subtitle?: string; left?: PageBarLink[]; right?: PageBarLink[]; fixedSides?: boolean }>()
 </script>
 
@@ -22,7 +22,7 @@ defineProps<{ title?: string; logo?: boolean; subtitle?: string; left?: PageBarL
     <div v-for="(side, s) in [left, right]" :key="s" class="contents">
       <div
         class="flex min-w-0 flex-1 items-center gap-1 overflow-hidden md:gap-4"
-        :class="[s === 0 ? 'order-1' : 'order-3 justify-end', fixedSides && 'max-md:w-[76px] max-md:flex-none']"
+        :class="[s === 0 ? 'order-1' : 'order-3 justify-end', fixedSides && 'max-md:flex-none']"
       >
         <template v-for="(l, i) in side" :key="l.label">
           <span v-if="i" class="hidden h-5 w-px bg-neutral-5 md:block" />
@@ -44,9 +44,9 @@ defineProps<{ title?: string; logo?: boolean; subtitle?: string; left?: PageBarL
       <!-- default slot replaces the logo / title (e.g. a custom centre) -->
       <slot>
       <!-- Figma PageBar logo: gradient mark tile + one-line wordmark (242×28) -->
-      <!-- the brand stays in frame on game screens (players record short videos of them) -->
+      <!-- the brand stays in frame on game screens (players record short videos of them); it leads home -->
       <span v-if="logo" class="flex flex-col items-center gap-1">
-      <span class="flex items-center gap-2 md:gap-4">
+      <NuxtLink to="/" :aria-label="$t('nav.cases')" class="kd-press flex items-center gap-2 md:gap-4">
         <span
           class="relative size-8 shrink-0 overflow-hidden rounded-lg md:size-10"
           style="background-image: linear-gradient(198deg, #000 10%, var(--color-brand-base) 72%, var(--color-coin) 98%)"
@@ -54,7 +54,7 @@ defineProps<{ title?: string; logo?: boolean; subtitle?: string; left?: PageBarL
           <img src="/img/brand/logo-tile-mark.svg" alt="" class="absolute top-[-16%] left-[-10%] h-[137%] w-[110%] max-w-none" draggable="false" />
         </span>
         <img src="/img/brand/logo-word-wide.svg" alt="KurwaDROP" class="h-4 w-auto sm:h-5 md:h-7" draggable="false" />
-      </span>
+      </NuxtLink>
       <span v-if="subtitle" class="type-10-caps text-neutral-11">{{ subtitle }}</span>
       </span>
       <h1 v-else class="type-16-caps md:type-20-caps truncate">{{ title }}</h1>

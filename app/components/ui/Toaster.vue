@@ -4,7 +4,7 @@ const { toasts } = useToast()
 
 <template>
   <div
-    class="pointer-events-none fixed inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-[70] flex flex-col items-center gap-2 px-4 lg:bottom-6"
+    class="pointer-events-none fixed inset-x-0 top-[calc(68px+env(safe-area-inset-top))] z-[70] flex flex-col items-center gap-2 px-4 lg:top-20 lg:right-6 lg:left-auto lg:items-end"
     aria-live="polite"
   >
     <TransitionGroup name="kd-toast">
@@ -37,9 +37,10 @@ const { toasts } = useToast()
     opacity var(--dur-fast) var(--ease-in),
     transform var(--dur-fast) var(--ease-in);
 }
+/* Toasts drop in from the header (top centre on phones, top right on desktop), clear of the game controls */
 .kd-toast-enter-from {
   opacity: 0;
-  transform: translateY(12px) scale(0.96);
+  transform: translateY(-12px) scale(0.96);
 }
 .kd-toast-leave-to {
   opacity: 0;
