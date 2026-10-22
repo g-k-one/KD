@@ -115,7 +115,10 @@ export function useForge(host?: Ref<HTMLElement | null | undefined>) {
     if (!el) return Promise.resolve(null)
     const r = el.getBoundingClientRect()
     const hr = host?.value?.getBoundingClientRect()
-    return play(name, { ...opts, x: r.left + r.width / 2 - (hr?.left ?? 0), y: r.top + r.height / 2 - (hr?.top ?? 0), size: Math.max(r.width, r.height) * scale, loop })
+    // the host may be mid-transform (the reel's punch scales it a touch): the canvas draws in its own unscaled
+    // pixels, so measure in those, or the effect lands off its element — more so the further from the host's corner
+    const k = host?.value && hr && host.value.offsetWidth ? hr.width / host.value.offsetWidth : 1
+    return play(name, { ...opts, x: (r.left + r.width / 2 - (hr?.left ?? 0)) / k, y: (r.top + r.height / 2 - (hr?.top ?? 0)) / k, size: (Math.max(r.width, r.height) * scale) / k, loop })
   }
 
   function stopAll() {

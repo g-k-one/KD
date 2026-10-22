@@ -90,9 +90,12 @@ export function defineKdEffects(engine: Engine) {
         tier.init(s)
         const o = (s as State & { o: { color?: string; level?: number } }).o
         if (o.color) {
-          // a notch dimmer than the stock tiers: it plays right behind the skin
+          // clean rarity colour: a light core, the colour itself pushed a little more saturated, and tails that fade
+          // out in the colour — dimming the whole palette or a 25% tail read as a muddy brown over the reel
           const c = hexToRgb(o.color)
-          s.pal = [c.map((v) => (v * 0.35 + 0.65) * 0.8), c.map((v) => v * 0.8), c.map((v) => v * 0.25)]
+          const l = 0.3 * c[0]! + 0.59 * c[1]! + 0.11 * c[2]!
+          const vivid = c.map((v) => Math.min(1, Math.max(0, l + (v - l) * 1.3)))
+          s.pal = [vivid.map((v) => v * 0.55 + 0.45), vivid, vivid.map((v) => v * 0.6)]
         }
         if (o.level != null) s.L = o.level
       },

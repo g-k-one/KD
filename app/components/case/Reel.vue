@@ -305,7 +305,8 @@ async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseIt
   if (!reduced && !skipping && horizontal.value)
     tracks.value.forEach((t, c) => cols.includes(c) && active.push(t.animate([{ filter: `blur(${horizontal.value ? 5 : 4}px)` }, { filter: 'blur(0)' }], { duration: blurMs, easing: 'cubic-bezier(0.2, 0.6, 0.3, 1)' })))
   const fx = { tension: null as ForgeHandle | null, done: false }
-  const tensionTimer = !reduced && !fast && !grid.value ? setTimeout(() => {
+  // one reel only: on x2–x5 the marker centre is the middle column, and the amber glow sat on that drop
+  const tensionTimer = !reduced && !fast && horizontal.value ? setTimeout(() => {
     if (!skipping && markerBox.value) fxBg.at('kdCharge', markerBox.value, 1.6, true).then((h) => (fx.done ? h?.kill() : (fx.tension = h)))
   }, base - 1500) : undefined
 
