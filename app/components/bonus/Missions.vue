@@ -25,7 +25,7 @@ async function claim(m: Mission) {
     const res = await $fetch<BonusClaimResponse>(`/api/bonuses/missions/${m.id}/claim`, { method: 'POST' })
     if (session.user) session.user.balance = res.balance
     fx.at('kdCoins', cards.value[m.id], 1)
-    sfx.reveal(2)
+    sfx.claim()
     emit('update', res.bonuses)
   } catch (e) {
     toast.error(e, t('common.error'))

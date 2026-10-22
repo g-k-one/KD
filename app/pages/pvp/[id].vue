@@ -76,7 +76,7 @@ watch(done, (d) => {
   const youSlot = b.value.slots.find((s) => s.player?.you)?.slot
   if (youSlot == null) return
   if (b.value.winnerSlot === youSlot) {
-    sfx.reveal(true)
+    sfx.win()
     toast.show(t('pvp.youWon', { amount: formatCoins(pot.value) }), 'success', 5000)
     session.fetchMe()
   } else {

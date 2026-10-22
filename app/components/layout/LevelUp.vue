@@ -44,7 +44,7 @@ watch(
     from.value = before
     shown.value = before
     refresh()
-    sfx.reveal(4)
+    sfx.levelUp()
     haptics.rare()
     // the number rolls up a beat after the plate lands, then the light
     setTimeout(() => {

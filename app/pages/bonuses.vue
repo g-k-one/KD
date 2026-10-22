@@ -108,7 +108,7 @@ async function claim(r: LevelReward) {
     // useFetch data is a shallow ref in Nuxt 4: replace the object, a nested assignment would not re-render
     if (data.value) data.value = { ...data.value, levels: res.levels }
     fx.at('kdJackpot', road.value?.nodes[r.level], 1.2)
-    sfx.reveal(2)
+    sfx.claim()
   } catch (e) {
     toast.error(e, t('common.error'))
   } finally {

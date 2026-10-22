@@ -29,7 +29,7 @@ async function claim(tier: PassTier) {
     const res = await $fetch<{ balance: number; pass: PassResponse }>(`/api/pass/tiers/${tier.level}/claim`, { method: 'POST' })
     if (session.user) session.user.balance = res.balance
     emit('update', res.pass)
-    sfx.reveal(2)
+    sfx.claim()
   } catch (e) {
     toast.error(e, t('common.error'))
   } finally {

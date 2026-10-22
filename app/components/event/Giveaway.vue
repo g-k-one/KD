@@ -23,7 +23,7 @@ async function join() {
   joining.value = true
   try {
     emit('update', await $fetch<EventResponse>('/api/event/giveaway/join', { method: 'POST' }))
-    sfx.reveal(2)
+    sfx.claim()
     toast.show(t('event.joined'), 'success')
   } catch (e) {
     toast.error(e, t('common.error'))

@@ -25,7 +25,7 @@ async function redeem() {
     if (session.user) session.user.balance = res.balance
     toast.show(t('bonus.promoOk', { coins: formatCoins(res.credited) }), 'success')
     fx.at('kdCoins', box.value, 1)
-    sfx.reveal(2)
+    sfx.claim()
     code.value = ''
     emit('done')
   } catch (e) {

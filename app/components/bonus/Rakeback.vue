@@ -22,7 +22,7 @@ async function claim() {
     const res = await $fetch<BonusClaimResponse>('/api/bonuses/rakeback/claim', { method: 'POST' })
     if (session.user) session.user.balance = res.balance
     fx.at('kdCoins', card.value, 1.2)
-    sfx.reveal(2)
+    sfx.claim()
     emit('update', res.bonuses)
   } catch (e) {
     toast.error(e, t('common.error'))

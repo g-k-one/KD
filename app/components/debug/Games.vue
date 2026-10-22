@@ -36,6 +36,9 @@ const SOUNDS: [string, () => void][] = [
   ['lose', sfx.lose],
   ['riser', sfx.riser],
   ['tense', sfx.tense],
+  ['claim', sfx.claim],
+  ['win', sfx.win],
+  ['level up', sfx.levelUp],
   ...[0, 1, 2, 3, 4].map((t) => [`reveal ${t}`, () => sfx.reveal(t)] as [string, () => void]),
 ]
 const HAPTICS: [string, () => void][] = [
