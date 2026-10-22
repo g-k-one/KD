@@ -121,9 +121,12 @@ function aim(c: number) {
   if (inputValue.value > 0) pickTarget(targetPriceFor(inputValue.value, c))
 }
 // Nothing is pinned: whatever the player set last leads. Aimed at a chance → a new stake re-picks the skin
-// for that chance; picked a skin by hand → the chance follows the stake.
+// for that chance; picked a skin by hand → the chance follows the stake. A stake with no target and no aim yet
+// starts at 50%, so the dial and the target show something to play right away.
 watch(inputValue, (v) => {
-  if (aimed.value != null && v > 0 && state.value === 'idle') pickTarget(targetPriceFor(v, aimed.value))
+  if (v <= 0 || state.value !== 'idle') return
+  if (aimed.value == null && !target.value) return aim(50)
+  if (aimed.value != null) pickTarget(targetPriceFor(v, aimed.value))
 })
 const tileChance = (price: number) => (inputValue.value > 0 && price > inputValue.value ? Math.min(UPGRADE_MAX_PCT, (inputValue.value / price) * 95) : null)
 const tileHint = (price: number) => {

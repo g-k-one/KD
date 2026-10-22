@@ -14,7 +14,8 @@ import { RARITY_HEX } from './rarity'
  *   kdCoins   — loop for the KURWADROP promo: a small KD-coin fountain every couple of seconds
  *   kdAura    — loop behind a rare result: a breathing glow and a few sparks drifting up.
  *               Colour per rarity: handle.set('tint', [r, g, b])
- *   kdWin     — won upgrade: green-gold shockwave and sparks
+ *   kdWin     — won upgrade: one beat — a burst of green and gold sparks and a single thin ring that stays
+ *               close to the dial (no glow wash, no second wave)
  *   kdLose    — lost upgrade: a red ring closes in, embers fall away
  *   kdCharge  — loop while the gauge turns: light is drawn into the centre
  *   kdBurn    — loop around a label: a flat warm glow hugging it, licks and embers rising along its width
@@ -311,10 +312,10 @@ export function defineKdEffects(engine: Engine) {
       const { R, pick } = h
       if (!s.fired) {
         s.fired = true
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 24; i++) {
           const a = R(0, 6.28)
-          const sp = R(220, 560)
-          h.spawn(s.sp as Particle[], { x: 180, y: 180, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, size: R(16, 32), life: R(0.7, 1.2), rot: R(0, 6), vr: R(-5, 5), drag: 2.6, cells: [at.map.spark], add: 1, tint: pick([GREEN, GOLD_HI, [1, 1, 1]]), fadeIn: 0.02, fadeOut: 0.6 })
+          const sp = R(200, 420)
+          h.spawn(s.sp as Particle[], { x: 180 + Math.cos(a) * 70, y: 180 + Math.sin(a) * 70, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, size: R(12, 24), life: R(0.5, 0.9), rot: R(0, 6), vr: R(-5, 5), drag: 3, cells: [at.map.spark], add: 1, tint: pick([GREEN, GOLD_HI, [1, 1, 1]]), fadeIn: 0.02, fadeOut: 0.6 })
         }
       }
       h.step(s.sp as Particle[], dt)
@@ -322,11 +323,8 @@ export function defineKdEffects(engine: Engine) {
     render(s, c) {
       const m = c.at.map
       const t = s.cycle
-      h.sprite(c, 180, 180, 360, 0, Math.max(0, 0.6 - t * 0.35), 1, m.glow!, 1, GREEN)
-      for (const [delay, tint] of [[0, GREEN], [0.14, GOLD]] as Array<[number, Rgb]>) {
-        const k = (t - delay) / 0.75
-        if (k > 0 && k < 1) h.sprite(c, 180, 180, 130 + 450 * h.easeOut(k), 0, (1 - k) * 0.9, 1, m.ring!, 1, tint)
-      }
+      const k = t / 0.55
+      if (k < 1) h.sprite(c, 180, 180, 220 + 120 * h.easeOut(k), 0, (1 - k) * 0.55, 1, m.ring!, 1, GREEN)
       h.draw(c, s.sp as Particle[])
     },
   }))

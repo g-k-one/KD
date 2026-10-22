@@ -279,14 +279,14 @@ const readout = computed(() =>
     filter: brightness(1.5) drop-shadow(0 0 18px rgb(255 125 32 / 0.7));
   }
 }
-/* Result. Won: one flare, then the arc stays lit */
+/* Result. Won: one short flare, then the arc just stays a little brighter — no halo around the wheel */
 .is-win .kd-gauge-arc {
-  filter: brightness(1.2) drop-shadow(0 0 20px rgb(18 183 106 / 0.7));
-  animation: kd-arc-flare 800ms var(--ease-out);
+  filter: brightness(1.15);
+  animation: kd-arc-flare 600ms var(--ease-out);
 }
 @keyframes kd-arc-flare {
   25% {
-    filter: brightness(1.8) drop-shadow(0 0 36px rgb(18 183 106 / 1));
+    filter: brightness(1.5);
   }
 }
 .is-win .kd-gauge-value {
