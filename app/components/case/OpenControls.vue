@@ -5,20 +5,29 @@
 // Open → Skip (while the reel spins) → Open again — so open, skip, open again is tap, tap, tap in one place.
 // "Sell all" gets a slot of its own (desktop: the middle card of the row under the dock, right below the main
 // button; phones: a row that unfolds under the button), so its arrival never pushes the main button.
+// The page decides what the main button says (open · sign in · top up the shortfall); for guests and short
+// balances "Try free" (a demo spin) unfolds under it on every width — the first win before the first deposit.
 const count = defineModel<1 | 2 | 3 | 4 | 5>('count', { required: true })
 const fast = defineModel<boolean>('fast', { required: true })
 const kurwadrop = defineModel<boolean>('kurwadrop', { required: true })
 
 const props = defineProps<{
-  price: number
+  /** Main button text and the amount on it (the price, or the shortfall when short) */
+  label: string
+  amount: number
+  /** The amount is a shortfall: shown as "+ amount" */
+  short?: boolean
+  /** Offer a demo spin under the main button */
+  offerDemo?: boolean
   phase: 'idle' | 'spinning' | 'result'
   unsoldTotal: number
   /** Sell all asks for a second tap (the drops are worth a lot) */
   confirmSell?: boolean
 }>()
-const emit = defineEmits<{ open: []; skip: []; sellAll: [] }>()
+const emit = defineEmits<{ open: []; skip: []; sellAll: []; demo: [] }>()
 const main = () => (props.phase === 'spinning' ? emit('skip') : emit('open'))
 const showSell = computed(() => props.phase === 'result' && props.unsoldTotal > 0)
+const showDemo = computed(() => !!props.offerDemo && props.phase !== 'spinning' && !showSell.value)
 
 const armed = ref(false)
 let armTimer: ReturnType<typeof setTimeout> | undefined
@@ -48,8 +57,11 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
 
     <div class="flex flex-col lg:items-center">
       <UiButton size="l" class="kd-main w-full lg:w-72" :variant="phase === 'spinning' ? 'secondary' : 'primary'" @click="main">
-        <UiTextSwap :text="phase === 'spinning' ? $t('case.skip') : phase === 'result' ? $t('case.openAgain') : $t('case.open', { count })" />
-        <UiPrice v-if="phase !== 'spinning'" :amount="price * count" size="m" tone="inverse" />
+        <UiTextSwap :text="label" />
+        <span v-if="phase !== 'spinning'" class="flex items-center gap-0.5">
+          <span v-if="short" class="type-14">+</span>
+          <UiPrice :amount="amount" size="m" tone="inverse" />
+        </span>
         <UiIcon v-else name="chevron-right" :size="18" class="kd-skip-icon" />
         <span v-if="phase === 'idle'" class="kd-shine" />
       </UiButton>
@@ -59,6 +71,14 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
           <UiButton :variant="armed ? 'danger' : 'secondary'" size="l" class="mt-2 w-full" :tabindex="showSell ? 0 : -1" @click="sellAll">
             <UiTextSwap :text="armed ? $t('wallet.sureSell') : $t('wallet.sellAll')" />
             <UiPrice :amount="unsoldTotal" size="m" />
+          </UiButton>
+        </div>
+      </div>
+      <!-- Guests and short balances: a free demo spin right under the main button -->
+      <div class="kd-unfold is-demo lg:w-72" :class="showDemo && 'is-open'">
+        <div class="min-h-0">
+          <UiButton variant="secondary" size="l" icon="demo" class="mt-2 w-full" :tabindex="showDemo ? 0 : -1" @click="emit('demo')">
+            {{ $t('case.tryFree') }}
           </UiButton>
         </div>
       </div>
@@ -113,7 +133,7 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
 }
 /* Phones only (a scoped display rule beats Tailwind's lg:hidden) */
 @media (min-width: 64rem) {
-  .kd-unfold {
+  .kd-unfold:not(.is-demo) {
     display: none;
   }
 }

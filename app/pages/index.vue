@@ -26,6 +26,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
     <HomeHeroBanner @start="scrollToCases" />
+    <HomeStatsBand />
 
     <div ref="fxHost" class="relative flex flex-col gap-6 lg:gap-10">
     <HomeBigWins />

@@ -468,7 +468,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
                 <span v-if="armed === results[col]!.uid">{{ $t('wallet.sure') }}</span>
                 <template v-else>
                   <span class="max-sm:hidden">{{ $t('wallet.sell') }}</span>
-                  <UiPrice :amount="results[col]!.price" size="s" tone="inverse" />
+                  <UiPrice :amount="results[col]!.price" size="s" tone="inverse" count-up />
                 </template>
               </UiButton>
             </div>
@@ -481,6 +481,12 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
         </div>
       </div>
     </div>
+
+    <!-- Depth: cards away from the centre sink into the dark (a still gradient, nothing re-rasterizes while the
+         strip moves). Columns drop it on the result, where the drop's name and Sell sit at the bottom. -->
+    <Transition name="kd-idle">
+      <div v-if="!grid && (horizontal || phase !== 'result')" class="kd-depth pointer-events-none absolute inset-0 rounded-5xl" :class="horizontal ? 'is-h' : 'is-v'" />
+    </Transition>
 
     <!-- KURWADROP: the chicken screams, then the respin among the expensive items. One reel: centred over it;
          several: the banner sits in the column where the chicken landed (see the column loop). -->
@@ -503,7 +509,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
           <div v-else-if="!demo" class="flex gap-2">
             <UiButton :variant="armed === results[0].uid ? 'danger' : 'light'" size="s" @click="askSell(results[0])">
               <UiTextSwap :text="armed === results[0].uid ? $t('wallet.sureSell') : $t('wallet.sell')" />
-              <UiPrice :amount="results[0].price" size="s" tone="inverse" />
+              <UiPrice :amount="results[0].price" size="s" tone="inverse" count-up />
             </UiButton>
             <UiButton variant="secondary" size="s" icon="upgrade" :to="`/upgrade?item=${results[0].uid}&from=${data.slug}`">{{ $t('upgrade.upgrade') }}</UiButton>
           </div>
@@ -566,6 +572,12 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   background:
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
     linear-gradient(180deg, var(--color-neutral-4) 15%, rgb(255 95 31 / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
+}
+.kd-depth.is-h {
+  background: linear-gradient(90deg, var(--color-neutral-1) 2%, transparent 30%, transparent 70%, var(--color-neutral-1) 98%);
+}
+.kd-depth.is-v {
+  background: linear-gradient(180deg, var(--color-neutral-1) 2%, transparent 30%, transparent 70%, var(--color-neutral-1) 98%);
 }
 /* Phone grid: the outer frame steps aside and every mini reel gets its own */
 .kd-reel.is-grid {

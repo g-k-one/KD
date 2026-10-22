@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CaseResponse, InventoryItem, OpenCaseResponse, PfRoll, SeedPairPublic, SellResponse } from '#shared/types/api'
+import type { CaseResponse, CasesResponse, InventoryItem, OpenCaseResponse, PfRoll, SeedPairPublic, SellResponse } from '#shared/types/api'
 
 const route = useRoute()
 const slug = computed(() => String(route.params.slug))
@@ -39,6 +39,35 @@ onKeyStroke(' ', (e) => {
 watch(count, () => {
   if (phase.value === 'result') phase.value = 'idle'
   results.value = []
+})
+
+// What the main button says: open, sign in (guests), or top up the shortfall (GGDrop) — the tap does the same
+const total = computed(() => openPrice.value * count.value)
+const shortBy = computed(() => (session.user ? Math.max(0, total.value - session.user.balance) : 0))
+const cta = computed(() => {
+  if (phase.value === 'spinning') return { label: t('case.skip'), amount: total.value, short: false }
+  if (!session.user) return { label: t('case.signInToOpen'), amount: total.value, short: false }
+  if (shortBy.value > 0) return { label: t('case.topUp'), amount: shortBy.value, short: true }
+  return { label: phase.value === 'result' ? t('case.openAgain') : t('case.open', { count: count.value }), amount: total.value, short: false }
+})
+// Guests and short balances get a free demo spin offered right under it
+const offerDemo = computed(() => !session.user || shortBy.value > 0)
+
+// Neighbour cases in home order (wraps around), so the next case is one tap away
+const { data: list } = useFetch<CasesResponse>('/api/cases', { key: 'cases', lazy: true, server: false })
+const order = computed(() => [...new Map((list.value?.sections ?? []).flatMap((s) => s.cases).map((c) => [c.slug, c])).values()])
+const neighbour = (step: number) => {
+  const all = order.value
+  const i = all.findIndex((c) => c.slug === slug.value)
+  return i < 0 || all.length < 2 ? null : all[(i + step + all.length) % all.length]!
+}
+const prevCase = computed(() => neighbour(-1))
+const nextCase = computed(() => neighbour(1))
+const typing = (e: KeyboardEvent) => !!(e.target as HTMLElement | null)?.closest('input, textarea, [role=dialog]')
+onKeyStroke(['ArrowLeft', 'ArrowRight'], (e) => {
+  const to = e.key === 'ArrowLeft' ? prevCase.value : nextCase.value
+  if (!to || typing(e) || phase.value === 'spinning') return
+  navigateTo(`/case/${to.slug}`)
 })
 
 const unsoldTotal = computed(() =>
@@ -105,6 +134,16 @@ const unsold = computed(() => (demo.value ? [] : results.value.filter((r) => !so
 const reelSection = useTemplateRef<HTMLElement>('reelSection')
 const scrollToReel = () => reelSection.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
+// "Try free" on a home card lands here with ?demo=1: the demo spin starts once the reel is up
+onMounted(() => {
+  if (route.query.demo !== '1') return
+  navigateTo({ query: { ...route.query, demo: undefined } }, { replace: true })
+  setTimeout(() => {
+    scrollToReel()
+    open(true)
+  }, 400)
+})
+
 const chance = (tickets: number) => {
   const p = tickets / 10_000
   return `${p >= 1 ? +p.toFixed(1) : +p.toPrecision(2)}%`
@@ -126,7 +165,6 @@ if (import.meta.client) {
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
     <div class="flex flex-col gap-4">
       <UiPageBar
-        :title="cs.name"
         :left="[
           { label: $t('case.allCases'), icon: 'arrow-left', to: '/' },
           { label: $t('case.share'), icon: 'share', onClick: share },
@@ -138,7 +176,29 @@ if (import.meta.client) {
             ? { label: $t('case.checkRoll'), icon: 'shield', onClick: () => (rollsOpen = true) }
             : { label: $t('case.fairness'), icon: 'shield', to: '/fairness' },
         ]"
-      />
+      >
+        <div class="flex min-w-0 items-center gap-1 md:gap-3">
+          <NuxtLink
+            v-if="prevCase"
+            :to="`/case/${prevCase.slug}`"
+            :aria-label="$t('case.prevCase', { name: prevCase.name })"
+            :title="prevCase.name"
+            class="kd-press kd-nb grid size-8 shrink-0 place-items-center rounded-lg text-neutral-12 hover:text-neutral-15"
+          >
+            <UiIcon name="chevron-left" :size="18" />
+          </NuxtLink>
+          <h1 class="type-16-caps md:type-20-caps truncate">{{ cs.name }}</h1>
+          <NuxtLink
+            v-if="nextCase"
+            :to="`/case/${nextCase.slug}`"
+            :aria-label="$t('case.nextCase', { name: nextCase.name })"
+            :title="nextCase.name"
+            class="kd-press kd-nb grid size-8 shrink-0 place-items-center rounded-lg text-neutral-12 hover:text-neutral-15"
+          >
+            <UiIcon name="chevron-right" :size="18" />
+          </NuxtLink>
+        </div>
+      </UiPageBar>
       <CaseTransparency :data="cs" />
     </div>
 
@@ -161,12 +221,16 @@ if (import.meta.client) {
         v-model:count="count"
         v-model:fast="fast"
         v-model:kurwadrop="kurwadrop"
-        :price="openPrice"
+        :label="cta.label"
+        :amount="cta.amount"
+        :short="cta.short"
+        :offer-demo="offerDemo"
         :phase="phase"
         :unsold-total="unsoldTotal"
         :confirm-sell="unsoldTotal >= openPrice * count * 3"
         @open="open()"
         @skip="reel?.skip()"
+        @demo="open(true)"
         @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"
       />
       <!-- Always there with a fixed height: a result only changes what the cards say -->
@@ -190,14 +254,27 @@ if (import.meta.client) {
       >
         <img :src="cs.image" alt="" class="size-10 object-contain" />
         <span class="type-12-caps min-w-0 flex-1 truncate">{{ cs.name }} · x{{ count }}</span>
-        <UiButton :variant="phase === 'spinning' ? 'secondary' : 'primary'" class="w-36" @click="phase === 'spinning' ? reel?.skip() : (open(), scrollToReel())">
-          <UiTextSwap :text="phase === 'spinning' ? $t('case.skip') : phase === 'result' ? $t('case.openAgain') : $t('case.open', { count })" />
-          <UiPrice v-if="phase !== 'spinning'" :amount="openPrice * count" size="s" tone="inverse" />
+        <UiButton :variant="phase === 'spinning' ? 'secondary' : 'primary'" class="min-w-36 shrink-0" @click="phase === 'spinning' ? reel?.skip() : (open(), scrollToReel())">
+          <UiTextSwap :text="cta.label" />
+          <span v-if="phase !== 'spinning'" class="flex items-center gap-0.5">
+            <span v-if="cta.short" class="type-12">+</span>
+            <UiPrice :amount="cta.amount" size="s" tone="inverse" />
+          </span>
         </UiButton>
       </div>
     </Transition>
 
     <section class="flex flex-col gap-4">
+      <UiSectionHeader :title="$t('case.contents')">
+        <template #actions>
+          <span class="type-12-caps flex shrink-0 items-center gap-3 text-neutral-11 tabular-nums">
+            <span class="lg:hidden">{{ $t('case.opens', { n: shortCount(cs.opens) }) }}</span>
+            <span class="max-lg:hidden">{{ $t('case.opens', { n: formatCount(cs.opens) }) }}</span>
+            <span class="h-3 w-px bg-neutral-5 max-lg:hidden" />
+            <span class="max-lg:hidden">{{ $t('case.skins', { n: cs.items.length }, cs.items.length) }}</span>
+          </span>
+        </template>
+      </UiSectionHeader>
       <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-3">
         <ItemDropCard v-for="it in cs.items" :key="it.id" :item="it" :chance="chance(it.tickets)" :range="[it.ticketFrom, it.ticketTo]" :drops="it.drops24h" :flash="flashId === it.id" />
       </div>

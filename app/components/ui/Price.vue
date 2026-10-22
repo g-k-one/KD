@@ -3,11 +3,36 @@
 type Size = 'xs' | 's' | 'm' | 'l' | 'xl' | 'xxl'
 type Tone = 'default' | 'coin' | 'success' | 'muted' | 'inverse'
 
-/** compact: from 1 000 coins on, the amount shortens to 12.9k / 1.2M (tight tiles) */
-const props = withDefaults(defineProps<{ amount: number; size?: Size; tone?: Tone; compact?: boolean }>(), {
+/** compact: from 1 000 coins on, the amount shortens to 12.9k / 1.2M (tight tiles).
+ *  countUp: on mount the amount runs up from zero (a drop's price as it lands, CSGOGem) */
+const props = withDefaults(defineProps<{ amount: number; size?: Size; tone?: Tone; compact?: boolean; countUp?: boolean }>(), {
   size: 'm',
   tone: 'default',
 })
+
+const shown = ref(props.amount)
+let raf = 0
+onMounted(() => {
+  if (!props.countUp || props.amount <= 0 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  const from = performance.now()
+  const ms = 900
+  const step = (now: number) => {
+    const p = Math.min(1, (now - from) / ms)
+    // ease-out cubic: fast at first, settles on the real amount
+    shown.value = Math.round(props.amount * (1 - (1 - p) ** 3))
+    if (p < 1) raf = requestAnimationFrame(step)
+  }
+  shown.value = 0
+  raf = requestAnimationFrame(step)
+})
+watch(
+  () => props.amount,
+  (v) => {
+    cancelAnimationFrame(raf)
+    shown.value = v
+  },
+)
+onBeforeUnmount(() => cancelAnimationFrame(raf))
 
 const spec = computed(
   () =>
@@ -43,6 +68,6 @@ const toneClass = computed(
 <template>
   <span class="inline-flex items-center whitespace-nowrap tabular-nums" :class="[spec.gap, spec.text, toneClass]">
     <UiCoin :size="spec.coin" :inverse="tone === 'inverse'" />
-    {{ compact ? shortCoins(amount) : formatCoins(amount) }}
+    {{ compact ? shortCoins(shown) : formatCoins(shown) }}
   </span>
 </template>

@@ -285,8 +285,10 @@ async function runUpgrade() {
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
+    <!-- Desktop: the dial overlaps upwards (-mt-6), so the bar lifts a little to keep the logo off its "100" -->
     <UiPageBar
       logo
+      class="lg:-translate-y-3"
       :left="barLeft"
       :right="[
         { label: $t('upgrade.howItWorks'), icon: 'info', to: '/fairness' },

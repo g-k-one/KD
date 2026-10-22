@@ -21,6 +21,7 @@ import type {
   PaymentMethod,
   PfRoll,
   Rarity,
+  StatsResponse,
   User,
 } from '#shared/types/api'
 import { PF_TICKETS, pickByTicket, pfRoll, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
@@ -216,6 +217,8 @@ function finishCase(def: CaseDef, withTickets: Array<Item & { tickets: number }>
     oddsVersion: 1,
     kurwadrop,
     topDrops,
+    // all-time opens: about half a year of the daily rate, stable per case
+    opens: opens24h * (150 + (hashStr(`${def.slug}:opens`) % 250)),
   }
 }
 
@@ -602,6 +605,22 @@ export async function rotateSeeds(clientSeed?: string) {
 
 const publicSeed = () => ({ serverSeedHash: state.seed.serverSeedHash, clientSeed: state.seed.clientSeed, nonce: state.seed.nonce })
 
+// --- Site counters (trust band) ------------------------------------------------
+
+const STATS_EPOCH = Date.parse('2026-01-01T00:00:00Z')
+let ownOpens = 0
+/** Counters that grow with time at a believable rate (plus the player's own opens); online drifts slowly */
+export function getStats(): StatsResponse {
+  const now = Date.now()
+  const hours = (now - STATS_EPOCH) / 3600_000
+  return {
+    casesOpened: 1_240_000 + Math.floor(hours * 410) + ownOpens,
+    upgrades: 310_000 + Math.floor(hours * 96),
+    battles: 82_000 + Math.floor(hours * 21),
+    online: 1_400 + Math.round(320 * Math.sin(now / 900_000)) + Math.floor(Math.random() * 24),
+  }
+}
+
 // --- Cases: open / sell -----------------------------------------------------
 
 export async function openCase(slug: string, count: number, demo: boolean, kurwadrop = false) {
@@ -612,6 +631,10 @@ export async function openCase(slug: string, count: number, demo: boolean, kurwa
   const price = kurwadrop ? cs.kurwadrop.price : cs.price
   if (!demo) spend(price * n)
   if (!demo) trackMission('open_cases', n)
+  if (!demo) {
+    cs.opens += n
+    ownOpens += n
+  }
   return roll(cs, n, demo, kurwadrop, price)
 }
 

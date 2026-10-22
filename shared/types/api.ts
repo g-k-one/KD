@@ -133,6 +133,8 @@ export interface CaseDetails extends CaseSummary {
   kurwadrop: KurwadropInfo
   /** Best drops from this case over the last 7 days by multiplier (drop price / case price), best first, ≤ 8 */
   topDrops: CaseTopDrop[]
+  /** How many times this case has been opened, all time (social proof on the case page) */
+  opens: number
 }
 
 export interface CaseTopDrop {
@@ -159,6 +161,15 @@ export interface KurwadropInfo {
 
 export interface CaseResponse {
   case: CaseDetails
+}
+
+/** Site-wide counters for the trust band on home. Counts, not coins. */
+export interface StatsResponse {
+  casesOpened: number
+  upgrades: number
+  battles: number
+  /** Players on the site right now */
+  online: number
 }
 
 export interface OpenCaseRequest {

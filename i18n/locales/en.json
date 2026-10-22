@@ -115,7 +115,13 @@
       "new": "Brand new",
       "hot": "Hot"
     },
-    "today": "x{x} today"
+    "today": "x{x} today",
+    "stats": {
+      "casesOpened": "Cases",
+      "upgrades": "Upgrades",
+      "battles": "Battles",
+      "online": "Online now"
+    }
   },
   "footer": {
     "play": "Play",
@@ -181,7 +187,15 @@
     "drops24h": "{n}× today",
     "topDrops": "Top drops",
     "topDropsWindow": "Last 7 days",
-    "dropsShort": "1 drop | {n} drops"
+    "dropsShort": "1 drop | {n} drops",
+    "signInToOpen": "Sign in to open",
+    "topUp": "Top up",
+    "tryFree": "Try free",
+    "tryFreeHint": "Demo spin of {name}: nothing is charged",
+    "prevCase": "Previous case: {name}",
+    "nextCase": "Next case: {name}",
+    "opens": "{n} opens",
+    "skins": "1 skin | {n} skins"
   },
   "upgrade": {
     "history": "History",

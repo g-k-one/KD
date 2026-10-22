@@ -6,6 +6,7 @@ import type { CaseSummary } from '#shared/types/api'
 const props = defineProps<{ item: CaseSummary }>()
 const { onPointerMove } = useSpotlight()
 const { t } = useI18n()
+const session = useSessionStore()
 
 // One badge per card, hottest first: HOT → a big multiplier today → brand new. Fiery ones burn (Forge).
 const badge = computed(() => {
@@ -19,9 +20,11 @@ const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-
 </script>
 
 <template>
+  <!-- A wrapper, so "Try free" can sit on the card without nesting one link in another -->
+  <div class="relative">
   <NuxtLink
     :to="`/case/${item.slug}`"
-    class="kd-case-card kd-spotlight group relative flex flex-col items-center gap-2 rounded-5xl border"
+    class="kd-case-card kd-spotlight group relative flex h-full flex-col items-center gap-2 rounded-5xl border"
     @pointermove="onPointerMove"
   >
     <div class="kd-case-art-box relative aspect-square w-full lg:aspect-auto lg:h-55">
@@ -64,9 +67,34 @@ const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-
       </FxFire>
     </span>
   </NuxtLink>
+  <!-- Guests: open any case as a free demo spin (the first win before signing in) -->
+  <NuxtLink
+    v-if="!session.user"
+    :to="`/case/${item.slug}?demo=1`"
+    :aria-label="$t('case.tryFreeHint', { name: item.name })"
+    class="kd-try kd-press type-10-caps absolute top-3 right-3 inline-flex h-6 items-center gap-1 rounded-sm px-1.5 lg:top-4 lg:right-4"
+  >
+    <UiIcon name="demo" :size="12" />
+    {{ $t('case.tryFree') }}
+  </NuxtLink>
+  </div>
 </template>
 
 <style scoped>
+/* Quiet next to the badges: a glass chip that lights up on hover */
+.kd-try {
+  color: var(--color-neutral-14);
+  background: rgb(12 13 16 / 0.64);
+  box-shadow: inset 0 0 0 1px var(--color-neutral-6);
+  backdrop-filter: blur(6px);
+  transition:
+    color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
+}
+.kd-try:hover {
+  color: var(--color-neutral-15);
+  box-shadow: inset 0 0 0 1px var(--color-brand-base);
+}
 /* Badges, three different voices: HOT is fire (orange → red, burning on Forge), a big win today is
    gold like the coin, new is a cool white sheen */
 .kd-badge {
