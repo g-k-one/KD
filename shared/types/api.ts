@@ -16,9 +16,13 @@ export interface CaseSummary {
   slug: string
   name: string
   image: string
+  /** Looping animated art (AVIF, transparent). Cards play it only while on screen, a few at a time. */
+  animation?: string
   price: number
   risk: RiskLevel
   tag?: CaseTag
+  /** Event cases: the step on the event's price ladder (1 = cheapest, `of` = the final boss) */
+  event?: { level: number; of: number }
   /** Return to player, basis points (9240 = 92.40%). Configured in the admin panel. */
   rtp: number
   /** Chance that one drop is worth at least the case price, basis points. Home sorts by it. */
@@ -32,6 +36,10 @@ export interface CaseSection {
   id: string
   title: string
   cases: CaseSummary[]
+  /** A section with a clock: the event's end, or when the weekly picks rotate */
+  endsAt?: string
+  /** Where the section's header leads (the event page) */
+  to?: string
 }
 
 export interface CasesResponse {

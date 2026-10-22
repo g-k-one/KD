@@ -19,6 +19,13 @@ const badge = computed(() => {
 })
 
 const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-light', extreme: 'text-danger' } as const
+
+// Animated art plays only while the card is on screen and holds a playback slot; until the
+// AVIF has loaded (and after it stops) the static WebP stays in place.
+const artBox = useTemplateRef<HTMLElement>('artBox')
+const playing = useArtPlayback(artBox, () => !!props.item.animation)
+const animReady = ref(false)
+watch(playing, (v) => !v && (animReady.value = false))
 </script>
 
 <template>
@@ -29,13 +36,24 @@ const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-
     class="kd-case-card kd-spotlight group relative flex h-full flex-col items-center gap-2 rounded-5xl border"
     @pointermove="onPointerMove"
   >
-    <div class="kd-case-art-box relative aspect-square w-full lg:aspect-auto lg:h-55">
+    <div ref="artBox" class="kd-case-art-box relative aspect-square w-full lg:aspect-auto lg:h-55">
       <img
         :src="item.image"
         :alt="item.name"
         loading="lazy"
         draggable="false"
         class="kd-case-art size-full object-contain"
+        :class="{ invisible: animReady }"
+      />
+      <img
+        v-if="playing && item.animation"
+        :src="item.animation"
+        alt=""
+        aria-hidden="true"
+        draggable="false"
+        class="kd-case-art absolute inset-0 size-full object-contain"
+        :class="{ invisible: !animReady }"
+        @load="animReady = true"
       />
     </div>
 

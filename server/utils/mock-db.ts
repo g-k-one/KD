@@ -121,7 +121,7 @@ function contentsFor(def: CaseDef): string[] {
 const CASE_DEFS: CaseDef[] = [
   { id: 'c1', slug: 'pierogi-pack', name: 'Pierogi Pack', image: '/img/cases/pierogi-pack.webp', price: 99, risk: 'low', tag: 'new', targetRtp: 9350, createdAt: '2026-10-10' },
   { id: 'c2', slug: 'kurwa-classic', name: 'Kurwa Classic', image: '/img/cases/kurwa-classic.webp', price: 1250, risk: 'medium', targetRtp: 9240, createdAt: '2026-08-01' },
-  { id: 'c3', slug: 'zloty-rush', name: 'Zloty Rush', image: '/img/cases/zloty-rush.webp', price: 490, risk: 'high', tag: 'new', targetRtp: 9100, createdAt: '2026-10-12' },
+  { id: 'c3', slug: 'zloty-rush', name: 'Zloty Rush', image: '/img/cases/zloty-rush.webp', animation: '/img/cases/zloty-rush.avif', price: 490, risk: 'high', tag: 'new', targetRtp: 9100, createdAt: '2026-10-12' },
   { id: 'c4', slug: 'babcias-box', name: 'Babcia’s Box', image: '/img/cases/babcias-box.webp', price: 750, risk: 'medium', targetRtp: 9300, createdAt: '2026-07-15' },
   { id: 'c5', slug: 'warsaw-nights', name: 'Warsaw Nights', image: '/img/cases/warsaw-nights.webp', price: 1250, risk: 'extreme', tag: 'new', targetRtp: 9240, createdAt: '2026-10-14' },
   { id: 'c6', slug: 'vodka-drop', name: 'Vodka Drop', image: '/img/cases/vodka-drop.webp', price: 2900, risk: 'medium', targetRtp: 9200, createdAt: '2026-06-02' },
@@ -307,11 +307,23 @@ export function getCaseSections(): CaseSection[] {
   const pick = (slugs: string[]) => slugs.map((s) => all.find((c) => c.slug === s)!)
   return [
     // the event's ladder leads while it runs, in ladder order
-    { id: 'event', title: EVENT.name, cases: all.filter((c) => c.event) },
+    { id: 'event', title: EVENT.name, cases: all.filter((c) => c.event), endsAt: EVENT.endsAt, to: '/event' },
     { id: 'hot', title: 'Hot right now', cases: pick(['pieklo', 'mafia', 'wiosna']) },
+    weeklyPicks(all),
     { id: 'featured', title: 'Featured cases', cases: all.filter((c) => !c.event && !['pieklo', 'mafia', 'wiosna'].includes(c.slug)) },
     { id: 'polish-classics', title: 'Polish classics', cases: pick(['babcias-box', 'vodka-drop', 'golden-kielbasa', 'kurwa-classic', 'pierogi-pack']) },
   ]
+}
+
+// Weekly picks (#36, Casehug's "new bestsellers in 6d"): five cases that change every Monday 00:00 UTC,
+// with the clock to the next set on the header
+function weeklyPicks(all: CaseSummary[]): CaseSection {
+  const WEEK_MS = 7 * 86_400_000
+  const ORIGIN = Date.UTC(1970, 0, 5)
+  const week = Math.floor((Date.now() - ORIGIN) / WEEK_MS)
+  const pool = all.filter((c) => !c.event)
+  const cases = [...pool].sort((a, b) => hashStr(`${a.slug}:${week}`) - hashStr(`${b.slug}:${week}`)).slice(0, 5)
+  return { id: 'weekly', title: 'Weekly picks', cases, endsAt: new Date(ORIGIN + (week + 1) * WEEK_MS).toISOString() }
 }
 
 export function getCase(slug: string): CaseDetails {
