@@ -91,7 +91,7 @@
 
 **Кит контролов** — всегда переиспользуем: `UiInput` (все поля), `UiSelect`, `UiSegmented` (×1…×5, плитка/линии), `UiChip` (пресеты и переключатели; `variant="field"` в ряду полей, тона coin/gold для ⚡ и KURWADROP), `UiButton`. Выставленный фильтр = `kd-field-set`.
 
-Компоненты: `FxBurst` (CSS, на месте дропа), `useForge` / `FxFire` (WebGL-частицы), `useExtrude` (Объём — псевдо-3D текст, `public/vendor/extrude`, исходник в pawn `src/app/16l-extrude.js`; рисует только в движении, буквы готовит в фоновом потоке; пока нигде не показан — ждёт пресетов), `useSfx`, `useHaptics`.
+Компоненты: `FxBurst` (CSS, на месте дропа), `useForge` / `FxFire` (WebGL-частицы), `useSfx`, `useHaptics`.
 
 ## Рулетка кейса (case/Reel.vue)
 
