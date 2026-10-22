@@ -7,7 +7,7 @@ import type { ForgeHandle } from '~/composables/useForge'
  * Figma "CaseReel". x1 = one horizontal reel under the top/bottom markers,
  * x2–x5 = vertical reels side by side with markers on the left and right (desktop).
  * On phones x2–x5 become a grid of mini reels (2 or 3 per row, 2 rows max for x4/x5).
- * The reel keeps one height for x1–x5 (278 desktop, 320 phone); rows split that height.
+ * The reel keeps one height for x1–x5 (278 desktop, 256 phone); rows split that height.
  * so every result keeps room for its name and Sell button.
  *
  * Motion (docs/motion.md → Reel):
@@ -71,8 +71,8 @@ const START = 3
 const horizontal = computed(() => props.count === 1)
 const isMobile = useMediaQuery('(max-width: 639.98px)')
 const cardW = computed(() => (isMobile.value ? 184 : 222))
-// Phone grid for x2–x5, inside the same 320px as x1
-const MOBILE_H = 320
+// Phone grid for x2–x5, inside the same 256px as x1 (h-64), so switching the amount never moves the page
+const MOBILE_H = 256
 const GRID_GAP = 8
 const grid = computed(() => !horizontal.value && isMobile.value)
 const cols = computed(() => (props.count === 2 || props.count === 4 ? 2 : 3))

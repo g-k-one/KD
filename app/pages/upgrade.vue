@@ -285,10 +285,8 @@ async function runUpgrade() {
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
-    <!-- Desktop: the dial overlaps upwards (-mt-6), so the bar lifts a little to keep the logo off its "100" -->
     <UiPageBar
       logo
-      class="lg:-translate-y-3"
       :left="barLeft"
       :right="[
         { label: $t('upgrade.howItWorks'), icon: 'info', to: '/fairness' },
@@ -357,8 +355,9 @@ async function runUpgrade() {
       <div class="relative z-[26] flex flex-col items-center max-lg:order-3 max-lg:col-span-2 lg:col-start-2 lg:row-span-2 lg:row-start-1">
         <!-- Forge layer behind the dial, wider than it so rings and sparks have room -->
         <div ref="fxHost" class="pointer-events-none absolute -inset-x-10 -inset-y-10 lg:-inset-20" />
-        <div ref="fxDial" class="pointer-events-none absolute top-0 left-1/2 aspect-square w-full max-w-[216px] -translate-x-1/2 lg:-top-6 lg:max-w-88" />
-        <UpgradeGauge ref="gauge" :chance="shownChance" :state="state" :nonce="lastNonce" class="relative z-[2] max-lg:max-w-[216px] lg:-mt-6" />
+        <div ref="fxDial" class="pointer-events-none absolute top-0 left-1/2 aspect-square w-full max-w-[216px] -translate-x-1/2 lg:-top-3 lg:max-w-84" />
+        <!-- -mt-3 (was -6) and 336px (was 352): the logo above gets air from the "100", the button below keeps its gap -->
+        <UpgradeGauge ref="gauge" :chance="shownChance" :state="state" :nonce="lastNonce" class="relative z-[2] max-lg:max-w-[216px] lg:-mt-3" />
         <UpgradeControls
           class="relative z-[3] mt-5 w-full max-w-80 max-lg:hidden lg:mt-auto"
           part="cta"

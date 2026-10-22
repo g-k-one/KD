@@ -65,8 +65,9 @@ const isLg = useMediaQuery('(min-width: 1024px)')
 
     <!-- Risk. Desktop: one more odds column — the label on top, the peppers and the level on one line under it.
          Phones: the same pieces in one line on the RTP row, right-aligned. -->
-    <div class="order-2 flex min-w-0 items-center justify-end gap-2 lg:order-3 lg:w-44 lg:flex-col lg:items-start lg:justify-center lg:gap-1.5 lg:border-l lg:border-neutral-4 lg:pl-6" :style="{ '--oc': RISK_COLOR[data.risk] }">
-      <span class="type-12-caps text-neutral-12 max-sm:hidden">{{ $t('case.risk') }}</span>
+    <div class="order-2 flex min-w-0 items-center justify-end gap-2 lg:order-3 lg:w-44 lg:flex-col lg:items-start lg:justify-center lg:gap-1 lg:border-l lg:border-neutral-4 lg:pl-6" :style="{ '--oc': RISK_COLOR[data.risk] }">
+      <!-- nudged down to sit on the odds labels' line (x2+, x3+…) -->
+      <span class="type-12-caps text-neutral-12 max-sm:hidden lg:translate-y-1.5">{{ $t('case.risk') }}</span>
       <span class="flex items-center gap-2">
         <UiRiskPeppers :level="data.risk" :size="isLg ? 18 : 16" />
         <span class="type-14 lg:type-16-medium kd-odds-value leading-none">{{ $t(`risk.${data.risk}`) }}</span>

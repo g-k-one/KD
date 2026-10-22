@@ -6,7 +6,8 @@
 // "Sell all" gets a slot of its own (desktop: the middle card of the row under the dock, right below the main
 // button; phones: a row that unfolds under the button), so its arrival never pushes the main button.
 // The page decides what the main button says (open · sign in · top up the shortfall); for guests and short
-// balances "Try free" (a demo spin) unfolds under it on every width — the first win before the first deposit.
+// balances "Try free" (a demo spin) is offered too — the first win before the first deposit. Phones: it unfolds
+// under the main button; desktop: a chip next to the switches, so the dock keeps its one-row height.
 const count = defineModel<1 | 2 | 3 | 4 | 5>('count', { required: true })
 const fast = defineModel<boolean>('fast', { required: true })
 const kurwadrop = defineModel<boolean>('kurwadrop', { required: true })
@@ -74,8 +75,8 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
           </UiButton>
         </div>
       </div>
-      <!-- Guests and short balances: a free demo spin right under the main button -->
-      <div class="kd-unfold is-demo lg:w-72" :class="showDemo && 'is-open'">
+      <!-- Phones: guests and short balances get a free demo spin right under the main button -->
+      <div class="kd-unfold" :class="showDemo && 'is-open'">
         <div class="min-h-0">
           <UiButton variant="secondary" size="l" icon="demo" class="mt-2 w-full" :tabindex="showDemo ? 0 : -1" @click="emit('demo')">
             {{ $t('case.tryFree') }}
@@ -86,6 +87,7 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
 
     <!-- Switches: the kit's chips (pressed = tinted fill), the hint lives in the tooltip -->
     <div class="grid grid-cols-2 gap-2 lg:flex lg:justify-end">
+      <UiChip v-if="showDemo" size="m" icon="demo" class="!h-12 px-4 max-lg:hidden" @click="emit('demo')">{{ $t('case.tryFree') }}</UiChip>
       <UiChip size="m" tone="coin" icon="fast" class="!h-12 px-4" :active="fast" @click="fast = !fast">{{ $t('case.fastOpen') }}</UiChip>
       <UiTooltip :text="$t('case.kurwaHint')" class="min-w-0">
         <UiChip size="m" tone="gold" icon="chicken" class="!h-12 w-full px-4" :active="kurwadrop" @click="kurwadrop = !kurwadrop">
@@ -133,7 +135,7 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
 }
 /* Phones only (a scoped display rule beats Tailwind's lg:hidden) */
 @media (min-width: 64rem) {
-  .kd-unfold:not(.is-demo) {
+  .kd-unfold {
     display: none;
   }
 }
