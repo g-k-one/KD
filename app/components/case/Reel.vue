@@ -892,8 +892,22 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     transform: scale(1.5);
   }
 }
+/* KURWADROP: the whole frame goes gold — a thicker rim, the edge gradient and the markers */
 .kd-reel.is-kurwa {
-  box-shadow: 0 0 0 2px var(--color-item-gold), 0 0 48px -8px var(--color-item-gold);
+  box-shadow: 0 0 0 3px var(--color-item-gold), 0 0 56px -6px var(--color-item-gold);
+  background:
+    linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
+    linear-gradient(90deg, var(--color-neutral-4) 10%, var(--color-item-gold) 50%, var(--color-neutral-4) 90%) border-box;
+}
+.kd-reel.is-kurwa.is-v {
+  background:
+    linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
+    linear-gradient(180deg, var(--color-neutral-4) 10%, var(--color-item-gold) 50%, var(--color-neutral-4) 90%) border-box;
+}
+/* the marker art is an orange gradient: shift it to gold and give it a gold glow */
+.kd-reel.is-kurwa .kd-marker-a,
+.kd-reel.is-kurwa .kd-marker-b {
+  filter: hue-rotate(26deg) saturate(1.15) brightness(1.2) drop-shadow(0 0 6px rgb(228 174 57 / 0.85));
 }
 .kd-kurwa-banner {
   background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light), var(--color-item-gold));
