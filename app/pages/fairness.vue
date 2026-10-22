@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { SeedsResponse } from '#shared/types/api'
 
-// Figma "Fairness": how it works, the formula, per-mode table, active seed pair, FAQ.
+// Figma "Fairness", reordered around the player's own results: hero, "Your rolls" (check any roll in one tap),
+// how it works, the formula, per-mode table, the seed log, FAQ.
 useHead({ title: 'Provably Fair · KurwaDROP' })
 
 const { data: seedsData } = await useFetch<SeedsResponse>('/api/seeds', { key: 'seeds' })
@@ -10,7 +11,7 @@ watch(seedsData, (v) => (seeds.value = v ?? null))
 
 const seedsOpen = ref(false)
 const verifierOpen = ref(false)
-const verifierInit = ref<{ serverSeed?: string; clientSeed?: string; nonce?: number }>({})
+const verifierInit = ref<{ serverSeed?: string; clientSeed?: string; nonce?: number; expect?: { ticket?: number; roll?: number } }>({})
 
 function openVerifier(init?: typeof verifierInit.value) {
   verifierInit.value = init ?? { clientSeed: seeds.value?.active.clientSeed, nonce: Math.max(1, seeds.value?.active.nonce ?? 1) }
@@ -18,15 +19,26 @@ function openVerifier(init?: typeof verifierInit.value) {
   verifierOpen.value = true
 }
 
-// "Check this roll" on a case result lands here with ?verify=<nonce>: open the verifier pre-filled
+// "Check this roll" on a case or upgrade lands here with ?verify=<nonce>: a roll of the active pair, so
+// "Your rolls" highlights it next to the rotation that reveals its seed
 const route = useRoute()
-onMounted(() => {
-  const nonce = Number(route.query.verify)
-  if (nonce > 0) openVerifier({ clientSeed: seeds.value?.active.clientSeed, nonce, serverSeed: seeds.value?.previous?.serverSeed })
-})
+const focusNonce = computed(() => Number(route.query.verify) || undefined)
 
 const toast = useToast()
 const { t, locale } = useI18n()
+
+const rotating = ref(false)
+async function rotate() {
+  rotating.value = true
+  try {
+    seeds.value = await $fetch<SeedsResponse>('/api/seeds/rotate', { method: 'POST', body: {} })
+    toast.show(t('fair.revealed'), 'success')
+  } catch (e) {
+    toast.error(e, t('common.error'))
+  } finally {
+    rotating.value = false
+  }
+}
 const when = (iso: string) => new Date(iso).toLocaleString(locale.value, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 async function copy(v: string) {
   try {
@@ -36,8 +48,6 @@ async function copy(v: string) {
     toast.show(v)
   }
 }
-
-const short = (s?: string) => (s ? `${s.slice(0, 4)}…${s.slice(-4)}` : '—')
 
 const STEPS = [
   { key: 'step1', img: 'pf-commit' },
@@ -82,6 +92,8 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
         class="kd-fair-hero pointer-events-none absolute -right-3 -bottom-3 w-[105%] max-w-none sm:top-1/2 sm:right-0 sm:bottom-auto sm:w-[52%] sm:-translate-y-1/2 lg:top-[-60px] lg:-right-[39px] lg:w-[676px] lg:translate-y-0 lg:rotate-[1.85deg]"
       />
     </section>
+
+    <FairMyRolls :seeds="seeds" :focus="focusNonce" :rotating="rotating" @verify="openVerifier" @rotate="rotate" />
 
     <!-- Steps -->
     <section class="grid gap-3 md:grid-cols-3 lg:gap-4">
@@ -129,31 +141,16 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
       </div>
     </section>
 
-    <!-- Active pair -->
-    <section class="flex flex-col gap-4 rounded-5xl bg-success-24 p-5 lg:flex-row lg:items-center lg:gap-6 lg:p-6">
-      <div class="flex min-w-0 flex-1 flex-col gap-1">
-        <span class="type-16-caps font-bold">{{ $t('fair.activePair') }}</span>
-        <span class="type-12-regular lg:type-14-regular flex flex-wrap gap-x-2 text-success lg:gap-x-3">
-          <span>{{ $t('fair.serverSeedHash') }} {{ short(seeds?.active.serverSeedHash) }}</span>
-          <span aria-hidden="true">•</span>
-          <span>{{ $t('fair.clientSeed') }} {{ seeds?.active.clientSeed }}</span>
-          <span aria-hidden="true">•</span>
-          <span>{{ $t('fair.nonce') }} {{ seeds?.active.nonce }}</span>
-        </span>
-      </div>
-      <div class="flex gap-2">
-        <UiButton variant="success" size="l" class="flex-1 lg:flex-none" @click="seedsOpen = true">{{ $t('fair.manageSeeds') }}</UiButton>
-        <UiButton variant="fair" size="l" class="flex-1 lg:flex-none" @click="openVerifier()">{{ $t('fair.verify') }}</UiButton>
-      </div>
-    </section>
-
     <!-- Seed log: every change of the pair, newest first. The active pair heads it (hash only, rolls so far);
          each past pair shows its period, the nonces it covered (1…N), whether the player changed the client
          seed with that rotation, and the revealed server seed — one tap into the verifier. -->
     <section class="flex flex-col gap-3">
-      <div class="flex flex-col gap-1">
-        <h2 class="type-20-caps">{{ $t('fair.history') }}</h2>
-        <p class="type-14-regular text-neutral-12">{{ $t('fair.historyHint') }}</p>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div class="flex flex-1 flex-col gap-1">
+          <h2 class="type-20-caps">{{ $t('fair.history') }}</h2>
+          <p class="type-14-regular text-neutral-12">{{ $t('fair.historyHint') }}</p>
+        </div>
+        <UiButton variant="secondary" size="l" icon="seeds" class="shrink-0" @click="seedsOpen = true">{{ $t('fair.manageSeeds') }}</UiButton>
       </div>
       <div class="type-10-caps hidden grid-cols-[150px_110px_1fr_1.3fr_auto] gap-4 px-4 text-neutral-10 lg:grid">
         <span>{{ $t('fair.period') }}</span>

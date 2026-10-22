@@ -426,7 +426,20 @@
     "noRolls": "no rolls",
     "hiddenTill": "Revealed after rotation",
     "pairN": "Pair #{n}",
-    "changed": "changed"
+    "changed": "changed",
+    "myRolls": "Your rolls",
+    "myRollsHint": "Your latest case and upgrade rolls. Check any of them against the revealed seed in one tap.",
+    "allHistory": "All history",
+    "sealedHint": "{n} roll uses your current seed pair. Its server seed stays hidden until you rotate the pair — then you can check it. | {n} rolls use your current seed pair. Its server seed stays hidden until you rotate the pair — then you can check them.",
+    "rotateReveal": "Rotate and reveal",
+    "revealed": "Server seed revealed. Every roll of that pair can be checked now.",
+    "sealed": "Sealed",
+    "check": "Check",
+    "signInRolls": "Sign in to see your rolls and check each one.",
+    "noRollsYet": "No rolls yet. Open a case or try an upgrade, then check it here.",
+    "match": "Matches your result",
+    "mismatch": "Does not match your result",
+    "yourResult": "You got: {v}"
   },
   "account": {
     "title": "Profile",

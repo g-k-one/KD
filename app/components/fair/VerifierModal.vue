@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Runs the exact PF maths from shared/utils/pf.ts in the browser — the same code the mock backend uses.
+// Opened from "Your rolls" it gets the result to expect and calculates at once: one tap to "matches".
 const open = defineModel<boolean>({ required: true })
-const props = defineProps<{ initial?: { serverSeed?: string; clientSeed?: string; nonce?: number } }>()
+const props = defineProps<{ initial?: { serverSeed?: string; clientSeed?: string; nonce?: number; expect?: { ticket?: number; roll?: number } } }>()
 const { t } = useI18n()
 
 const serverSeed = ref('')
@@ -15,6 +16,20 @@ watch(open, (v) => {
   clientSeed.value = props.initial?.clientSeed ?? clientSeed.value
   nonce.value = props.initial?.nonce ?? nonce.value
   result.value = null
+  if (props.initial?.expect && serverSeed.value) calculate()
+})
+
+// Compared against the inputs it was opened with; editing a field drops the check
+const expect = computed(() => {
+  const i = props.initial
+  return i?.expect && serverSeed.value === i.serverSeed && clientSeed.value === i.clientSeed && nonce.value === i.nonce ? i.expect : null
+})
+const verdict = computed(() => {
+  if (!result.value || !expect.value) return null
+  const { ticket, roll } = expect.value
+  if (ticket != null) return { ok: result.value.ticket === ticket, v: `${t('fair.ticket')} ${spaced(ticket)}` }
+  if (roll != null) return { ok: result.value.roll === roll, v: `${t('fair.roll')} ${roll.toFixed(2)}` }
+  return null
 })
 
 async function calculate() {
@@ -72,6 +87,15 @@ async function copy(v: string) {
       <UiButton type="submit" variant="fair" size="l" block>{{ $t('fair.calculate') }}</UiButton>
     </form>
 
+    <Transition name="kd-result">
+      <div v-if="verdict" class="flex items-center gap-3 rounded-2xl p-4" :class="verdict.ok ? 'bg-success-24 text-success' : 'bg-danger-24 text-danger'">
+        <UiIcon :name="verdict.ok ? 'shield-check' : 'x-circle'" :size="24" class="shrink-0" />
+        <span class="flex min-w-0 flex-col">
+          <span class="type-14-caps">{{ verdict.ok ? $t('fair.match') : $t('fair.mismatch') }}</span>
+          <span class="type-12-regular text-neutral-12">{{ $t('fair.yourResult', { v: verdict.v }) }}</span>
+        </span>
+      </div>
+    </Transition>
     <Transition name="kd-result">
       <dl v-if="result" class="grid gap-2 rounded-2xl bg-neutral-3 p-4 text-sm">
         <div v-for="row in rows" :key="row.k" class="grid grid-cols-[140px_1fr_auto] items-center gap-3">

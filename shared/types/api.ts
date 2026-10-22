@@ -330,6 +330,11 @@ export interface HistoryEntry {
   payout: number
   status: 'won' | 'lost' | 'done'
   nonce?: number
+  /** Rolls: the hash of the seed pair the nonce belongs to — the PF page finds the revealed seed by it */
+  seedHash?: string
+  /** Cases: the ticket and the skin it gave */
+  ticket?: number
+  drop?: string
   /** Upgrades: the chance played (basis points), the roll (0.00–99.99) and what the target was worth */
   chance?: number
   roll?: number
