@@ -170,7 +170,6 @@ if (import.meta.client) {
           { label: $t('case.share'), icon: 'share', onClick: share },
         ]"
         :right="[
-          { label: $t('case.demoSpin'), icon: 'demo', onClick: () => open(true) },
           // after a drop the same spot checks this roll; before, it explains fairness
           phase === 'result' && !demo
             ? { label: $t('case.checkRoll'), icon: 'shield', onClick: () => (rollsOpen = true) }

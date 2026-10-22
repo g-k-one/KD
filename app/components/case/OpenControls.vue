@@ -6,8 +6,9 @@
 // "Sell all" gets a slot of its own (desktop: the middle card of the row under the dock, right below the main
 // button; phones: a row that unfolds under the button), so its arrival never pushes the main button.
 // The page decides what the main button says (open · sign in · top up the shortfall); for guests and short
-// balances "Try free" (a demo spin) is offered too — the first win before the first deposit. Phones: it unfolds
-// under the main button; desktop: a chip next to the switches, so the dock keeps its one-row height.
+// balances "Try free" (a demo spin) is offered too — the first win before the first deposit. It is the page's only
+// demo control: desktop, a chip at the end of the amount row (balancing the two switches on the right); phones,
+// a full button unfolding under the main one for guests and short balances, an icon next to the amount otherwise.
 const count = defineModel<1 | 2 | 3 | 4 | 5>('count', { required: true })
 const fast = defineModel<boolean>('fast', { required: true })
 const kurwadrop = defineModel<boolean>('kurwadrop', { required: true })
@@ -53,6 +54,16 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
     <div class="flex items-center gap-2 lg:justify-between">
       <!-- Amount: the kit's segmented control -->
       <UiSegmented v-model="count" :options="COUNT_OPTIONS" :disabled="phase === 'spinning'" block class="flex-1 lg:w-60 lg:flex-none" />
+      <UiChip size="m" icon="demo" class="!h-12 px-4 max-lg:hidden" :disabled="phase === 'spinning'" @click="emit('demo')">{{ $t('case.tryFree') }}</UiChip>
+      <UiChip
+        v-if="!offerDemo"
+        size="m"
+        icon="demo"
+        class="!h-12 !w-12 !px-0 lg:hidden"
+        :aria-label="$t('case.tryFree')"
+        :disabled="phase === 'spinning'"
+        @click="emit('demo')"
+      />
       <!-- Desktop: Sell all lives in the row under the main button (CaseNextHook), centred like it -->
     </div>
 
@@ -87,7 +98,6 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
 
     <!-- Switches: the kit's chips (pressed = tinted fill), the hint lives in the tooltip -->
     <div class="grid grid-cols-2 gap-2 lg:flex lg:justify-end">
-      <UiChip v-if="showDemo" size="m" icon="demo" class="!h-12 px-4 max-lg:hidden" @click="emit('demo')">{{ $t('case.tryFree') }}</UiChip>
       <UiChip size="m" tone="coin" icon="fast" class="!h-12 px-4" :active="fast" @click="fast = !fast">{{ $t('case.fastOpen') }}</UiChip>
       <UiTooltip :text="$t('case.kurwaHint')" class="min-w-0">
         <UiChip size="m" tone="gold" icon="chicken" class="!h-12 w-full px-4" :active="kurwadrop" @click="kurwadrop = !kurwadrop">
