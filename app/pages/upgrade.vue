@@ -218,6 +218,10 @@ const fx = useForge(fxHost)
 // The target card gets its own light on the shared top layer: an aura in its rarity while the dial turns,
 // the jackpot burst when it is won, a collapse when it is lost
 const fxTop = useForge()
+// the rank reveal goes behind the won skin: the target card's own layer (desktop), a layer in the mini card (phones)
+const targetCard = useTemplateRef<{ rank: (r: Rarity, s: number) => ReturnType<typeof rarityRank> }>('targetCard')
+const miniFx = useTemplateRef<HTMLElement>('miniFx')
+const fxMini = useForge(miniFx)
 let aura: ForgeHandle | null = null
 // the won skin gets its rank reveal (docs/motion.md → rarity steps); the handle goes with the next stake
 let beam: Awaited<ReturnType<typeof rarityRank>> = null
@@ -269,7 +273,8 @@ async function runUpgrade() {
       const el = targetEl()
       const rarity = target.value.rarity
       const scale = isLg.value ? 1.6 : 1.1
-      rarityRank(fxTop, el?.querySelector<HTMLElement>('.kd-art img') ?? el, rarity, scale).then((h) => (state.value === 'win' ? (beam = h) : h?.kill()))
+      const shot = isLg.value ? targetCard.value?.rank(rarity, scale) : rarityRank(fxMini, el?.querySelector<HTMLElement>('.kd-art img') ?? el, rarity, scale)
+      shot?.then((h) => (state.value === 'win' ? (beam = h) : h?.kill()))
       if (RARITY_TIER[rarity] >= 4) goldBurst(fxTop, el, scale, appBase)
     }
     if (res.win) {
@@ -395,6 +400,7 @@ async function runUpgrade() {
       </div>
 
       <button type="button" class="kd-mini kd-mini-target kd-press max-lg:order-2 lg:hidden" :class="[state !== 'idle' && `is-${state}`, nextStep === 'target' && 'is-next']" :disabled="state === 'spinning'" @click="openSheet('desired')">
+        <span ref="miniFx" class="pointer-events-none absolute inset-0" />
         <template v-if="target">
           <ItemArt morph float :image="target.image" :rarity="target.rarity" :size="60" class="kd-mini-art h-16 w-full" />
           <UiPrice :amount="target.price" size="m" />
@@ -407,7 +413,7 @@ async function runUpgrade() {
         </template>
       </button>
       <div class="max-lg:hidden lg:contents">
-        <UpgradeTarget class="lg:col-start-3 lg:row-start-1" :item="target" :state="state" @clear="(target = null), resetResult()" />
+        <UpgradeTarget ref="targetCard" class="lg:col-start-3 lg:row-start-1" :item="target" :state="state" @clear="(target = null), resetResult()" />
         <UpgradeControls
           class="lg:col-start-3 lg:row-start-2"
           part="chance"

@@ -39,8 +39,10 @@ const WIN = STRIP - 4
 const strip = ref<Item[]>([])
 const landed = ref(false)
 
-// The drop gets the same rarity grade as a case drop: the rank reveal on its rarity shape (more layers the rarer)
-// and the gold burst for gold. Shared top layer: one canvas for every seat
+// The drop gets the same rarity grade as a case drop: the rank reveal on its rarity shape (more layers the rarer),
+// on a layer under the strip so it bursts from behind the skin, and the gold burst for gold on the shared top layer
+const fxHost = useTemplateRef<HTMLElement>('fxHost')
+const fxBack = useForge(fxHost)
 const fx = useForge()
 const appBase = useRuntimeConfig().app.baseURL
 let beam: Awaited<ReturnType<typeof rarityRank>> = null
@@ -54,7 +56,7 @@ async function dropFx(it: Item) {
   const card = root.value?.querySelector<HTMLElement>('[data-win]')
   if (!card) return
   const scale = props.compact ? 1 : 1.5
-  rarityRank(fx, card.querySelector<HTMLElement>('.kd-art img') ?? card, it.rarity, scale).then((h) => (landed.value ? (beam = h) : h?.kill()))
+  rarityRank(fxBack, card.querySelector<HTMLElement>('.kd-art img') ?? card, it.rarity, scale).then((h) => (landed.value ? (beam = h) : h?.kill()))
   if (RARITY_TIER[it.rarity] >= 4) goldBurst(fx, card, scale, appBase)
 }
 
@@ -110,6 +112,7 @@ watch([height, cell], () => {
       <span class="type-12-regular text-neutral-11">{{ compact ? $t('pvp.waiting') : $t('pvp.waitingForPlayers') }}</span>
     </div>
     <template v-else>
+      <div ref="fxHost" class="pointer-events-none absolute inset-0" />
       <div ref="track" class="absolute inset-x-0 top-0" :class="!landed && 'will-change-transform'">
         <div
           v-for="(it, i) in strip"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Item } from '#shared/types/api'
+import type { Item, Rarity } from '#shared/types/api'
 
 /*
  * Figma "UpgradeItem" for the target side.
@@ -13,6 +13,11 @@ import type { Item } from '#shared/types/api'
 const props = defineProps<{ item: Item | null; state: 'idle' | 'spinning' | 'win' | 'lose' }>()
 defineEmits<{ clear: [] }>()
 const isLg = useMediaQuery('(min-width: 1024px)')
+// A won skin: the rank reveal bursts from behind it, on a Forge layer under the art (the page calls rank())
+const fxHost = useTemplateRef<HTMLElement>('fxHost')
+const fx = useForge(fxHost)
+const root = useTemplateRef<HTMLElement>('root')
+defineExpose({ rank: (rarity: Rarity, scale: number) => rarityRank(fx, root.value?.querySelector<HTMLElement>('.kd-art img'), rarity, scale) })
 const rc = computed(() => (props.item ? RARITY_COLOR[props.item.rarity] : undefined))
 const priceSrc = computed(() => props.item?.price ?? 0)
 const priceShown = useTransition(priceSrc, { duration: 500, transition: [0.22, 1, 0.36, 1] })
@@ -35,10 +40,12 @@ watch(
   <div class="min-w-0">
     <!-- Desktop -->
     <div
+      ref="root"
       class="kd-target relative h-72 overflow-hidden rounded-5xl bg-neutral-2 lg:h-76"
       :class="`is-${state}`"
       :style="{ '--rc': rc }"
     >
+      <div ref="fxHost" class="pointer-events-none absolute inset-0" />
       <Transition name="kd-target" mode="out-in">
         <div v-if="item" key="item" class="absolute inset-0">
           <span class="kd-target-burst pointer-events-none absolute top-1/2 left-1/2 size-[170px] rounded-full" />
