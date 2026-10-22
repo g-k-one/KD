@@ -53,7 +53,7 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
     <div class="flex flex-col">
       <UiButton size="l" class="kd-main w-full lg:h-14 lg:w-80" :variant="phase === 'spinning' ? 'secondary' : 'primary'" @click="main">
         <span>{{ label }}</span>
-        <span v-if="phase !== 'spinning'" class="flex items-center gap-0.5">
+        <span v-if="phase !== 'spinning'" class="btn-value">
           <span v-if="short" class="type-14">+</span>
           <UiPrice :amount="amount" size="m" tone="inverse" />
         </span>
@@ -65,7 +65,7 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
         <div class="min-h-0">
           <UiButton :variant="armed ? 'danger' : 'secondary'" size="l" class="mt-2 w-full" :tabindex="showSell ? 0 : -1" @click="sellAll">
             <span>{{ armed ? $t('wallet.sureSell') : $t('wallet.sellAll') }}</span>
-            <UiPrice :amount="unsoldTotal" size="m" />
+            <span class="btn-value"><UiPrice :amount="unsoldTotal" size="m" /></span>
           </UiButton>
         </div>
       </div>

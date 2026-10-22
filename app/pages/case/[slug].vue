@@ -262,9 +262,9 @@ if (import.meta.client) {
         <span class="type-12-caps min-w-0 flex-1 truncate">{{ cs.name }} · x{{ count }}</span>
         <UiButton :variant="phase === 'spinning' ? 'secondary' : 'primary'" class="min-w-36 shrink-0" @click="phase === 'spinning' ? reel?.skip() : (open(), scrollToReel())">
           <span>{{ cta.label }}</span>
-          <span v-if="phase !== 'spinning'" class="flex items-center gap-0.5">
-            <span v-if="cta.short" class="type-12">+</span>
-            <UiPrice :amount="cta.amount" size="s" tone="inverse" />
+          <span v-if="phase !== 'spinning'" class="btn-value">
+            <span v-if="cta.short" class="type-14">+</span>
+            <UiPrice :amount="cta.amount" size="m" tone="inverse" />
           </span>
         </UiButton>
       </div>

@@ -162,13 +162,13 @@ const canReset = computed(() => !!(props.input || props.target))
         <template v-if="offerAgain && again">
           <UiIcon name="upgrade" :size="20" />
           <span>{{ $t('upgrade.upgradeWin') }}</span>
-          <UiPrice :amount="again.price" size="s" tone="inverse" class="kd-cta-flow" />
+          <span class="btn-value"><UiPrice :amount="again.price" size="m" tone="inverse" /></span>
         </template>
         <template v-else-if="!busy && target && input">
           <UiIcon name="upgrade" :size="20" />
           <span>{{ $t('upgrade.upgrade') }}</span>
           <!-- the chance, not coins: an upgrade pays out a skin, never change -->
-          <span class="kd-cta-flow tabular-nums">{{ real.toFixed(real < 10 ? 2 : 1) }}%</span>
+          <span class="btn-value type-14 tabular-nums">{{ real.toFixed(real < 10 ? 2 : 1) }}%</span>
         </template>
         <span v-else>{{ busy ? $t('upgrade.rolling') : !signedIn ? $t('auth.signInToPlay') : !input ? $t('upgrade.addToUpgrade') : $t('upgrade.chooseTarget') }}</span>
       </UiButton>
@@ -296,16 +296,6 @@ const canReset = computed(() => !!(props.input || props.target))
     padding: 16px 16px 8px;
     background: linear-gradient(transparent, var(--color-neutral-1) 16px);
   }
-}
-.kd-cta-flow {
-  display: inline-flex;
-  height: 24px;
-  align-items: center;
-  margin-left: 4px;
-  padding: 0 8px;
-  border-radius: 8px;
-  background: rgb(12 13 16 / 0.18);
-  line-height: 1;
 }
 .kd-bal-track {
   background: var(--color-neutral-4);
