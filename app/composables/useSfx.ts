@@ -58,41 +58,6 @@ export function useSfx() {
       sweep(700, 1500, 0.32, 0.12)
       setTimeout(() => sweep(800, 1700, 0.42, 0.12), 260)
     },
-    /** Golden Chicken, the long "KUUURWAAA": a sawtooth that climbs, holds with a wobble and cracks down; k shortens it (Fast) */
-    scream: (k = 1) => {
-      const s = settings.settings
-      if (!s.sound || s.volume <= 0) return
-      const a = audio()
-      if (!a) return
-      const t = a.currentTime
-      const d = 1.05 * k
-      const osc = a.createOscillator()
-      const lfo = a.createOscillator()
-      const depth = a.createGain()
-      const g = a.createGain()
-      const lp = a.createBiquadFilter()
-      osc.type = 'sawtooth'
-      osc.frequency.setValueAtTime(520, t)
-      osc.frequency.exponentialRampToValueAtTime(1350, t + 0.18 * k)
-      osc.frequency.setValueAtTime(1350, t + 0.7 * k)
-      osc.frequency.exponentialRampToValueAtTime(620, t + d)
-      // the wobble of a throat: 11 Hz vibrato, ±60 Hz
-      lfo.frequency.value = 11
-      depth.gain.value = 60
-      lfo.connect(depth).connect(osc.frequency)
-      lp.type = 'lowpass'
-      lp.frequency.value = 3200
-      const v = 0.1 * (s.volume / 100)
-      g.gain.setValueAtTime(0.0001, t)
-      g.gain.exponentialRampToValueAtTime(v, t + 0.04)
-      g.gain.setValueAtTime(v, t + 0.75 * k)
-      g.gain.exponentialRampToValueAtTime(0.0001, t + d)
-      osc.connect(lp).connect(g).connect(a.destination)
-      osc.start(t)
-      lfo.start(t)
-      osc.stop(t + d + 0.05)
-      lfo.stop(t + d + 0.05)
-    },
     /** Reel passes a card */
     tick: () => blip(1400, 0.035, 0.05, 'square'),
     /** Result revealed: a longer, brighter arpeggio the rarer the drop (tier 0–4, or true for "rare") */

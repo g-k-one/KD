@@ -178,10 +178,7 @@ let active: Animation[] = []
 function skip() {
   skipping = true
   active.forEach((a) => a.finish())
-  scream.value?.stop()
 }
-/** The chicken's 3D scream over the reel (CaseKurwaScream); mounted only while KURWADROP is on */
-const scream = ref<{ play(fast?: boolean): Promise<boolean>; stop(): void; screaming: boolean } | null>(null)
 
 // Gold drops shake the frame once
 const shaking = ref(false)
@@ -364,10 +361,7 @@ async function spin(winners: Item[], fast: boolean, kurwa: boolean[] = []) {
     nextTick(() => root.value?.querySelectorAll<HTMLElement>('.kd-chicken-hit').forEach((el) => fxTop.at('kdJackpot', el, 2)))
     shaking.value = true
     setTimeout(() => (shaking.value = false), 600)
-    // the 3D scream holds the respin until it is gone (never longer than 3 s); without 3D — the plain pause and banner
-    const played = !skipping && (await Promise.race([scream.value?.play(fast) ?? Promise.resolve(false), new Promise<boolean>((r) => setTimeout(() => r(true), 3000))]))
-    if (!played) await wait(fast ? 900 : 1700)
-    else if (scream.value?.screaming) scream.value.stop()   // a slow phone ran past 3 s: the respin does not wait, the label goes
+    await wait(fast ? 900 : 1700)
     respinning.value = true
     chickenHit.value = []
     await run(winners, fast, hits, kurwaPool.value)
@@ -447,7 +441,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
           </div>
         </div>
         <Transition name="kd-kurwa">
-          <div v-if="kurwaCols.includes(col) && (respinning || !scream?.screaming)" class="pointer-events-none absolute inset-x-0 top-2 z-20 flex justify-center px-1">
+          <div v-if="kurwaCols.includes(col)" class="pointer-events-none absolute inset-x-0 top-2 z-20 flex justify-center px-1">
             <span class="kd-kurwa-banner rounded-md px-2 py-0.5 text-neutral-1" :class="grid ? 'type-10-caps' : 'type-12-caps'">{{ respinning ? $t('case.kurwaRespin') : $t('case.kurwaHit') }}</span>
           </div>
         </Transition>
@@ -490,10 +484,8 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 
     <!-- KURWADROP: the chicken screams, then the respin among the expensive items. One reel: centred over it;
          several: the banner sits in the column where the chicken landed (see the column loop). -->
-    <!-- the 3D scream over the top of the reel; while it plays it replaces the "KURWADROP!" banner -->
-    <CaseKurwaScream v-if="kurwadrop" ref="scream" :text="$t('case.kurwaScream')" class="absolute inset-x-0 top-0 z-30 h-1/2" />
     <Transition name="kd-kurwa">
-      <div v-if="horizontal && ((chickenHit.some(Boolean) && !scream?.screaming) || respinning)" class="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center">
+      <div v-if="horizontal && (chickenHit.some(Boolean) || respinning)" class="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center">
         <span class="kd-kurwa-banner type-16-caps rounded-lg px-3 py-1 text-neutral-1">{{ respinning ? $t('case.kurwaRespin') : $t('case.kurwaHit') }}</span>
       </div>
     </Transition>
