@@ -47,6 +47,7 @@ const root = useTemplateRef<HTMLElement>('root')
 const fxHost = useTemplateRef<HTMLElement>('fxHost')
 const fxBg = useForge(fxHost)
 const fxTop = useForge()
+const appBase = useRuntimeConfig().app.baseURL
 const { width: rootW, height: rootH } = useElementSize(root)
 
 // x1 runs a long strip; x2–x5 a shorter one (five tall strips of 56 cards each made multi-open lag)
@@ -346,24 +347,25 @@ async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseIt
 
 /**
  * Rarity reveals (docs/motion.md → rarity steps): the landing itself is ItemArt `reveal` — the rarity shape pops,
- * its echo spreads, diamond sparks fly off. Forge only adds a soft aura behind covert and gold, and the KD-coin
- * jackpot for gold.
+ * its echo spreads, diamond sparks fly off. Forge adds the rarity beam under every drop (more layers the rarer:
+ * ring → rising rings → sparks → swirl → light pillar → stars) and the gold burst (KD coins + burning gold feathers) for gold.
  */
 async function rareFx(winners: Item[]) {
   if (grid.value) return
-  await nextTick()
-  const cards = root.value?.querySelectorAll<HTMLElement>('[data-win]') ?? []
+  // the win card gets data-win only once the parent switches to 'result' (a tick or two after spin() resolves):
+  // wait for it, otherwise the effects found no card and never played
+  let cards: NodeListOf<HTMLElement> | never[] = []
+  for (let i = 0; i < 30 && !cards.length; i++) {
+    await new Promise((r) => requestAnimationFrame(r))
+    cards = root.value?.querySelectorAll<HTMLElement>('[data-win]') ?? []
+  }
   cards.forEach((el, i) => {
     const w = horizontal.value ? winners[0] : winners[i]
     const tier = w ? RARITY_TIER[w.rarity] : 0
-    if (!w || tier < 3) return
-    const rgb = hexToRgb(RARITY_HEX[w.rarity])
-    const k = horizontal.value ? 1.2 : 1
-    fxBg.at('kdAura', el, k, true).then((hd) => {
-      hd?.set('tint', rgb)
-      hd?.set('soft', 1)
-    })
-    if (tier >= 4) fxTop.at('kdJackpot', el, 1.6)
+    if (!w) return
+    // the beam stands on the item picture, not on the card
+    rarityBeam(fxBg, el.querySelector<HTMLElement>('.kd-art img') ?? el, w.rarity, 1.8)
+    if (tier >= 4) goldBurst(fxTop, el, 1.6, appBase)
   })
 }
 
@@ -388,7 +390,8 @@ async function spin(winners: Item[], fast: boolean, kurwa: boolean[] = []) {
     kurwaCols.value = hits
     sfx.squawk()
     haptics.jackpot()
-    nextTick(() => root.value?.querySelectorAll<HTMLElement>('.kd-chicken-hit').forEach((el) => fxTop.at('kdJackpot', el, 2)))
+    // one burst per chicken: skip a hit element nested in another one
+    nextTick(() => root.value?.querySelectorAll<HTMLElement>('.kd-chicken-hit').forEach((el) => el.parentElement?.closest('.kd-chicken-hit') || goldBurst(fxTop, el, 2, appBase)))
     shaking.value = true
     setTimeout(() => (shaking.value = false), 600)
     await wait(fast ? 900 : 1700)

@@ -1,3 +1,6 @@
+import type { Rarity } from '#shared/types/api'
+import { RARITY_HEX } from './rarity'
+
 /*
  * KurwaDROP's own Forge effects (docs/motion.md → VFX), drawn from our atlas 'kd'
  * (scripts/build-forge-atlas.mjs): the KD coin and its edge, a golden-chicken feather, and white masks
@@ -379,4 +382,36 @@ export function defineKdEffects(engine: Engine) {
       h.draw(c, s.em as Particle[])
     },
   }))
+}
+
+/* ── Forge packs (rarity, matter): rarity beams under drops and the gold burst ── */
+type Layer = { at: (name: string, el: HTMLElement | null | undefined, scale?: number, loop?: boolean, opts?: Record<string, unknown>) => Promise<{ stop(): void; kill(): void } | null> }
+
+/** Rarity → how many layers its beam gets (0 a ring … 5 light pillar, orbiting stars). The colour is the rarity's own */
+const BEAM_LEVEL: Record<Rarity, number> = { industrial: 0, milspec: 1, restricted: 2, classified: 3, covert: 4, gold: 5 }
+/** Loop under a drop: a glow on the ground in the rarity colour, rings rising, sparks; covert gets a light pillar, gold also stars */
+export function rarityBeam(layer: Layer, el: HTMLElement | null | undefined, rarity: Rarity, scale = 1) {
+  // ground 205: the beam's floor sits just under the picture's middle — the name right under the picture stays clear
+  return layer.at('lootbeam', el, scale, true, { color: RARITY_HEX[rarity], level: BEAM_LEVEL[rarity], ground: 205 })
+}
+
+let coinUrl: Promise<string> | null = null
+/** The KD coin as a 256 px image for Forge coin faces: the svg is 20 px and would draw blurry as it is */
+function kdCoin(base: string) {
+  coinUrl ??= fetch(`${base}img/brand/coin.svg`)
+    .then((r) => r.text())
+    .then((t) => URL.createObjectURL(new Blob([t.replace(/width="20" height="20"/, 'width="256" height="256"')], { type: 'image/svg+xml' })))
+    .catch(() => '')
+  return coinUrl
+}
+/** Gold drop and the Golden Chicken: gold is drawn in, flash and rays, KD coins with an edge tumble, fall and bounce,
+ *  gold feathers burst out, glide and burn away. base — the app's baseURL (useRuntimeConfig().app.baseURL) */
+export async function goldBurst(layer: Layer, el: HTMLElement | null | undefined, scale: number, base: string) {
+  if (!el) return
+  const img = await kdCoin(base.endsWith('/') ? base : `${base}/`)
+  // big targets (the 3D chicken) would blow the burst up past the reel: cap it at ~440 px
+  const r = el.getBoundingClientRect(), k = Math.min(scale, 440 / Math.max(r.width, r.height, 1))
+  // coins fly out and away rather than piling up over the controls under the reel
+  layer.at('goldboom', el, k, false, { floor: false, ...(img ? { img } : {}) })
+  layer.at('feathers:gold', el, k * 0.9)
 }

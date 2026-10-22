@@ -16,11 +16,20 @@ export interface ForgeHandle {
   /** Sets a field on the effect's state, e.g. set('tint', [r, g, b]) for kdAura */
   set(k: string, v: unknown): void
 }
+/** play options: position and size, follow an element, loop; effect settings (rarity colour and level, a coin image …) */
+export interface ForgeOptions {
+  x?: number
+  y?: number
+  size?: number
+  loop?: boolean
+  el?: HTMLElement
+  [k: string]: unknown
+}
 interface ForgeEngine {
   names: string[]
   define: (name: string, build: (h: never) => unknown) => void
   base: string
-  play(name: string, o?: { x?: number; y?: number; size?: number; loop?: boolean; el?: HTMLElement }): ForgeHandle | null
+  play(name: string, o?: ForgeOptions): ForgeHandle | null
   stopAll(): void
   preload(atlas: string): void
   /** vendored patch: frees a section canvas and its GL context */
@@ -47,12 +56,16 @@ function baseUrl() {
   const b = useRuntimeConfig().app.baseURL || '/'
   return `${b.endsWith('/') ? b : `${b}/`}vendor/forge/`
 }
-/** Loads the atlas map and the engine once (classic scripts: the engine reads FX_ATLAS as a global). */
+/** Forge packs we ship (from the Pawn repo: `npm run forge` → dist-forge, *.min.js copied here without .min):
+ *  image — image modes the others build on · hits — sharp shapes (rays, rings) · matter — 3D coins and feathers,
+ *  gold burst (goldboom, feathers) · rarity — rarity beam under a drop (lootbeam), rarity frame / reveal, appear / vanish */
+const PACKS = ['image', 'hits', 'matter', 'rarity']
+/** Loads the engine (with its atlas map), our own atlas, then the packs — once, in order (classic scripts sharing globals). */
 function ensureForge(base: string) {
-  loading ??= loadScript(`${base}16e-forge-atlas.js`)
-    // our own atlas (KD coin, feather, glow masks), see scripts/build-forge-atlas.mjs
+  loading ??= loadScript(`${base}forge.js`)
+    // our own atlas (KD coin, feather, glow masks), see scripts/build-forge-atlas.mjs — adds FX_ATLAS.kd, so after the engine
     .then(() => loadScript(`${base}kd-atlas.js`))
-    .then(() => loadScript(`${base}forge.js`))
+    .then(() => PACKS.reduce((p, n) => p.then(() => loadScript(`${base}forge-${n}.js`)), Promise.resolve()))
     .then(() => {
       if (!window.Forge) return false
       window.Forge.base = base
@@ -89,7 +102,7 @@ export function useForge(host?: Ref<HTMLElement | null | undefined>) {
     return e
   }
 
-  async function play(name: string, o: { x?: number; y?: number; size?: number; loop?: boolean; el?: HTMLElement } = {}) {
+  async function play(name: string, o: ForgeOptions = {}) {
     const e = await get()
     const h = e?.play(name, o) ?? null
     if (h) live.add(h)
@@ -97,11 +110,11 @@ export function useForge(host?: Ref<HTMLElement | null | undefined>) {
   }
 
   /** One-shot centred on an element (viewport coordinates, or relative to the host). */
-  function at(name: string, el: HTMLElement | null | undefined, scale = 1, loop = false) {
+  function at(name: string, el: HTMLElement | null | undefined, scale = 1, loop = false, opts: ForgeOptions = {}) {
     if (!el) return Promise.resolve(null)
     const r = el.getBoundingClientRect()
     const hr = host?.value?.getBoundingClientRect()
-    return play(name, { x: r.left + r.width / 2 - (hr?.left ?? 0), y: r.top + r.height / 2 - (hr?.top ?? 0), size: Math.max(r.width, r.height) * scale, loop })
+    return play(name, { ...opts, x: r.left + r.width / 2 - (hr?.left ?? 0), y: r.top + r.height / 2 - (hr?.top ?? 0), size: Math.max(r.width, r.height) * scale, loop })
   }
 
   function stopAll() {
