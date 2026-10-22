@@ -1,0 +1,70 @@
+{
+  "_source": "csgogem.com/games/cases, read 2026-10-22. Prices are CSGOGem coins; odds in %. Stickers left out.",
+  "cases": [
+    {
+      "name": "Hades",
+      "price": 3956.74,
+      "items": [
+        ["Skeleton Knife", "Doppler", "MW", false, 11515.0, 0.5],
+        ["M9 Bayonet", "Doppler", "MW", true, 9962.28, 0.75],
+        ["Skeleton Knife", "Doppler", "FN", false, 7078.09, 1.25],
+        ["Nomad Knife", "Doppler", "FN", false, 5796.66, 3.5],
+        ["Specialist Gloves", "Crimson Kimono", "MW", false, 5484.37, 8],
+        ["Talon Knife", "Doppler", "FN", true, 5037.85, 12],
+        ["M4A4", "Howl", "WW", false, 4814.51, 15],
+        ["AK-47", "Fire Serpent", "MW", true, 3900.0, 15],
+        ["M4A1-S", "Knight", "MW", false, 2587.5, 10],
+        ["M9 Bayonet", "Autotronic", "FT", true, 1444.82, 8],
+        ["Desert Eagle", "Sunset Storm 弐", "MW", false, 394.33, 20]
+      ]
+    },
+    {
+      "name": "Spring",
+      "price": 1514.65,
+      "items": [
+        ["AK-47", "Wild Lotus", "FN", false, 18049.03, 0.003],
+        ["Butterfly Knife", "Gamma Doppler", "FN", true, 17031.06, 0.005],
+        ["M9 Bayonet", "Gamma Doppler", "MW", false, 14090.19, 0.01],
+        ["Sport Gloves", "Hedge Maze", "MW", false, 12797.88, 0.03],
+        ["AK-47", "Wild Lotus", "FT", false, 10255.94, 0.05],
+        ["AK-47", "Fire Serpent", "FN", true, 6029.28, 0.075],
+        ["Bayonet", "Gamma Doppler", "FN", false, 5364.16, 0.157],
+        ["Butterfly Knife", "Gamma Doppler", "FN", true, 4879.65, 0.37],
+        ["Karambit", "Gamma Doppler", "MW", true, 3673.43, 0.55],
+        ["Specialist Gloves", "Emerald Web", "MW", false, 3056.74, 1],
+        ["Sport Gloves", "Hedge Maze", "BS", false, 2770.78, 1.75],
+        ["M9 Bayonet", "Lore", "MW", true, 2237.08, 8],
+        ["Huntsman Knife", "Gamma Doppler", "MW", false, 2228.82, 8],
+        ["AK-47", "Fire Serpent", "WW", true, 2025.0, 9],
+        ["Karambit", "Lore", "MW", false, 1886.0, 15],
+        ["Falchion Knife", "Gamma Doppler", "FN", true, 1417.11, 15],
+        ["AK-47", "Hydroponic", "WW", false, 985.84, 12],
+        ["Gut Knife", "Gamma Doppler", "FN", false, 373.87, 11],
+        ["Broken Fang Gloves", "Jade", "BS", false, 148.59, 18]
+      ]
+    },
+    {
+      "name": "Mobster",
+      "price": 1763.2,
+      "items": [
+        ["Butterfly Knife", "Doppler", "FN", true, 20519.35, 0.05],
+        ["Specialist Gloves", "Crimson Kimono", "FN", false, 17871.93, 0.1],
+        ["Butterfly Knife", "Doppler", "FN", false, 16723.27, 0.15],
+        ["Karambit", "Doppler", "FN", false, 12710.09, 0.25],
+        ["AWP", "Dragon Lore", "FT", false, 8992.17, 0.45],
+        ["M9 Bayonet", "Crimson Web", "FN", false, 7689.86, 1],
+        ["M4A4", "Howl", "MW", false, 6438.78, 2],
+        ["Butterfly Knife", "Fade", "FN", false, 4881.05, 2.5],
+        ["AK-47", "Gold Arabesque", "FN", false, 3903.07, 3],
+        ["Flip Knife", "Doppler", "FN", true, 3341.77, 4],
+        ["AK-47", "Gold Arabesque", "FT", false, 2762.53, 5],
+        ["Hand Wraps", "Slaughter", "FN", false, 2352.13, 6],
+        ["M9 Bayonet", "Crimson Web", "MW", true, 1797.18, 6],
+        ["AK-47", "Wasteland Rebel", "FN", true, 1643.41, 13.5],
+        ["AK-47", "Cartel", "FT", false, 15.33, 15],
+        ["P250", "Cartel", "MW", false, 7.88, 15],
+        ["Dual Berettas", "Cartel", "FN", true, 6.84, 20]
+      ]
+    }
+  ]
+}

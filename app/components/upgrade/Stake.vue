@@ -3,11 +3,13 @@ import type { InventoryItem } from '#shared/types/api'
 
 /*
  * Figma "UpgradeItem" for the stake side.
- * Desktop: State=Empty (dashed, "Choose your skins below") → State=2+ (3×2 slots, coins count as a piece).
- *          Both keep the total (Price XXL) and the "Add balance" field at the bottom.
- * Phones get the same panel at full width; slots keep the desktop tile proportions.
- * Motion: pieces pop into their slot, leave by shrinking away, the total counts up, the coin flips when the
- * amount changes, and while the upgrade runs every piece is pulled towards the gauge.
+ * State=Empty (dashed, "Choose your skins below") → State=1 (one piece shown big, like the target card)
+ * → State=2+ (3×2 slots, coins count as a piece). All keep the total (Price XXL) and "Add balance" below.
+ * Phones get the same panel at full width.
+ * Motion (docs/motion.md): going to slots, the pieces deal into place one by one; a new piece flies up
+ * from the inventory and lands with a flash of the slot rim; a removed one drops back down. The next free
+ * slot breathes. The total counts up, the coin flips when the amount changes; while the upgrade runs the
+ * pieces stay put and pulse in turn, a loss drains them to grey.
  */
 const props = defineProps<{
   items: InventoryItem[]
@@ -16,7 +18,6 @@ const props = defineProps<{
   state: 'idle' | 'spinning' | 'win' | 'lose'
   disabled?: boolean
 }>()
-const extra = defineModel<string>('extra', { required: true })
 const emit = defineEmits<{ remove: [uid: string]; clearCoins: [] }>()
 
 const SLOTS = 6
@@ -27,11 +28,11 @@ const pieces = computed<Piece[]>(() => {
   if (props.coins > 0) list.push({ key: 'coins', kind: 'coins', amount: props.coins })
   return list
 })
-// More than six pieces: five are shown, the sixth slot says +N
-const overflow = computed(() => Math.max(0, pieces.value.length - SLOTS))
-const shown = computed(() => (overflow.value ? pieces.value.slice(0, SLOTS - 1) : pieces.value))
-const emptySlots = computed(() => Math.max(0, SLOTS - shown.value.length - (overflow.value ? 1 : 0)))
-const isEmpty = computed(() => pieces.value.length === 0)
+// The page caps the stake at six pieces (coins count as one), so every piece has a slot
+const shown = computed(() => pieces.value.slice(0, SLOTS))
+const layout = computed(() => (pieces.value.length === 0 ? 'empty' : pieces.value.length === 1 ? 'single' : 'grid'))
+const single = computed(() => pieces.value[0])
+const isLg = useMediaQuery('(min-width: 1024px)')
 
 // Total counts towards the new value instead of jumping
 const totalSrc = computed(() => props.total)
@@ -44,86 +45,147 @@ watch(
   (v, old) => v !== old && v > 0 && coinFlip.value++,
 )
 
+// One big piece ↔ slots: the piece that stays morphs (FLIP) from where it was to where it lands —
+// the big art shrinks into its slot when a second skin arrives, and grows back when only one is left.
+const root = useTemplateRef<HTMLElement>('root')
+const morphing = ref<string | null>(null)
+const artOf = (key: string) => root.value?.querySelector<HTMLElement>(`[data-key="${CSS.escape(key)}"] .kd-morph`)
+watch(
+  layout,
+  (now, before) => {
+    if (!((before === 'single' && now === 'grid') || (before === 'grid' && now === 'single'))) return
+    const stays = now === 'single' ? pieces.value[0]?.key : root.value?.querySelector<HTMLElement>('.kd-single-art')?.dataset.key
+    const from = stays && artOf(stays)?.getBoundingClientRect()
+    if (!stays || !from) return
+    morphing.value = stays
+    nextTick(() => {
+      const el = artOf(stays)
+      const to = el?.getBoundingClientRect()
+      if (el && to && to.width) {
+        const dx = from.left + from.width / 2 - (to.left + to.width / 2)
+        const dy = from.top + from.height / 2 - (to.top + to.height / 2)
+        el.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${from.width / to.width})` }, { transform: 'none' }], {
+          duration: 560,
+          easing: 'linear(0, 0.25 7%, 0.68 17%, 0.97 27%, 1.08 35%, 1.06 45%, 1.01 58%, 0.995 72%, 1)',
+        })
+      }
+      setTimeout(() => (morphing.value = null), 600)
+    })
+  },
+  { flush: 'pre' },
+)
+
 function removePiece(p: Piece) {
   if (props.disabled) return
   if (p.kind === 'coins') emit('clearCoins')
   else emit('remove', p.item.uid)
 }
-
 </script>
 
 <template>
   <div class="min-w-0">
-    <!-- Desktop -->
     <div
-      class="kd-stake relative flex flex-col rounded-5xl bg-neutral-2 lg:h-90"
-      :class="[isEmpty ? 'is-empty border border-dashed border-neutral-7' : 'border border-transparent', `is-${state}`]"
+      ref="root"
+      class="kd-stake relative flex flex-col rounded-5xl bg-neutral-2 lg:h-76"
+      :class="`is-${state}`"
     >
       <Transition name="kd-stake-swap" mode="out-in">
-        <div v-if="isEmpty" key="empty" class="flex min-h-56 flex-1 flex-col items-center justify-center gap-4 text-center">
-          <UiIcon name="stake-empty" :size="73" class="kd-stake-icon text-neutral-8" />
+        <div v-if="layout === 'empty'" key="empty" class="flex min-h-56 flex-1 flex-col items-center justify-center gap-4 text-center">
+          <UiIcon name="deck-plus" :size="72" class="kd-stake-icon kd-ico-deck text-neutral-10" />
           <p class="type-16-caps max-w-40 font-bold text-neutral-12">{{ $t('upgrade.chooseSkins') }}</p>
         </div>
-        <TransitionGroup v-else key="grid" tag="div" name="kd-piece" class="relative grid flex-1 grid-cols-3 gap-2.5 p-4 lg:grid-rows-2">
-          <button
-            v-for="(p, i) in shown"
-            :key="p.key"
-            type="button"
-            class="kd-piece group relative aspect-[116/127] overflow-hidden rounded-2xl border text-left lg:aspect-auto"
-            :class="p.kind === 'coins' ? 'is-coins' : ''"
-            :style="{ '--i': i }"
-            :disabled="disabled"
-            :aria-label="p.kind === 'coins' ? 'KD Coins' : `${p.item.weapon} | ${p.item.skin}`"
-            @click="removePiece(p)"
-          >
-            <template v-if="p.kind === 'skin'">
-              <ItemArt :image="p.item.image" :rarity="p.item.rarity" :size="56" class="absolute inset-0 m-auto w-full" />
-              <div class="absolute inset-x-0 top-0 flex flex-col gap-0.5 px-1.5 py-1">
-                <UiPrice :amount="p.item.price" size="s" />
-                <span class="type-10-caps flex gap-1">
-                  <span v-if="p.item.statTrak" class="text-brand-light">ST</span>
-                  <span class="text-neutral-15/48">{{ p.item.wear }}</span>
+
+        <!-- One piece: shown big, same layout as the target card -->
+        <!-- single and grid live in one keyed wrapper, so switching between them morphs instead of fading -->
+        <div v-else key="filled" class="relative flex min-h-56 flex-1 flex-col">
+        <div v-if="layout === 'single' && single" class="relative min-h-56 flex-1">
+          <Transition :name="morphing ? 'kd-none' : 'kd-single'" mode="out-in" appear>
+            <div :key="single.key" class="absolute inset-0">
+              <div class="kd-single-art absolute inset-0 grid place-items-center" :data-key="single.key">
+                <ItemArt v-if="single.kind === 'skin'" float :image="single.item.image" :rarity="single.item.rarity" :size="isLg ? 150 : 120" class="kd-morph w-[260px]" />
+                <UiCoinStack v-else :key="coinFlip" :size="isLg ? 96 : 76" :amount="coins" class="kd-morph kd-coin-big" />
+              </div>
+              <div class="absolute inset-x-0 top-0 flex items-start justify-between p-4">
+                <div v-if="single.kind === 'skin'" class="flex min-w-0 flex-col gap-1">
+                  <UiTextSwap :text="single.item.skin" class="truncate type-20-caps tracking-[0.05em]" :style="{ color: RARITY_COLOR[single.item.rarity] }" />
+                  <span class="type-14-caps flex items-center gap-3 text-weapon">
+                    <UiTextSwap :text="single.item.weapon" />
+                    <span class="h-4 w-px bg-neutral-8" />
+                    <span class="flex items-center gap-1.5"><span v-if="single.item.statTrak" class="text-brand-light">ST</span><UiTextSwap :text="single.item.wear" /></span>
+                  </span>
+                </div>
+                <div v-else class="flex min-w-0 flex-col gap-1">
+                  <span class="text-xl leading-6 font-extrabold tracking-[0.05em] text-item-gold uppercase">{{ $t('common.coins') }}</span>
+                  <span class="type-14-caps text-neutral-11">KD</span>
+                </div>
+                <UiButton variant="ghost" icon="close" icon-only :aria-label="$t('upgrade.clear')" :disabled="disabled" @click="removePiece(single)" />
+              </div>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- 2+: slots. Empty slots are a fixed layer underneath; pieces deal in on top. -->
+        <div v-else class="relative flex-1">
+          <div class="grid h-full grid-cols-3 gap-2.5 p-4 lg:grid-rows-2">
+            <div
+              v-for="n in SLOTS"
+              :key="n"
+              class="kd-slot grid aspect-[116/127] place-items-center rounded-2xl bg-neutral-3 text-neutral-7 lg:aspect-auto"
+              :class="n - 1 === pieces.length && state === 'idle' && 'is-next'"
+            >
+              <!-- the next free slot shows a quiet + instead of the placeholder gun; nothing pulses -->
+              <UiIcon :name="n - 1 === pieces.length && state === 'idle' ? 'plus' : 'pistol'" :size="n - 1 === pieces.length && state === 'idle' ? 24 : 40" />
+            </div>
+          </div>
+          <TransitionGroup tag="div" name="kd-piece" appear class="absolute inset-0 grid grid-cols-3 gap-2.5 p-4 lg:grid-rows-2">
+            <button
+              v-for="(p, i) in shown"
+              :key="p.key"
+              type="button"
+              class="kd-piece group relative aspect-[116/127] overflow-hidden rounded-2xl border text-left lg:aspect-auto"
+              :class="[p.kind === 'coins' && 'is-coins', morphing === p.key && 'is-morph']"
+              :data-key="p.key"
+              :style="{ '--i': i }"
+              :disabled="disabled"
+              :aria-label="p.kind === 'coins' ? 'KD Coins' : `${p.item.weapon} | ${p.item.skin}`"
+              @click="removePiece(p)"
+            >
+              <template v-if="p.kind === 'skin'">
+                <span class="absolute inset-0 grid place-items-center">
+                  <ItemArt :image="p.item.image" :rarity="p.item.rarity" :size="56" class="kd-morph w-full" />
                 </span>
-              </div>
-              <div class="absolute inset-x-0 bottom-0 flex min-w-0 flex-col px-1.5 py-0.5">
-                <span class="type-10-caps truncate text-neutral-15/48">{{ p.item.weapon }}</span>
-                <span class="type-12 truncate" :style="{ color: RARITY_COLOR[p.item.rarity] }">{{ p.item.skin }}</span>
-              </div>
-            </template>
-            <template v-else>
-              <img :key="coinFlip" src="/img/items/coins.png" alt="" class="kd-coin-img absolute top-1/2 left-1/2 size-24 object-contain" draggable="false" />
-              <div class="absolute inset-x-0 top-0 px-1.5 py-1">
-                <UiPrice :amount="p.amount" size="s" />
-              </div>
-              <div class="absolute inset-x-0 bottom-0 flex flex-col px-1.5 py-0.5">
-                <span class="type-10-caps text-neutral-15/48">KD</span>
-                <span class="type-12 text-item-gold">Coins</span>
-              </div>
-            </template>
-            <UiIcon name="x-circle" :size="24" class="kd-piece-x absolute top-1/2 left-1/2 text-neutral-15" />
-          </button>
-          <div v-if="overflow" key="more" class="kd-piece-slot grid aspect-[116/127] place-items-center lg:aspect-auto rounded-2xl bg-neutral-3">
-            <span class="type-16-caps font-bold text-neutral-12">+{{ overflow + 1 }}</span>
-          </div>
-          <div v-for="n in emptySlots" :key="`e${n}`" class="kd-piece-slot grid aspect-[116/127] place-items-center lg:aspect-auto rounded-2xl bg-neutral-3 text-neutral-7">
-            <UiIcon name="pistol" :size="40" />
-          </div>
-        </TransitionGroup>
+                <div class="absolute inset-x-0 top-0 flex flex-col gap-0.5 px-1.5 py-1">
+                  <UiPrice :amount="p.item.price" size="s" />
+                  <span class="type-10-caps flex gap-1">
+                    <span v-if="p.item.statTrak" class="text-brand-light">ST</span>
+                    <span class="text-neutral-15/48">{{ p.item.wear }}</span>
+                  </span>
+                </div>
+                <div class="absolute inset-x-0 bottom-0 flex min-w-0 flex-col px-1.5 py-0.5">
+                  <span class="type-10-caps truncate text-weapon">{{ p.item.weapon }}</span>
+                  <span class="type-12 truncate" :style="{ color: RARITY_COLOR[p.item.rarity] }">{{ p.item.skin }}</span>
+                </div>
+              </template>
+              <template v-else>
+                <span class="absolute inset-0 grid place-items-center"><UiCoinStack :key="coinFlip" :size="40" :amount="coins" class="kd-morph" /></span>
+                <div class="absolute inset-x-0 top-0 px-1.5 py-1">
+                  <UiPrice :amount="p.amount" size="s" />
+                </div>
+                <div class="absolute inset-x-0 bottom-0 flex flex-col px-1.5 py-0.5">
+                  <span class="type-10-caps text-neutral-15/48">KD</span>
+                  <span class="type-12 text-item-gold">{{ $t('common.coins') }}</span>
+                </div>
+              </template>
+              <UiIcon name="x-circle" :size="24" class="kd-piece-x absolute top-1/2 left-1/2 text-neutral-15" />
+            </button>
+          </TransitionGroup>
+        </div>
+        </div>
       </Transition>
 
       <div class="flex items-center justify-between gap-3 pr-4 pb-4 pl-6">
+        <span class="type-12-caps text-neutral-11">{{ $t('upgrade.stakeTotal') }}</span>
         <UiPrice :amount="Math.round(totalShown)" size="xxl" />
-        <label class="kd-extra flex h-12 w-36 shrink-0 items-center gap-2 rounded-lg border border-neutral-4 bg-neutral-1 px-3 focus-within:border-brand-base">
-          <UiCoin :size="20" />
-          <input
-            id="upgrade-extra"
-            v-model.lazy="extra"
-            inputmode="decimal"
-            :placeholder="$t('upgrade.addBalance')"
-            class="type-14 w-full min-w-0 bg-transparent outline-none placeholder:text-neutral-11"
-            :disabled="disabled"
-          />
-        </label>
       </div>
     </div>
   </div>
@@ -134,7 +196,7 @@ function removePiece(p: Piece) {
   transition: border-color var(--dur-base) var(--ease-out);
 }
 .kd-stake-icon {
-  animation: kd-float 3.4s ease-in-out infinite;
+  animation: kd-float 3.2s var(--ease-in-out) infinite;
 }
 @keyframes kd-float {
   50% {
@@ -195,30 +257,79 @@ function removePiece(p: Piece) {
     transform: translate(-50%, -50%);
   }
 }
+.kd-coin-big {
+  animation: kd-coin-big 700ms var(--ease-spring) both;
+}
+@keyframes kd-coin-big {
+  from {
+    transform: rotateY(-180deg) scale(0.6);
+    opacity: 0;
+  }
+}
 
-/* Slot transitions: pop in with a little overshoot, shrink away, neighbours slide over. */
+/* Slots: empty ones show a faint gun; the next free one a quiet + (only while idle) */
+.kd-slot.is-next {
+  color: var(--color-neutral-11);
+  background: var(--color-neutral-4);
+}
+
+/* A new piece flies up from the inventory below, overshoots and lands (no rim flash — no hard outlines).
+   Switching from one big piece to slots deals them in one after another. */
+.kd-piece-enter-active.is-morph {
+  animation: none;
+}
 .kd-piece-enter-active {
+  animation: kd-piece-in 560ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+@keyframes kd-piece-in {
+  0% {
+    opacity: 0;
+    transform: translateY(48px) scale(0.55) rotate(-8deg);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.06) rotate(2deg);
+  }
+  78% {
+    transform: translateY(1px) scale(0.98);
+  }
+  100% {
+    transform: none;
+  }
+}
+/* Removed: drops back down towards the inventory; the rest slide over afterwards */
+.kd-piece-leave-active {
+  animation: kd-piece-out 240ms var(--ease-in) both;
+}
+@keyframes kd-piece-out {
+  to {
+    opacity: 0;
+    transform: translateY(28px) scale(0.75) rotate(4deg);
+  }
+}
+.kd-piece-move {
+  transition: transform var(--dur-slow) var(--ease-spring);
+}
+
+/* Single piece: drops in like the target; swapping it for another crossfades */
+.kd-single-enter-active {
   transition:
     opacity var(--dur-base) var(--ease-out),
     transform var(--dur-slow) var(--ease-spring);
 }
-.kd-piece-leave-active {
+.kd-single-leave-active {
   transition:
     opacity var(--dur-fast) var(--ease-in),
     transform var(--dur-fast) var(--ease-in);
-  position: absolute;
-  visibility: hidden;
 }
-.kd-piece-enter-from {
+.kd-single-enter-from {
   opacity: 0;
-  transform: translateY(14px) scale(0.7);
+  transform: translateY(18px) scale(0.9);
 }
-.kd-piece-leave-to {
+.kd-single-leave-to {
   opacity: 0;
-  transform: scale(0.6);
-}
-.kd-piece-move {
-  transition: transform var(--dur-slow) var(--ease-out);
+  transform: scale(0.94);
 }
 
 .kd-stake-swap-enter-active,
@@ -233,24 +344,39 @@ function removePiece(p: Piece) {
   transform: scale(0.97);
 }
 
-/* Upgrade running: every piece is drawn towards the gauge one after another and stays spent
-   through the result (same animation name, so it does not restart when the state flips). */
+/* Upgrade running: the pieces stay where they are and float in turn — no outlines, no flashing.
+   Won: they are spent — they slide towards the target and fade, the won skin takes their place.
+   Lost: they drain to grey and sink a little. */
 .is-spinning .kd-piece,
+.is-spinning .kd-single-art {
+  animation: kd-piece-float 1.6s var(--ease-in-out) infinite;
+  animation-delay: calc(var(--i, 0) * 140ms);
+}
+@keyframes kd-piece-float {
+  50% {
+    translate: 0 -4px;
+  }
+}
 .is-win .kd-piece,
-.is-lose .kd-piece {
-  animation: kd-feed 900ms var(--ease-in-out) both;
-  animation-delay: calc(var(--i) * 70ms);
+.is-win .kd-single-art {
+  animation: kd-piece-spent 650ms var(--ease-in) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
 }
-@keyframes kd-feed {
-  40% {
-    transform: scale(1.04);
-    box-shadow: 0 0 0 1px var(--color-brand-base), 0 0 24px -6px var(--color-brand-base);
-  }
+@keyframes kd-piece-spent {
   to {
-    transform: translateX(40px) scale(0.6);
-    opacity: 0.15;
-    filter: blur(2px);
+    translate: 48px 0;
+    scale: 0.7;
+    opacity: 0;
   }
 }
-
+.is-lose .kd-piece,
+.is-lose .kd-single-art {
+  filter: grayscale(1) brightness(0.5);
+  opacity: 0.6;
+  translate: 0 6px;
+  transition:
+    filter 700ms var(--ease-out),
+    opacity 700ms var(--ease-out),
+    translate 700ms var(--ease-out);
+}
 </style>

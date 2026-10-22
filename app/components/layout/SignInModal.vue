@@ -21,7 +21,7 @@ async function signIn() {
 <template>
   <UiModal v-model="ui.signInOpen" :title="$t('auth.signInTitle')" :description="$t('auth.signInText')" :width="480">
     <template #media>
-      <img src="/img/illustrations/sign-in.png" alt="" class="kd-signin-art mx-auto h-50 w-auto max-w-full object-contain" />
+      <img src="/img/illustrations/sign-in.webp" alt="" class="kd-signin-art mx-auto h-50 w-auto max-w-full object-contain" />
     </template>
     <div class="flex flex-col gap-4">
       <UiCheckbox v-model="terms">{{ $t('auth.agreeTerms') }}</UiCheckbox>

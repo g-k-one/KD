@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CaseDetails, CaseItem, InventoryItem, Item } from '#shared/types/api'
 import { goldenChicken, KURWA_CHICKEN_ID } from '#shared/kurwadrop'
+import type { ForgeHandle } from '~/composables/useForge'
 
 /*
  * Figma "CaseReel". x1 = one horizontal reel under the top/bottom markers,
@@ -9,8 +10,15 @@ import { goldenChicken, KURWA_CHICKEN_ID } from '#shared/kurwadrop'
  * The reel keeps one height for x1–x5 (278 desktop, 320 phone); rows split that height.
  * so every result keeps room for its name and Sell button.
  *
- * Motion: a long deceleration that overshoots the centre by a random part of a card,
- * then a short correction back onto the winner — the "almost landed on the next one" beat.
+ * Motion (docs/motion.md → Reel):
+ *   breath — from idle the case squashes, jumps and opens (~420ms) while the riser plays
+ *   spin   — a long deceleration onto the winner. It ends one of three ways:
+ *            settle — overshoots the centre by part of a card and corrects back
+ *            short  — stops over the edge of the card before, hangs there, then creeps over onto the winner
+ *            over   — rolls just past onto the next card, hangs, then slides back
+ *            The hang is the "подкрут": markers pulse, a low tense sound, the frame tightens.
+ *            Rare drops tease more often. The filler is never rigged: neighbours come from the real odds.
+ *   land   — ItemArt reveal (the rarity shape pops, its echo, diamond sparks) + a soft Forge aura for rare drops + haptics.
  * A rAF loop counts cards crossing the marker to drive the tick sound.
  */
 const props = defineProps<{
@@ -22,15 +30,42 @@ const props = defineProps<{
   demo?: boolean
   /** KURWADROP on: the Golden Chicken shows up on the reel at its real odds */
   kurwadrop?: boolean
+  /** Fast open: no breath, no tease */
+  fast?: boolean
+  /** Sell asks for a second tap when a drop is worth this much or more (coin cents) */
+  confirmFrom?: number
 }>()
 const emit = defineEmits<{ sell: [uid: string] }>()
 
 const sfx = useSfx()
+const haptics = useHaptics()
 const root = useTemplateRef<HTMLElement>('root')
+// Forge: a layer behind the cards for rare results, and the shared top layer for the chicken
+const fxHost = useTemplateRef<HTMLElement>('fxHost')
+const fxBg = useForge(fxHost)
+const fxTop = useForge()
 const { width: rootW, height: rootH } = useElementSize(root)
 
-const STRIP = 56
-const WIN = STRIP - 7
+// x1 runs a long strip; x2–x5 a shorter one (five tall strips of 56 cards each made multi-open lag)
+/** True while a reel moves: the live feed holds its updates so nothing re-lays out mid-spin */
+const reelBusy = useState('kd_reel_busy', () => false)
+onBeforeUnmount(() => (reelBusy.value = false))
+// Warm the decode cache with the case's items while the page is idle
+onMounted(() => {
+  const warm = () => props.data.items.forEach((i) => decodeImage(i.image))
+  'requestIdleCallback' in window ? requestIdleCallback(warm) : setTimeout(warm, 300)
+})
+
+// Idle drift: ten of the case's items spread across the price range, doubled for a seamless loop
+const driftItems = computed(() => {
+  const items = [...props.data.items].sort((a, b) => b.price - a.price)
+  const step = Math.max(1, Math.floor(items.length / 10))
+  const pick = items.filter((_, i) => i % step === 0).slice(0, 10)
+  return [...pick, ...pick]
+})
+
+const STRIP = computed(() => (props.count === 1 ? 56 : 36))
+const WIN = computed(() => STRIP.value - 7)
 const START = 3
 
 const horizontal = computed(() => props.count === 1)
@@ -69,9 +104,9 @@ const landed = ref<boolean[]>([])
 // SSR and first client render use a deterministic strip (no hydration mismatch); spins randomize.
 function stripFor(col: number, winner?: Item, keep?: Item, random = true, pool?: CaseItem[]) {
   const rand = random ? undefined : seeded(col + 1)
-  const s = Array.from({ length: STRIP }, () => filler(rand, pool))
+  const s = Array.from({ length: STRIP.value }, () => filler(rand, pool))
   if (keep) s[START] = keep
-  if (winner) s[WIN] = winner
+  if (winner) s[WIN.value] = winner
   return s
 }
 function buildStrips(n: number, winners?: Item[], keep?: Item[], random = true) {
@@ -83,6 +118,7 @@ watch(
   (n) => {
     tracks.value = []
     landed.value = []
+    fxBg.stopAll()
     spunOnce = false
     buildStrips(n)
     nextTick(resetPositions)
@@ -101,22 +137,81 @@ function resetPositions() {
 onMounted(() => nextTick(resetPositions))
 watch([rootW, rootH, grid], () => props.phase !== 'spinning' && props.phase !== 'result' && nextTick(resetPositions))
 
+// Breath: leaving idle, the case winds up before the strip appears
+const breathing = ref(false)
+let breathDone: Promise<void> = Promise.resolve()
+watch(
+  () => props.phase,
+  (p, old) => {
+    // A new opening: forget the last skip. A skip pressed from here on (even during the breath) counts.
+    if (p === 'spinning') skipping = false
+    if (old !== 'idle' || p !== 'spinning' || props.fast || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    breathing.value = true
+    sfx.riser()
+    breathDone = new Promise((r) =>
+      setTimeout(() => {
+        breathing.value = false
+        r()
+      }, 420),
+    )
+  },
+)
+
+// Sell needs a second tap for valuable drops (phones: no accidental sells)
+const armed = ref<string | null>(null)
+let armTimer: ReturnType<typeof setTimeout> | undefined
+function askSell(item: InventoryItem) {
+  if (props.confirmFrom != null && item.price >= props.confirmFrom && armed.value !== item.uid) {
+    armed.value = item.uid
+    clearTimeout(armTimer)
+    armTimer = setTimeout(() => (armed.value = null), 3000)
+    haptics.tap()
+    return
+  }
+  armed.value = null
+  emit('sell', item.uid)
+}
+
 // Clicking the reel while it spins jumps straight to the result (Key-Drop's fast-forward)
 let skipping = false
 let active: Animation[] = []
 function skip() {
   skipping = true
   active.forEach((a) => a.finish())
+  scream.value?.stop()
 }
+/** The chicken's 3D scream over the reel (CaseKurwaScream); mounted only while KURWADROP is on */
+const scream = ref<{ play(fast?: boolean): Promise<boolean>; stop(): void; screaming: boolean } | null>(null)
 
 // Gold drops shake the frame once
 const shaking = ref(false)
 
 /** Columns whose reel just stopped on the Golden Chicken (the celebration plays on them) */
 const chickenHit = ref<boolean[]>([])
+/** Columns where the chicken landed, kept through the respin so its banner stays over the right column */
+const kurwaCols = ref<number[]>([])
 const respinning = ref(false)
 let spunOnce = false
 const wait = (ms: number) => new Promise((r) => setTimeout(r, skipping ? 0 : ms))
+
+const markerBox = useTemplateRef<HTMLElement>('markerBox')
+const punch = ref(false)
+
+/** Cells currently hanging on a card edge (the tease) */
+const tense = ref<boolean[]>([])
+
+/** Where a track is right now, from its running animation (no getComputedStyle per frame) */
+const posOf = new WeakMap<HTMLElement, () => number>()
+function slide(t: HTMLElement, axis: string, a: number, b: number, duration: number, easing: string) {
+  const anim = t.animate([{ transform: `translate${axis}(${a}px)` }, { transform: `translate${axis}(${b}px)` }], { duration, easing, fill: 'forwards' })
+  posOf.set(t, () => a + (b - a) * (anim.effect?.getComputedTiming().progress ?? 1))
+  active.push(anim)
+  if (skipping) anim.finish()
+  return animationDone(anim, duration).then(() => {
+    t.style.transform = `translate${axis}(${b}px)`
+    anim.cancel()
+  })
+}
 
 /**
  * Animates the given columns onto `winners`. Columns not listed keep where they are.
@@ -124,11 +219,14 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, skipping ? 0 : ms)
  */
 async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseItem[]) {
   active = []
-  const keep = strips.value.map((s) => s[spunOnce ? WIN : START]!)
+  const keep = strips.value.map((s) => s[spunOnce ? WIN.value : START]!)
   strips.value = strips.value.map((s, col) => (cols.includes(col) ? stripFor(col, winners[col], keep[col], true, pool) : s))
   if (!strips.value.length) buildStrips(props.count, winners, keep)
   cols.forEach((c) => (landed.value[c] = false))
   await nextTick()
+  // Every image on the strips decoded up front (capped), so nothing decodes while the reel moves
+  const urls = new Set(cols.flatMap((c) => strips.value[c]?.map((it) => it.image) ?? []))
+  await Promise.race([Promise.all([...urls].map(decodeImage)), new Promise((r) => setTimeout(r, 450))])
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const base = reduced ? 300 : fast ? 1600 : pool ? 3600 : 5600
@@ -136,16 +234,16 @@ async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseIt
   const size = horizontal.value ? cardW.value : cardH.value
   const axis = horizontal.value ? 'X' : 'Y'
   const from = centre(len, size, START)
-  const to = centre(len, size, WIN)
+  const to = centre(len, size, WIN.value)
 
   // Tick when a card crosses the marker
   let raf = 0
   let lastIdx = START
   const first = tracks.value[cols[0]!]
   const watchTicks = () => {
-    if (first) {
-      const m = new DOMMatrixReadOnly(getComputedStyle(first).transform)
-      const pos = horizontal.value ? m.m41 : m.m42
+    const at = first && posOf.get(first)
+    if (at) {
+      const pos = at()
       const idx = Math.floor((len / 2 - pos) / size)
       if (idx !== lastIdx) {
         lastIdx = idx
@@ -156,44 +254,99 @@ async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseIt
   }
   if (!reduced) raf = requestAnimationFrame(watchTicks)
 
+  // Speed reads as motion blur that melts away as the reel slows; the last stretch builds a glow
+  // under the markers (Forge kdCharge) that ends with the landing
+  const blurMs = base * 0.55
+  // x1 only: on x2–x5 a blur filter over several tall tracks re-rasterizes them every frame (the lag on multi-open)
+  if (!reduced && !skipping && horizontal.value)
+    tracks.value.forEach((t, c) => cols.includes(c) && active.push(t.animate([{ filter: `blur(${horizontal.value ? 5 : 4}px)` }, { filter: 'blur(0)' }], { duration: blurMs, easing: 'cubic-bezier(0.2, 0.6, 0.3, 1)' })))
+  const fx = { tension: null as ForgeHandle | null, done: false }
+  const tensionTimer = !reduced && !fast && !grid.value ? setTimeout(() => {
+    if (!skipping && markerBox.value) fxBg.at('kdCharge', markerBox.value, 1.6, true).then((h) => (fx.done ? h?.kill() : (fx.tension = h)))
+  }, base - 1500) : undefined
+
   await Promise.all(
     cols.map(async (col, order) => {
       const t = tracks.value[col]
       if (!t) return
-      const overshoot = (Math.random() * 0.36 + 0.12) * size * (Math.random() < 0.5 ? 1 : -1)
-      const duration = base + order * (fast ? 120 : 260)
-      t.style.transform = `translate${axis}(${from}px)`
-      const main = t.animate([{ transform: `translate${axis}(${from}px)` }, { transform: `translate${axis}(${to + overshoot}px)` }], {
-        duration,
-        easing: 'cubic-bezier(0.08, 0.6, 0.12, 1)',
-        fill: 'forwards',
-      })
-      active.push(main)
-      if (skipping) main.finish()
-      await animationDone(main, duration)
-      const settleMs = reduced || skipping ? 1 : 420
-      const settle = t.animate([{ transform: `translate${axis}(${to + overshoot}px)` }, { transform: `translate${axis}(${to}px)` }], {
-        duration: settleMs,
-        easing: 'cubic-bezier(0.65, 0, 0.35, 1)',
-        fill: 'forwards',
-      })
-      await animationDone(settle, settleMs)
-      t.style.transform = `translate${axis}(${to}px)`
-      main.cancel()
-      settle.cancel()
-      landed.value[col] = true
       const w = winners[col]
-      if (w && w.id !== KURWA_CHICKEN_ID) sfx.reveal(RARITY_TIER[w.rarity])
+      const tier = w ? RARITY_TIER[w.rarity] : 0
+      const duration = base + order * (fast ? 120 : 260)
+      // How this reel ends: rare drops tease more often; fast and reduced motion never do
+      const teaseOdds = w?.id === KURWA_CHICKEN_ID ? 0.7 : tier >= 3 ? 0.6 : 0.28
+      const ending = fast || reduced || skipping || Math.random() >= teaseOdds ? 'settle' : Math.random() < 0.5 ? 'short' : 'over'
+      t.style.transform = `translate${axis}(${from}px)`
+
+      if (ending === 'settle') {
+        const overshoot = (Math.random() * 0.36 + 0.12) * size * (Math.random() < 0.5 ? 1 : -1)
+        await slide(t, axis, from, to + overshoot, duration, 'cubic-bezier(0.08, 0.6, 0.12, 1)')
+        await slide(t, axis, to + overshoot, to, reduced || skipping ? 1 : 420, 'cubic-bezier(0.65, 0, 0.35, 1)')
+      } else {
+        // short: the marker stops over the card before; over: just past, on the next card
+        const edge = (0.53 + Math.random() * 0.08) * size * (ending === 'short' ? 1 : -1)
+        await slide(t, axis, from, to + edge, duration, 'cubic-bezier(0.08, 0.6, 0.12, 1)')
+        tense.value[col] = true
+        sfx.tense()
+        haptics.tap()
+        await wait(ending === 'short' ? 520 : 440)
+        // a tiny nudge the wrong way, then it gives in
+        const pull = edge * 0.06
+        await slide(t, axis, to + edge, to + edge + pull, skipping ? 1 : 160, 'cubic-bezier(0.45, 0, 0.55, 1)')
+        tense.value[col] = false
+        await slide(t, axis, to + edge + pull, to, skipping ? 1 : ending === 'short' ? 820 : 700, 'cubic-bezier(0.55, 0, 0.25, 1)')
+      }
+      landed.value[col] = true
+      if (w && w.id !== KURWA_CHICKEN_ID) {
+        sfx.reveal(tier)
+        if (tier >= 4) haptics.jackpot()
+        else if (tier >= 3) haptics.rare()
+        else haptics.tap()
+      }
     }),
   )
   cancelAnimationFrame(raf)
+  clearTimeout(tensionTimer)
+  fx.done = true
+  fx.tension?.stop()
   active = []
+  tense.value = []
   spunOnce = true
+  // a small punch of the frame on the stop
+  punch.value = false
+  requestAnimationFrame(() => (punch.value = true))
+  setTimeout(() => (punch.value = false), 420)
+}
+
+/**
+ * Rarity reveals (docs/motion.md → rarity steps): the landing itself is ItemArt `reveal` — the rarity shape pops,
+ * its echo spreads, diamond sparks fly off. Forge only adds a soft aura behind covert and gold, and the KD-coin
+ * jackpot for gold.
+ */
+async function rareFx(winners: Item[]) {
+  if (grid.value) return
+  await nextTick()
+  const cards = root.value?.querySelectorAll<HTMLElement>('[data-win]') ?? []
+  cards.forEach((el, i) => {
+    const w = horizontal.value ? winners[0] : winners[i]
+    const tier = w ? RARITY_TIER[w.rarity] : 0
+    if (!w || tier < 3) return
+    const rgb = hexToRgb(RARITY_HEX[w.rarity])
+    const k = horizontal.value ? 1.2 : 1
+    fxBg.at('kdAura', el, k, true).then((hd) => {
+      hd?.set('tint', rgb)
+      hd?.set('soft', 1)
+    })
+    if (tier >= 4) fxTop.at('kdJackpot', el, 1.6)
+  })
 }
 
 async function spin(winners: Item[], fast: boolean, kurwa: boolean[] = []) {
-  skipping = false
+  // from the first frame to the landing: the feed holds (no layout work, and your drop does not show early)
+  reelBusy.value = true
+  fxBg.stopAll()
+  await breathDone
   chickenHit.value = []
+  kurwaCols.value = []
   respinning.value = false
   landed.value = []
   const all = winners.map((_, i) => i)
@@ -205,20 +358,29 @@ async function spin(winners: Item[], fast: boolean, kurwa: boolean[] = []) {
   if (hits.length) {
     // The chicken grows, screams, and the respin starts among the expensive items only
     chickenHit.value = all.map((i) => kurwa[i]!)
+    kurwaCols.value = hits
     sfx.squawk()
+    haptics.jackpot()
+    nextTick(() => root.value?.querySelectorAll<HTMLElement>('.kd-chicken-hit').forEach((el) => fxTop.at('kdJackpot', el, 2)))
     shaking.value = true
     setTimeout(() => (shaking.value = false), 600)
-    await wait(fast ? 900 : 1700)
+    // the 3D scream holds the respin until it is gone (never longer than 3 s); without 3D — the plain pause and banner
+    const played = !skipping && (await Promise.race([scream.value?.play(fast) ?? Promise.resolve(false), new Promise<boolean>((r) => setTimeout(() => r(true), 3000))]))
+    if (!played) await wait(fast ? 900 : 1700)
+    else if (scream.value?.screaming) scream.value.stop()   // a slow phone ran past 3 s: the respin does not wait, the label goes
     respinning.value = true
     chickenHit.value = []
     await run(winners, fast, hits, kurwaPool.value)
     respinning.value = false
+    kurwaCols.value = []
   }
 
   if (winners.some((w) => RARITY_TIER[w.rarity] >= 4)) {
     shaking.value = true
     setTimeout(() => (shaking.value = false), 600)
   }
+  reelBusy.value = false
+  rareFx(winners)
 }
 
 defineExpose({ spin, skip })
@@ -232,21 +394,24 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     class="kd-reel relative rounded-5xl"
     :title="phase === 'spinning' ? $t('case.skipHint') : undefined"
     @click="phase === 'spinning' && skip()"
-    :class="[shaking && 'is-shaking', (respinning || chickenHit.some(Boolean)) && 'is-kurwa', phase, horizontal ? 'is-h h-80 overflow-hidden sm:h-[278px]' : 'is-v', grid ? 'is-grid' : !horizontal && 'h-[278px] overflow-hidden']"
-    :style="grid ? { height: `${MOBILE_H}px` } : undefined"
+    :class="[shaking && 'is-shaking', punch && 'is-punch', tense.some(Boolean) && 'is-tense', (respinning || chickenHit.some(Boolean)) && 'is-kurwa', phase, horizontal ? 'is-h h-64 overflow-hidden sm:h-[278px]' : 'is-v', grid ? 'is-grid' : !horizontal && 'h-[278px] overflow-hidden']"
+    :style="{ ...(grid ? { height: `${MOBILE_H}px` } : {}) }"
   >
+    <!-- Forge layer: sits behind the cards, clipped by the reel; markerBox is where the tension glow sits -->
+    <div ref="fxHost" class="pointer-events-none absolute inset-0 overflow-hidden rounded-5xl" />
+    <span ref="markerBox" class="pointer-events-none absolute top-1/2 left-1/2 size-40 -translate-1/2" aria-hidden="true" />
+
     <!-- Horizontal (x1) -->
-    <div v-if="horizontal" :ref="(el) => (tracks = el ? [el as HTMLElement] : [])" class="kd-reel-track absolute inset-y-0 left-0 flex items-center will-change-transform">
+    <div v-if="horizontal" :ref="(el) => (tracks = el ? [el as HTMLElement] : [])" class="kd-reel-track absolute inset-y-0 left-0 flex items-center" :class="phase === 'spinning' && 'will-change-transform'">
       <div
         v-for="(it, i) in strips[0]"
         :key="i"
         class="kd-reel-card relative flex shrink-0 flex-col items-center justify-center"
         :style="{ width: `${cardW}px` }"
         :data-win="(phase === 'result' && i === WIN) || undefined"
+        :class="[Math.abs(i - WIN) <= 3 && 'is-near', phase === 'result' && i === WIN && results[0] && soldUids.includes(results[0].uid) && 'is-sold']"
       >
-        <FxBurst v-if="phase === 'result' && i === WIN" :tier="RARITY_TIER[it.rarity]" :color="RARITY_COLOR[it.rarity]" :size="isMobile ? 170 : 190" />
-        <FxBurst v-if="chickenHit[0] && i === WIN" :tier="4" color="var(--color-item-gold)" :size="isMobile ? 200 : 230" />
-        <ItemArt :image="it.image" :rarity="it.rarity" :size="isMobile ? 112 : 96" class="relative w-full" :class="chickenHit[0] && i === WIN && 'kd-chicken-hit'" />
+        <ItemArt :image="it.image" :rarity="it.rarity" :size="96" eager :reveal="phase === 'result' && i === WIN && it.id !== 'kurwa-chicken' ? RARITY_TIER[it.rarity] || 1 : 0" class="relative w-full" :class="chickenHit[0] && i === WIN && 'kd-chicken-hit'" />
       </div>
     </div>
 
@@ -263,30 +428,35 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
       <div
         v-for="(strip, col) in strips"
         :key="`${count}-${col}`"
-        class="kd-cell relative h-full overflow-hidden"
-        :class="grid ? 'is-framed rounded-3xl' : { 'border-l border-neutral-5': col > 0 }"
+        class="kd-cell relative h-full overflow-hidden [contain:layout_paint]"
+        :class="[grid ? 'is-framed rounded-3xl' : { 'border-l border-neutral-5': col > 0 }, tense[col] && 'is-tense']"
         :style="cellStyle(col)"
       >
-        <div :ref="(el) => el && (tracks[col] = el as HTMLElement)" class="absolute inset-x-0 top-0 will-change-transform">
+        <!-- will-change only while it moves: a resting strip as a layer kept the whole 36-card texture in GPU memory -->
+        <div :ref="(el) => el && (tracks[col] = el as HTMLElement)" class="absolute inset-x-0 top-0" :class="phase === 'spinning' && 'will-change-transform'">
           <div
             v-for="(it, i) in strip"
             :key="i"
             class="kd-reel-card relative flex items-center justify-center"
             :style="{ height: `${cardH}px` }"
             :data-win="(landed[col] && i === WIN) || undefined"
+            :class="[Math.abs(i - WIN) <= 2 && 'is-near', landed[col] && i === WIN && results[col] && soldUids.includes(results[col]!.uid) && 'is-sold']"
           >
-            <FxBurst v-if="landed[col] && i === WIN && !chickenHit[col] && it.id !== 'kurwa-chicken'" :tier="RARITY_TIER[it.rarity]" :color="RARITY_COLOR[it.rarity]" :size="compact ? 90 : 150" />
-            <FxBurst v-if="chickenHit[col] && i === WIN" :tier="4" color="var(--color-item-gold)" :size="compact ? 110 : 180" />
             <ItemArt
-              :class="chickenHit[col] && i === WIN && 'kd-chicken-hit'" :image="it.image" :rarity="it.rarity" :size="compact ? 52 : grid && cols === 3 ? 60 : isMobile ? 72 : 88" class="relative w-full" />
+              :class="chickenHit[col] && i === WIN && 'kd-chicken-hit'" eager :reveal="landed[col] && i === WIN && !chickenHit[col] && it.id !== 'kurwa-chicken' ? RARITY_TIER[it.rarity] || 1 : 0" :image="it.image" :rarity="it.rarity" :size="compact ? 52 : grid && cols === 3 ? 60 : isMobile ? 72 : 88" class="relative w-full" />
           </div>
         </div>
+        <Transition name="kd-kurwa">
+          <div v-if="kurwaCols.includes(col) && (respinning || !scream?.screaming)" class="pointer-events-none absolute inset-x-0 top-2 z-20 flex justify-center px-1">
+            <span class="kd-kurwa-banner rounded-md px-2 py-0.5 text-neutral-1" :class="grid ? 'type-10-caps' : 'type-12-caps'">{{ respinning ? $t('case.kurwaRespin') : $t('case.kurwaHit') }}</span>
+          </div>
+        </Transition>
 
         <!-- Result inside its own reel -->
         <div class="pointer-events-none absolute inset-x-0 flex justify-center px-1 sm:bottom-5" :class="compact ? 'bottom-1.5' : 'bottom-3'">
           <Transition name="kd-result">
             <div v-if="landed[col] && results[col]" class="pointer-events-auto flex max-w-full min-w-0 flex-col items-center gap-1 sm:gap-2">
-              <span v-if="!compact" class="type-10-caps sm:type-12-caps max-w-full truncate text-neutral-11">{{ results[col]!.weapon }}</span>
+              <span v-if="!compact" class="type-10-caps sm:type-12-caps max-w-full truncate text-weapon">{{ results[col]!.weapon }}</span>
               <span class="type-12 sm:type-14 max-w-full truncate" :style="{ color: RARITY_COLOR[results[col]!.rarity] }">{{ results[col]!.skin }}</span>
               <span
                 v-if="soldUids.includes(results[col]!.uid)"
@@ -294,9 +464,18 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
               >
                 {{ $t('wallet.sold') }}
               </span>
-              <UiButton v-else-if="phase === 'result' && !demo" variant="light" size="s" class="max-sm:h-7 max-sm:px-2" @click="emit('sell', results[col]!.uid)">
-                <span class="max-sm:hidden">{{ $t('wallet.sell') }}</span>
-                <UiPrice :amount="results[col]!.price" size="s" tone="inverse" />
+              <UiButton
+                v-else-if="phase === 'result' && !demo"
+                :variant="armed === results[col]!.uid ? 'danger' : 'light'"
+                size="s"
+                class="max-sm:h-7 max-sm:px-2"
+                @click="askSell(results[col]!)"
+              >
+                <span v-if="armed === results[col]!.uid">{{ $t('wallet.sure') }}</span>
+                <template v-else>
+                  <span class="max-sm:hidden">{{ $t('wallet.sell') }}</span>
+                  <UiPrice :amount="results[col]!.price" size="s" tone="inverse" />
+                </template>
               </UiButton>
             </div>
           </Transition>
@@ -309,9 +488,12 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
       </div>
     </div>
 
-    <!-- KURWADROP: the chicken screams, then the respin among the expensive items -->
+    <!-- KURWADROP: the chicken screams, then the respin among the expensive items. One reel: centred over it;
+         several: the banner sits in the column where the chicken landed (see the column loop). -->
+    <!-- the 3D scream over the top of the reel; while it plays it replaces the "KURWADROP!" banner -->
+    <CaseKurwaScream v-if="kurwadrop" ref="scream" :text="$t('case.kurwaScream')" class="absolute inset-x-0 top-0 z-30 h-1/2" />
     <Transition name="kd-kurwa">
-      <div v-if="chickenHit.some(Boolean) || respinning" class="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center">
+      <div v-if="horizontal && ((chickenHit.some(Boolean) && !scream?.screaming) || respinning)" class="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center">
         <span class="kd-kurwa-banner type-16-caps rounded-lg px-3 py-1 text-neutral-1">{{ respinning ? $t('case.kurwaRespin') : $t('case.kurwaHit') }}</span>
       </div>
     </Transition>
@@ -320,29 +502,30 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     <div v-if="horizontal && phase === 'result' && results[0]" class="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center sm:bottom-5">
       <Transition name="kd-result" appear>
         <div class="pointer-events-auto flex min-w-0 flex-col items-center gap-1 sm:gap-2">
-          <span class="type-12-caps max-w-full truncate text-neutral-11">{{ results[0].weapon }}</span>
+          <span class="type-12-caps max-w-full truncate text-weapon">{{ results[0].weapon }}</span>
           <span class="type-14 max-w-full truncate" :style="{ color: RARITY_COLOR[results[0].rarity] }">{{ results[0].skin }}</span>
           <span v-if="soldUids.includes(results[0].uid)" class="type-12-caps flex h-8 items-center gap-1.5 rounded-md border border-success bg-success-24 px-2 text-success">
             {{ $t('wallet.sold') }}
             <UiPrice :amount="results[0].price" size="s" tone="muted" />
           </span>
           <div v-else-if="!demo" class="flex gap-2">
-            <UiButton variant="light" size="s" @click="emit('sell', results[0].uid)">
-              {{ $t('wallet.sell') }}
+            <UiButton :variant="armed === results[0].uid ? 'danger' : 'light'" size="s" @click="askSell(results[0])">
+              <UiTextSwap :text="armed === results[0].uid ? $t('wallet.sureSell') : $t('wallet.sell')" />
               <UiPrice :amount="results[0].price" size="s" tone="inverse" />
             </UiButton>
-            <UiButton variant="secondary" size="s" icon="upgrade" :to="`/upgrade?item=${results[0].uid}`">{{ $t('upgrade.upgrade') }}</UiButton>
+            <UiButton variant="secondary" size="s" icon="upgrade" :to="`/upgrade?item=${results[0].uid}&from=${data.slug}`">{{ $t('upgrade.upgrade') }}</UiButton>
           </div>
         </div>
       </Transition>
     </div>
 
-    <!-- Idle: the case sits in the centre while its contents drift by, blurred, behind it -->
+    <!-- Idle: the case sits in the centre while a few of its contents drift by, faded, behind it -->
     <Transition name="kd-idle">
-      <div v-if="phase === 'idle'" class="kd-idle pointer-events-none absolute inset-0 overflow-hidden rounded-5xl">
-        <div class="kd-drift absolute inset-y-0 left-0 flex items-center">
+      <div v-if="phase === 'idle' || breathing" class="kd-idle pointer-events-none absolute inset-0 overflow-hidden rounded-5xl" :class="breathing && 'is-breathing'">
+        <div class="kd-idle-fade absolute inset-0">
+          <div class="kd-drift absolute inset-y-0 left-0 flex items-center">
           <ItemArt
-            v-for="(it, i) in [...data.items, ...data.items]"
+            v-for="(it, i) in driftItems"
             :key="i"
             :image="it.image"
             :rarity="it.rarity"
@@ -350,10 +533,11 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
             class="w-44 shrink-0 sm:w-52"
           />
         </div>
+        </div>
         <img
           :src="data.image"
           :alt="data.name"
-          class="kd-reel-case absolute top-1/2 left-1/2 size-56 -translate-x-1/2 -translate-y-1/2 object-contain sm:size-[230px]"
+          class="kd-reel-case absolute top-1/2 left-1/2 size-40 -translate-x-1/2 -translate-y-1/2 object-contain sm:size-[210px]"
         />
       </div>
     </Transition>
@@ -366,27 +550,30 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 </template>
 
 <style scoped>
-.kd-reel-card {
+/* Only the cards that can be on screen when the reel stops (is-near) animate: dimming every card of five
+   strips meant hundreds of opacity/filter transitions at once — the multi-open lag */
+.kd-reel-card.is-near {
   transition:
     opacity var(--dur-slow) var(--ease-out),
     transform var(--dur-slow) var(--ease-spring),
     filter var(--dur-slow) var(--ease-out);
 }
+.kd-reel-card {
+  contain: layout style;
+}
 /* Figma: grey frame that warms up to brand orange where the markers sit */
+/* The frame warms up towards the markers (a soft gradient that anchors them), no glow around it */
 .kd-reel {
   border: 4px solid transparent;
   background:
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
-    linear-gradient(90deg, var(--color-neutral-7) 22%, var(--color-brand-base) 50%, var(--color-neutral-7) 78%) border-box;
+    linear-gradient(90deg, var(--color-neutral-4) 15%, rgb(255 95 31 / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
   transition: box-shadow var(--dur-slow) var(--ease-out);
 }
 .kd-reel.is-v {
   background:
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
-    linear-gradient(180deg, var(--color-neutral-7) 22%, var(--color-brand-base) 50%, var(--color-neutral-7) 78%) border-box;
-}
-.kd-reel.spinning {
-  box-shadow: 0 0 32px -8px rgb(255 95 31 / 0.45);
+    linear-gradient(180deg, var(--color-neutral-4) 15%, rgb(255 95 31 / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
 }
 /* Phone grid: the outer frame steps aside and every mini reel gets its own */
 .kd-reel.is-grid {
@@ -398,7 +585,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   border: 2px solid transparent;
   background:
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
-    linear-gradient(180deg, var(--color-neutral-7) 22%, var(--color-brand-base) 50%, var(--color-neutral-7) 78%) border-box;
+    linear-gradient(180deg, var(--color-neutral-4) 15%, rgb(255 95 31 / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
 }
 .kd-reel.is-grid.spinning .kd-cell {
   box-shadow: 0 0 24px -8px rgb(255 95 31 / 0.45);
@@ -416,11 +603,14 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 .kd-reel.idle .kd-reel-track {
   opacity: 0;
 }
+/* The moving strip is plain (no filter, no mask): a filtered/masked layer that size kept several full copies
+   in GPU memory. The edge fade is a mask on the still parent, rasterized once at the reel's size. */
 .kd-drift {
   width: max-content;
-  filter: blur(4px) saturate(0.9);
-  opacity: 0.55;
-  animation: kd-drift 70s linear infinite;
+  opacity: 0.32;
+  animation: kd-drift 40s linear infinite;
+}
+.kd-idle-fade {
   mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
 }
 @keyframes kd-drift {
@@ -442,12 +632,27 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   transition: transform var(--dur-base) var(--ease-in);
   transform: scale(1.2);
 }
-.kd-reel.spinning .kd-reel-card {
-  opacity: 0.85;
-}
-.kd-reel.result .kd-reel-card:not([data-win]) {
+.kd-reel.result .kd-reel-card.is-near:not([data-win]) {
   opacity: 0.18;
   filter: grayscale(0.6);
+}
+/* The drop floats and its glow breathes while it is yours; once sold it stops and dims */
+.kd-reel-card[data-win]:not(.is-sold) > .kd-art {
+  /* translate only (compositor), the glow is static: animating a drop-shadow filter stuttered */
+  will-change: translate;
+  animation: kd-drop-float 3.2s cubic-bezier(0.45, 0, 0.55, 1) 800ms infinite;
+}
+@keyframes kd-drop-float {
+  50% {
+    translate: 0 -6px;
+  }
+}
+.kd-reel-card.is-sold[data-win] {
+  opacity: 0.4;
+  filter: grayscale(0.85);
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    filter var(--dur-slow) var(--ease-out);
 }
 .kd-reel-card[data-win] {
   opacity: 1;
@@ -490,18 +695,59 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 
 /* Skin.club "rouletteDropFloat": the case levitates and its shadow grows softer as it rises */
 .kd-reel-case {
-  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.75));
-  animation: kd-case-float 3.6s ease-in-out infinite;
+  /* static shadow (an animated drop-shadow repaints every frame); the case stays clear of the frame */
+  filter: drop-shadow(0 12px 14px rgb(0 0 0 / 0.6));
+  animation: kd-case-float 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 /* Centring comes from Tailwind's `translate` property, so the float only touches `transform` */
 @keyframes kd-case-float {
   50% {
-    transform: translateY(-14px);
-    filter: drop-shadow(0 22px 18px rgb(0 0 0 / 0.45));
+    transform: translateY(-8px);
   }
 }
 .kd-reel.spinning {
   cursor: pointer;
+}
+/* Breath: the case squashes, jumps and swells before it bursts open into the strip */
+.kd-idle.is-breathing .kd-reel-case {
+  animation: kd-breath 420ms var(--ease-in-out) both;
+}
+.kd-idle.is-breathing .kd-drift {
+  opacity: 0.2;
+  transition: opacity 300ms var(--ease-out);
+}
+@keyframes kd-breath {
+  0% {
+    transform: none;
+  }
+  25% {
+    transform: scale(1.08, 0.88) translateY(8px);
+  }
+  60% {
+    transform: scale(0.94, 1.1) translateY(-22px);
+    filter: drop-shadow(0 0 24px rgb(255 125 32 / 0.7));
+  }
+  100% {
+    transform: scale(1.25) translateY(-6px);
+    filter: drop-shadow(0 0 40px rgb(255 125 32 / 0.9)) brightness(1.4);
+  }
+}
+/* Tease: while a reel hangs on a card edge the markers breathe and a soft glow gathers (no hard rim) */
+.kd-reel.is-tense:not(.is-grid),
+.kd-cell.is-framed.is-tense {
+  box-shadow: 0 0 44px -10px rgb(255 95 31 / 0.7);
+  transition: box-shadow var(--dur-slow) var(--ease-out);
+}
+.kd-reel.is-tense .kd-marker-a,
+.kd-reel.is-tense .kd-marker-b,
+.kd-cell.is-tense .kd-marker-a,
+.kd-cell.is-tense .kd-marker-b {
+  animation: kd-marker-tense 640ms var(--ease-in-out) infinite alternate;
+}
+@keyframes kd-marker-tense {
+  to {
+    filter: drop-shadow(0 0 10px rgb(255 151 33 / 0.85));
+  }
 }
 /* KURWADROP */
 .kd-chicken-hit {
@@ -536,7 +782,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   box-shadow: 0 0 0 2px var(--color-item-gold), 0 0 48px -8px var(--color-item-gold);
 }
 .kd-kurwa-banner {
-  background: linear-gradient(90deg, #f5c649, #fff3c4, #e4ae39);
+  background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light), var(--color-item-gold));
   box-shadow: 0 6px 24px rgb(228 174 57 / 0.55);
 }
 .kd-kurwa-enter-active {
@@ -578,7 +824,32 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   transform: translateY(10px);
 }
 
-/* Markers: top/bottom for the horizontal reel, left/right for vertical reels */
+/* Markers: top/bottom for the horizontal reel, left/right for vertical reels.
+   Once the reel has stopped they slide out of the way (the drop gets the stage) and glide back in
+   when the next spin starts. */
+.kd-marker-a,
+.kd-marker-b {
+  transition:
+    opacity 420ms var(--ease-out),
+    translate 520ms var(--ease-out),
+    filter 120ms linear;
+}
+.kd-reel.result .kd-markers-h .kd-marker-a {
+  opacity: 0;
+  translate: 0 -12px;
+}
+.kd-reel.result .kd-markers-h .kd-marker-b {
+  opacity: 0;
+  translate: 0 12px;
+}
+.kd-reel.result .kd-markers-v .kd-marker-a {
+  opacity: 0;
+  translate: -12px 0;
+}
+.kd-reel.result .kd-markers-v .kd-marker-b {
+  opacity: 0;
+  translate: 12px 0;
+}
 .kd-markers-h .kd-marker-a,
 .kd-markers-h .kd-marker-b {
   left: 50%;
@@ -612,8 +883,13 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   width: 16px;
   height: 12px;
 }
-.kd-reel.spinning .kd-marker-a,
-.kd-reel.spinning .kd-marker-b {
-  filter: drop-shadow(0 0 8px rgb(255 125 32 / 0.8));
+
+.kd-reel.is-punch {
+  animation: kd-punch 420ms var(--ease-spring);
+}
+@keyframes kd-punch {
+  35% {
+    scale: 1.012;
+  }
 }
 </style>

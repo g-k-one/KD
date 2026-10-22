@@ -21,6 +21,10 @@ export interface CaseSummary {
   tag?: CaseTag
   /** Return to player, basis points (9240 = 92.40%). Configured in the admin panel. */
   rtp: number
+  /** Chance that one drop is worth at least the case price, basis points. Home sorts by it. */
+  payback: number
+  /** Biggest multiplier (drop price / case price) this case paid in the last 24 h; null if nothing notable */
+  bestToday: number | null
   createdAt: string
 }
 
@@ -39,11 +43,14 @@ export interface User {
   nickname: string
   avatar: string
   steamId: string
+  /** Grows with coins spent on cases, upgrades and battles (XP = coin cents spent) */
   level: number
   /** 0..100 progress to the next level */
   levelProgress: number
   balance: number
   skinsValue: number
+  /** Steam trade offer link the skins are sent to; null until the player saves one */
+  tradeUrl: string | null
 }
 
 export interface MeResponse {
@@ -57,14 +64,19 @@ export interface FeedDrop {
   rarity: Rarity
   image: string
   price: number
+  /** "upgrade" for upgrade wins */
   caseSlug: string
+  caseName: string
+  /** What the player paid: the case price, or the stake for an upgrade. Multiplier = price / casePrice. */
+  casePrice: number
   userNickname: string
+  userAvatar: string
   createdAt: string
 }
 
 export interface FeedResponse {
   drops: FeedDrop[]
-  /** Highest-value recent drop, shown pinned at the start of the feed */
+  /** Recent drop with the biggest multiplier (price / casePrice), pinned at the start of the feed */
   highlight: FeedDrop | null
 }
 
@@ -89,7 +101,7 @@ export interface InventoryItem extends Item {
   acquiredAt: string
   /** Where it came from, for history and the "Sold" badge on results */
   source: 'case' | 'upgrade'
-  status: 'owned' | 'sold' | 'used'
+  status: 'owned' | 'sold' | 'used' | 'withdrawn'
 }
 
 // --- Case page -----------------------------------------------------------
@@ -100,6 +112,8 @@ export interface CaseItem extends Item {
   /** Inclusive ticket range owned by this item, assigned in list order. */
   ticketFrom: number
   ticketTo: number
+  /** How many times this item dropped from this case in the last 24 h (all players) */
+  drops24h: number
 }
 
 export interface CaseOdds {
@@ -117,24 +131,29 @@ export interface CaseDetails extends CaseSummary {
   /** Version of the odds table committed into the seed hash (see fairness page). */
   oddsVersion: number
   kurwadrop: KurwadropInfo
+  /** Best drops from this case over the last 7 days by multiplier (drop price / case price), best first, ≤ 8 */
+  topDrops: CaseTopDrop[]
+}
+
+export interface CaseTopDrop {
+  item: Item
+  nickname: string
+  /** item.price / case price, one decimal */
+  multiplier: number
+  at: string
 }
 
 /**
- * KURWADROP option: a Golden Chicken joins the case. Landing on it triggers a second roll
- * among the expensive items only. The option price is set so the RTP stays the same:
- * price = case price × (EV with the chicken) / (EV without it).
- *
- * PF: roll 1 is the normal ticket. Tickets 1…chickenTickets are the chicken; anything above is
- * rescaled onto the normal table: ceil((ticket − chickenTickets) × 1 000 000 / (1 000 000 − chickenTickets)).
- * Roll 2 (chicken only) uses client seed + ":kurwadrop" with the same nonce, mapped onto the pool's
- * tickets rescaled to 1 000 000.
+ * KURWADROP option: presentation only — same odds, same price. When the roll lands on one of the top items
+ * (poolIds), the reel first stops on the Golden Chicken, then spins again among the top items onto the drop.
+ * PF is the normal single ticket.
  */
 export interface KurwadropInfo {
-  /** Open price with the option on, coin cents */
+  /** Open price with the option on: the same as the case price */
   price: number
-  /** Chicken share out of PF_TICKETS */
+  /** How often the chicken shows: the top items' tickets out of PF_TICKETS */
   chickenTickets: number
-  /** Item ids the second roll picks from (price ≥ 3× case price, at least the top 3) */
+  /** Top items that arrive through the chicken (price ≥ 3× case price, at least the top 3) */
   poolIds: string[]
 }
 
@@ -155,7 +174,7 @@ export interface PfRoll {
 
 export interface OpenCaseResponse {
   drops: InventoryItem[]
-  /** Per drop: true when roll 1 hit the Golden Chicken and the drop came from the respin */
+  /** Per drop: true when KURWADROP was on and the drop is a top item (shown via the chicken and a respin) */
   kurwa: boolean[]
   rolls: PfRoll[]
   balance: number
@@ -175,6 +194,24 @@ export interface SellRequest {
 export interface SellResponse {
   sold: string[]
   balance: number
+}
+
+// --- Withdraw to Steam ----------------------------------------------------------
+
+/** PUT /api/me/trade-url. Must look like https://steamcommunity.com/tradeoffer/new/?partner=…&token=… */
+export interface TradeUrlBody {
+  tradeUrl: string
+}
+
+/** POST /api/inventory/withdraw. 400 without a saved trade URL. */
+export interface WithdrawBody {
+  uids: string[]
+}
+
+export interface WithdrawResponse {
+  withdrawn: string[]
+  /** One Steam trade offer for all of them; the player accepts it in Steam before it expires */
+  offer: { id: string; sentAt: string; expiresAt: string }
 }
 
 // --- Upgrade --------------------------------------------------------------
@@ -210,10 +247,22 @@ export interface SeedPairPublic {
   nonce: number
 }
 
+export interface RevealedSeedPair extends SeedPairPublic {
+  /** Revealed at rotation; SHA-256 of it equals serverSeedHash */
+  serverSeed: string
+  /** When this pair became active and when it was replaced; nonce = rolls made with it (1…nonce) */
+  createdAt: string
+  rotatedAt: string
+  /** The player set a new client seed with this rotation (otherwise only the server seed changed) */
+  clientChanged: boolean
+}
+
 export interface SeedsResponse {
-  active: SeedPairPublic
-  /** Last revealed pair, after a rotation */
-  previous: (SeedPairPublic & { serverSeed: string }) | null
+  active: SeedPairPublic & { createdAt: string }
+  /** Last revealed pair, after a rotation (= history[0]) */
+  previous: RevealedSeedPair | null
+  /** Every rotation so far, newest first: the full trail to verify any past roll */
+  history: RevealedSeedPair[]
 }
 
 // --- Deposit --------------------------------------------------------------
@@ -258,7 +307,7 @@ export interface PromoResponse {
 
 // --- History --------------------------------------------------------------
 
-export type HistoryGame = 'case' | 'upgrade' | 'deposit' | 'sell'
+export type HistoryGame = 'case' | 'upgrade' | 'deposit' | 'sell' | 'withdraw'
 
 export interface HistoryEntry {
   id: string
@@ -270,6 +319,10 @@ export interface HistoryEntry {
   payout: number
   status: 'won' | 'lost' | 'done'
   nonce?: number
+  /** Upgrades: the chance played (basis points), the roll (0.00–99.99) and what the target was worth */
+  chance?: number
+  roll?: number
+  targetPrice?: number
 }
 
 export interface HistoryResponse {
@@ -323,6 +376,8 @@ export interface Battle {
   /** ms per round the client should use to replay */
   roundMs: number
   winnerSlot: number | null
+  /** People watching the room right now (the Go backend counts WebSocket subscribers) */
+  viewers: number
   seed: { serverSeedHash: string; eosBlock: number | null; serverSeed: string | null }
   createdAt: string
 }
@@ -339,4 +394,103 @@ export interface BattleResponse {
 export interface CreateBattleRequest {
   size: 2 | 3 | 4
   cases: Array<{ slug: string; qty: number }>
+}
+
+// --- Big wins of the day ---------------------------------------------------------
+
+export interface BigWin {
+  id: string
+  nickname: string
+  avatar: string
+  level: number
+  item: Item
+  caseSlug: string
+  caseName: string
+  caseImage: string
+  /** What was paid for the roll (case price) */
+  cost: number
+  /** item.price / cost, rounded down */
+  multiplier: number
+  at: string
+}
+
+export interface BigWinsResponse {
+  /** Top drops of the last 24 h by multiplier, best first */
+  wins: BigWin[]
+}
+
+// --- Bonuses: daily case and level rewards ---------------------------------------------
+
+export interface DailyInfo {
+  /** The free case; its contents get better every 5 levels */
+  case: CaseDetails
+  tier: number
+  /** null = can be opened now; otherwise when it unlocks */
+  nextAt: string | null
+}
+
+export interface LevelReward {
+  level: number
+  /** Coin cents credited on claim */
+  coins: number
+  /** Set on levels where the daily case moves up a tier */
+  dailyTier?: number
+  status: 'locked' | 'claimable' | 'claimed'
+}
+
+/**
+ * Rakeback: a share of every coin played comes back, the share grows with the level.
+ * `pending` accrues on each spend and is claimed by hand (POST /api/bonuses/rakeback/claim).
+ */
+export interface RakebackInfo {
+  /** Current share in basis points (50 = 0.5%) */
+  rateBp: number
+  /** The share at the next step and the level it unlocks at; null at the top */
+  next: { level: number; rateBp: number } | null
+  /** Coin cents waiting to be claimed */
+  pending: number
+  claimedTotal: number
+}
+
+export type MissionKind = 'open_cases' | 'win_upgrade' | 'play_battle' | 'spend'
+
+/** Daily missions: three small goals, reset every 24 h (missionsResetAt). Titles come from i18n by kind. */
+export interface Mission {
+  id: string
+  kind: MissionKind
+  /** Target count; for `spend` coin cents */
+  goal: number
+  progress: number
+  /** Coin cents paid on claim (POST /api/bonuses/missions/:id/claim) */
+  reward: number
+  status: 'active' | 'claimable' | 'claimed'
+}
+
+export interface BonusesResponse {
+  daily: DailyInfo
+  /** A window of levels around the user's: a few behind, the current one and the next ten */
+  levels: LevelReward[]
+  rakeback: RakebackInfo
+  missions: Mission[]
+  missionsResetAt: string
+}
+
+/** POST /api/bonuses/promo. 400 for an unknown or already used code. */
+export interface PromoBody {
+  code: string
+}
+export interface PromoResponse {
+  balance: number
+  credited: number
+}
+
+/** Rakeback and mission claims: the new balance and the fresh bonuses state */
+export interface BonusClaimResponse {
+  balance: number
+  bonuses: BonusesResponse
+}
+
+export interface ClaimLevelResponse {
+  balance: number
+  levels: LevelReward[]
 }

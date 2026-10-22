@@ -2,7 +2,9 @@
 import type { Item } from '#shared/types/api'
 
 // Figma "InventoryItem": Default / Hover / Selected (brand tint + remove icon) / Empty slot.
-const props = defineProps<{ item?: Item | null; selected?: boolean; disabled?: boolean }>()
+// hint: a small label in the top-right corner (the upgrade chance for this target); near: highlighted by the chance slider
+// readonly: the same card as a plain div (PvP drops), no hover lift or toggle
+const props = defineProps<{ item?: Item | null; selected?: boolean; disabled?: boolean; hint?: string; near?: boolean; readonly?: boolean }>()
 defineEmits<{ toggle: [] }>()
 const rc = computed(() => (props.item ? RARITY_COLOR[props.item.rarity] : undefined))
 </script>
@@ -11,18 +13,25 @@ const rc = computed(() => (props.item ? RARITY_COLOR[props.item.rarity] : undefi
   <div v-if="!item" class="grid aspect-[164/128] place-items-center lg:aspect-auto lg:h-[105px] rounded-2xl bg-neutral-3 text-neutral-7">
     <UiIcon name="pistol" :size="40" />
   </div>
-  <button
+  <component
+    :is="readonly ? 'div' : 'button'"
     v-else
-    type="button"
+    :type="readonly ? undefined : 'button'"
     class="kd-tile group relative aspect-[164/128] w-full lg:aspect-auto lg:h-[105px] overflow-hidden rounded-2xl border text-left"
+    :class="readonly && 'is-readonly'"
     :aria-pressed="selected"
+    :data-near="near || undefined"
     :disabled="disabled"
     @click="$emit('toggle')"
   >
-    <ItemArt :image="item.image" :rarity="item.rarity" :size="56" class="kd-tile-art absolute inset-0 m-auto w-full" />
+    <span class="absolute inset-0 grid place-items-center"><ItemArt :image="item.image" :rarity="item.rarity" :size="56" class="kd-tile-art w-full" /></span>
     <div class="absolute inset-x-0 top-0 flex flex-col gap-0.5 px-1.5 py-1">
-      <UiPrice :amount="item.price" size="s" />
-      <span class="type-10-caps flex gap-1">
+      <!-- prices are short (12.9k), so the chance hint fits at the top edge beside them -->
+      <span class="flex items-center gap-1">
+        <UiPrice :amount="item.price" size="s" compact />
+        <span v-if="hint" class="kd-tile-hint type-10-caps ml-auto rounded-xs px-1 py-px tabular-nums">{{ hint }}</span>
+      </span>
+      <span class="type-10-caps flex items-center gap-1">
         <span v-if="item.statTrak" class="text-brand-light">ST</span>
         <span class="kd-tile-meta">{{ item.wear }}</span>
       </span>
@@ -31,8 +40,8 @@ const rc = computed(() => (props.item ? RARITY_COLOR[props.item.rarity] : undefi
       <span class="kd-tile-meta type-10-caps truncate">{{ item.weapon }}</span>
       <span class="type-12 truncate" :style="{ color: rc }">{{ item.skin }}</span>
     </div>
-    <UiIcon name="x-circle" :size="24" class="kd-tile-x absolute top-1/2 left-1/2 text-neutral-15" />
-  </button>
+    <UiIcon v-if="!readonly" name="x-circle" :size="24" class="kd-tile-x absolute top-1/2 left-1/2 text-neutral-15" />
+  </component>
 </template>
 
 <style scoped>
@@ -45,7 +54,7 @@ const rc = computed(() => (props.item ? RARITY_COLOR[props.item.rarity] : undefi
     transform var(--dur-base) var(--ease-spring);
 }
 .kd-tile-meta {
-  color: rgb(255 255 255 / 0.48);
+  color: var(--color-weapon);
   transition: color var(--dur-base) var(--ease-out);
 }
 .kd-tile-x {
@@ -58,11 +67,14 @@ const rc = computed(() => (props.item ? RARITY_COLOR[props.item.rarity] : undefi
 @media (hover: hover) {
   .kd-tile:hover {
     background: var(--color-neutral-4);
-    border-color: var(--color-neutral-7);
+    border-color: var(--color-neutral-6);
   }
   .kd-tile:hover .kd-tile-meta {
     color: var(--color-neutral-14);
   }
+}
+.kd-tile.is-readonly {
+  pointer-events: none;
 }
 .kd-tile:active {
   transform: scale(0.96);
@@ -70,11 +82,25 @@ const rc = computed(() => (props.item ? RARITY_COLOR[props.item.rarity] : undefi
 }
 .kd-tile[aria-pressed='true'] {
   background: var(--color-brand-24);
-  border-color: var(--color-brand-base);
+  border-color: rgb(255 95 31 / 0.35);
 }
 .kd-tile[aria-pressed='true'] .kd-tile-x {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1) rotate(0);
+}
+.kd-tile-hint {
+  background: rgb(12 13 16 / 0.7);
+  color: var(--color-neutral-13);
+  transition: color var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out);
+}
+/* Chance slider: tiles near the wanted chance light up */
+.kd-tile[data-near] {
+  border-color: rgb(18 183 106 / 0.6);
+  box-shadow: 0 0 16px -6px var(--color-success);
+}
+.kd-tile[data-near] .kd-tile-hint {
+  background: var(--color-success-24);
+  color: var(--color-success);
 }
 .kd-tile:disabled {
   opacity: 0.4;

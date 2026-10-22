@@ -45,7 +45,17 @@ const NAV = computed(() => [
 // --- Inventory ---------------------------------------------------------------
 const selected = ref<string[]>([])
 const selectedValue = computed(() => inventory.value.filter((i) => selected.value.includes(i.uid)).reduce((a, i) => a + i.price, 0))
-const sortedInventory = computed(() => [...inventory.value].sort((a, b) => b.price - a.price))
+// Search by weapon or skin, sort by price either way or by newest
+const invQuery = ref('')
+const invSort = ref<'priceDesc' | 'priceAsc' | 'newest'>('priceDesc')
+const invSortOptions = computed(() => (['priceDesc', 'priceAsc', 'newest'] as const).map((v) => ({ value: v, label: t(`filters.sortOptions.${v}`) })))
+const sortedInventory = computed(() => {
+  const q = invQuery.value.trim().toLowerCase()
+  const list = inventory.value.filter((i) => !q || `${i.weapon} ${i.skin}`.toLowerCase().includes(q))
+  if (invSort.value === 'newest') return list.sort((a, b) => Date.parse(b.acquiredAt) - Date.parse(a.acquiredAt))
+  return list.sort((a, b) => (invSort.value === 'priceAsc' ? a.price - b.price : b.price - a.price))
+})
+const selectAll = () => (selected.value = sortedInventory.value.map((i) => i.uid))
 function toggle(uid: string) {
   selected.value = selected.value.includes(uid) ? selected.value.filter((u) => u !== uid) : [...selected.value, uid]
 }
@@ -65,27 +75,71 @@ async function sellSelected() {
   }
 }
 
+// Withdraw the selected skins to Steam (one trade offer)
+const withdrawOpen = ref(false)
+const selectedItems = computed(() => inventory.value.filter((i) => selected.value.includes(i.uid)))
+async function onWithdrawn() {
+  selected.value = []
+  await load()
+}
+
 // --- History -----------------------------------------------------------------
 const gameFilter = ref<HistoryGame | 'all'>('all')
 const filteredHistory = computed(() => history.value.filter((h) => gameFilter.value === 'all' || h.game === gameFilter.value))
-const GAME_ICON: Record<HistoryGame, string> = { case: 'cases', upgrade: 'upgrade', deposit: 'plus', sell: 'wallet' }
+const GAME_ICON: Record<HistoryGame, string> = { case: 'cases', upgrade: 'upgrade', deposit: 'plus', sell: 'wallet', withdraw: 'steam' }
 const when = (iso: string) =>
   new Date(iso).toLocaleString(locale.value, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 const mult = (h: HistoryEntry) => (h.bet > 0 ? `${(h.payout / h.bet).toFixed(2)}x` : '—')
+
+// --- Stats (from the history the profile already loads) ------------------------------
+const stats = computed(() => {
+  const cases = history.value.filter((h) => h.game === 'case')
+  const ups = history.value.filter((h) => h.game === 'upgrade')
+  const wins = ups.filter((h) => h.status === 'won')
+  const played = [...cases, ...ups]
+  const best = played.reduce<HistoryEntry | null>((b, h) => (!b || h.payout > b.payout ? h : b), null)
+  const topX = played.reduce((m, h) => (h.bet > 0 ? Math.max(m, h.payout / h.bet) : m), 0)
+  return {
+    cases: cases.length,
+    upgrades: `${wins.length} / ${ups.length}`,
+    best,
+    topX,
+    wagered: played.reduce((a, h) => a + h.bet, 0),
+  }
+})
+
+// --- Steam trade link (settings) --------------------------------------------------------
+const TRADE_RE = /^https:\/\/steamcommunity\.com\/tradeoffer\/new\/\?partner=\d+&token=[\w-]{6,}$/
+const tradeLink = ref('')
+watch(() => session.user?.tradeUrl, (v) => (tradeLink.value = v ?? ''), { immediate: true })
+const tradeValid = computed(() => TRADE_RE.test(tradeLink.value.trim()))
+const tradeSaving = ref(false)
+async function saveTrade() {
+  tradeSaving.value = true
+  try {
+    const res = await $fetch<{ tradeUrl: string }>('/api/me/trade-url', { method: 'PUT', body: { tradeUrl: tradeLink.value.trim() } })
+    if (session.user) session.user.tradeUrl = res.tradeUrl
+    toast.show(t('withdraw.saved'), 'success')
+  } catch (e) {
+    toast.error(e, t('common.error'))
+  } finally {
+    tradeSaving.value = false
+  }
+}
 
 const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.slice(0, 4)}…${session.user.steamId.slice(-4)}` : ''))
 </script>
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
-    <div v-if="!session.user" class="flex flex-col items-center gap-4 rounded-5xl border border-neutral-4 bg-neutral-2 px-6 py-16 text-center">
+    <div v-if="!session.user" class="flex flex-col items-center gap-4 rounded-5xl bg-neutral-2 px-6 py-16 text-center">
       <p class="type-14-regular text-neutral-12">{{ $t('account.signInHint') }}</p>
       <UiButton icon="sign-in" size="l" @click="ui.openSignIn()">{{ $t('auth.signInToPlay') }}</UiButton>
     </div>
 
     <template v-else>
       <!-- Profile summary -->
-      <section class="flex flex-col gap-4 rounded-5xl border border-neutral-4 bg-neutral-2 p-4 md:flex-row md:items-center md:gap-6 md:p-6">
+      <section class="flex flex-col gap-4 rounded-5xl bg-neutral-2 p-4 md:flex-row md:items-center md:gap-6 md:p-6">
         <div class="flex min-w-0 flex-1 items-center gap-4">
           <UiAvatar :src="session.user.avatar" :size="72" />
           <div class="flex min-w-0 flex-1 flex-col gap-2">
@@ -118,6 +172,18 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
         </div>
       </section>
 
+      <!-- Stats -->
+      <section class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        <div class="kd-stat"><span class="type-10-caps text-neutral-11">{{ $t('account.statCases') }}</span><span class="type-20-caps tabular-nums">{{ stats.cases }}</span></div>
+        <div class="kd-stat"><span class="type-10-caps text-neutral-11">{{ $t('account.statUpgrades') }}</span><span class="type-20-caps tabular-nums">{{ stats.upgrades }}</span></div>
+        <div class="kd-stat"><span class="type-10-caps text-neutral-11">{{ $t('account.statWagered') }}</span><UiPrice :amount="stats.wagered" size="l" /></div>
+        <div class="kd-stat"><span class="type-10-caps text-neutral-11">{{ $t('account.statTopX') }}</span><span class="type-20-caps text-coin tabular-nums">{{ stats.topX ? `x${stats.topX.toFixed(stats.topX >= 10 ? 0 : 2)}` : '—' }}</span></div>
+        <div class="kd-stat max-sm:col-span-2"><span class="type-10-caps text-neutral-11">{{ $t('account.statBest') }}</span>
+          <span v-if="stats.best" class="flex min-w-0 flex-col"><UiPrice :amount="stats.best.payout" size="l" tone="coin" /><span class="type-12-regular truncate text-neutral-11">{{ stats.best.title }}</span></span>
+          <span v-else class="type-20-caps">—</span>
+        </div>
+      </section>
+
       <div class="grid gap-4 lg:grid-cols-[240px_1fr] lg:gap-6">
         <!-- Account nav: side list on desktop (Figma "Account"), tabs on mobile -->
         <nav class="hidden flex-col gap-1 lg:flex">
@@ -142,13 +208,24 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
 
         <!-- Inventory -->
         <section v-if="tab === 'inventory'" class="flex min-w-0 flex-col gap-4">
+          <div v-if="inventory.length" class="flex items-center gap-2">
+            <UiInput id="inv-search" v-model="invQuery" icon="search" clearable :placeholder="$t('upgrade.search')" class="min-w-0 flex-1" />
+            <UiSelect v-model="invSort" :options="invSortOptions" menu-width="fixed" class="w-44 shrink-0 max-sm:hidden">
+              <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
+            </UiSelect>
+            <!-- phones: one tap cycles the sort, the title says which -->
+            <UiChip size="l" variant="field" icon="sort" class="w-12 shrink-0 justify-center px-0 sm:hidden" :title="invSortOptions.find((o) => o.value === invSort)?.label" @click="invSort = invSortOptions[(invSortOptions.findIndex((o) => o.value === invSort) + 1) % invSortOptions.length]!.value" />
+            <UiChip size="l" variant="field" :active="!!selected.length" class="shrink-0" @click="selected.length ? (selected = []) : selectAll()">
+              <UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" />
+            </UiChip>
+          </div>
           <div v-if="loading" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
             <span v-for="n in 12" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl" />
           </div>
           <div v-else-if="inventory.length" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
             <ItemTile v-for="it in sortedInventory" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
           </div>
-          <div v-else class="flex flex-col items-center gap-4 rounded-5xl border border-dashed border-neutral-7 px-6 py-16 text-center">
+          <div v-else class="flex flex-col items-center gap-4 rounded-5xl bg-neutral-2 px-6 py-16 text-center">
             <UiIcon name="pistol" :size="48" class="text-neutral-8" />
             <p class="type-14-regular max-w-72 text-neutral-12">{{ $t('account.emptyInventory') }}</p>
             <UiButton to="/" icon="cases">{{ $t('account.openCases') }}</UiButton>
@@ -158,32 +235,34 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
           <Transition name="kd-bar">
             <div
               v-if="selected.length"
-              class="sticky bottom-[calc(76px+env(safe-area-inset-bottom))] z-20 flex flex-wrap items-center gap-2 rounded-3xl border border-neutral-5 bg-neutral-3/95 p-3 shadow-elevation-2 backdrop-blur lg:bottom-6"
+              class="sticky bottom-[calc(76px+env(safe-area-inset-bottom))] z-20 flex flex-wrap items-center gap-2 rounded-3xl border border-neutral-5 bg-neutral-3 p-3 shadow-elevation-2 lg:bottom-6"
             >
               <span class="type-14 flex-1">{{ $t('account.selected', { count: selected.length }) }}</span>
               <UiButton variant="ghost" size="s" @click="selected = []">{{ $t('account.clear') }}</UiButton>
-              <UiButton variant="secondary" size="m" icon="upgrade" to="/upgrade">{{ $t('account.upgradeThem') }}</UiButton>
+              <UiButton variant="secondary" size="m" icon="upgrade" :to="`/upgrade?item=${selected.slice(0, 6).join(',')}`">{{ $t('account.upgradeThem') }}</UiButton>
+              <UiButton variant="secondary" size="m" icon="steam" @click="withdrawOpen = true">{{ $t('withdraw.short') }}</UiButton>
               <UiButton variant="light" size="m" :loading="selling" @click="sellSelected">
                 {{ $t('account.sellSelected') }}
                 <UiPrice :amount="selectedValue" size="s" tone="inverse" />
               </UiButton>
             </div>
           </Transition>
+          <WalletWithdrawModal v-model="withdrawOpen" :items="selectedItems" @done="onWithdrawn" />
         </section>
 
         <!-- History -->
         <section v-else-if="tab === 'history'" class="flex min-w-0 flex-col gap-4">
           <div class="scrollbar-none flex gap-1 overflow-x-auto">
             <UiChip :active="gameFilter === 'all'" @click="gameFilter = 'all'">{{ $t('account.allGames') }}</UiChip>
-            <UiChip v-for="g in (['case', 'upgrade', 'deposit', 'sell'] as const)" :key="g" :active="gameFilter === g" @click="gameFilter = g">
+            <UiChip v-for="g in (['case', 'upgrade', 'deposit', 'sell', 'withdraw'] as const)" :key="g" :active="gameFilter === g" @click="gameFilter = g">
               {{ $t(`account.games.${g}`) }}
             </UiChip>
           </div>
 
-          <p v-if="!filteredHistory.length" class="type-14-regular rounded-3xl border border-neutral-4 px-6 py-12 text-center text-neutral-12">{{ $t('account.emptyHistory') }}</p>
+          <p v-if="!filteredHistory.length" class="type-14-regular rounded-3xl bg-neutral-2 px-6 py-12 text-center text-neutral-12">{{ $t('account.emptyHistory') }}</p>
 
           <!-- Desktop table -->
-          <div v-else class="hidden overflow-hidden rounded-3xl border border-neutral-4 bg-neutral-2 md:block">
+          <div v-else class="hidden overflow-hidden rounded-3xl bg-neutral-2 md:block">
             <table class="w-full text-left">
               <thead class="type-12-caps text-neutral-11">
                 <tr class="border-b border-neutral-4">
@@ -239,8 +318,19 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
         </section>
 
         <!-- Settings -->
-        <section v-else class="max-w-lg rounded-5xl border border-neutral-4 bg-neutral-2 p-4 lg:p-6">
-          <LayoutSettingsPanel />
+        <section v-else class="flex max-w-lg flex-col gap-4">
+          <form class="flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4 lg:p-6" @submit.prevent="saveTrade">
+            <span class="type-14-caps">{{ $t('withdraw.tradeLink') }}</span>
+            <UiInput id="settings-trade" v-model="tradeLink" size="l" icon="steam" inputmode="url" clearable :error="!!tradeLink && !tradeValid" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…" />
+            <span class="type-12-regular text-neutral-11">
+              {{ $t('withdraw.whereLink') }}
+              <a href="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" target="_blank" rel="noopener" class="text-brand-light hover:underline">{{ $t('withdraw.openSteam') }}</a>
+            </span>
+            <UiButton type="submit" size="m" class="self-start" :loading="tradeSaving" :disabled="!tradeValid || tradeLink.trim() === session.user.tradeUrl">{{ $t('common.save') }}</UiButton>
+          </form>
+          <div class="rounded-5xl bg-neutral-2 p-4 lg:p-6">
+            <LayoutSettingsPanel />
+          </div>
         </section>
       </div>
     </template>
@@ -248,6 +338,15 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
 </template>
 
 <style scoped>
+.kd-stat {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 16px;
+  background: var(--color-neutral-2);
+  padding: 12px 14px;
+}
 .kd-bar-enter-active {
   transition:
     opacity var(--dur-base) var(--ease-out),

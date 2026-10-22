@@ -11,6 +11,17 @@ export const useSessionStore = defineStore('session', () => {
     user.value = res.user
   }
 
+  /** Re-reads the user after a game (level, progress) without replacing the object the header animates. */
+  async function refresh() {
+    if (!user.value) return
+    try {
+      const res = await $fetch<MeResponse>('/api/me')
+      if (res.user && user.value) Object.assign(user.value, res.user)
+    } catch {
+      // keep what we have
+    }
+  }
+
   async function login() {
     const res = await $fetch<MeResponse>('/api/auth/login', { method: 'POST' })
     user.value = res.user
@@ -21,5 +32,5 @@ export const useSessionStore = defineStore('session', () => {
     user.value = null
   }
 
-  return { user, isLoggedIn, fetchMe, login, logout }
+  return { user, isLoggedIn, fetchMe, refresh, login, logout }
 })

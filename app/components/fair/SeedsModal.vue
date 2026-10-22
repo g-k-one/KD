@@ -41,8 +41,8 @@ async function rotate() {
       <div class="flex flex-col gap-2">
         <label for="new-client" class="type-12-caps text-neutral-12">{{ $t('fair.newClientSeed') }}</label>
         <div class="flex gap-2">
-          <input id="new-client" v-model="newClient" spellcheck="false" class="h-12 min-w-0 flex-1 rounded-xl border border-neutral-4 bg-neutral-1 px-4 font-mono text-sm outline-none focus:border-brand-base" />
-          <UiButton size="l" icon="refresh" :loading="rotating" @click="rotate">{{ $t('fair.rotate') }}</UiButton>
+          <UiInput id="new-client" v-model="newClient" size="l" mono clearable class="min-w-0 flex-1" />
+          <UiButton variant="fair" size="l" icon="refresh" :loading="rotating" @click="rotate">{{ $t('fair.rotate') }}</UiButton>
         </div>
         <span class="type-12-regular text-neutral-11">{{ $t('fair.rotateHint') }}</span>
       </div>
@@ -53,12 +53,13 @@ async function rotate() {
           <dl class="grid gap-2 text-sm">
             <div class="grid grid-cols-[140px_1fr] gap-3"><dt class="type-12-caps text-neutral-11">{{ $t('fair.serverSeed') }}</dt><dd class="truncate font-mono text-xs text-neutral-13">{{ seeds.previous.serverSeed }}</dd></div>
             <div class="grid grid-cols-[140px_1fr] gap-3"><dt class="type-12-caps text-neutral-11">{{ $t('fair.clientSeed') }}</dt><dd class="truncate font-mono text-xs text-neutral-13">{{ seeds.previous.clientSeed }}</dd></div>
-            <div class="grid grid-cols-[140px_1fr] gap-3"><dt class="type-12-caps text-neutral-11">{{ $t('fair.nonce') }}</dt><dd class="font-mono text-xs text-neutral-13">1 – {{ seeds.previous.nonce }}</dd></div>
+            <div class="grid grid-cols-[140px_1fr] gap-3"><dt class="type-12-caps text-neutral-11">{{ $t('fair.nonce') }}</dt><dd class="font-mono text-xs text-neutral-13">{{ seeds.previous.nonce ? `1–${seeds.previous.nonce}` : $t('fair.noRolls') }}</dd></div>
           </dl>
           <UiButton
-            variant="secondary"
+            variant="fair"
             icon="check-circle"
             class="self-start"
+            :disabled="!seeds.previous.nonce"
             @click="emit('verify', { serverSeed: seeds.previous!.serverSeed, clientSeed: seeds.previous!.clientSeed, nonce: Math.max(1, seeds.previous!.nonce) })"
           >
             {{ $t('fair.useInVerifier') }}

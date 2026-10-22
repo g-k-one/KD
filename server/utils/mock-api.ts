@@ -11,6 +11,13 @@ import {
   getCaseSections,
   getFeed,
   getHistory,
+  getBigWins,
+  getBonuses,
+  openDaily,
+  claimLevel,
+  claimMission,
+  claimRakeback,
+  redeemPromo,
   getInventory,
   getMarket,
   getMockState,
@@ -21,6 +28,8 @@ import {
   quoteDeposit,
   rotateSeeds,
   sellItems,
+  setTradeUrl,
+  withdrawItems,
   upgrade,
   type DebugStateBody,
 } from './mock-db'
@@ -52,10 +61,44 @@ export async function mockRoute(method: string, path: string, body: Body, query:
   }
 
   if (m === 'GET' && path === '/api/feed') return getFeed()
+  if (m === 'GET' && path === '/api/wins/today') return getBigWins()
+
+  if (m === 'GET' && path === '/api/bonuses') {
+    authed()
+    return getBonuses()
+  }
+  if (m === 'POST' && path === '/api/bonuses/daily/open') {
+    authed()
+    return openDaily()
+  }
+  if (m === 'POST' && path === '/api/bonuses/rakeback/claim') {
+    authed()
+    return claimRakeback()
+  }
+  if (m === 'POST' && (match = path.match(/^\/api\/bonuses\/missions\/([\w-]+)\/claim$/))) {
+    authed()
+    return claimMission(match[1]!)
+  }
+  if (m === 'POST' && path === '/api/bonuses/promo') {
+    authed()
+    return redeemPromo(String(body.code ?? ''))
+  }
+  if (m === 'POST' && (match = path.match(/^\/api\/bonuses\/levels\/(\d+)\/claim$/))) {
+    authed()
+    return claimLevel(Number(match[1]))
+  }
 
   if (m === 'GET' && path === '/api/inventory') {
     authed()
     return getInventory()
+  }
+  if (m === 'POST' && path === '/api/inventory/withdraw') {
+    authed()
+    return withdrawItems(body.uids ?? [])
+  }
+  if (m === 'PUT' && path === '/api/me/trade-url') {
+    authed()
+    return setTradeUrl(body.tradeUrl)
   }
   if (m === 'POST' && path === '/api/inventory/sell') {
     authed()

@@ -16,6 +16,8 @@ const props = withDefaults(
     placeholder?: string
     multiple?: boolean
     menuWidth?: 'trigger' | 'fixed'
+    /** the "filter is set" look, shared with UiChip variant=field */
+    active?: boolean
   }>(),
   { menuWidth: 'trigger' },
 )
@@ -53,11 +55,11 @@ const isSelected = (o: SelectOption<T>) => (props.multiple ? many.value.includes
 
 <template>
   <div ref="root" class="relative flex min-w-0 flex-col gap-2">
-    <span v-if="label" class="type-12-caps text-neutral-12">{{ label }}</span>
+    <span v-if="label" class="kd-field-label type-12-caps text-neutral-12">{{ label }}</span>
     <button
       type="button"
       class="flex h-10 w-full items-center gap-2 rounded-lg border bg-neutral-1 px-3 text-left transition-colors duration-200"
-      :class="open ? 'border-brand-base' : 'border-neutral-4 hover:border-neutral-7'"
+      :class="[open ? 'border-brand-base' : 'border-neutral-4 hover:border-neutral-6', active && !open && 'kd-field-set']"
       :aria-expanded="open"
       aria-haspopup="listbox"
       @click="open = !open"

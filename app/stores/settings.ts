@@ -7,9 +7,10 @@ interface Settings {
   sound: boolean
   volume: number
   streamerMode: boolean
+  haptics: boolean
 }
 
-const DEFAULTS: Settings = { currency: 'USD', sound: true, volume: 70, streamerMode: false }
+const DEFAULTS: Settings = { currency: 'USD', sound: true, volume: 70, streamerMode: false, haptics: true }
 
 export const useSettingsStore = defineStore('settings', () => {
   const source = usePersisted<Settings>('kd_settings', DEFAULTS)

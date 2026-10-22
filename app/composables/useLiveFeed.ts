@@ -2,6 +2,11 @@ import type { FeedResponse } from '#shared/types/api'
 
 const POLL_MS = 3000
 
+// One poll for the whole app, however many components read the feed; it stops while the tab is hidden
+// and when the last reader unmounts.
+let users = 0
+let stop: (() => void) | null = null
+
 // Polls the mock feed. The Go backend will push over WebSocket — swap the transport here only.
 export function useLiveFeed() {
   const { data, refresh } = useFetch<FeedResponse>('/api/feed', {
@@ -9,10 +14,23 @@ export function useLiveFeed() {
     default: () => ({ drops: [], highlight: null }),
   })
 
-  if (import.meta.client) {
-    const { pause, resume } = useIntervalFn(() => refresh(), POLL_MS)
-    const visibility = useDocumentVisibility()
-    watch(visibility, (v) => (v === 'visible' ? resume() : pause()))
+  const reelBusy = useState('kd_reel_busy', () => false)
+
+  if (import.meta.client && getCurrentInstance()) {
+    onMounted(() => {
+      users += 1
+      if (stop) return
+      // plain timer, not tied to the first reader's scope, so it outlives that component
+      const id = setInterval(() => document.visibilityState === 'visible' && !reelBusy.value && refresh(), POLL_MS)
+      stop = () => {
+        clearInterval(id)
+        stop = null
+      }
+    })
+    onBeforeUnmount(() => {
+      users -= 1
+      if (!users) stop?.()
+    })
   }
 
   return { feed: data, refresh }

@@ -2,20 +2,55 @@
 import type { Rarity } from '#shared/types/api'
 
 // Figma "Art": blurred rarity glow + rarity star + item image. Size scales the whole stack.
-withDefaults(defineProps<{ image: string; rarity: Rarity; size?: number; dim?: boolean; alt?: string }>(), {
+// morph: the stack stays mounted when the item changes — the rarity colour flows into the new one and the
+// weapon turns into the next (the old one twists away blurred while the new one twists in), no remount.
+// float: the art is alive while it waits — the skin bobs, the rarity star turns slowly, the glow breathes
+// (transform/opacity only, so it stays smooth on phones).
+// reveal: the landing moment, built around the rarity shape (0 = none, 1…4 = rarity tier): the star pops in and
+// turns into place, an echo of the same shape spreads out (two for covert and gold), diamond sparks fly off.
+const props = withDefaults(defineProps<{ image: string; rarity: Rarity; size?: number; dim?: boolean; alt?: string; morph?: boolean; float?: boolean; reveal?: number; eager?: boolean }>(), {
   size: 96,
+  reveal: 0,
+})
+// Diamond sparks around the shape: more for rarer drops, random directions per landing
+const sparks = computed(() => {
+  if (!props.reveal) return []
+  const n = [0, 6, 9, 12, 14][props.reveal] ?? 0
+  return Array.from({ length: n }, (_, i) => {
+    const a = (i / n) * Math.PI * 2 + Math.random() * 0.5
+    const d = props.size * (0.55 + Math.random() * 0.35)
+    return { '--x': `${Math.cos(a) * d}px`, '--y': `${Math.sin(a) * d}px`, '--d': `${Math.round(Math.random() * 120)}ms`, '--k': (0.6 + Math.random() * 0.6).toFixed(2) }
+  })
 })
 </script>
 
 <template>
-  <div class="kd-art relative" :style="{ height: `${size}px`, '--rc': RARITY_COLOR[rarity], '--s': size / 96 }">
+  <div class="kd-art relative" :class="[float && 'is-float', morph && 'is-morph']" :style="{ height: `${size}px`, '--rc': RARITY_COLOR[rarity], '--s': size / 96 }">
     <span class="kd-art-glow absolute top-1/2 left-1/2 rounded-full" />
-    <span class="kd-rarity-star kd-art-star absolute top-1/2 left-1/2" />
+    <span class="kd-rarity-star kd-art-star absolute top-1/2 left-1/2" :class="reveal ? 'is-reveal' : undefined" />
+    <template v-if="reveal">
+      <span class="kd-rarity-star kd-art-echo absolute top-1/2 left-1/2" />
+      <span v-if="reveal >= 3" class="kd-rarity-star kd-art-echo is-late absolute top-1/2 left-1/2" />
+      <span v-for="(sp, i) in sparks" :key="i" class="kd-art-diamond absolute top-1/2 left-1/2" :style="sp" />
+    </template>
+    <Transition v-if="morph" name="kd-art-morph">
+      <img
+        :key="image"
+        :src="image"
+        :alt="alt ?? ''"
+        draggable="false"
+        decoding="async"
+        class="kd-art-img pointer-events-none absolute top-1/2 left-1/2 object-contain"
+        :class="dim && 'opacity-50 grayscale'"
+      />
+    </Transition>
     <img
+      v-else
       :src="image"
       :alt="alt ?? ''"
-      loading="lazy"
+      :loading="eager ? 'eager' : 'lazy'"
       draggable="false"
+        decoding="async"
       class="kd-art-img pointer-events-none absolute top-1/2 left-1/2 object-contain"
       :class="dim && 'opacity-50 grayscale'"
     />
@@ -23,11 +58,153 @@ withDefaults(defineProps<{ image: string; rarity: Rarity; size?: number; dim?: b
 </template>
 
 <style>
+/* The rarity colour is a typed property, so a new rarity fades into place instead of snapping */
+@property --rc {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+/* only a morphing art (stake / target cards) fades its colour; reels and grids switch instantly — a --rc
+   transition on every card of a fresh strip repainted all their glows each frame */
+.kd-art.is-morph {
+  transition: --rc 600ms var(--ease-out);
+}
+/* Gentle: a slight sway of the skin and the star, the glow breathing. The star and glow are centred with
+   transform: translate(-50%, -50%), so the motion lives inside transform too (a separate rotate would swing
+   the offset around and drag the shape off-centre). */
+/* Reveal */
+.kd-art-star.is-reveal {
+  animation: kd-star-in 900ms var(--ease-spring) both;
+}
+@keyframes kd-star-in {
+  0% {
+    transform: translate(-50%, -50%) scale(0.4) rotate(-45deg);
+    opacity: 0;
+  }
+  45% {
+    transform: translate(-50%, -50%) scale(1.18) rotate(8deg);
+    opacity: 1;
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+}
+.kd-art-echo {
+  width: calc(72px * var(--s));
+  height: calc(72px * var(--s));
+  opacity: 0;
+  pointer-events: none;
+  animation: kd-star-echo 1100ms var(--ease-out) 120ms both;
+}
+.kd-art-echo.is-late {
+  animation-delay: 380ms;
+}
+@keyframes kd-star-echo {
+  0% {
+    transform: translate(-50%, -50%) scale(0.9) rotate(0deg);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.3) rotate(30deg);
+    opacity: 0;
+  }
+}
+.kd-art-diamond {
+  width: calc(7px * var(--s) * var(--k));
+  height: calc(7px * var(--s) * var(--k));
+  background: color-mix(in srgb, var(--rc) 70%, white);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--rc) 70%, transparent);
+  pointer-events: none;
+  animation: kd-diamond 1000ms var(--ease-out) calc(160ms + var(--d)) both;
+}
+@keyframes kd-diamond {
+  0% {
+    transform: translate(-50%, -50%) rotate(45deg) scale(0.2);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(225deg) scale(1);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kd-art-echo,
+  .kd-art-diamond {
+    display: none;
+  }
+  .kd-art-star.is-reveal {
+    animation: none;
+  }
+}
+.kd-art.is-float .kd-art-img {
+  animation: kd-art-sway 4.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.kd-art.is-float .kd-art-star {
+  animation: kd-art-star-sway 6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.kd-art.is-float .kd-art-glow {
+  animation: kd-art-breathe 4.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes kd-art-sway {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(-2deg);
+  }
+  50% {
+    transform: translate(-50%, calc(-50% - 2px)) rotate(2deg);
+  }
+}
+@keyframes kd-art-star-sway {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(-10deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(10deg);
+  }
+}
+@keyframes kd-art-breathe {
+  50% {
+    opacity: 0.7;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kd-art.is-float * {
+    animation: none !important;
+  }
+}
+.kd-art-morph-enter-active,
+.kd-art-morph-leave-active {
+  transition:
+    opacity 420ms var(--ease-out),
+    transform 560ms var(--ease-spring),
+    filter 420ms var(--ease-out);
+}
+.kd-art-morph-leave-active {
+  transition-timing-function: var(--ease-in);
+  transition-duration: 300ms;
+}
+/* the image is centred by transform: translate(-50%, -50%), so the twist is composed with it */
+.kd-art-morph-enter-from {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.72) rotate(16deg);
+  filter: blur(8px) brightness(1.6);
+}
+.kd-art-morph-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.86) rotate(-14deg);
+  filter: blur(8px);
+}
 .kd-art-glow {
-  width: calc(88px * var(--s));
-  height: calc(88px * var(--s));
-  background: radial-gradient(circle, var(--rc), color-mix(in srgb, var(--rc) 10%, transparent));
-  filter: blur(calc(32px * var(--s)));
+  /* A soft gradient as wide as the old 88px blob blurred by 32px — no filter, so a reel of hundreds of
+     cards stays cheap to paint and move */
+  width: calc(152px * var(--s));
+  height: calc(152px * var(--s));
+  background: radial-gradient(closest-side, var(--rc), color-mix(in srgb, var(--rc) 45%, transparent) 40%, color-mix(in srgb, var(--rc) 12%, transparent) 70%, transparent);
   transform: translate(-50%, -50%);
   opacity: 0.9;
   transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);

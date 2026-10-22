@@ -1,0 +1,197 @@
+<script setup lang="ts">
+import { NuxtLink } from '#components'
+import { upgradeChanceBp } from '#shared/upgrade'
+import type { CaseDetails, InventoryItem, MarketResponse } from '#shared/types/api'
+
+/*
+ * The row under the open controls. One fixed height in both states, so nothing below jumps; the contents
+ * cross-fade.
+ *   Before a drop — this case's best drops of the last 7 days, with their ×, best first (Hellcase-style
+ *                   social proof: what this exact case has really paid)
+ *   After a drop  — what to do with it: Upgrade it (the unsold drops aimed at ~2.5× their value, chance shown)
+ *                   and Sell all (desktop; phones have it under the main button)
+ */
+const props = defineProps<{ data: CaseDetails; unsold: InventoryItem[]; count: number; phase: 'idle' | 'spinning' | 'result'; confirmSell?: boolean }>()
+const emit = defineEmits<{ sellAll: [] }>()
+const live = computed(() => props.phase === 'result' && props.unsold.length > 0)
+const isLg = useMediaQuery('(min-width: 1024px)')
+
+// Sell all — expensive drops ask for a second tap
+const unsoldTotal = computed(() => props.unsold.reduce((a, i) => a + i.price, 0))
+const armed = ref(false)
+let armTimer: ReturnType<typeof setTimeout> | undefined
+function sellAll() {
+  if (props.confirmSell && !armed.value) {
+    armed.value = true
+    clearTimeout(armTimer)
+    armTimer = setTimeout(() => (armed.value = false), 3000)
+    return
+  }
+  armed.value = false
+  emit('sellAll')
+}
+
+// Upgrade it
+const { data: market } = useFetch<MarketResponse>('/api/market', { key: 'market', lazy: true, server: false })
+const upgrade = computed(() => {
+  const value = unsoldTotal.value
+  if (!value) return null
+  const items = (market.value?.items ?? []).filter((i) => i.price > value * 1.2)
+  if (!items.length) return null
+  const aim = value * 2.5
+  const target = items.reduce((best, i) => (Math.abs(i.price - aim) < Math.abs(best.price - aim) ? i : best))
+  const chance = upgradeChanceBp(value, target.price) / 100
+  return { target, chance, to: `/upgrade?item=${props.unsold.map((i) => i.uid).join(',')}&target=${target.id}&from=${props.data.slug}` }
+})
+
+const top = computed(() => props.data.topDrops ?? [])
+const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1)}`)
+</script>
+
+<template>
+  <div class="kd-hook w-full" :class="phase === 'spinning' && 'is-resting'">
+    <Transition name="kd-hc" mode="out-in">
+      <!-- After a drop: what to do with it -->
+      <div v-if="live" key="act" class="flex justify-center gap-2">
+        <component :is="upgrade ? NuxtLink : 'div'" :to="upgrade?.to" class="kd-hook-card kd-act" :class="upgrade ? 'kd-press is-live' : 'is-muted'">
+          <template v-if="upgrade">
+            <ItemArt :image="upgrade.target.image" :rarity="upgrade.target.rarity" :size="40" class="w-14 shrink-0" />
+            <span class="flex min-w-0 flex-col">
+              <span class="type-12-caps text-neutral-11">{{ $t('case.hookUpgrade') }}</span>
+              <span class="type-14 truncate" :style="{ color: RARITY_COLOR[upgrade.target.rarity] }">{{ upgrade.target.weapon }} | {{ upgrade.target.skin }}</span>
+            </span>
+            <span class="type-16-caps ml-auto shrink-0 tabular-nums" :class="upgrade.chance >= 60 ? 'text-success' : upgrade.chance >= 30 ? 'text-warning' : 'text-danger'">{{ upgrade.chance.toFixed(1) }}%</span>
+          </template>
+          <template v-else>
+            <span class="kd-hc-ic bg-neutral-3 text-neutral-11"><UiIcon name="upgrade" :size="22" /></span>
+            <span class="type-14 truncate text-neutral-12">{{ $t('case.hookUpgradeIdle') }}</span>
+          </template>
+        </component>
+        <button v-if="isLg" type="button" class="kd-hook-card kd-act kd-press is-live" :class="armed ? 'is-danger' : 'is-sell'" @click="sellAll">
+          <span class="kd-hc-ic kd-sell-ic"><UiIcon name="wallet" :size="22" /></span>
+          <span class="flex min-w-0 flex-col text-left">
+            <span class="type-12-caps text-neutral-11">{{ $t('wallet.sellAll') }}</span>
+            <UiTextSwap :text="armed ? $t('wallet.sureSell') : $t('case.dropsShort', unsold.length)" class="type-14" />
+          </span>
+          <UiPrice :amount="unsoldTotal" size="m" tone="coin" class="ml-auto" />
+        </button>
+      </div>
+
+      <!-- Before a drop: what this case has paid lately -->
+      <div v-else-if="top.length" key="top" class="kd-hook-card kd-top mx-auto w-fit max-w-full">
+        <span class="flex shrink-0 flex-col pr-1 max-sm:hidden">
+          <span class="type-12-caps flex items-center gap-1.5 text-neutral-11"><UiIcon name="trophy" :size="14" class="text-coin" />{{ $t('case.topDrops') }}</span>
+          <span class="type-12-regular text-neutral-11">{{ $t('case.topDropsWindow') }}</span>
+        </span>
+        <div class="scrollbar-none flex min-w-0 flex-1 gap-1.5 overflow-x-auto max-sm:-mr-2 max-sm:pr-2 mask-r-from-85% sm:mask-none">
+          <div v-for="(d, i) in top" :key="i" class="kd-top-drop" :style="{ '--rc': RARITY_COLOR[d.item.rarity] }" :title="`${d.item.weapon} | ${d.item.skin} · ${d.nickname} · ${timeAgo(d.at)}`">
+            <ItemArt :image="d.item.image" :rarity="d.item.rarity" :size="34" class="w-12 shrink-0" />
+            <span class="flex min-w-0 flex-col">
+              <span class="kd-top-x tabular-nums">{{ xLabel(d.multiplier) }}</span>
+              <span class="type-10-caps truncate normal-case text-neutral-11">{{ timeAgo(d.at) }}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </div>
+</template>
+
+<style scoped>
+.kd-hook {
+  min-height: 64px;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+.kd-hook.is-resting {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.kd-hook-card {
+  display: flex;
+  min-width: 0;
+  height: 64px;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  padding: 0 16px 0 8px;
+  border-radius: 16px;
+  background: var(--color-neutral-2);
+  transition: background-color var(--dur-slow) var(--ease-out);
+}
+.kd-hook-card.kd-top {
+  padding: 0 8px 0 16px;
+}
+/* Action cards sit under the main button at a compact, fixed width (the row stays centred, not stretched) */
+.kd-act {
+  flex: 0 1 320px;
+}
+@media (width < 64rem) {
+  .kd-act {
+    flex: 1 1 auto;
+  }
+}
+.kd-hc-ic {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 12px;
+}
+/* 48px tiles in a 64px card: 8px inset, 16 − 8 = 8 radius (concentric) */
+.kd-top-drop {
+  display: flex;
+  height: 48px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  padding-right: 10px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--rc) 14%, var(--color-neutral-3)), var(--color-neutral-3) 70%);
+}
+.kd-top-x {
+  font-size: 16px;
+  line-height: 18px;
+  font-weight: 800;
+  background: linear-gradient(180deg, var(--color-gold-light), var(--color-brand-bright) 55%, var(--color-brand-base));
+  background-clip: text;
+  color: transparent;
+}
+.kd-sell-ic {
+  background: rgb(253 176 34 / 0.14);
+  color: var(--color-coin);
+  transition:
+    background-color var(--dur-slow) var(--ease-out),
+    color var(--dur-slow) var(--ease-out);
+}
+/* Same card as its neighbours; asking to confirm only warms it up — no flips to white or solid red */
+.kd-hook-card.is-danger {
+  background-color: #2a1517;
+}
+.kd-hook-card.is-danger .kd-sell-ic {
+  background: rgb(240 68 56 / 0.18);
+  color: var(--color-danger);
+}
+.kd-hook-card.is-muted {
+  background: rgb(255 255 255 / 0.02);
+}
+@media (hover: hover) {
+  .kd-hook-card.is-live:not(.is-danger):hover {
+    background: var(--color-neutral-3);
+  }
+}
+.kd-hc-enter-active,
+.kd-hc-leave-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    translate var(--dur-base) var(--ease-out);
+}
+.kd-hc-enter-from {
+  opacity: 0;
+  translate: 0 6px;
+}
+.kd-hc-leave-to {
+  opacity: 0;
+  translate: 0 -6px;
+}
+</style>

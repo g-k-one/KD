@@ -1,7 +1,7 @@
 import type { CaseSummary, RiskLevel } from '#shared/types/api'
 
 export type PriceRange = 'any' | '0-1' | '1-5' | '5-10' | '10-30' | '30+'
-export type CaseSort = 'default' | 'priceAsc' | 'priceDesc' | 'newest'
+export type CaseSort = 'default' | 'payback' | 'priceAsc' | 'priceDesc' | 'newest'
 
 // Coin cents
 const RANGES: Record<Exclude<PriceRange, 'any'>, [number, number]> = {
@@ -37,6 +37,7 @@ export function useCaseFilters() {
       if (affordable.value && session.user && c.price > session.user.balance) return false
       return true
     })
+    if (sort.value === 'payback') out = [...out].sort((a, b) => b.payback - a.payback)
     if (sort.value === 'priceAsc') out = [...out].sort((a, b) => a.price - b.price)
     if (sort.value === 'priceDesc') out = [...out].sort((a, b) => b.price - a.price)
     if (sort.value === 'newest') out = [...out].sort((a, b) => b.createdAt.localeCompare(a.createdAt))

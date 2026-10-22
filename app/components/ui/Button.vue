@@ -1,10 +1,12 @@
 <script setup lang="ts">
+// Imported, not resolveComponent() in the template: the static artifact build left that as a literal <nuxtlink> tag
+import { NuxtLink } from '#components'
 import type { RouteLocationRaw } from 'vue-router'
 
 // Figma "Button": Primary = main CTA, Secondary = neutral, Ghost = nav actions,
-// Light = on banners, Success = promo, Gold = rewards, Danger = destructive.
+// Light = on banners, Success = promo, Gold = rewards, Danger = destructive, Fair = provable-fairness actions.
 // States (hover / active / disabled) live in main.css → .kd-btn-*.
-type Variant = 'primary' | 'secondary' | 'ghost' | 'light' | 'success' | 'gold' | 'danger'
+type Variant = 'primary' | 'secondary' | 'ghost' | 'light' | 'success' | 'gold' | 'danger' | 'fair'
 type Size = 's' | 'm' | 'l'
 
 const props = withDefaults(
@@ -39,7 +41,7 @@ const iconSize = computed(() => ({ s: 16, m: 18, l: 20 })[props.size])
 
 <template>
   <component
-    :is="to ? resolveComponent('NuxtLink') : 'button'"
+    :is="to ? NuxtLink : 'button'"
     :to="to"
     :type="to ? undefined : type"
     :disabled="to ? undefined : disabled || loading"

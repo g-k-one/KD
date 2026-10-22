@@ -9,15 +9,23 @@
  * 0 sits at the bottom, 100 at the top. The pointer's distance from the bottom (0–180°) maps to the
  * roll (0–100), so it lands inside the arc exactly when roll < chance.
  *
- * Spin, built for suspense:
+ * Spin, built for suspense — one continuous curve, no speed jumps between phases:
  *   1. wind-up  — the pointer pulls back a little while the arc charges
  *   2. turns    — fast laps with ticks
- *   3. crawl    — the last stretch slows to a creep; near the edge of the chance it crawls longer,
- *                 with a heartbeat. The core shows the live value under the pointer, green inside
- *                 the chance and red outside, so every pass through the zone is felt.
+ *   3. crawl    — the long tail of the same curve; near the edge of the chance it lasts longer and
+ *                 carries a heartbeat (sound only — the dial itself stays calm, no strobing or pulsing).
+ * Landing (docs/motion.md → Upgrade): won — the arc flares once and settles bright, the number pops;
+ * lost — the arc drains to grey and the number gives one short shake. The pointer never jumps.
+ * The core shows the chance; after the roll, the verdict in words ("Won!" / "Missed") and under it the numbers
+ * that explain it ("Rolled 94.92" / "wins if the roll is under 60.37"); before a roll the same small line
+ * explains the ring: it is a 0–100 roll that wins under the chance.
  * Clicking the dial skips straight to the result.
+ *
+ * KURWADROP on the dial (presentation only, like the case reel — no extra chance, no surcharge): the lowest
+ * tenth of the chance arc, right by the 0, is gold. A win that lands in it brings the Golden Chicken up
+ * from under the dial with the KD-coin jackpot.
  */
-const props = defineProps<{ chance: number; state: 'idle' | 'spinning' | 'win' | 'lose' }>()
+const props = defineProps<{ chance: number; state: 'idle' | 'spinning' | 'win' | 'lose'; nonce?: number | null }>()
 const { t } = useI18n()
 const sfx = useSfx()
 
@@ -40,9 +48,9 @@ watch(
 )
 
 const label = computed(() => {
-  if (props.state === 'win') return t('upgrade.win')
-  if (props.state === 'lose') return t('upgrade.lose')
+  if (props.state === 'win' || props.state === 'lose') return t('upgrade.rolledLine', { roll: rolled.value?.toFixed(2) ?? '—' })
   if (props.state === 'spinning') return t('upgrade.rolling')
+  if (!pct.value) return t('upgrade.chance')
   return t(`upgrade.${tier.value}Chance`)
 })
 
@@ -62,19 +70,6 @@ function skip() {
   active?.finish()
 }
 
-async function step(el: HTMLElement, from: number, to: number, duration: number, easing: string) {
-  const anim = el.animate([{ transform: `rotate(${from}deg)` }, { transform: `rotate(${to}deg)` }], {
-    duration: skipping ? 1 : duration,
-    easing,
-    fill: 'forwards',
-  })
-  active = anim
-  await animationDone(anim, skipping ? 1 : duration)
-  el.style.transform = `rotate(${to}deg)`
-  anim.cancel()
-  active = null
-}
-
 async function spin(roll: number, fast: boolean) {
   const el = pointer.value
   if (!el) return
@@ -92,8 +87,6 @@ async function spin(roll: number, fast: boolean) {
 
   // Close calls crawl longer: within 8 points of the edge either way
   const edge = Math.abs(roll - pct.value) < 8
-  const crawlDeg = reduced ? 0 : edge ? 70 : 40
-  const crawlMs = fast ? (edge ? 900 : 500) : edge ? 2600 : 1500
 
   // Live value + ticks + heartbeat
   let raf = 0
@@ -115,16 +108,31 @@ async function spin(roll: number, fast: boolean) {
   }
   raf = requestAnimationFrame(watchPointer)
 
-  if (!reduced) {
-    phase.value = 'charge'
-    await step(el, from, from - 16, fast ? 220 : 480, 'cubic-bezier(0.45, 0, 0.55, 1)')
-  }
-  phase.value = 'turns'
-  await step(el, reduced ? from : from - 16, to - crawlDeg, reduced ? 200 : fast ? 1300 : 3200, 'cubic-bezier(0.32, 0, 0.18, 1)')
-  if (crawlDeg) {
-    phase.value = 'crawl'
-    await step(el, to - crawlDeg, to, crawlMs, 'cubic-bezier(0.1, 0.55, 0.15, 1)')
-  }
+  // One continuous motion: a short wind-up back, then the turns and the long creep in a single curve
+  // that starts and ends at rest — no speed jumps between phases. Close calls get a longer tail.
+  const wind = reduced ? 0 : 8
+  const total = reduced ? 200 : (fast ? 1500 : 4200) + (fast ? 0 : edge ? 1500 : 500)
+  const windMs = reduced ? 0 : fast ? 200 : 450
+  phase.value = reduced ? 'turns' : 'charge'
+  const anim = el.animate(
+    [
+      { transform: `rotate(${from}deg)`, easing: 'cubic-bezier(0.45, 0, 0.55, 1)' },
+      { transform: `rotate(${from - wind}deg)`, offset: windMs / total, easing: edge ? 'cubic-bezier(0.3, 0, 0.04, 1)' : 'cubic-bezier(0.3, 0, 0.1, 1)' },
+      { transform: `rotate(${to}deg)` },
+    ],
+    { duration: skipping ? 1 : total, fill: 'forwards' },
+  )
+  active = anim
+  // Phases by time: wind-up, turns, and the crawl (last ~40% of the curve, where the heartbeat plays)
+  const phaseTimer = setInterval(() => {
+    const ms = Number(anim.currentTime ?? 0)
+    phase.value = ms < windMs ? 'charge' : ms < total * 0.6 ? 'turns' : 'crawl'
+  }, 60)
+  await animationDone(anim, skipping ? 1 : total)
+  clearInterval(phaseTimer)
+  el.style.transform = `rotate(${to}deg)`
+  anim.cancel()
+  active = null
 
   cancelAnimationFrame(raf)
   angle = to % 360
@@ -134,24 +142,40 @@ async function spin(roll: number, fast: boolean) {
 }
 
 function reset() {
-  angle = 0
   rolled.value = null
-  if (pointer.value) pointer.value.style.transform = 'rotate(0deg)'
+  const el = pointer.value
+  if (!el) return
+  // Glide back to zero the short way round instead of snapping
+  const from = ((angle % 360) + 360) % 360
+  const back = from > 180 ? 360 : 0
+  el.animate([{ transform: `rotate(${from}deg)` }, { transform: `rotate(${back}deg)` }], { duration: 500, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' })
+  el.style.transform = 'rotate(0deg)'
+  angle = 0
 }
 
 defineExpose({ spin, reset, skip })
 
-const readout = computed(() => {
-  if (live.value != null) return live.value.toFixed(2)
-  if (rolled.value != null && (props.state === 'win' || props.state === 'lose')) return rolled.value.toFixed(2)
-  return `${pctShown.value.toFixed(1)}%`
+// The core shows the chance; after the roll it shows the rolled number with a plain verdict under it
+// ("Roll under 54.60 · won"), so the number never needs explaining. The live value only tints the dial.
+const showRoll = computed(() => rolled.value != null && (props.state === 'win' || props.state === 'lose'))
+/** Close calls: within 3 points of the edge either way */
+const chickenMood = computed(() => {
+  if (rolled.value == null || !showRoll.value) return null
+  const d = Math.abs(rolled.value - pct.value)
+  if (d >= 3) return null
+  return props.state === 'win' ? ('nearWin' as const) : ('nearLose' as const)
 })
+watch(chickenMood, (m) => m && sfx.squawk())
+// After the roll the big line is the verdict in words, the small line explains it with the numbers
+const readout = computed(() =>
+  showRoll.value ? (props.state === 'win' ? t('upgrade.verdictWin') : t('upgrade.verdictLose')) : pct.value ? `${pctShown.value.toFixed(1)}%` : '—',
+)
 </script>
 
 <template>
   <div
-    class="kd-gauge relative aspect-square w-full max-w-72 select-none lg:max-w-90"
-    :class="[`is-${state}`, `tier-${tier}`, `ph-${phase}`, inside && 'is-inside', live != null && !inside && 'is-outside']"
+    class="kd-gauge @container relative aspect-square w-full max-w-72 select-none lg:max-w-88"
+    :class="[`is-${state}`, `tier-${tier}`, `ph-${phase}`, inside && 'is-inside', live != null && !inside && 'is-outside', !pct && 'is-empty']"
     :title="state === 'spinning' ? t('case.skipHint') : undefined"
     :style="{ '--chance': pct / 100 }"
     @click="state === 'spinning' && skip()"
@@ -171,13 +195,18 @@ const readout = computed(() => {
     <!-- Core with the readout -->
     <img src="/img/gauge/core.svg" alt="" class="pointer-events-none absolute inset-[17.5%] size-[65%]" draggable="false" />
     <div class="absolute inset-0 flex flex-col items-center justify-center gap-0.5 text-center uppercase">
-      <span class="kd-gauge-value text-[clamp(28px,11vw,48px)] leading-[1.08] font-extrabold tracking-[-0.01em] tabular-nums">
+      <span class="kd-gauge-value text-[clamp(22px,18cqw,48px)] leading-[1.08] font-extrabold tracking-[-0.01em] tabular-nums">
         {{ readout }}
       </span>
-      <Transition name="kd-label" mode="out-in">
-        <span :key="label" class="type-12-caps sm:type-16-caps text-neutral-15 sm:font-bold">{{ label }}</span>
-      </Transition>
+      <UiTextSwap :text="label" class="max-w-[62%] text-neutral-15" :class="showRoll ? 'type-12 sm:type-14 normal-case' : 'type-12-caps sm:type-16-caps sm:font-bold'" />
+      <!-- after a roll: one tap to check it in the verifier -->
+      <button v-if="showRoll && nonce" type="button" class="kd-press kd-verify type-10-caps mt-1 flex items-center gap-1 rounded-md px-1.5 py-0.5 normal-case" @click.stop="navigateTo(`/fairness?verify=${nonce}`)">
+        <UiIcon name="shield-check" :size="12" />{{ $t('upgrade.verifyRoll') }}
+      </button>
     </div>
+
+    <!-- the meme chicken peeks out on close calls: won by a hair, missed by a hair -->
+    <UpgradeChicken :mood="chickenMood" :margin="rolled != null ? Math.abs(rolled - pct) : undefined" />
 
     <!-- Pointer layer turns around the centre; rotate(0) = bottom -->
     <img ref="pointer" src="/img/gauge/pointer.svg" alt="" class="kd-gauge-pointer pointer-events-none absolute inset-0 size-full" draggable="false" />
@@ -185,6 +214,11 @@ const readout = computed(() => {
 </template>
 
 <style scoped>
+.kd-verify {
+  background: rgb(18 183 106 / 0.14);
+  color: var(--color-success);
+  pointer-events: auto;
+}
 .kd-gauge {
   transition: --chance 700ms var(--ease-out);
 }
@@ -199,7 +233,6 @@ const readout = computed(() => {
     transparent calc(var(--chance) * 180deg) calc(360deg - var(--chance) * 180deg),
     #000 calc(360deg - var(--chance) * 180deg)
   );
-  transition: filter var(--dur-slow) var(--ease-out);
 }
 .kd-dodge {
   mix-blend-mode: color-dodge;
@@ -228,12 +261,13 @@ const readout = computed(() => {
 .tier-low .kd-gauge-value {
   color: var(--color-danger);
 }
-/* While spinning the value is the pointer's: green inside the chance, red outside */
-.is-inside .kd-gauge-value {
-  color: var(--color-success);
+/* Nothing staked yet: a neutral dash, not an alarming red */
+.is-empty .kd-gauge-value {
+  color: var(--color-neutral-10);
 }
-.is-outside .kd-gauge-value {
-  color: var(--color-danger);
+/* While spinning the number stays calm and white — no red/green flicker as the pointer passes */
+.is-spinning .kd-gauge-value {
+  color: var(--color-neutral-15);
 }
 
 /* Wind-up: the arc charges */
@@ -245,67 +279,45 @@ const readout = computed(() => {
     filter: brightness(1.5) drop-shadow(0 0 18px rgb(255 125 32 / 0.7));
   }
 }
-/* The arc lights up every time the pointer passes through it */
-.is-inside .kd-gauge-arc {
-  filter: brightness(1.35) drop-shadow(0 0 16px rgb(18 183 106 / 0.6));
-}
-/* The crawl: the whole dial leans in */
-.kd-gauge.ph-crawl {
-  animation: kd-lean 1.4s var(--ease-in-out) infinite;
-}
-@keyframes kd-lean {
-  50% {
-    scale: 1.025;
-  }
-}
-
-/* Result */
+/* Result. Won: one flare, then the arc stays lit */
 .is-win .kd-gauge-arc {
-  filter: brightness(1.25) drop-shadow(0 0 24px rgb(18 183 106 / 0.85));
+  filter: brightness(1.2) drop-shadow(0 0 20px rgb(18 183 106 / 0.7));
+  animation: kd-arc-flare 800ms var(--ease-out);
+}
+@keyframes kd-arc-flare {
+  25% {
+    filter: brightness(1.8) drop-shadow(0 0 36px rgb(18 183 106 / 1));
+  }
 }
 .is-win .kd-gauge-value {
   color: var(--color-success);
-}
-.is-lose .kd-gauge-arc {
-  filter: grayscale(0.85) brightness(0.6);
-}
-.is-lose .kd-gauge-value {
-  color: var(--color-danger);
-}
-.is-win .kd-gauge-value,
-.is-lose .kd-gauge-value {
   animation: kd-value-pop 600ms var(--ease-spring);
 }
 @keyframes kd-value-pop {
   40% {
-    transform: scale(1.14);
+    transform: scale(1.16);
   }
 }
-.is-lose .kd-gauge-pointer {
-  animation: kd-pointer-shake 420ms var(--ease-out);
+/* Lost: the colour drains out of the arc, the number shakes once */
+.kd-gauge-arc {
+  transition: filter 800ms var(--ease-out);
 }
-@keyframes kd-pointer-shake {
-  25%,
-  75% {
-    translate: -3px 0;
+.is-lose .kd-gauge-arc {
+  filter: grayscale(1) brightness(0.5);
+}
+.is-lose .kd-gauge-value {
+  color: var(--color-danger);
+  animation: kd-value-shake 380ms var(--ease-out);
+}
+@keyframes kd-value-shake {
+  25% {
+    translate: -5px 0;
   }
   50% {
-    translate: 3px 0;
+    translate: 4px 0;
   }
-}
-
-.kd-label-enter-active,
-.kd-label-leave-active {
-  transition:
-    opacity var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
-}
-.kd-label-enter-from {
-  opacity: 0;
-  transform: translateY(4px);
-}
-.kd-label-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
+  75% {
+    translate: -2px 0;
+  }
 }
 </style>

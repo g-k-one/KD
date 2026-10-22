@@ -1,7 +1,8 @@
 <script setup lang="ts" generic="T extends string">
 // Figma "Tab": caps label, active = white with a brand underline. The underline slides between tabs.
 const model = defineModel<T>({ required: true })
-defineProps<{ tabs: Array<{ value: T; label: string; count?: number }> }>()
+/** flush: no bottom rule of its own (the parent draws it, e.g. with controls on the same line) */
+defineProps<{ tabs: Array<{ value: T; label: string; count?: number }>; flush?: boolean }>()
 
 const root = useTemplateRef<HTMLElement>('root')
 const bar = reactive({ x: 0, w: 0 })
@@ -19,7 +20,7 @@ useResizeObserver(root, measure)
 </script>
 
 <template>
-  <div ref="root" role="tablist" class="scrollbar-none relative flex gap-6 overflow-x-auto border-b border-neutral-4">
+  <div ref="root" role="tablist" class="scrollbar-none relative flex gap-6 overflow-x-auto" :class="!flush && 'border-b border-neutral-4'">
     <button
       v-for="t in tabs"
       :key="t.value"

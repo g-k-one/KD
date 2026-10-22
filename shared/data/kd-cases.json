@@ -1,0 +1,509 @@
+[
+ {
+  "name": "Hades",
+  "slug": "hades",
+  "price": 183221,
+  "items": [
+   {
+    "id": "skeleton-knife-doppler-mw",
+    "weapon": "Skeleton Knife",
+    "skin": "Doppler",
+    "rarity": "gold",
+    "wear": "MW",
+    "image": "/img/items/cs2/skeleton-knife-doppler.webp",
+    "price": 603724,
+    "tickets": 5319
+   },
+   {
+    "id": "m9-bayonet-doppler-mw-st",
+    "weapon": "M9 Bayonet",
+    "skin": "Doppler",
+    "rarity": "gold",
+    "wear": "MW",
+    "statTrak": true,
+    "image": "/img/items/cs2/m9-bayonet-doppler.webp",
+    "price": 522316,
+    "tickets": 7979
+   },
+   {
+    "id": "skeleton-knife-doppler-fn",
+    "weapon": "Skeleton Knife",
+    "skin": "Doppler",
+    "rarity": "gold",
+    "wear": "FN",
+    "image": "/img/items/cs2/skeleton-knife-doppler.webp",
+    "price": 51137,
+    "tickets": 13298
+   },
+   {
+    "id": "nomad-knife-doppler-fn",
+    "weapon": "Nomad Knife",
+    "skin": "Doppler",
+    "rarity": "gold",
+    "wear": "FN",
+    "image": "/img/items/cs2/nomad-knife-doppler.webp",
+    "price": 104975,
+    "tickets": 37234
+   },
+   {
+    "id": "specialist-gloves-crimson-kimono-mw",
+    "weapon": "Specialist Gloves",
+    "skin": "Crimson Kimono",
+    "rarity": "gold",
+    "wear": "MW",
+    "image": "/img/items/cs2/specialist-gloves-crimson-kimono.webp",
+    "price": 315805,
+    "tickets": 85106
+   },
+   {
+    "id": "talon-knife-doppler-fn-st",
+    "weapon": "Talon Knife",
+    "skin": "Doppler",
+    "rarity": "gold",
+    "wear": "FN",
+    "statTrak": true,
+    "image": "/img/items/cs2/talon-knife-doppler.webp",
+    "price": 108830,
+    "tickets": 127660
+   },
+   {
+    "id": "m4a4-howl-ww",
+    "weapon": "M4A4",
+    "skin": "Howl",
+    "rarity": "covert",
+    "wear": "WW",
+    "image": "/img/items/cs2/m4a4-howl.webp",
+    "price": 252422,
+    "tickets": 159574
+   },
+   {
+    "id": "ak-47-fire-serpent-mw-st",
+    "weapon": "AK-47",
+    "skin": "Fire Serpent",
+    "rarity": "covert",
+    "wear": "MW",
+    "statTrak": true,
+    "image": "/img/items/cs2/ak-47-fire-serpent.webp",
+    "price": 280465,
+    "tickets": 159574
+   },
+   {
+    "id": "m4a1-s-knight-mw",
+    "weapon": "M4A1-S",
+    "skin": "Knight",
+    "rarity": "classified",
+    "wear": "MW",
+    "image": "/img/items/cs2/m4a1-s-knight.webp",
+    "price": 135661,
+    "tickets": 106383
+   },
+   {
+    "id": "m9-bayonet-autotronic-ft-st",
+    "weapon": "M9 Bayonet",
+    "skin": "Autotronic",
+    "rarity": "gold",
+    "wear": "FT",
+    "statTrak": true,
+    "image": "/img/items/cs2/m9-bayonet-autotronic.webp",
+    "price": 75751,
+    "tickets": 85106
+   },
+   {
+    "id": "desert-eagle-sunset-storm-mw",
+    "weapon": "Desert Eagle",
+    "skin": "Sunset Storm 弐",
+    "rarity": "restricted",
+    "wear": "MW",
+    "image": "/img/items/cs2/desert-eagle-sunset-storm.webp",
+    "price": 46587,
+    "tickets": 212767
+   }
+  ]
+ },
+ {
+  "name": "Spring",
+  "slug": "spring",
+  "price": 87283,
+  "items": [
+   {
+    "id": "ak-47-wild-lotus-fn",
+    "weapon": "AK-47",
+    "skin": "Wild Lotus",
+    "rarity": "covert",
+    "wear": "FN",
+    "image": "/img/items/cs2/ak-47-wild-lotus.webp",
+    "price": 1434100,
+    "tickets": 30
+   },
+   {
+    "id": "butterfly-knife-gamma-doppler-fn-st",
+    "weapon": "Butterfly Knife",
+    "skin": "Gamma Doppler",
+    "rarity": "gold",
+    "wear": "FN",
+    "statTrak": true,
+    "image": "/img/items/cs2/butterfly-knife-gamma-doppler.webp",
+    "price": 1293037,
+    "tickets": 50
+   },
+   {
+    "id": "m9-bayonet-gamma-doppler-mw",
+    "weapon": "M9 Bayonet",
+    "skin": "Gamma Doppler",
+    "rarity": "gold",
+    "wear": "MW",
+    "image": "/img/items/cs2/m9-bayonet-gamma-doppler.webp",
+    "price": 1069760,
+    "tickets": 100
+   },
+   {
+    "id": "sport-gloves-hedge-maze-mw",
+    "weapon": "Sport Gloves",
+    "skin": "Hedge Maze",
+    "rarity": "gold",
+    "wear": "MW",
+    "image": "/img/items/cs2/sport-gloves-hedge-maze.webp",
+    "price": 819315,
+    "tickets": 300
+   },
+   {
+    "id": "ak-47-wild-lotus-ft",
+    "weapon": "AK-47",
+    "skin": "Wild Lotus",
+    "rarity": "covert",
+    "wear": "FT",
+    "image": "/img/items/cs2/ak-47-wild-lotus.webp",
+    "price": 842675,
+    "tickets": 500
+   },
+   {
+    "id": "ak-47-fire-serpent-fn-st",
+    "weapon": "AK-47",
+    "skin": "Fire Serpent",
+    "rarity": "covert",
+    "wear": "FN",
+    "statTrak": true,
+    "image": "/img/items/cs2/ak-47-fire-serpent.webp",
+    "price": 512072,
+    "tickets": 750
+   },
+   {
+    "id": "bayonet-gamma-doppler-fn",
+    "weapon": "Bayonet",
+    "skin": "Gamma Doppler",
+    "rarity": "gold",
+    "wear": "FN",
+    "image": "/img/items/cs2/bayonet-gamma-doppler.webp",
+    "price": 52381,
+    "tickets": 1570
+   },
+   {
+    "id": "butterfly-knife-gamma-doppler-fn-st",
+    "weapon": "Butterfly Knife",
+    "skin": "Gamma Doppler",
+    "rarity": "gold",
+    "wear": "FN",
+    "statTrak": true,
+    "image": "/img/items/cs2/butterfly-knife-gamma-doppler.webp",
+    "price": 370474,
+    "tickets": 3700
+   },
+   {
+    "id": "karambit-gamma-doppler-mw-st",
+    "weapon": "Karambit",
+    "skin": "Gamma Doppler",
+    "rarity": "gold",
+    "wear": "MW",
+    "statTrak": true,
+    "image": "/img/items/cs2/karambit-gamma-doppler.webp",
+    "price": 278895,
+    "tickets": 5500
+   },
+   {
+    "id": "specialist-gloves-emerald-web-mw",
+    "weapon": "Specialist Gloves",
+    "skin": "Emerald Web",
+    "rarity": "gold",
+    "wear": "MW",
+    "image": "/img/items/cs2/specialist-gloves-emerald-web.webp",
+    "price": 273882,
+    "tickets": 10000
+   },
+   {
+    "id": "sport-gloves-hedge-maze-bs",
+    "weapon": "Sport Gloves",
+    "skin": "Hedge Maze",
+    "rarity": "gold",
+    "wear": "BS",
+    "image": "/img/items/cs2/sport-gloves-hedge-maze.webp",
+    "price": 210364,
+    "tickets": 17500
+   },
+   {
+    "id": "m9-bayonet-lore-mw-st",
+    "weapon": "M9 Bayonet",
+    "skin": "Lore",
+    "rarity": "gold",
+    "wear": "MW",
+    "statTrak": true,
+    "image": "/img/items/cs2/m9-bayonet-lore.webp",
+    "price": 179226,
+    "tickets": 80000
+   },
+   {
+    "id": "huntsman-knife-gamma-doppler-mw",
+    "weapon": "Huntsman Knife",
+    "skin": "Gamma Doppler",
+    "rarity": "gold",
+    "wear": "MW",
+    "image": "/img/items/cs2/huntsman-knife-gamma-doppler.webp",
+    "price": 91008,
+    "tickets": 80000
+   },
+   {
+    "id": "ak-47-fire-serpent-ww-st",
+    "weapon": "AK-47",
+    "skin": "Fire Serpent",
+    "rarity": "covert",
+    "wear": "WW",
+    "statTrak": true,
+    "image": "/img/items/cs2/ak-47-fire-serpent.webp",
+    "price": 227141,
+    "tickets": 90000
+   },
+   {
+    "id": "karambit-lore-mw",
+    "weapon": "Karambit",
+    "skin": "Lore",
+    "rarity": "gold",
+    "wear": "MW",
+    "image": "/img/items/cs2/karambit-lore.webp",
+    "price": 72368,
+    "tickets": 150000
+   },
+   {
+    "id": "falchion-knife-gamma-doppler-fn-st",
+    "weapon": "Falchion Knife",
+    "skin": "Gamma Doppler",
+    "rarity": "gold",
+    "wear": "FN",
+    "statTrak": true,
+    "image": "/img/items/cs2/falchion-knife-gamma-doppler.webp",
+    "price": 23564,
+    "tickets": 150000
+   },
+   {
+    "id": "ak-47-hydroponic-ww",
+    "weapon": "AK-47",
+    "skin": "Hydroponic",
+    "rarity": "classified",
+    "wear": "WW",
+    "image": "/img/items/cs2/ak-47-hydroponic.webp",
+    "price": 74847,
+    "tickets": 120000
+   },
+   {
+    "id": "gut-knife-gamma-doppler-fn",
+    "weapon": "Gut Knife",
+    "skin": "Gamma Doppler",
+    "rarity": "gold",
+    "wear": "FN",
+    "image": "/img/items/cs2/gut-knife-gamma-doppler.webp",
+    "price": 28385,
+    "tickets": 110000
+   },
+   {
+    "id": "broken-fang-gloves-jade-bs",
+    "weapon": "Broken Fang Gloves",
+    "skin": "Jade",
+    "rarity": "gold",
+    "wear": "BS",
+    "image": "/img/items/cs2/broken-fang-gloves-jade.webp",
+    "price": 5959,
+    "tickets": 180000
+   }
+  ]
+ },
+ {
+  "name": "Mobster",
+  "slug": "mobster",
+  "price": 81241,
+  "items": [
+   {
+    "id": "butterfly-knife-doppler-fn-st",
+    "weapon": "Butterfly Knife",
+    "skin": "Doppler",
+    "rarity": "gold",
+    "wear": "FN",
+    "statTrak": true,
+    "image": "/img/items/cs2/butterfly-knife-doppler.webp",
+    "price": 1230592,
+    "tickets": 532
+   },
+   {
+    "id": "specialist-gloves-crimson-kimono-fn",
+    "weapon": "Specialist Gloves",
+    "skin": "Crimson Kimono",
+    "rarity": "gold",
+    "wear": "FN",
+    "image": "/img/items/cs2/specialist-gloves-crimson-kimono.webp",
+    "price": 1071820,
+    "tickets": 1064
+   },
+   {
+    "id": "butterfly-knife-doppler-fn",
+    "weapon": "Butterfly Knife",
+    "skin": "Doppler",
+    "rarity": "gold",
+    "wear": "FN",
+    "image": "/img/items/cs2/butterfly-knife-doppler.webp",
+    "price": 1002932,
+    "tickets": 1596
+   },
+   {
+    "id": "karambit-doppler-fn",
+    "weapon": "Karambit",
+    "skin": "Doppler",
+    "rarity": "gold",
+    "wear": "FN",
+    "image": "/img/items/cs2/karambit-doppler.webp",
+    "price": 716799,
+    "tickets": 2660
+   },
+   {
+    "id": "awp-dragon-lore-ft",
+    "weapon": "AWP",
+    "skin": "Dragon Lore",
+    "rarity": "covert",
+    "wear": "FT",
+    "image": "/img/items/cs2/awp-dragon-lore.webp",
+    "price": 616234,
+    "tickets": 4787
+   },
+   {
+    "id": "m9-bayonet-crimson-web-fn",
+    "weapon": "M9 Bayonet",
+    "skin": "Crimson Web",
+    "rarity": "gold",
+    "wear": "FN",
+    "image": "/img/items/cs2/m9-bayonet-crimson-web.webp",
+    "price": 409058,
+    "tickets": 10638
+   },
+   {
+    "id": "m4a4-howl-mw",
+    "weapon": "M4A4",
+    "skin": "Howl",
+    "rarity": "covert",
+    "wear": "MW",
+    "image": "/img/items/cs2/m4a4-howl.webp",
+    "price": 505642,
+    "tickets": 21277
+   },
+   {
+    "id": "butterfly-knife-fade-fn",
+    "weapon": "Butterfly Knife",
+    "skin": "Fade",
+    "rarity": "gold",
+    "wear": "FN",
+    "image": "/img/items/cs2/butterfly-knife-fade.webp",
+    "price": 210820,
+    "tickets": 26596
+   },
+   {
+    "id": "ak-47-gold-arabesque-fn",
+    "weapon": "AK-47",
+    "skin": "Gold Arabesque",
+    "rarity": "covert",
+    "wear": "FN",
+    "image": "/img/items/cs2/ak-47-gold-arabesque.webp",
+    "price": 215778,
+    "tickets": 31915
+   },
+   {
+    "id": "flip-knife-doppler-fn-st",
+    "weapon": "Flip Knife",
+    "skin": "Doppler",
+    "rarity": "gold",
+    "wear": "FN",
+    "statTrak": true,
+    "image": "/img/items/cs2/flip-knife-doppler.webp",
+    "price": 39770,
+    "tickets": 42553
+   },
+   {
+    "id": "ak-47-gold-arabesque-ft",
+    "weapon": "AK-47",
+    "skin": "Gold Arabesque",
+    "rarity": "covert",
+    "wear": "FT",
+    "image": "/img/items/cs2/ak-47-gold-arabesque.webp",
+    "price": 116468,
+    "tickets": 53191
+   },
+   {
+    "id": "hand-wraps-slaughter-fn",
+    "weapon": "Hand Wraps",
+    "skin": "Slaughter",
+    "rarity": "gold",
+    "wear": "FN",
+    "image": "/img/items/cs2/hand-wraps-slaughter.webp",
+    "price": 141063,
+    "tickets": 63830
+   },
+   {
+    "id": "m9-bayonet-crimson-web-mw-st",
+    "weapon": "M9 Bayonet",
+    "skin": "Crimson Web",
+    "rarity": "gold",
+    "wear": "MW",
+    "statTrak": true,
+    "image": "/img/items/cs2/m9-bayonet-crimson-web.webp",
+    "price": 114208,
+    "tickets": 63830
+   },
+   {
+    "id": "ak-47-wasteland-rebel-fn-st",
+    "weapon": "AK-47",
+    "skin": "Wasteland Rebel",
+    "rarity": "covert",
+    "wear": "FN",
+    "statTrak": true,
+    "image": "/img/items/cs2/ak-47-wasteland-rebel.webp",
+    "price": 98559,
+    "tickets": 143617
+   },
+   {
+    "id": "ak-47-cartel-ft",
+    "weapon": "AK-47",
+    "skin": "Cartel",
+    "rarity": "classified",
+    "wear": "FT",
+    "image": "/img/items/cs2/ak-47-cartel.webp",
+    "price": 1364,
+    "tickets": 159574
+   },
+   {
+    "id": "p250-cartel-mw",
+    "weapon": "P250",
+    "skin": "Cartel",
+    "rarity": "classified",
+    "wear": "MW",
+    "image": "/img/items/cs2/p250-cartel.webp",
+    "price": 999,
+    "tickets": 159574
+   },
+   {
+    "id": "dual-berettas-cartel-fn-st",
+    "weapon": "Dual Berettas",
+    "skin": "Cartel",
+    "rarity": "milspec",
+    "wear": "FN",
+    "statTrak": true,
+    "image": "/img/items/cs2/dual-berettas-cartel.webp",
+    "price": 810,
+    "tickets": 212766
+   }
+  ]
+ }
+]

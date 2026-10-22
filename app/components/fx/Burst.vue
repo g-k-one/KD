@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /*
  * Layered reveal effect, scaled by tier (see RARITY_TIER):
- *   1 flash · 2 + expanding halo · 3 + spark particles · 4 + rotating rays and a second ring.
+ *   1 flash · 2 + soft aura · 3+ spark particles. No hard rings: the crisp spark rings come from Forge (kdReveal).
+ * Rays and the lasting glow behind rare drops come from Forge (kdAura), which draws them soft.
  * Pure CSS on a handful of elements, plays once on mount. Sits centred over its parent.
  */
 const props = withDefaults(defineProps<{ tier: number; color: string; size?: number }>(), { size: 160 })
@@ -25,10 +26,7 @@ const sparks = computed(() => {
 <template>
   <span class="kd-burst pointer-events-none absolute top-1/2 left-1/2" :style="{ '--c': color, '--size': `${size}px` }" aria-hidden="true">
     <span class="kd-burst-aura" />
-    <span v-if="tier >= 3" class="kd-burst-rays" />
     <span class="kd-burst-flash" />
-    <span class="kd-burst-ring" />
-    <span v-if="tier >= 3" class="kd-burst-ring is-late" />
     <span v-for="(s, i) in sparks" :key="i" class="kd-burst-spark" :style="s" />
   </span>
 </template>
@@ -69,27 +67,6 @@ const sparks = computed(() => {
   }
 }
 /* Hellcase "hexRing / hexWave": a thin ring that expands and fades */
-.kd-burst-ring {
-  width: var(--size);
-  height: var(--size);
-  margin: calc(var(--size) / -2);
-  border: 3px solid color-mix(in srgb, var(--c) 70%, white);
-  box-shadow: 0 0 24px var(--c), inset 0 0 24px var(--c);
-  animation: kd-ring 1.1s var(--ease-out) both;
-}
-.kd-burst-ring.is-late {
-  animation-delay: 220ms;
-}
-@keyframes kd-ring {
-  0% {
-    opacity: 0.9;
-    transform: scale(0.35);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.9);
-  }
-}
 /* A soft rarity glow stays behind the drop after the burst, so the result never looks dull */
 .kd-burst-aura {
   width: calc(var(--size) * 1.1);
@@ -129,28 +106,6 @@ const sparks = computed(() => {
   100% {
     opacity: 0;
     transform: translate(var(--x), var(--y)) scale(0.2);
-  }
-}
-/* Hellcase "hexStarRay": slow rotating rays behind gold drops */
-.kd-burst-rays {
-  width: calc(var(--size) * 2.2);
-  height: calc(var(--size) * 2.2);
-  margin: calc(var(--size) * -1.1);
-  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--c) 55%, transparent) 0deg 8deg, transparent 8deg 30deg);
-  mask: radial-gradient(circle, #000 0%, transparent 65%);
-  animation:
-    kd-rays-in 600ms var(--ease-out) both,
-    kd-rays-spin 9s linear infinite;
-}
-@keyframes kd-rays-in {
-  from {
-    opacity: 0;
-    scale: 0.4;
-  }
-}
-@keyframes kd-rays-spin {
-  to {
-    rotate: 360deg;
   }
 }
 </style>

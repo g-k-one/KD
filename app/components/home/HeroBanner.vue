@@ -18,7 +18,7 @@ function start() {
   >
     <!-- Mobile: art sits in the flow above the text -->
     <div class="relative -mx-4 -mt-4 mb-2 h-40 overflow-hidden sm:hidden">
-      <img src="/img/brand/hero-mascot.png" alt="" class="absolute -top-2 left-1 h-48 w-auto max-w-none" draggable="false" />
+      <img src="/img/brand/hero-mascot.webp" alt="" class="absolute -top-2 left-1 h-48 w-auto max-w-none" draggable="false" />
     </div>
 
     <div class="relative z-10 flex flex-col justify-between gap-4 sm:max-w-[58%] sm:gap-6 lg:h-full lg:w-[709px] lg:max-w-none">
@@ -35,7 +35,7 @@ function start() {
     </div>
 
     <img
-      src="/img/brand/hero-mascot.png"
+      src="/img/brand/hero-mascot.webp"
       alt=""
       class="kd-hero-art pointer-events-none absolute top-[calc(50%-3.5px)] right-0 hidden h-[115%] w-auto max-w-none -translate-y-1/2 sm:block lg:right-[31px] lg:h-[379px] lg:w-[568px] lg:object-cover"
       draggable="false"

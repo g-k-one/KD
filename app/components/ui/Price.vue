@@ -3,7 +3,8 @@
 type Size = 'xs' | 's' | 'm' | 'l' | 'xl' | 'xxl'
 type Tone = 'default' | 'coin' | 'success' | 'muted' | 'inverse'
 
-const props = withDefaults(defineProps<{ amount: number; size?: Size; tone?: Tone }>(), {
+/** compact: from 1 000 coins on, the amount shortens to 12.9k / 1.2M (tight tiles) */
+const props = withDefaults(defineProps<{ amount: number; size?: Size; tone?: Tone; compact?: boolean }>(), {
   size: 'm',
   tone: 'default',
 })
@@ -20,6 +21,13 @@ const spec = computed(
     })[props.size],
 )
 
+/** Cents → "12.9k" (3 significant digits), "1.23M"; below 1 000 coins the full amount */
+function shortCoins(cents: number) {
+  const c = cents / 100
+  if (c < 1000) return formatCoins(cents)
+  const [v, unit] = c >= 1e6 ? [c / 1e6, 'M'] : [c / 1e3, 'k']
+  return `${v.toFixed(v >= 100 ? 0 : v >= 10 ? 1 : 2).replace(/\.?0+$/, '')}${unit}`
+}
 const toneClass = computed(
   () =>
     ({
@@ -35,6 +43,6 @@ const toneClass = computed(
 <template>
   <span class="inline-flex items-center whitespace-nowrap tabular-nums" :class="[spec.gap, spec.text, toneClass]">
     <UiCoin :size="spec.coin" :inverse="tone === 'inverse'" />
-    {{ formatCoins(amount) }}
+    {{ compact ? shortCoins(amount) : formatCoins(amount) }}
   </span>
 </template>

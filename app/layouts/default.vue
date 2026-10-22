@@ -1,12 +1,14 @@
 <script setup lang="ts">
 const ui = useUiStore()
 const route = useRoute()
+// Debug dock: dev server and the prototype build; a production build sets NUXT_PUBLIC_DEBUG=false
+const debug = useRuntimeConfig().public.debug
 watch(() => route.fullPath, () => (ui.popover = null))
 </script>
 
 <template>
   <div class="flex min-h-dvh flex-col">
-    <div class="sticky top-0 z-30">
+    <div class="kd-sticky-top sticky top-0 z-30">
       <LayoutDesktopHeader class="hidden lg:flex" />
       <LayoutMobileHeader class="lg:hidden" />
     </div>
@@ -21,7 +23,9 @@ watch(() => route.fullPath, () => (ui.popover = null))
     <LayoutBottomNav class="lg:hidden" />
     <LayoutMobileMenu />
     <LayoutSignInModal />
+    <WalletQuickDeposit />
+    <LayoutLevelUp />
     <UiToaster />
-    <LayoutDebugDock />
+    <LayoutDebugDock v-if="debug" />
   </div>
 </template>

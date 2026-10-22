@@ -15,7 +15,7 @@ const totalShown = useTransition(totalSrc, { duration: 700, transition: [0.22, 1
   <div
     class="kd-slot relative flex items-center"
     :class="[
-      compact ? 'flex-col justify-center gap-1 rounded-2xl px-1 py-2 text-center' : 'h-16 gap-3 rounded-3xl p-3',
+      compact ? 'flex-col justify-center gap-1 rounded-2xl px-1 py-2 text-center' : 'h-16 gap-3 rounded-2xl p-3',
       winner ? 'is-winner' : '',
     ]"
   >
@@ -57,7 +57,7 @@ const totalShown = useTransition(totalSrc, { duration: 700, transition: [0.22, 1
 
 <style scoped>
 .kd-slot {
-  background: var(--color-neutral-2);
+  background: var(--color-neutral-3);
   border: 1px solid transparent;
   transition:
     background-color var(--dur-slow) var(--ease-out),
@@ -65,7 +65,7 @@ const totalShown = useTransition(totalSrc, { duration: 700, transition: [0.22, 1
 }
 .kd-slot.is-winner {
   background: var(--color-success-24);
-  border-color: var(--color-success);
+  border-color: transparent;
   animation: kd-winner 900ms var(--ease-spring);
 }
 /* Crown drops in big and settles next to the name (Skin.club "show-crown") */

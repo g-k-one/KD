@@ -57,26 +57,26 @@ async function copy(v: string) {
     <form class="flex flex-col gap-3" @submit.prevent="calculate">
       <label class="flex flex-col gap-2">
         <span class="type-12-caps text-neutral-12">{{ $t('fair.serverSeed') }}</span>
-        <input id="v-server" v-model="serverSeed" required spellcheck="false" class="kd-input font-mono" />
+        <UiInput id="v-server" v-model="serverSeed" size="l" mono />
       </label>
       <div class="grid grid-cols-[1fr_120px] gap-3">
         <label class="flex flex-col gap-2">
           <span class="type-12-caps text-neutral-12">{{ $t('fair.clientSeed') }}</span>
-          <input id="v-client" v-model="clientSeed" required spellcheck="false" class="kd-input font-mono" />
+          <UiInput id="v-client" v-model="clientSeed" size="l" mono />
         </label>
         <label class="flex flex-col gap-2">
           <span class="type-12-caps text-neutral-12">{{ $t('fair.nonce') }}</span>
-          <input id="v-nonce" v-model.number="nonce" type="number" min="0" required class="kd-input font-mono" />
+          <UiInput id="v-nonce" v-model.number="nonce" size="l" type="number" mono />
         </label>
       </div>
-      <UiButton type="submit" size="l" block>{{ $t('fair.calculate') }}</UiButton>
+      <UiButton type="submit" variant="fair" size="l" block>{{ $t('fair.calculate') }}</UiButton>
     </form>
 
     <Transition name="kd-result">
       <dl v-if="result" class="grid gap-2 rounded-2xl bg-neutral-3 p-4 text-sm">
         <div v-for="row in rows" :key="row.k" class="grid grid-cols-[140px_1fr_auto] items-center gap-3">
           <dt class="type-12-caps text-neutral-11">{{ row.k }}</dt>
-          <dd class="min-w-0 truncate tabular-nums" :class="[row.mono && 'font-mono text-xs text-neutral-13', row.accent && 'type-16-medium font-semibold text-brand-light']">{{ row.v }}</dd>
+          <dd class="min-w-0 truncate tabular-nums" :class="[row.mono && 'font-mono text-xs text-neutral-13', row.accent && 'type-16-medium font-semibold text-success']">{{ row.v }}</dd>
           <button type="button" class="kd-press text-neutral-11 hover:text-neutral-15" :aria-label="$t('fair.copy')" @click="copy(String(row.v))">
             <UiIcon name="copy" :size="16" />
           </button>
@@ -87,20 +87,6 @@ async function copy(v: string) {
 </template>
 
 <style scoped>
-.kd-input {
-  height: 48px;
-  min-width: 0;
-  border-radius: 12px;
-  border: 1px solid var(--color-neutral-4);
-  background: var(--color-neutral-1);
-  padding: 0 14px;
-  font-size: 13px;
-  outline: none;
-  transition: border-color var(--dur-base) var(--ease-out);
-}
-.kd-input:focus {
-  border-color: var(--color-brand-base);
-}
 .kd-result-enter-active {
   transition:
     opacity var(--dur-base) var(--ease-out),

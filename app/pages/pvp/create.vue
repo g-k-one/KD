@@ -47,7 +47,8 @@ async function create() {
     if (res.balance != null) session.user.balance = res.balance
     await navigateTo(`/pvp/${res.battle.id}`)
   } catch (e) {
-    toast.error(e, t('common.error'))
+    if ((e as { statusCode?: number }).statusCode === 402) ui.openDeposit()
+    else toast.error(e, t('common.error'))
   } finally {
     creating.value = false
   }
@@ -66,10 +67,7 @@ async function create() {
               {{ $t(`pvp.modes.${n}`) }}
             </UiChip>
           </div>
-          <label class="flex h-10 flex-1 items-center gap-2 rounded-lg border border-neutral-4 bg-neutral-1 px-3 focus-within:border-brand-base">
-            <UiIcon name="search" :size="16" class="text-neutral-11" />
-            <input id="pvp-search" v-model="search" :placeholder="$t('pvp.search')" class="type-14 w-full min-w-0 bg-transparent outline-none" />
-          </label>
+          <UiInput id="pvp-search" v-model="search" icon="search" clearable :placeholder="$t('pvp.search')" class="flex-1" />
         </div>
 
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:gap-3">
@@ -93,7 +91,7 @@ async function create() {
       </div>
 
       <!-- Summary -->
-      <aside class="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-20 flex flex-col gap-3 border-t border-neutral-5 bg-neutral-2/95 p-4 backdrop-blur lg:sticky lg:top-24 lg:bottom-auto lg:rounded-5xl lg:border lg:border-neutral-4 lg:bg-neutral-2 lg:p-5">
+      <aside class="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-20 flex flex-col gap-3 border-t border-neutral-5 bg-neutral-2 p-4 lg:sticky lg:top-24 lg:bottom-auto lg:rounded-5xl lg:border lg:border-neutral-4 lg:bg-neutral-2 lg:p-5">
         <h2 class="type-16-caps hidden lg:block">{{ $t('pvp.summary') }}</h2>
         <div v-if="picked.length" class="scrollbar-none hidden flex-wrap gap-2 lg:flex">
           <PvpCaseThumb v-for="c in picked" :key="c.slug" :image="c.image" :name="c.name" :qty="qty[c.slug]" />
@@ -134,7 +132,7 @@ async function create() {
 }
 @media (hover: hover) {
   .kd-ctile:hover {
-    border-color: var(--color-neutral-7);
+    border-color: var(--color-neutral-6);
   }
   .kd-ctile:hover .kd-ctile-art {
     transform: translateY(-4px) scale(1.04);

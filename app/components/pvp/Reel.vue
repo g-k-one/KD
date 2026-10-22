@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { BattleCaseRef, CaseItem, CaseResponse, Item } from '#shared/types/api'
 
-// Figma "BattleReel": Waiting = case art placeholder; Spinning = square items on rarity glow,
-// fades top and bottom, short brand markers left and right.
+// Battle reel, in the same language as the case reel: items as ItemArt (rarity glow + star, no tiles),
+// the same brand markers left and right, fades top and bottom; the drop flares and bursts when it lands.
+// Waiting = the round's case floating.
 const props = defineProps<{
   caseRef: BattleCaseRef | null
   /** Drop to land on for the current round, null while waiting */
@@ -19,7 +20,7 @@ const props = defineProps<{
 const root = useTemplateRef<HTMLElement>('root')
 const track = useTemplateRef<HTMLElement>('track')
 const { height } = useElementSize(root)
-const cell = computed(() => (props.compact ? 80 : 158))
+const cell = computed(() => (props.compact ? 84 : 150))
 
 // Filler items come from the case being opened this round
 const caseItems = ref<CaseItem[]>([])
@@ -82,47 +83,63 @@ watch([height, cell], () => {
 </script>
 
 <template>
-  <div ref="root" class="kd-preel relative overflow-hidden bg-neutral-2" :class="compact ? 'h-50 rounded-2xl' : 'h-80 rounded-3xl'">
+  <div ref="root" class="kd-preel relative overflow-hidden rounded-2xl" :class="compact ? 'h-50' : 'h-80'">
     <div v-if="waiting || !target" class="flex h-full flex-col items-center justify-center gap-3 px-2 text-center">
-      <img v-if="caseRef" :src="caseRef.image" alt="" class="kd-preel-wait object-contain" :class="compact ? 'size-14' : 'size-30'" />
+      <img v-if="caseRef" :src="caseRef.image" alt="" class="kd-preel-wait object-contain" :class="compact ? 'size-16' : 'size-32'" />
       <span class="type-12-regular text-neutral-11">{{ compact ? $t('pvp.waiting') : $t('pvp.waitingForPlayers') }}</span>
     </div>
     <template v-else>
-      <div ref="track" class="absolute inset-x-0 top-0 will-change-transform">
+      <div ref="track" class="absolute inset-x-0 top-0" :class="!landed && 'will-change-transform'">
         <div
           v-for="(it, i) in strip"
           :key="i"
-          class="flex items-center justify-center"
+          class="kd-preel-card relative flex items-center justify-center"
+          :class="landed && 'is-landed'"
           :style="{ height: `${cell}px` }"
+          :data-win="(landed && i === WIN) || undefined"
         >
-          <div
-            class="kd-preel-item relative overflow-hidden"
-            :class="[compact ? 'size-[75px] rounded-md' : 'size-[150px] rounded-2xl', landed && i === WIN && 'is-win']"
-            :style="{ '--rc': RARITY_COLOR[it.rarity] }"
-          >
-            <img :src="it.image" alt="" class="absolute inset-[16%_7%] size-[86%] object-contain" />
-            <span class="absolute inset-x-0 bottom-0" :class="compact ? 'h-[1.5px]' : 'h-[3px]'" :style="{ background: 'var(--rc)' }" />
-          </div>
+          <FxBurst v-if="landed && i === WIN && !instant" :tier="RARITY_TIER[it.rarity]" :color="RARITY_COLOR[it.rarity]" :size="compact ? 90 : 150" />
+          <ItemArt :image="it.image" :rarity="it.rarity" :size="compact ? 60 : 96" class="relative w-full" />
         </div>
       </div>
-      <div class="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-neutral-2 to-transparent" :class="compact ? 'h-15' : 'h-24'" />
-      <div class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-neutral-2 to-transparent" :class="compact ? 'h-15' : 'h-24'" />
-      <span class="absolute top-1/2 left-0 h-0.5 -translate-y-1/2 bg-brand-base" :class="compact ? 'w-1.5' : 'w-2.5'" />
-      <span class="absolute top-1/2 right-0 h-0.5 -translate-y-1/2 bg-brand-base" :class="compact ? 'w-1.5' : 'w-2.5'" />
+      <div class="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-neutral-1 to-transparent" :class="compact ? 'h-12' : 'h-20'" />
+      <div class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-neutral-1 to-transparent" :class="compact ? 'h-12' : 'h-20'" />
+      <img src="/img/fx/marker-top.svg" alt="" class="kd-pmark absolute top-1/2 left-0 -ml-0.5 -rotate-90" :class="compact ? 'w-3' : 'w-5'" />
+      <img src="/img/fx/marker-top.svg" alt="" class="kd-pmark absolute top-1/2 right-0 -mr-0.5 rotate-90" :class="compact ? 'w-3' : 'w-5'" />
     </template>
   </div>
 </template>
 
 <style scoped>
-.kd-preel-item {
-  background: radial-gradient(120% 90% at 50% 12%, color-mix(in srgb, var(--rc) 35%, transparent), var(--color-neutral-3) 95%);
+.kd-preel-card {
   transition:
+    opacity var(--dur-slow) var(--ease-out),
     transform var(--dur-slow) var(--ease-spring),
-    box-shadow var(--dur-slow) var(--ease-out);
+    filter var(--dur-slow) var(--ease-out);
 }
-.kd-preel-item.is-win {
-  transform: scale(1.06);
-  box-shadow: 0 0 0 1px var(--rc), 0 0 28px -6px var(--rc);
+.kd-preel-card.is-landed:not([data-win]) {
+  opacity: 0.2;
+  filter: grayscale(0.6);
+}
+.kd-preel-card[data-win] {
+  transform: scale(1.12);
+  z-index: 1;
+  animation: kd-pwin 700ms var(--ease-out);
+}
+@keyframes kd-pwin {
+  0% {
+    filter: brightness(2.2) saturate(1.4);
+  }
+}
+/* Same frame language as the case reel: it warms up towards the markers, so they sit on it */
+.kd-preel {
+  border: 3px solid transparent;
+  background:
+    linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
+    linear-gradient(180deg, var(--color-neutral-4) 15%, rgb(255 95 31 / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
+}
+.kd-pmark {
+  translate: 0 -50%;
 }
 .kd-preel-wait {
   animation: kd-wait-float 3.2s ease-in-out infinite;

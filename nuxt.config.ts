@@ -13,7 +13,8 @@ export default defineNuxtConfig({
   }),
 
   runtimeConfig: {
-    public: { clientMock: artifact },
+    // debug: the 🐞 dock and /debug, /fx tools. On for the prototype; NUXT_PUBLIC_DEBUG=false hides them.
+    public: { clientMock: artifact, debug: true },
   },
 
   compatibilityDate: '2025-07-15',
@@ -25,6 +26,8 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    // The artifact host caps a version at 511 files: one stylesheet instead of one per component
+    ...(artifact && { build: { cssCodeSplit: false } }),
   },
 
   app: {

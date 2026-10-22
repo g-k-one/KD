@@ -22,6 +22,8 @@
   --color-neutral-8: #444a56;
   --color-neutral-10: #525863;
   --color-neutral-11: #727782;
+  /* Weapon type over skin names: white at 56%, so it reads on any rarity glow (grey looked dead) */
+  --color-weapon: rgb(255 255 255 / 0.56);
   --color-neutral-12: #8a8f99;
   --color-neutral-13: #adb1b9;
   --color-neutral-14: #e6e7ea;
@@ -45,6 +47,10 @@
   --color-item-milspec: #4b69ff;
   --color-item-industrial: #5e98d9;
   --color-item-gold: #e4ae39;
+  /* the gold ramp for KD rewards and KURWADROP: highlight → body → deep */
+  --color-gold-light: #fff3c4;
+  --color-gold: #f5c649;
+  --color-gold-dark: #c98a10;
 
   /* alpha */
   --color-white-4: rgb(255 255 255 / 0.04);
@@ -97,6 +103,11 @@
 @property --chance {
   syntax: '<number>';
   inherits: true;
+  initial-value: 0;
+}
+@property --gold {
+  syntax: '<number>';
+  inherits: false;
   initial-value: 0;
 }
 @property --spot-o {
@@ -187,6 +198,38 @@
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/*
+ * Scrollbars: a slim floating pill on a clear track, brighter under the cursor and brand-tinted while dragged.
+ * WebKit/Blink get the shaped pill (the transparent border insets it from the edge); Firefox the standard thin bar.
+ * Unlayered for the same reason as the page ground below.
+ */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-6) padding-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  min-height: 40px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-neutral-8);
+}
+::-webkit-scrollbar-thumb:active {
+  background-color: var(--color-brand-base);
+}
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-neutral-6) transparent;
   }
 }
 
@@ -310,6 +353,25 @@ html body {
     color: var(--color-neutral-1);
     border: 1px solid var(--color-white-12);
   }
+  /* Fair: everything about provable fairness (verify, check a roll) is green on white text */
+  /* Dark text on the green: white on #12b76a fails contrast */
+  .kd-btn-fair {
+    color: var(--color-neutral-1);
+    background: linear-gradient(180deg, #19c97a, var(--color-success) 60%, #0e9a58);
+    box-shadow: var(--shadow-inner-primary);
+    transition:
+      filter var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-spring),
+      box-shadow var(--dur-base) var(--ease-out);
+  }
+  @media (hover: hover) {
+    .kd-btn-fair:hover {
+      filter: brightness(1.08);
+      box-shadow:
+        var(--shadow-inner-primary),
+        0 6px 20px -6px rgb(18 183 106 / 0.6);
+    }
+  }
   .kd-btn-success,
   .kd-btn-gold,
   .kd-btn-danger {
@@ -371,22 +433,59 @@ html body {
     border: 1px solid transparent;
   }
   .kd-chip[data-tone='success'] {
-    --tone: rgb(18 183 106 / 0.48);
+    --tone: rgb(18 183 106 / 0.24);
     --tone-fill: var(--color-success-24);
     --tone-active: var(--color-success);
     border-color: var(--tone);
   }
   .kd-chip[data-tone='warning'] {
-    --tone: rgb(247 144 9 / 0.48);
+    --tone: rgb(247 144 9 / 0.24);
     --tone-fill: var(--color-warning-24);
     --tone-active: var(--color-warning);
     border-color: var(--tone);
   }
   .kd-chip[data-tone='danger'] {
-    --tone: rgb(240 68 56 / 0.48);
+    --tone: rgb(240 68 56 / 0.24);
     --tone-fill: var(--color-danger-24);
     --tone-active: var(--color-danger);
     border-color: var(--tone);
+  }
+  .kd-chip[data-tone='coin'] {
+    --tone-fill: rgb(253 176 34 / 0.14);
+    --tone-active: var(--color-coin);
+  }
+  .kd-chip[data-tone='gold'] {
+    --tone-fill: rgb(245 198 73 / 0.16);
+    --tone-active: #f5c649;
+  }
+  .kd-chip[data-tone='coin'][aria-pressed='true'],
+  .kd-chip[data-tone='gold'][aria-pressed='true'] {
+    color: var(--tone-active);
+  }
+  /* A switch in a row of fields: same face as UiInput / UiSelect; pressed = the "filter is set" look */
+  .kd-chip[data-variant='field'] {
+    background: var(--color-neutral-1);
+    border-color: var(--color-neutral-4);
+    color: var(--color-neutral-15);
+    text-transform: none;
+  }
+  @media (hover: hover) {
+    .kd-chip[data-variant='field']:hover {
+      background: var(--color-neutral-1);
+      border-color: var(--color-neutral-6);
+    }
+  }
+  .kd-chip[data-variant='field'][aria-pressed='true'],
+  .kd-field-set {
+    background: var(--color-brand-24);
+    border-color: rgb(255 95 31 / 0.3);
+    box-shadow: none;
+  }
+  .kd-chip-icon {
+    transition: scale var(--dur-base) var(--ease-spring);
+  }
+  .kd-chip[aria-pressed='true'] .kd-chip-icon {
+    scale: 1.12;
   }
   @media (hover: hover) {
     .kd-chip:hover {
@@ -394,10 +493,12 @@ html body {
       color: var(--color-neutral-15);
     }
   }
+  /* Selected = a tinted fill and a soft inner rim, never a bright 1px outline (docs/motion.md) */
   .kd-chip[aria-pressed='true'],
   .kd-chip[aria-checked='true'] {
     background: var(--tone-fill);
-    border-color: var(--tone-active);
+    border-color: transparent;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone-active) 35%, transparent);
     color: var(--color-neutral-15);
   }
 
@@ -408,13 +509,13 @@ html body {
   }
   @media (hover: hover) {
     .kd-select-tile:hover {
-      border-color: var(--color-neutral-7);
+      border-color: var(--color-neutral-6);
       background: var(--color-neutral-3);
     }
   }
   .kd-select-tile[aria-pressed='true'],
   .kd-select-tile[aria-checked='true'] {
-    border-color: var(--color-brand-base);
+    border-color: rgb(255 95 31 / 0.35);
     background: linear-gradient(180deg, rgb(255 95 31 / 0.3), rgb(255 95 31 / 0.12));
   }
 
@@ -483,5 +584,69 @@ html body {
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
+  }
+}
+
+/* Infinite glows never animate box-shadow itself (a repaint every frame on phones): the shadow sits on a
+   ::after layer and only its opacity pulses. Components use: animation: kd-glow-pulse 2s ease-in-out infinite. */
+@keyframes kd-glow-pulse {
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Empty-state icons breathe (docs/motion.md → idle): the back cards of deck-plus fan out and the plus
+   pulses; the target-up crosshair ticks turn slowly and the arrow nudges upward. Inline SVG parts. */
+.kd-ico-deck svg,
+.kd-ico-target svg {
+  overflow: visible;
+}
+.kd-ico-deck svg rect,
+.kd-ico-deck svg path,
+.kd-ico-target svg path,
+.kd-ico-target svg circle {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.kd-ico-deck svg rect:nth-of-type(1) {
+  animation: kd-ico-fan-l 3.2s var(--ease-in-out) infinite;
+}
+.kd-ico-deck svg rect:nth-of-type(2) {
+  animation: kd-ico-fan-r 3.2s var(--ease-in-out) infinite;
+}
+@keyframes kd-ico-fan-l {
+  50% {
+    rotate: -5deg;
+    translate: -1.5px 0;
+  }
+}
+@keyframes kd-ico-fan-r {
+  50% {
+    rotate: 5deg;
+    translate: 1.5px 0;
+  }
+}
+/* Same strength as the deck: the ticks sway a little (no full spin), the arrow nudges up */
+.kd-ico-target svg path:nth-of-type(1) {
+  transform-box: view-box;
+  animation: kd-ico-sway 3.2s var(--ease-in-out) infinite;
+}
+.kd-ico-target svg path:nth-of-type(2) {
+  animation: kd-ico-nudge 3.2s var(--ease-in-out) infinite;
+}
+@keyframes kd-ico-sway {
+  50% {
+    rotate: 8deg;
+  }
+}
+@keyframes kd-ico-nudge {
+  50% {
+    translate: 0 -2px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kd-ico-deck svg *,
+  .kd-ico-target svg * {
+    animation: none !important;
   }
 }

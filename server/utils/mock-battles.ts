@@ -3,15 +3,15 @@
 // the rounds from startedAt + roundMs.
 import type { Battle, BattleCaseRef, BattlePlayerRef, BattleRoundResult, CreateBattleRequest } from '#shared/types/api'
 import { pickByTicket, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
-import { getCase, getCaseSections, getMockState, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory } from './mock-db'
+import { getCase, getCaseSections, getMockState, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory, trackMission } from './mock-db'
 
 const ROUND_MS = 4200
 const BOT_NAMES = ['Bot Pierogi', 'Bot Babcia', 'Bot Zloty', 'Bot Vodka']
 const PLAYERS: BattlePlayerRef[] = [
-  { nickname: 'krakow_kid', avatar: '/img/brand/avatar.png', level: 8 },
-  { nickname: 'babcia99', avatar: '/img/brand/avatar.png', level: 21 },
-  { nickname: 'zlotyboy', avatar: '/img/brand/avatar.png', level: 4 },
-  { nickname: 'ez_drop', avatar: '/img/brand/avatar.png', level: 33 },
+  { nickname: 'krakow_kid', avatar: '/img/brand/avatar.webp', level: 8 },
+  { nickname: 'babcia99', avatar: '/img/brand/avatar.webp', level: 21 },
+  { nickname: 'zlotyboy', avatar: '/img/brand/avatar.webp', level: 4 },
+  { nickname: 'ez_drop', avatar: '/img/brand/avatar.webp', level: 33 },
 ]
 
 interface StoredBattle extends Battle {
@@ -41,6 +41,7 @@ async function newBattle(size: number, rounds: BattleCaseRef[]): Promise<StoredB
     startedAt: null,
     roundMs: ROUND_MS,
     winnerSlot: null,
+    viewers: 0,
     seed: { serverSeedHash: await sha256Hex(serverSeed), eosBlock: null, serverSeed: null },
     serverSeed,
     clientSeed: '',
@@ -107,11 +108,21 @@ function refreshStatus(b: StoredBattle) {
   }
 }
 
+/** Fake audience: live rooms draw a crowd that drifts, waiting rooms a few, finished ones empty out. */
+function viewersOf(b: StoredBattle) {
+  const base = (Number(b.id) * 37) % 50
+  const wave = Math.round(Math.sin(Date.now() / 9000 + Number(b.id)) * 6)
+  if (b.status === 'live') return 40 + base + b.size * 15 + wave
+  if (b.status === 'waiting') return 3 + (base % 12) + Math.max(0, wave)
+  return Math.max(0, (base % 6) + wave)
+}
+
 function publicBattle(b: StoredBattle, loggedIn: boolean): Battle {
   refreshStatus(b)
   const { serverSeed: _s, clientSeed: _c, ...pub } = b
   return {
     ...pub,
+    viewers: viewersOf(b),
     seed: { ...pub.seed },
     slots: pub.slots.map((s) => ({ ...s, player: s.player ? { ...s.player, you: loggedIn && !!s.player.you } : null })),
   }
@@ -121,7 +132,8 @@ function publicBattle(b: StoredBattle, loggedIn: boolean): Battle {
 let seeded: Promise<void> | null = null
 function ensureSeeded() {
   seeded ??= (async () => {
-    const all = getCaseSections()[0]!.cases.map((c) => c.slug)
+    // Cheaper cases make friendlier lobby battles; spread rounds across them
+    const all = getCaseSections().find((s) => s.id === 'featured')!.cases.filter((c) => c.price <= 3000).map((c) => c.slug)
     const pick = (n: number, from: number) => Array.from({ length: n }, (_, i) => caseRef(all[(from + i * 3) % all.length]!))
     const specs = [
       { size: 3, rounds: pick(5, 0), filled: 2 },
@@ -177,6 +189,7 @@ export async function createBattle(req: CreateBattleRequest) {
   if (rounds.length > 25) throw new MockError(400, 'A battle can have up to 25 rounds')
   const b = await newBattle(size, rounds)
   spend(b.cost)
+  trackMission('play_battle')
   b.slots[0]!.player = you()
   battles.unshift(b)
   return { battle: publicBattle(b, true), balance: getMockState().user.balance }
@@ -190,6 +203,7 @@ export async function joinBattle(id: string, slot?: number) {
   const free = b.slots.find((s) => !s.player && (slot == null || s.slot === slot))
   if (!free) throw new MockError(409, 'No free seats')
   spend(b.cost)
+  trackMission('play_battle')
   free.player = you()
   if (b.slots.every((s) => s.player)) await start(b)
   return { battle: publicBattle(b, true), balance: getMockState().user.balance }

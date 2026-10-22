@@ -1,0 +1,2909 @@
+[
+ {
+  "id": "ak-47-wild-lotus",
+  "weapon": "AK-47",
+  "skin": "Wild Lotus",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/ak-47-wild-lotus.webp",
+  "price": 842675
+ },
+ {
+  "id": "awp-gungnir",
+  "weapon": "AWP",
+  "skin": "Gungnir",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/awp-gungnir.webp",
+  "price": 737375
+ },
+ {
+  "id": "karambit-doppler",
+  "weapon": "Karambit",
+  "skin": "Doppler",
+  "rarity": "gold",
+  "wear": "FN",
+  "image": "/img/items/cs2/karambit-doppler.webp",
+  "price": 716799
+ },
+ {
+  "id": "awp-dragon-lore",
+  "weapon": "AWP",
+  "skin": "Dragon Lore",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/awp-dragon-lore.webp",
+  "price": 616234
+ },
+ {
+  "id": "m9-bayonet-doppler",
+  "weapon": "M9 Bayonet",
+  "skin": "Doppler",
+  "rarity": "gold",
+  "wear": "FN",
+  "image": "/img/items/cs2/m9-bayonet-doppler.webp",
+  "price": 491589
+ },
+ {
+  "id": "karambit-gamma-doppler",
+  "weapon": "Karambit",
+  "skin": "Gamma Doppler",
+  "rarity": "gold",
+  "wear": "MW",
+  "image": "/img/items/cs2/karambit-gamma-doppler.webp",
+  "price": 436937
+ },
+ {
+  "id": "butterfly-knife-fade",
+  "weapon": "Butterfly Knife",
+  "skin": "Fade",
+  "rarity": "gold",
+  "wear": "MW",
+  "image": "/img/items/cs2/butterfly-knife-fade.webp",
+  "price": 420514
+ },
+ {
+  "id": "m4a4-howl",
+  "weapon": "M4A4",
+  "skin": "Howl",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a4-howl.webp",
+  "price": 416090
+ },
+ {
+  "id": "sport-gloves-hedge-maze",
+  "weapon": "Sport Gloves",
+  "skin": "Hedge Maze",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/sport-gloves-hedge-maze.webp",
+  "price": 412454
+ },
+ {
+  "id": "sport-gloves-pandora-s-box",
+  "weapon": "Sport Gloves",
+  "skin": "Pandora's Box",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/sport-gloves-pandora-s-box.webp",
+  "price": 352245
+ },
+ {
+  "id": "m4a1-s-knight",
+  "weapon": "M4A1-S",
+  "skin": "Knight",
+  "rarity": "classified",
+  "wear": "FN",
+  "image": "/img/items/cs2/m4a1-s-knight.webp",
+  "price": 270247
+ },
+ {
+  "id": "mp9-wild-lily",
+  "weapon": "MP9",
+  "skin": "Wild Lily",
+  "rarity": "classified",
+  "wear": "FN",
+  "image": "/img/items/cs2/mp9-wild-lily.webp",
+  "price": 249867
+ },
+ {
+  "id": "negev-mj-lnir",
+  "weapon": "Negev",
+  "skin": "Mjölnir",
+  "rarity": "classified",
+  "wear": "MW",
+  "image": "/img/items/cs2/negev-mj-lnir.webp",
+  "price": 233033
+ },
+ {
+  "id": "awp-medusa",
+  "weapon": "AWP",
+  "skin": "Medusa",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/awp-medusa.webp",
+  "price": 208136
+ },
+ {
+  "id": "specialist-gloves-crimson-kimono",
+  "weapon": "Specialist Gloves",
+  "skin": "Crimson Kimono",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/specialist-gloves-crimson-kimono.webp",
+  "price": 205463
+ },
+ {
+  "id": "butterfly-knife-gamma-doppler",
+  "weapon": "Butterfly Knife",
+  "skin": "Gamma Doppler",
+  "rarity": "gold",
+  "wear": "FN",
+  "image": "/img/items/cs2/butterfly-knife-gamma-doppler.webp",
+  "price": 203620
+ },
+ {
+  "id": "sport-gloves-superconductor",
+  "weapon": "Sport Gloves",
+  "skin": "Superconductor",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/sport-gloves-superconductor.webp",
+  "price": 198365
+ },
+ {
+  "id": "glock-18-fade",
+  "weapon": "Glock-18",
+  "skin": "Fade",
+  "rarity": "restricted",
+  "wear": "MW",
+  "image": "/img/items/cs2/glock-18-fade.webp",
+  "price": 189426
+ },
+ {
+  "id": "moto-gloves-spearmint",
+  "weapon": "Moto Gloves",
+  "skin": "Spearmint",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/moto-gloves-spearmint.webp",
+  "price": 175158
+ },
+ {
+  "id": "awp-the-prince",
+  "weapon": "AWP",
+  "skin": "The Prince",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/awp-the-prince.webp",
+  "price": 167492
+ },
+ {
+  "id": "karambit-fade",
+  "weapon": "Karambit",
+  "skin": "Fade",
+  "rarity": "gold",
+  "wear": "FN",
+  "image": "/img/items/cs2/karambit-fade.webp",
+  "price": 165896
+ },
+ {
+  "id": "specialist-gloves-emerald-web",
+  "weapon": "Specialist Gloves",
+  "skin": "Emerald Web",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/specialist-gloves-emerald-web.webp",
+  "price": 165135
+ },
+ {
+  "id": "m4a1-s-hot-rod",
+  "weapon": "M4A1-S",
+  "skin": "Hot Rod",
+  "rarity": "classified",
+  "wear": "MW",
+  "image": "/img/items/cs2/m4a1-s-hot-rod.webp",
+  "price": 156616
+ },
+ {
+  "id": "butterfly-knife-marble-fade",
+  "weapon": "Butterfly Knife",
+  "skin": "Marble Fade",
+  "rarity": "gold",
+  "wear": "MW",
+  "image": "/img/items/cs2/butterfly-knife-marble-fade.webp",
+  "price": 148378
+ },
+ {
+  "id": "m9-bayonet-fade",
+  "weapon": "M9 Bayonet",
+  "skin": "Fade",
+  "rarity": "gold",
+  "wear": "MW",
+  "image": "/img/items/cs2/m9-bayonet-fade.webp",
+  "price": 122757
+ },
+ {
+  "id": "moto-gloves-cool-mint",
+  "weapon": "Moto Gloves",
+  "skin": "Cool Mint",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/moto-gloves-cool-mint.webp",
+  "price": 119309
+ },
+ {
+  "id": "driver-gloves-crimson-weave",
+  "weapon": "Driver Gloves",
+  "skin": "Crimson Weave",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/driver-gloves-crimson-weave.webp",
+  "price": 117777
+ },
+ {
+  "id": "ak-47-gold-arabesque",
+  "weapon": "AK-47",
+  "skin": "Gold Arabesque",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/ak-47-gold-arabesque.webp",
+  "price": 116468
+ },
+ {
+  "id": "karambit-marble-fade",
+  "weapon": "Karambit",
+  "skin": "Marble Fade",
+  "rarity": "gold",
+  "wear": "MW",
+  "image": "/img/items/cs2/karambit-marble-fade.webp",
+  "price": 113741
+ },
+ {
+  "id": "m9-bayonet-gamma-doppler",
+  "weapon": "M9 Bayonet",
+  "skin": "Gamma Doppler",
+  "rarity": "gold",
+  "wear": "FN",
+  "image": "/img/items/cs2/m9-bayonet-gamma-doppler.webp",
+  "price": 111923
+ },
+ {
+  "id": "butterfly-knife-tiger-tooth",
+  "weapon": "Butterfly Knife",
+  "skin": "Tiger Tooth",
+  "rarity": "gold",
+  "wear": "FN",
+  "image": "/img/items/cs2/butterfly-knife-tiger-tooth.webp",
+  "price": 105560
+ },
+ {
+  "id": "butterfly-knife-slaughter",
+  "weapon": "Butterfly Knife",
+  "skin": "Slaughter",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/butterfly-knife-slaughter.webp",
+  "price": 104747
+ },
+ {
+  "id": "awp-desert-hydra",
+  "weapon": "AWP",
+  "skin": "Desert Hydra",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/awp-desert-hydra.webp",
+  "price": 96639
+ },
+ {
+  "id": "sport-gloves-arid",
+  "weapon": "Sport Gloves",
+  "skin": "Arid",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/sport-gloves-arid.webp",
+  "price": 88125
+ },
+ {
+  "id": "karambit-autotronic",
+  "weapon": "Karambit",
+  "skin": "Autotronic",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/karambit-autotronic.webp",
+  "price": 87620
+ },
+ {
+  "id": "butterfly-knife-autotronic",
+  "weapon": "Butterfly Knife",
+  "skin": "Autotronic",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/butterfly-knife-autotronic.webp",
+  "price": 74108
+ },
+ {
+  "id": "falchion-knife-fade",
+  "weapon": "Falchion Knife",
+  "skin": "Fade",
+  "rarity": "gold",
+  "wear": "MW",
+  "image": "/img/items/cs2/falchion-knife-fade.webp",
+  "price": 68176
+ },
+ {
+  "id": "m4a1-s-blue-phosphor",
+  "weapon": "M4A1-S",
+  "skin": "Blue Phosphor",
+  "rarity": "classified",
+  "wear": "MW",
+  "image": "/img/items/cs2/m4a1-s-blue-phosphor.webp",
+  "price": 67486
+ },
+ {
+  "id": "ursus-knife-doppler",
+  "weapon": "Ursus Knife",
+  "skin": "Doppler",
+  "rarity": "gold",
+  "wear": "FN",
+  "image": "/img/items/cs2/ursus-knife-doppler.webp",
+  "price": 65336
+ },
+ {
+  "id": "ak-47-fire-serpent",
+  "weapon": "AK-47",
+  "skin": "Fire Serpent",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/ak-47-fire-serpent.webp",
+  "price": 64768
+ },
+ {
+  "id": "negev-anodized-navy",
+  "weapon": "Negev",
+  "skin": "Anodized Navy",
+  "rarity": "milspec",
+  "wear": "MW",
+  "image": "/img/items/cs2/negev-anodized-navy.webp",
+  "price": 61658
+ },
+ {
+  "id": "desert-eagle-blaze",
+  "weapon": "Desert Eagle",
+  "skin": "Blaze",
+  "rarity": "restricted",
+  "wear": "FN",
+  "image": "/img/items/cs2/desert-eagle-blaze.webp",
+  "price": 60505
+ },
+ {
+  "id": "m9-bayonet-autotronic",
+  "weapon": "M9 Bayonet",
+  "skin": "Autotronic",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/m9-bayonet-autotronic.webp",
+  "price": 57803
+ },
+ {
+  "id": "driver-gloves-convoy",
+  "weapon": "Driver Gloves",
+  "skin": "Convoy",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/driver-gloves-convoy.webp",
+  "price": 56198
+ },
+ {
+  "id": "mag-7-cinquedea",
+  "weapon": "MAG-7",
+  "skin": "Cinquedea",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/mag-7-cinquedea.webp",
+  "price": 52698
+ },
+ {
+  "id": "skeleton-knife-doppler",
+  "weapon": "Skeleton Knife",
+  "skin": "Doppler",
+  "rarity": "gold",
+  "wear": "FN",
+  "image": "/img/items/cs2/skeleton-knife-doppler.webp",
+  "price": 51137
+ },
+ {
+  "id": "moto-gloves-boom",
+  "weapon": "Moto Gloves",
+  "skin": "Boom!",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/moto-gloves-boom.webp",
+  "price": 50402
+ },
+ {
+  "id": "five-seven-neon-kimono",
+  "weapon": "Five-SeveN",
+  "skin": "Neon Kimono",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/five-seven-neon-kimono.webp",
+  "price": 45878
+ },
+ {
+  "id": "ssg-08-sea-calico",
+  "weapon": "SSG 08",
+  "skin": "Sea Calico",
+  "rarity": "restricted",
+  "wear": "MW",
+  "image": "/img/items/cs2/ssg-08-sea-calico.webp",
+  "price": 45451
+ },
+ {
+  "id": "stiletto-knife-doppler",
+  "weapon": "Stiletto Knife",
+  "skin": "Doppler",
+  "rarity": "gold",
+  "wear": "FN",
+  "image": "/img/items/cs2/stiletto-knife-doppler.webp",
+  "price": 45451
+ },
+ {
+  "id": "nomad-knife-doppler",
+  "weapon": "Nomad Knife",
+  "skin": "Doppler",
+  "rarity": "gold",
+  "wear": "MW",
+  "image": "/img/items/cs2/nomad-knife-doppler.webp",
+  "price": 44965
+ },
+ {
+  "id": "huntsman-knife-fade",
+  "weapon": "Huntsman Knife",
+  "skin": "Fade",
+  "rarity": "gold",
+  "wear": "MW",
+  "image": "/img/items/cs2/huntsman-knife-fade.webp",
+  "price": 43747
+ },
+ {
+  "id": "m4a4-daybreak",
+  "weapon": "M4A4",
+  "skin": "Daybreak",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a4-daybreak.webp",
+  "price": 43407
+ },
+ {
+  "id": "scar-20-emerald",
+  "weapon": "SCAR-20",
+  "skin": "Emerald",
+  "rarity": "restricted",
+  "wear": "MW",
+  "image": "/img/items/cs2/scar-20-emerald.webp",
+  "price": 43061
+ },
+ {
+  "id": "aug-akihabara-accept",
+  "weapon": "AUG",
+  "skin": "Akihabara Accept",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/aug-akihabara-accept.webp",
+  "price": 41361
+ },
+ {
+  "id": "p90-astral-j-rmungandr",
+  "weapon": "P90",
+  "skin": "Astral Jörmungandr",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/p90-astral-j-rmungandr.webp",
+  "price": 40906
+ },
+ {
+  "id": "g3sg1-chronos",
+  "weapon": "G3SG1",
+  "skin": "Chronos",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/g3sg1-chronos.webp",
+  "price": 40906
+ },
+ {
+  "id": "specialist-gloves-cloud-chaser",
+  "weapon": "Specialist Gloves",
+  "skin": "Cloud Chaser",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/specialist-gloves-cloud-chaser.webp",
+  "price": 40677
+ },
+ {
+  "id": "talon-knife-blue-steel",
+  "weapon": "Talon Knife",
+  "skin": "Blue Steel",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/talon-knife-blue-steel.webp",
+  "price": 39655
+ },
+ {
+  "id": "hand-wraps-badlands",
+  "weapon": "Hand Wraps",
+  "skin": "Badlands",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/hand-wraps-badlands.webp",
+  "price": 38338
+ },
+ {
+  "id": "glock-18-synth-leaf",
+  "weapon": "Glock-18",
+  "skin": "Synth Leaf",
+  "rarity": "restricted",
+  "wear": "MW",
+  "image": "/img/items/cs2/glock-18-synth-leaf.webp",
+  "price": 36357
+ },
+ {
+  "id": "bayonet-doppler",
+  "weapon": "Bayonet",
+  "skin": "Doppler",
+  "rarity": "gold",
+  "wear": "FN",
+  "image": "/img/items/cs2/bayonet-doppler.webp",
+  "price": 35613
+ },
+ {
+  "id": "pp-bizon-modern-hunter",
+  "weapon": "PP-Bizon",
+  "skin": "Modern Hunter",
+  "rarity": "milspec",
+  "wear": "FN",
+  "image": "/img/items/cs2/pp-bizon-modern-hunter.webp",
+  "price": 35224
+ },
+ {
+  "id": "cz75-auto-chalice",
+  "weapon": "CZ75-Auto",
+  "skin": "Chalice",
+  "rarity": "restricted",
+  "wear": "FN",
+  "image": "/img/items/cs2/cz75-auto-chalice.webp",
+  "price": 33426
+ },
+ {
+  "id": "flip-knife-doppler",
+  "weapon": "Flip Knife",
+  "skin": "Doppler",
+  "rarity": "gold",
+  "wear": "FN",
+  "image": "/img/items/cs2/flip-knife-doppler.webp",
+  "price": 32724
+ },
+ {
+  "id": "classic-knife-fade",
+  "weapon": "Classic Knife",
+  "skin": "Fade",
+  "rarity": "gold",
+  "wear": "MW",
+  "image": "/img/items/cs2/classic-knife-fade.webp",
+  "price": 32180
+ },
+ {
+  "id": "mac-10-hot-snakes",
+  "weapon": "MAC-10",
+  "skin": "Hot Snakes",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/mac-10-hot-snakes.webp",
+  "price": 30985
+ },
+ {
+  "id": "navaja-knife-fade",
+  "weapon": "Navaja Knife",
+  "skin": "Fade",
+  "rarity": "gold",
+  "wear": "MW",
+  "image": "/img/items/cs2/navaja-knife-fade.webp",
+  "price": 30611
+ },
+ {
+  "id": "bowie-knife-doppler",
+  "weapon": "Bowie Knife",
+  "skin": "Doppler",
+  "rarity": "gold",
+  "wear": "FN",
+  "image": "/img/items/cs2/bowie-knife-doppler.webp",
+  "price": 30451
+ },
+ {
+  "id": "m9-bayonet-boreal-forest",
+  "weapon": "M9 Bayonet",
+  "skin": "Boreal Forest",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/m9-bayonet-boreal-forest.webp",
+  "price": 28406
+ },
+ {
+  "id": "talon-knife-damascus-steel",
+  "weapon": "Talon Knife",
+  "skin": "Damascus Steel",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/talon-knife-damascus-steel.webp",
+  "price": 28406
+ },
+ {
+  "id": "huntsman-knife-blue-steel",
+  "weapon": "Huntsman Knife",
+  "skin": "Blue Steel",
+  "rarity": "gold",
+  "wear": "MW",
+  "image": "/img/items/cs2/huntsman-knife-blue-steel.webp",
+  "price": 27271
+ },
+ {
+  "id": "sport-gloves-amphibious",
+  "weapon": "Sport Gloves",
+  "skin": "Amphibious",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/sport-gloves-amphibious.webp",
+  "price": 26532
+ },
+ {
+  "id": "usp-s-target-acquired",
+  "weapon": "USP-S",
+  "skin": "Target Acquired",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/usp-s-target-acquired.webp",
+  "price": 25907
+ },
+ {
+  "id": "bloodhound-gloves-bronzed",
+  "weapon": "Bloodhound Gloves",
+  "skin": "Bronzed",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/bloodhound-gloves-bronzed.webp",
+  "price": 24771
+ },
+ {
+  "id": "bayonet-autotronic",
+  "weapon": "Bayonet",
+  "skin": "Autotronic",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/bayonet-autotronic.webp",
+  "price": 23575
+ },
+ {
+  "id": "ump-45-fade",
+  "weapon": "UMP-45",
+  "skin": "Fade",
+  "rarity": "classified",
+  "wear": "FN",
+  "image": "/img/items/cs2/ump-45-fade.webp",
+  "price": 21769
+ },
+ {
+  "id": "skeleton-knife-blue-steel",
+  "weapon": "Skeleton Knife",
+  "skin": "Blue Steel",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/skeleton-knife-blue-steel.webp",
+  "price": 20588
+ },
+ {
+  "id": "sg-553-bulldozer",
+  "weapon": "SG 553",
+  "skin": "Bulldozer",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/sg-553-bulldozer.webp",
+  "price": 20476
+ },
+ {
+  "id": "ssg-08-death-strike",
+  "weapon": "SSG 08",
+  "skin": "Death Strike",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/ssg-08-death-strike.webp",
+  "price": 20364
+ },
+ {
+  "id": "dual-berettas-duelist",
+  "weapon": "Dual Berettas",
+  "skin": "Duelist",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/dual-berettas-duelist.webp",
+  "price": 20321
+ },
+ {
+  "id": "mp9-hot-rod",
+  "weapon": "MP9",
+  "skin": "Hot Rod",
+  "rarity": "milspec",
+  "wear": "FN",
+  "image": "/img/items/cs2/mp9-hot-rod.webp",
+  "price": 19316
+ },
+ {
+  "id": "specialist-gloves-big-swell",
+  "weapon": "Specialist Gloves",
+  "skin": "Big Swell",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/specialist-gloves-big-swell.webp",
+  "price": 18406
+ },
+ {
+  "id": "galil-ar-chatterbox",
+  "weapon": "Galil AR",
+  "skin": "Chatterbox",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/galil-ar-chatterbox.webp",
+  "price": 18320
+ },
+ {
+  "id": "glock-18-gamma-doppler",
+  "weapon": "Glock-18",
+  "skin": "Gamma Doppler",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/glock-18-gamma-doppler.webp",
+  "price": 17704
+ },
+ {
+  "id": "m4a4-asiimov",
+  "weapon": "M4A4",
+  "skin": "Asiimov",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a4-asiimov.webp",
+  "price": 17605
+ },
+ {
+  "id": "flip-knife-autotronic",
+  "weapon": "Flip Knife",
+  "skin": "Autotronic",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/flip-knife-autotronic.webp",
+  "price": 16930
+ },
+ {
+  "id": "kukri-knife-fade",
+  "weapon": "Kukri Knife",
+  "skin": "Fade",
+  "rarity": "gold",
+  "wear": "MW",
+  "image": "/img/items/cs2/kukri-knife-fade.webp",
+  "price": 16879
+ },
+ {
+  "id": "ak-47-autoexec",
+  "weapon": "AK-47",
+  "skin": "AUTOEXEC",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/ak-47-autoexec.webp",
+  "price": 15986
+ },
+ {
+  "id": "p90-asiimov",
+  "weapon": "P90",
+  "skin": "Asiimov",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/p90-asiimov.webp",
+  "price": 15907
+ },
+ {
+  "id": "gut-knife-fade",
+  "weapon": "Gut Knife",
+  "skin": "Fade",
+  "rarity": "gold",
+  "wear": "MW",
+  "image": "/img/items/cs2/gut-knife-fade.webp",
+  "price": 14887
+ },
+ {
+  "id": "desert-eagle-fennec-fox",
+  "weapon": "Desert Eagle",
+  "skin": "Fennec Fox",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/desert-eagle-fennec-fox.webp",
+  "price": 14703
+ },
+ {
+  "id": "sawed-off-copper",
+  "weapon": "Sawed-Off",
+  "skin": "Copper",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/sawed-off-copper.webp",
+  "price": 14366
+ },
+ {
+  "id": "bowie-knife-case-hardened",
+  "weapon": "Bowie Knife",
+  "skin": "Case Hardened",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/bowie-knife-case-hardened.webp",
+  "price": 13748
+ },
+ {
+  "id": "mp5-sd-oxide-oasis",
+  "weapon": "MP5-SD",
+  "skin": "Oxide Oasis",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp5-sd-oxide-oasis.webp",
+  "price": 13561
+ },
+ {
+  "id": "p2000-ocean-foam",
+  "weapon": "P2000",
+  "skin": "Ocean Foam",
+  "rarity": "classified",
+  "wear": "MW",
+  "image": "/img/items/cs2/p2000-ocean-foam.webp",
+  "price": 13376
+ },
+ {
+  "id": "falchion-knife-blue-steel",
+  "weapon": "Falchion Knife",
+  "skin": "Blue Steel",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/falchion-knife-blue-steel.webp",
+  "price": 11539
+ },
+ {
+  "id": "five-seven-berries-and-cherries",
+  "weapon": "Five-SeveN",
+  "skin": "Berries And Cherries",
+  "rarity": "restricted",
+  "wear": "MW",
+  "image": "/img/items/cs2/five-seven-berries-and-cherries.webp",
+  "price": 11363
+ },
+ {
+  "id": "hand-wraps-caution",
+  "weapon": "Hand Wraps",
+  "skin": "CAUTION!",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/hand-wraps-caution.webp",
+  "price": 11362
+ },
+ {
+  "id": "classic-knife-blue-steel",
+  "weapon": "Classic Knife",
+  "skin": "Blue Steel",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/classic-knife-blue-steel.webp",
+  "price": 11134
+ },
+ {
+  "id": "moto-gloves-blood-pressure",
+  "weapon": "Moto Gloves",
+  "skin": "Blood Pressure",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/moto-gloves-blood-pressure.webp",
+  "price": 11070
+ },
+ {
+  "id": "driver-gloves-black-tie",
+  "weapon": "Driver Gloves",
+  "skin": "Black Tie",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/driver-gloves-black-tie.webp",
+  "price": 10889
+ },
+ {
+  "id": "pp-bizon-judgement-of-anubis",
+  "weapon": "PP-Bizon",
+  "skin": "Judgement of Anubis",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/pp-bizon-judgement-of-anubis.webp",
+  "price": 10662
+ },
+ {
+  "id": "cz75-auto-emerald-quartz",
+  "weapon": "CZ75-Auto",
+  "skin": "Emerald Quartz",
+  "rarity": "milspec",
+  "wear": "MW",
+  "image": "/img/items/cs2/cz75-auto-emerald-quartz.webp",
+  "price": 10329
+ },
+ {
+  "id": "mag-7-counter-terrace",
+  "weapon": "MAG-7",
+  "skin": "Counter Terrace",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/mag-7-counter-terrace.webp",
+  "price": 10265
+ },
+ {
+  "id": "mac-10-neon-rider",
+  "weapon": "MAC-10",
+  "skin": "Neon Rider",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/mac-10-neon-rider.webp",
+  "price": 10250
+ },
+ {
+  "id": "m4a1-s-chantico-s-fire",
+  "weapon": "M4A1-S",
+  "skin": "Chantico's Fire",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a1-s-chantico-s-fire.webp",
+  "price": 10223
+ },
+ {
+  "id": "awp-asiimov",
+  "weapon": "AWP",
+  "skin": "Asiimov",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/awp-asiimov.webp",
+  "price": 10191
+ },
+ {
+  "id": "xm1014-frost-borre",
+  "weapon": "XM1014",
+  "skin": "Frost Borre",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/xm1014-frost-borre.webp",
+  "price": 10033
+ },
+ {
+  "id": "driver-gloves-dragon-fists",
+  "weapon": "Driver Gloves",
+  "skin": "Dragon Fists",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/driver-gloves-dragon-fists.webp",
+  "price": 9881
+ },
+ {
+  "id": "falchion-knife-autotronic",
+  "weapon": "Falchion Knife",
+  "skin": "Autotronic",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/falchion-knife-autotronic.webp",
+  "price": 9738
+ },
+ {
+  "id": "nova-baroque-orange",
+  "weapon": "Nova",
+  "skin": "Baroque Orange",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/nova-baroque-orange.webp",
+  "price": 9079
+ },
+ {
+  "id": "mp9-bulldozer",
+  "weapon": "MP9",
+  "skin": "Bulldozer",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp9-bulldozer.webp",
+  "price": 8522
+ },
+ {
+  "id": "huntsman-knife-autotronic",
+  "weapon": "Huntsman Knife",
+  "skin": "Autotronic",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/huntsman-knife-autotronic.webp",
+  "price": 8521
+ },
+ {
+  "id": "ssg-08-blood-in-the-water",
+  "weapon": "SSG 08",
+  "skin": "Blood in the Water",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/ssg-08-blood-in-the-water.webp",
+  "price": 8290
+ },
+ {
+  "id": "awp-boom",
+  "weapon": "AWP",
+  "skin": "BOOM",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/awp-boom.webp",
+  "price": 8219
+ },
+ {
+  "id": "gut-knife-autotronic",
+  "weapon": "Gut Knife",
+  "skin": "Autotronic",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/gut-knife-autotronic.webp",
+  "price": 8181
+ },
+ {
+  "id": "p90-cold-blooded",
+  "weapon": "P90",
+  "skin": "Cold Blooded",
+  "rarity": "classified",
+  "wear": "MW",
+  "image": "/img/items/cs2/p90-cold-blooded.webp",
+  "price": 8080
+ },
+ {
+  "id": "scar-20-brass",
+  "weapon": "SCAR-20",
+  "skin": "Brass",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/scar-20-brass.webp",
+  "price": 8071
+ },
+ {
+  "id": "p2000-chainmail",
+  "weapon": "P2000",
+  "skin": "Chainmail",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/p2000-chainmail.webp",
+  "price": 7954
+ },
+ {
+  "id": "galil-ar-aqua-terrace",
+  "weapon": "Galil AR",
+  "skin": "Aqua Terrace",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/galil-ar-aqua-terrace.webp",
+  "price": 7816
+ },
+ {
+  "id": "r8-revolver-fade",
+  "weapon": "R8 Revolver",
+  "skin": "Fade",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/r8-revolver-fade.webp",
+  "price": 7436
+ },
+ {
+  "id": "bowie-knife-autotronic",
+  "weapon": "Bowie Knife",
+  "skin": "Autotronic",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/bowie-knife-autotronic.webp",
+  "price": 7386
+ },
+ {
+  "id": "sport-gloves-bronze-morph",
+  "weapon": "Sport Gloves",
+  "skin": "Bronze Morph",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/sport-gloves-bronze-morph.webp",
+  "price": 7272
+ },
+ {
+  "id": "ump-45-crime-scene",
+  "weapon": "UMP-45",
+  "skin": "Crime Scene",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/ump-45-crime-scene.webp",
+  "price": 7204
+ },
+ {
+  "id": "m4a4-bullet-rain",
+  "weapon": "M4A4",
+  "skin": "Bullet Rain",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a4-bullet-rain.webp",
+  "price": 6886
+ },
+ {
+  "id": "aug-chameleon",
+  "weapon": "AUG",
+  "skin": "Chameleon",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/aug-chameleon.webp",
+  "price": 6829
+ },
+ {
+  "id": "broken-fang-gloves-jade",
+  "weapon": "Broken Fang Gloves",
+  "skin": "Jade",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/broken-fang-gloves-jade.webp",
+  "price": 6538
+ },
+ {
+  "id": "desert-eagle-cobalt-disruption",
+  "weapon": "Desert Eagle",
+  "skin": "Cobalt Disruption",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/desert-eagle-cobalt-disruption.webp",
+  "price": 6514
+ },
+ {
+  "id": "classic-knife-boreal-forest",
+  "weapon": "Classic Knife",
+  "skin": "Boreal Forest",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/classic-knife-boreal-forest.webp",
+  "price": 6476
+ },
+ {
+  "id": "sawed-off-first-class",
+  "weapon": "Sawed-Off",
+  "skin": "First Class",
+  "rarity": "milspec",
+  "wear": "MW",
+  "image": "/img/items/cs2/sawed-off-first-class.webp",
+  "price": 6250
+ },
+ {
+  "id": "hydra-gloves-case-hardened",
+  "weapon": "Hydra Gloves",
+  "skin": "Case Hardened",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/hydra-gloves-case-hardened.webp",
+  "price": 5753
+ },
+ {
+  "id": "m249-blizzard-marbleized",
+  "weapon": "M249",
+  "skin": "Blizzard Marbleized",
+  "rarity": "industrial",
+  "wear": "MW",
+  "image": "/img/items/cs2/m249-blizzard-marbleized.webp",
+  "price": 5680
+ },
+ {
+  "id": "mp7-teal-blossom",
+  "weapon": "MP7",
+  "skin": "Teal Blossom",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp7-teal-blossom.webp",
+  "price": 5544
+ },
+ {
+  "id": "xm1014-ancient-lore",
+  "weapon": "XM1014",
+  "skin": "Ancient Lore",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/xm1014-ancient-lore.webp",
+  "price": 5543
+ },
+ {
+  "id": "glock-18-bullet-queen",
+  "weapon": "Glock-18",
+  "skin": "Bullet Queen",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/glock-18-bullet-queen.webp",
+  "price": 4759
+ },
+ {
+  "id": "specialist-gloves-buckshot",
+  "weapon": "Specialist Gloves",
+  "skin": "Buckshot",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/specialist-gloves-buckshot.webp",
+  "price": 4752
+ },
+ {
+  "id": "tec-9-nuclear-threat",
+  "weapon": "Tec-9",
+  "skin": "Nuclear Threat",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/tec-9-nuclear-threat.webp",
+  "price": 4673
+ },
+ {
+  "id": "five-seven-angry-mob",
+  "weapon": "Five-SeveN",
+  "skin": "Angry Mob",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/five-seven-angry-mob.webp",
+  "price": 4633
+ },
+ {
+  "id": "p250-apep-s-curse",
+  "weapon": "P250",
+  "skin": "Apep's Curse",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/p250-apep-s-curse.webp",
+  "price": 4477
+ },
+ {
+  "id": "hand-wraps-arboreal",
+  "weapon": "Hand Wraps",
+  "skin": "Arboreal",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/hand-wraps-arboreal.webp",
+  "price": 4199
+ },
+ {
+  "id": "famas-bad-trip",
+  "weapon": "FAMAS",
+  "skin": "Bad Trip",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/famas-bad-trip.webp",
+  "price": 3928
+ },
+ {
+  "id": "m4a1-s-bright-water",
+  "weapon": "M4A1-S",
+  "skin": "Bright Water",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a1-s-bright-water.webp",
+  "price": 3738
+ },
+ {
+  "id": "usp-s-business-class",
+  "weapon": "USP-S",
+  "skin": "Business Class",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/usp-s-business-class.webp",
+  "price": 3684
+ },
+ {
+  "id": "dual-berettas-cobra-strike",
+  "weapon": "Dual Berettas",
+  "skin": "Cobra Strike",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/dual-berettas-cobra-strike.webp",
+  "price": 3618
+ },
+ {
+  "id": "ak-47-aquamarine-revenge",
+  "weapon": "AK-47",
+  "skin": "Aquamarine Revenge",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/ak-47-aquamarine-revenge.webp",
+  "price": 3408
+ },
+ {
+  "id": "mac-10-commuter",
+  "weapon": "MAC-10",
+  "skin": "Commuter",
+  "rarity": "industrial",
+  "wear": "FN",
+  "image": "/img/items/cs2/mac-10-commuter.webp",
+  "price": 3068
+ },
+ {
+  "id": "g3sg1-arctic-camo",
+  "weapon": "G3SG1",
+  "skin": "Arctic Camo",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/g3sg1-arctic-camo.webp",
+  "price": 3067
+ },
+ {
+  "id": "cz75-auto-emerald",
+  "weapon": "CZ75-Auto",
+  "skin": "Emerald",
+  "rarity": "milspec",
+  "wear": "MW",
+  "image": "/img/items/cs2/cz75-auto-emerald.webp",
+  "price": 3045
+ },
+ {
+  "id": "hydra-gloves-rattler",
+  "weapon": "Hydra Gloves",
+  "skin": "Rattler",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/hydra-gloves-rattler.webp",
+  "price": 2997
+ },
+ {
+  "id": "driver-gloves-racing-green",
+  "weapon": "Driver Gloves",
+  "skin": "Racing Green",
+  "rarity": "gold",
+  "wear": "FT",
+  "image": "/img/items/cs2/driver-gloves-racing-green.webp",
+  "price": 2993
+ },
+ {
+  "id": "aug-anodized-navy",
+  "weapon": "AUG",
+  "skin": "Anodized Navy",
+  "rarity": "milspec",
+  "wear": "MW",
+  "image": "/img/items/cs2/aug-anodized-navy.webp",
+  "price": 2954
+ },
+ {
+  "id": "usp-s-ancient-visions",
+  "weapon": "USP-S",
+  "skin": "Ancient Visions",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/usp-s-ancient-visions.webp",
+  "price": 2840
+ },
+ {
+  "id": "ump-45-blaze",
+  "weapon": "UMP-45",
+  "skin": "Blaze",
+  "rarity": "milspec",
+  "wear": "MW",
+  "image": "/img/items/cs2/ump-45-blaze.webp",
+  "price": 2840
+ },
+ {
+  "id": "awp-chromatic-aberration",
+  "weapon": "AWP",
+  "skin": "Chromatic Aberration",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/awp-chromatic-aberration.webp",
+  "price": 2765
+ },
+ {
+  "id": "mp7-bloodsport",
+  "weapon": "MP7",
+  "skin": "Bloodsport",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp7-bloodsport.webp",
+  "price": 2571
+ },
+ {
+  "id": "tec-9-blue-titanium",
+  "weapon": "Tec-9",
+  "skin": "Blue Titanium",
+  "rarity": "milspec",
+  "wear": "FN",
+  "image": "/img/items/cs2/tec-9-blue-titanium.webp",
+  "price": 2511
+ },
+ {
+  "id": "m4a1-s-atomic-alloy",
+  "weapon": "M4A1-S",
+  "skin": "Atomic Alloy",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a1-s-atomic-alloy.webp",
+  "price": 2112
+ },
+ {
+  "id": "nova-blaze-orange",
+  "weapon": "Nova",
+  "skin": "Blaze Orange",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/nova-blaze-orange.webp",
+  "price": 2029
+ },
+ {
+  "id": "p90-baroque-red",
+  "weapon": "P90",
+  "skin": "Baroque Red",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/p90-baroque-red.webp",
+  "price": 1970
+ },
+ {
+  "id": "dual-berettas-anodized-navy",
+  "weapon": "Dual Berettas",
+  "skin": "Anodized Navy",
+  "rarity": "milspec",
+  "wear": "MW",
+  "image": "/img/items/cs2/dual-berettas-anodized-navy.webp",
+  "price": 1894
+ },
+ {
+  "id": "desert-eagle-conspiracy",
+  "weapon": "Desert Eagle",
+  "skin": "Conspiracy",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/desert-eagle-conspiracy.webp",
+  "price": 1782
+ },
+ {
+  "id": "five-seven-anodized-gunmetal",
+  "weapon": "Five-SeveN",
+  "skin": "Anodized Gunmetal",
+  "rarity": "industrial",
+  "wear": "FN",
+  "image": "/img/items/cs2/five-seven-anodized-gunmetal.webp",
+  "price": 1754
+ },
+ {
+  "id": "glock-18-axia",
+  "weapon": "Glock-18",
+  "skin": "AXIA",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/glock-18-axia.webp",
+  "price": 1731
+ },
+ {
+  "id": "xm1014-blaze-orange",
+  "weapon": "XM1014",
+  "skin": "Blaze Orange",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/xm1014-blaze-orange.webp",
+  "price": 1727
+ },
+ {
+  "id": "famas-afterimage",
+  "weapon": "FAMAS",
+  "skin": "Afterimage",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/famas-afterimage.webp",
+  "price": 1719
+ },
+ {
+  "id": "g3sg1-new-roots",
+  "weapon": "G3SG1",
+  "skin": "New Roots",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/g3sg1-new-roots.webp",
+  "price": 1674
+ },
+ {
+  "id": "ssg-08-bloodshot",
+  "weapon": "SSG 08",
+  "skin": "Bloodshot",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/ssg-08-bloodshot.webp",
+  "price": 1670
+ },
+ {
+  "id": "galil-ar-blue-titanium",
+  "weapon": "Galil AR",
+  "skin": "Blue Titanium",
+  "rarity": "milspec",
+  "wear": "FN",
+  "image": "/img/items/cs2/galil-ar-blue-titanium.webp",
+  "price": 1628
+ },
+ {
+  "id": "p2000-corticera",
+  "weapon": "P2000",
+  "skin": "Corticera",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/p2000-corticera.webp",
+  "price": 1589
+ },
+ {
+  "id": "m4a4-cyber-security",
+  "weapon": "M4A4",
+  "skin": "Cyber Security",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a4-cyber-security.webp",
+  "price": 1571
+ },
+ {
+  "id": "mac-10-amber-fade",
+  "weapon": "MAC-10",
+  "skin": "Amber Fade",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/mac-10-amber-fade.webp",
+  "price": 1550
+ },
+ {
+  "id": "cz75-auto-the-fuschia-is-now",
+  "weapon": "CZ75-Auto",
+  "skin": "The Fuschia Is Now",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/cz75-auto-the-fuschia-is-now.webp",
+  "price": 1477
+ },
+ {
+  "id": "sawed-off-orange-ddpat",
+  "weapon": "Sawed-Off",
+  "skin": "Orange DDPAT",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/sawed-off-orange-ddpat.webp",
+  "price": 1367
+ },
+ {
+  "id": "m249-shipping-forecast",
+  "weapon": "M249",
+  "skin": "Shipping Forecast",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/m249-shipping-forecast.webp",
+  "price": 1340
+ },
+ {
+  "id": "sg-553-gator-mesh",
+  "weapon": "SG 553",
+  "skin": "Gator Mesh",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/sg-553-gator-mesh.webp",
+  "price": 1337
+ },
+ {
+  "id": "ak-47-aphrodite",
+  "weapon": "AK-47",
+  "skin": "Aphrodite",
+  "rarity": "covert",
+  "wear": "FT",
+  "image": "/img/items/cs2/ak-47-aphrodite.webp",
+  "price": 1292
+ },
+ {
+  "id": "pp-bizon-rust-coat",
+  "weapon": "PP-Bizon",
+  "skin": "Rust Coat",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/pp-bizon-rust-coat.webp",
+  "price": 1252
+ },
+ {
+  "id": "negev-calicamo",
+  "weapon": "Negev",
+  "skin": "CaliCamo",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/negev-calicamo.webp",
+  "price": 1219
+ },
+ {
+  "id": "p250-asiimov",
+  "weapon": "P250",
+  "skin": "Asiimov",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/p250-asiimov.webp",
+  "price": 1079
+ },
+ {
+  "id": "mp9-airlock",
+  "weapon": "MP9",
+  "skin": "Airlock",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp9-airlock.webp",
+  "price": 1064
+ },
+ {
+  "id": "mag-7-bulldozer",
+  "weapon": "MAG-7",
+  "skin": "Bulldozer",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/mag-7-bulldozer.webp",
+  "price": 1023
+ },
+ {
+  "id": "scar-20-bloodsport",
+  "weapon": "SCAR-20",
+  "skin": "Bloodsport",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/scar-20-bloodsport.webp",
+  "price": 1012
+ },
+ {
+  "id": "p2000-coach-class",
+  "weapon": "P2000",
+  "skin": "Coach Class",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/p2000-coach-class.webp",
+  "price": 960
+ },
+ {
+  "id": "mp9-dry-season",
+  "weapon": "MP9",
+  "skin": "Dry Season",
+  "rarity": "industrial",
+  "wear": "MW",
+  "image": "/img/items/cs2/mp9-dry-season.webp",
+  "price": 940
+ },
+ {
+  "id": "xm1014-banana-leaf",
+  "weapon": "XM1014",
+  "skin": "Banana Leaf",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/xm1014-banana-leaf.webp",
+  "price": 919
+ },
+ {
+  "id": "aug-bengal-tiger",
+  "weapon": "AUG",
+  "skin": "Bengal Tiger",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/aug-bengal-tiger.webp",
+  "price": 915
+ },
+ {
+  "id": "famas-contrast-spray",
+  "weapon": "FAMAS",
+  "skin": "Contrast Spray",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/famas-contrast-spray.webp",
+  "price": 899
+ },
+ {
+  "id": "desert-eagle-crimson-web",
+  "weapon": "Desert Eagle",
+  "skin": "Crimson Web",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/desert-eagle-crimson-web.webp",
+  "price": 873
+ },
+ {
+  "id": "zeus-x27-dragon-snore",
+  "weapon": "Zeus x27",
+  "skin": "Dragon Snore",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/zeus-x27-dragon-snore.webp",
+  "price": 834
+ },
+ {
+  "id": "nova-antique",
+  "weapon": "Nova",
+  "skin": "Antique",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/nova-antique.webp",
+  "price": 831
+ },
+ {
+  "id": "galil-ar-amber-fade",
+  "weapon": "Galil AR",
+  "skin": "Amber Fade",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/galil-ar-amber-fade.webp",
+  "price": 825
+ },
+ {
+  "id": "g3sg1-contractor",
+  "weapon": "G3SG1",
+  "skin": "Contractor",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/g3sg1-contractor.webp",
+  "price": 801
+ },
+ {
+  "id": "p250-black-tan",
+  "weapon": "P250",
+  "skin": "Black & Tan",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/p250-black-tan.webp",
+  "price": 799
+ },
+ {
+  "id": "scar-20-cardiac",
+  "weapon": "SCAR-20",
+  "skin": "Cardiac",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/scar-20-cardiac.webp",
+  "price": 784
+ },
+ {
+  "id": "ssg-08-big-iron",
+  "weapon": "SSG 08",
+  "skin": "Big Iron",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/ssg-08-big-iron.webp",
+  "price": 778
+ },
+ {
+  "id": "m4a1-s-basilisk",
+  "weapon": "M4A1-S",
+  "skin": "Basilisk",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a1-s-basilisk.webp",
+  "price": 733
+ },
+ {
+  "id": "negev-infrastructure",
+  "weapon": "Negev",
+  "skin": "Infrastructure",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/negev-infrastructure.webp",
+  "price": 585
+ },
+ {
+  "id": "p90-attack-vector",
+  "weapon": "P90",
+  "skin": "Attack Vector",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/p90-attack-vector.webp",
+  "price": 567
+ },
+ {
+  "id": "mp5-sd-autumn-twilly",
+  "weapon": "MP5-SD",
+  "skin": "Autumn Twilly",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp5-sd-autumn-twilly.webp",
+  "price": 556
+ },
+ {
+  "id": "mp7-abyssal-apparition",
+  "weapon": "MP7",
+  "skin": "Abyssal Apparition",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp7-abyssal-apparition.webp",
+  "price": 523
+ },
+ {
+  "id": "m4a4-faded-zebra",
+  "weapon": "M4A4",
+  "skin": "Faded Zebra",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a4-faded-zebra.webp",
+  "price": 483
+ },
+ {
+  "id": "r8-revolver-blaze",
+  "weapon": "R8 Revolver",
+  "skin": "Blaze",
+  "rarity": "milspec",
+  "wear": "MW",
+  "image": "/img/items/cs2/r8-revolver-blaze.webp",
+  "price": 481
+ },
+ {
+  "id": "sg-553-barricade",
+  "weapon": "SG 553",
+  "skin": "Barricade",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/sg-553-barricade.webp",
+  "price": 475
+ },
+ {
+  "id": "tec-9-bamboo-forest",
+  "weapon": "Tec-9",
+  "skin": "Bamboo Forest",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/tec-9-bamboo-forest.webp",
+  "price": 459
+ },
+ {
+  "id": "dual-berettas-black-limba",
+  "weapon": "Dual Berettas",
+  "skin": "Black Limba",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/dual-berettas-black-limba.webp",
+  "price": 455
+ },
+ {
+  "id": "awp-atheris",
+  "weapon": "AWP",
+  "skin": "Atheris",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/awp-atheris.webp",
+  "price": 402
+ },
+ {
+  "id": "sawed-off-bamboo-shadow",
+  "weapon": "Sawed-Off",
+  "skin": "Bamboo Shadow",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/sawed-off-bamboo-shadow.webp",
+  "price": 387
+ },
+ {
+  "id": "pp-bizon-antique",
+  "weapon": "PP-Bizon",
+  "skin": "Antique",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/pp-bizon-antique.webp",
+  "price": 384
+ },
+ {
+  "id": "ak-47-baroque-purple",
+  "weapon": "AK-47",
+  "skin": "Baroque Purple",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/ak-47-baroque-purple.webp",
+  "price": 368
+ },
+ {
+  "id": "mag-7-hard-water",
+  "weapon": "MAG-7",
+  "skin": "Hard Water",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/mag-7-hard-water.webp",
+  "price": 364
+ },
+ {
+  "id": "five-seven-boost-protocol",
+  "weapon": "Five-SeveN",
+  "skin": "Boost Protocol",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/five-seven-boost-protocol.webp",
+  "price": 358
+ },
+ {
+  "id": "usp-s-blueprint",
+  "weapon": "USP-S",
+  "skin": "Blueprint",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/usp-s-blueprint.webp",
+  "price": 356
+ },
+ {
+  "id": "ump-45-bone-pile",
+  "weapon": "UMP-45",
+  "skin": "Bone Pile",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/ump-45-bone-pile.webp",
+  "price": 337
+ },
+ {
+  "id": "mac-10-aloha",
+  "weapon": "MAC-10",
+  "skin": "Aloha",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/mac-10-aloha.webp",
+  "price": 332
+ },
+ {
+  "id": "cz75-auto-green-plaid",
+  "weapon": "CZ75-Auto",
+  "skin": "Green Plaid",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/cz75-auto-green-plaid.webp",
+  "price": 308
+ },
+ {
+  "id": "glock-18-blue-fissure",
+  "weapon": "Glock-18",
+  "skin": "Blue Fissure",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/glock-18-blue-fissure.webp",
+  "price": 306
+ },
+ {
+  "id": "m249-jungle",
+  "weapon": "M249",
+  "skin": "Jungle",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/m249-jungle.webp",
+  "price": 306
+ },
+ {
+  "id": "mp5-sd-bamboo-garden",
+  "weapon": "MP5-SD",
+  "skin": "Bamboo Garden",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp5-sd-bamboo-garden.webp",
+  "price": 293
+ },
+ {
+  "id": "awp-black-nile",
+  "weapon": "AWP",
+  "skin": "Black Nile",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/awp-black-nile.webp",
+  "price": 284
+ },
+ {
+  "id": "m4a4-evil-daimyo",
+  "weapon": "M4A4",
+  "skin": "Evil Daimyo",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a4-evil-daimyo.webp",
+  "price": 284
+ },
+ {
+  "id": "ssg-08-carbon-fiber",
+  "weapon": "SSG 08",
+  "skin": "Carbon Fiber",
+  "rarity": "industrial",
+  "wear": "MW",
+  "image": "/img/items/cs2/ssg-08-carbon-fiber.webp",
+  "price": 282
+ },
+ {
+  "id": "nova-clear-polymer",
+  "weapon": "Nova",
+  "skin": "Clear Polymer",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/nova-clear-polymer.webp",
+  "price": 277
+ },
+ {
+  "id": "negev-boroque-sand",
+  "weapon": "Negev",
+  "skin": "Boroque Sand",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/negev-boroque-sand.webp",
+  "price": 250
+ },
+ {
+  "id": "famas-hexane",
+  "weapon": "FAMAS",
+  "skin": "Hexane",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/famas-hexane.webp",
+  "price": 242
+ },
+ {
+  "id": "pp-bizon-blue-streak",
+  "weapon": "PP-Bizon",
+  "skin": "Blue Streak",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/pp-bizon-blue-streak.webp",
+  "price": 232
+ },
+ {
+  "id": "ak-47-breakthrough",
+  "weapon": "AK-47",
+  "skin": "Breakthrough",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/ak-47-breakthrough.webp",
+  "price": 226
+ },
+ {
+  "id": "mac-10-derailment",
+  "weapon": "MAC-10",
+  "skin": "Derailment",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/mac-10-derailment.webp",
+  "price": 226
+ },
+ {
+  "id": "galil-ar-crimson-tsunami",
+  "weapon": "Galil AR",
+  "skin": "Crimson Tsunami",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/galil-ar-crimson-tsunami.webp",
+  "price": 214
+ },
+ {
+  "id": "mp9-arctic-tri-tone",
+  "weapon": "MP9",
+  "skin": "Arctic Tri-Tone",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp9-arctic-tri-tone.webp",
+  "price": 207
+ },
+ {
+  "id": "g3sg1-ancient-ritual",
+  "weapon": "G3SG1",
+  "skin": "Ancient Ritual",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/g3sg1-ancient-ritual.webp",
+  "price": 206
+ },
+ {
+  "id": "glock-18-grinder",
+  "weapon": "Glock-18",
+  "skin": "Grinder",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/glock-18-grinder.webp",
+  "price": 200
+ },
+ {
+  "id": "cz75-auto-army-sheen",
+  "weapon": "CZ75-Auto",
+  "skin": "Army Sheen",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/cz75-auto-army-sheen.webp",
+  "price": 199
+ },
+ {
+  "id": "ump-45-crimson-foil",
+  "weapon": "UMP-45",
+  "skin": "Crimson Foil",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/ump-45-crimson-foil.webp",
+  "price": 194
+ },
+ {
+  "id": "mag-7-bi83-spectrum",
+  "weapon": "MAG-7",
+  "skin": "BI83 Spectrum",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/mag-7-bi83-spectrum.webp",
+  "price": 183
+ },
+ {
+  "id": "mp7-anodized-navy",
+  "weapon": "MP7",
+  "skin": "Anodized Navy",
+  "rarity": "milspec",
+  "wear": "MW",
+  "image": "/img/items/cs2/mp7-anodized-navy.webp",
+  "price": 182
+ },
+ {
+  "id": "tec-9-avalanche",
+  "weapon": "Tec-9",
+  "skin": "Avalanche",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/tec-9-avalanche.webp",
+  "price": 169
+ },
+ {
+  "id": "scar-20-army-sheen",
+  "weapon": "SCAR-20",
+  "skin": "Army Sheen",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/scar-20-army-sheen.webp",
+  "price": 164
+ },
+ {
+  "id": "p250-bone-mask",
+  "weapon": "P250",
+  "skin": "Bone Mask",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/p250-bone-mask.webp",
+  "price": 162
+ },
+ {
+  "id": "zeus-x27-charged-up",
+  "weapon": "Zeus x27",
+  "skin": "Charged Up",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/zeus-x27-charged-up.webp",
+  "price": 153
+ },
+ {
+  "id": "five-seven-contractor",
+  "weapon": "Five-SeveN",
+  "skin": "Contractor",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/five-seven-contractor.webp",
+  "price": 150
+ },
+ {
+  "id": "aug-amber-fade",
+  "weapon": "AUG",
+  "skin": "Amber Fade",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/aug-amber-fade.webp",
+  "price": 136
+ },
+ {
+  "id": "sawed-off-brake-light",
+  "weapon": "Sawed-Off",
+  "skin": "Brake Light",
+  "rarity": "milspec",
+  "wear": "MW",
+  "image": "/img/items/cs2/sawed-off-brake-light.webp",
+  "price": 132
+ },
+ {
+  "id": "dual-berettas-balance",
+  "weapon": "Dual Berettas",
+  "skin": "Balance",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/dual-berettas-balance.webp",
+  "price": 130
+ },
+ {
+  "id": "m249-emerald-poison-dart",
+  "weapon": "M249",
+  "skin": "Emerald Poison Dart",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/m249-emerald-poison-dart.webp",
+  "price": 123
+ },
+ {
+  "id": "desert-eagle-directive",
+  "weapon": "Desert Eagle",
+  "skin": "Directive",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/desert-eagle-directive.webp",
+  "price": 116
+ },
+ {
+  "id": "usp-s-bleeding-edge",
+  "weapon": "USP-S",
+  "skin": "Bleeding Edge",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/usp-s-bleeding-edge.webp",
+  "price": 115
+ },
+ {
+  "id": "xm1014-black-tie",
+  "weapon": "XM1014",
+  "skin": "Black Tie",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/xm1014-black-tie.webp",
+  "price": 115
+ },
+ {
+  "id": "p90-chopper",
+  "weapon": "P90",
+  "skin": "Chopper",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/p90-chopper.webp",
+  "price": 114
+ },
+ {
+  "id": "p2000-grassland",
+  "weapon": "P2000",
+  "skin": "Grassland",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/p2000-grassland.webp",
+  "price": 110
+ },
+ {
+  "id": "r8-revolver-amber-fade",
+  "weapon": "R8 Revolver",
+  "skin": "Amber Fade",
+  "rarity": "classified",
+  "wear": "FT",
+  "image": "/img/items/cs2/r8-revolver-amber-fade.webp",
+  "price": 109
+ },
+ {
+  "id": "m4a1-s-electrum",
+  "weapon": "M4A1-S",
+  "skin": "Electrum",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a1-s-electrum.webp",
+  "price": 101
+ },
+ {
+  "id": "sg-553-anodized-navy",
+  "weapon": "SG 553",
+  "skin": "Anodized Navy",
+  "rarity": "milspec",
+  "wear": "MW",
+  "image": "/img/items/cs2/sg-553-anodized-navy.webp",
+  "price": 101
+ },
+ {
+  "id": "pp-bizon-cobalt-halftone",
+  "weapon": "PP-Bizon",
+  "skin": "Cobalt Halftone",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/pp-bizon-cobalt-halftone.webp",
+  "price": 98
+ },
+ {
+  "id": "usp-s-black-lotus",
+  "weapon": "USP-S",
+  "skin": "Black Lotus",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/usp-s-black-lotus.webp",
+  "price": 97
+ },
+ {
+  "id": "mp9-army-sheen",
+  "weapon": "MP9",
+  "skin": "Army Sheen",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp9-army-sheen.webp",
+  "price": 80
+ },
+ {
+  "id": "awp-acheron",
+  "weapon": "AWP",
+  "skin": "Acheron",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/awp-acheron.webp",
+  "price": 77
+ },
+ {
+  "id": "p250-contaminant",
+  "weapon": "P250",
+  "skin": "Contaminant",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/p250-contaminant.webp",
+  "price": 77
+ },
+ {
+  "id": "galil-ar-black-sand",
+  "weapon": "Galil AR",
+  "skin": "Black Sand",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/galil-ar-black-sand.webp",
+  "price": 77
+ },
+ {
+  "id": "mp5-sd-acid-wash",
+  "weapon": "MP5-SD",
+  "skin": "Acid Wash",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp5-sd-acid-wash.webp",
+  "price": 73
+ },
+ {
+  "id": "p90-cocoa-rampage",
+  "weapon": "P90",
+  "skin": "Cocoa Rampage",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/p90-cocoa-rampage.webp",
+  "price": 68
+ },
+ {
+  "id": "tec-9-bamboozle",
+  "weapon": "Tec-9",
+  "skin": "Bamboozle",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/tec-9-bamboozle.webp",
+  "price": 57
+ },
+ {
+  "id": "five-seven-buddy",
+  "weapon": "Five-SeveN",
+  "skin": "Buddy",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/five-seven-buddy.webp",
+  "price": 55
+ },
+ {
+  "id": "dual-berettas-angel-eyes",
+  "weapon": "Dual Berettas",
+  "skin": "Angel Eyes",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/dual-berettas-angel-eyes.webp",
+  "price": 55
+ },
+ {
+  "id": "ak-47-uncharted",
+  "weapon": "AK-47",
+  "skin": "Uncharted",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/ak-47-uncharted.webp",
+  "price": 53
+ },
+ {
+  "id": "m4a4-converter",
+  "weapon": "M4A4",
+  "skin": "Converter",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a4-converter.webp",
+  "price": 53
+ },
+ {
+  "id": "g3sg1-black-sand",
+  "weapon": "G3SG1",
+  "skin": "Black Sand",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/g3sg1-black-sand.webp",
+  "price": 49
+ },
+ {
+  "id": "p2000-acid-etched",
+  "weapon": "P2000",
+  "skin": "Acid Etched",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/p2000-acid-etched.webp",
+  "price": 48
+ },
+ {
+  "id": "xm1014-blue-tire",
+  "weapon": "XM1014",
+  "skin": "Blue Tire",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/xm1014-blue-tire.webp",
+  "price": 47
+ },
+ {
+  "id": "ssg-08-abyss",
+  "weapon": "SSG 08",
+  "skin": "Abyss",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/ssg-08-abyss.webp",
+  "price": 44
+ },
+ {
+  "id": "mp7-akoben",
+  "weapon": "MP7",
+  "skin": "Akoben",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp7-akoben.webp",
+  "price": 41
+ },
+ {
+  "id": "desert-eagle-corinthian",
+  "weapon": "Desert Eagle",
+  "skin": "Corinthian",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/desert-eagle-corinthian.webp",
+  "price": 40
+ },
+ {
+  "id": "m4a1-s-emphorosaur-s",
+  "weapon": "M4A1-S",
+  "skin": "Emphorosaur-S",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a1-s-emphorosaur-s.webp",
+  "price": 39
+ },
+ {
+  "id": "scar-20-assault",
+  "weapon": "SCAR-20",
+  "skin": "Assault",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/scar-20-assault.webp",
+  "price": 39
+ },
+ {
+  "id": "glock-18-block-18",
+  "weapon": "Glock-18",
+  "skin": "Block-18",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/glock-18-block-18.webp",
+  "price": 36
+ },
+ {
+  "id": "m249-aztec",
+  "weapon": "M249",
+  "skin": "Aztec",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/m249-aztec.webp",
+  "price": 36
+ },
+ {
+  "id": "zeus-x27-tosai",
+  "weapon": "Zeus x27",
+  "skin": "Tosai",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/zeus-x27-tosai.webp",
+  "price": 36
+ },
+ {
+  "id": "ump-45-arctic-wolf",
+  "weapon": "UMP-45",
+  "skin": "Arctic Wolf",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/ump-45-arctic-wolf.webp",
+  "price": 35
+ },
+ {
+  "id": "aug-amber-slipstream",
+  "weapon": "AUG",
+  "skin": "Amber Slipstream",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/aug-amber-slipstream.webp",
+  "price": 35
+ },
+ {
+  "id": "r8-revolver-banana-cannon",
+  "weapon": "R8 Revolver",
+  "skin": "Banana Cannon",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/r8-revolver-banana-cannon.webp",
+  "price": 34
+ },
+ {
+  "id": "mag-7-cobalt-core",
+  "weapon": "MAG-7",
+  "skin": "Cobalt Core",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/mag-7-cobalt-core.webp",
+  "price": 33
+ },
+ {
+  "id": "mac-10-allure",
+  "weapon": "MAC-10",
+  "skin": "Allure",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/mac-10-allure.webp",
+  "price": 32
+ },
+ {
+  "id": "nova-army-sheen",
+  "weapon": "Nova",
+  "skin": "Army Sheen",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/nova-army-sheen.webp",
+  "price": 32
+ },
+ {
+  "id": "famas-calicamo",
+  "weapon": "FAMAS",
+  "skin": "CaliCamo",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/famas-calicamo.webp",
+  "price": 30
+ },
+ {
+  "id": "cz75-auto-distressed",
+  "weapon": "CZ75-Auto",
+  "skin": "Distressed",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/cz75-auto-distressed.webp",
+  "price": 30
+ },
+ {
+  "id": "negev-dazzle",
+  "weapon": "Negev",
+  "skin": "Dazzle",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/negev-dazzle.webp",
+  "price": 30
+ },
+ {
+  "id": "sg-553-atlas",
+  "weapon": "SG 553",
+  "skin": "Atlas",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/sg-553-atlas.webp",
+  "price": 30
+ },
+ {
+  "id": "sawed-off-analog-input",
+  "weapon": "Sawed-Off",
+  "skin": "Analog Input",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/sawed-off-analog-input.webp",
+  "price": 30
+ },
+ {
+  "id": "desert-eagle-blue-ply",
+  "weapon": "Desert Eagle",
+  "skin": "Blue Ply",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/desert-eagle-blue-ply.webp",
+  "price": 28
+ },
+ {
+  "id": "dual-berettas-cobalt-quartz",
+  "weapon": "Dual Berettas",
+  "skin": "Cobalt Quartz",
+  "rarity": "restricted",
+  "wear": "FT",
+  "image": "/img/items/cs2/dual-berettas-cobalt-quartz.webp",
+  "price": 28
+ },
+ {
+  "id": "sg-553-aerial",
+  "weapon": "SG 553",
+  "skin": "Aerial",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/sg-553-aerial.webp",
+  "price": 28
+ },
+ {
+  "id": "ump-45-briefing",
+  "weapon": "UMP-45",
+  "skin": "Briefing",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/ump-45-briefing.webp",
+  "price": 27
+ },
+ {
+  "id": "negev-desert-strike",
+  "weapon": "Negev",
+  "skin": "Desert-Strike",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/negev-desert-strike.webp",
+  "price": 27
+ },
+ {
+  "id": "r8-revolver-bone-forged",
+  "weapon": "R8 Revolver",
+  "skin": "Bone Forged",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/r8-revolver-bone-forged.webp",
+  "price": 27
+ },
+ {
+  "id": "mp9-bioleak",
+  "weapon": "MP9",
+  "skin": "Bioleak",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp9-bioleak.webp",
+  "price": 26
+ },
+ {
+  "id": "tec-9-cracked-opal",
+  "weapon": "Tec-9",
+  "skin": "Cracked Opal",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/tec-9-cracked-opal.webp",
+  "price": 26
+ },
+ {
+  "id": "usp-s-27",
+  "weapon": "USP-S",
+  "skin": "27",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/usp-s-27.webp",
+  "price": 24
+ },
+ {
+  "id": "galil-ar-akoben",
+  "weapon": "Galil AR",
+  "skin": "Akoben",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/galil-ar-akoben.webp",
+  "price": 23
+ },
+ {
+  "id": "mp7-armor-core",
+  "weapon": "MP7",
+  "skin": "Armor Core",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp7-armor-core.webp",
+  "price": 23
+ },
+ {
+  "id": "cz75-auto-circaetus",
+  "weapon": "CZ75-Auto",
+  "skin": "Circaetus",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/cz75-auto-circaetus.webp",
+  "price": 22
+ },
+ {
+  "id": "glock-18-coral-bloom",
+  "weapon": "Glock-18",
+  "skin": "Coral Bloom",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/glock-18-coral-bloom.webp",
+  "price": 18
+ },
+ {
+  "id": "famas-2a2f",
+  "weapon": "FAMAS",
+  "skin": "2A2F",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/famas-2a2f.webp",
+  "price": 18
+ },
+ {
+  "id": "ssg-08-azure-glyph",
+  "weapon": "SSG 08",
+  "skin": "Azure Glyph",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/ssg-08-azure-glyph.webp",
+  "price": 15
+ },
+ {
+  "id": "mp5-sd-co-processor",
+  "weapon": "MP5-SD",
+  "skin": "Co-Processor",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/mp5-sd-co-processor.webp",
+  "price": 15
+ },
+ {
+  "id": "p2000-coral-halftone",
+  "weapon": "P2000",
+  "skin": "Coral Halftone",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/p2000-coral-halftone.webp",
+  "price": 15
+ },
+ {
+  "id": "zeus-x27-earth-mandala",
+  "weapon": "Zeus x27",
+  "skin": "Earth Mandala",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/zeus-x27-earth-mandala.webp",
+  "price": 15
+ },
+ {
+  "id": "aug-creep",
+  "weapon": "AUG",
+  "skin": "Creep",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/aug-creep.webp",
+  "price": 14
+ },
+ {
+  "id": "p90-aeolian-light",
+  "weapon": "P90",
+  "skin": "Aeolian Light",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/p90-aeolian-light.webp",
+  "price": 12
+ },
+ {
+  "id": "sawed-off-amber-fade",
+  "weapon": "Sawed-Off",
+  "skin": "Amber Fade",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/sawed-off-amber-fade.webp",
+  "price": 12
+ },
+ {
+  "id": "awp-safari-mesh",
+  "weapon": "AWP",
+  "skin": "Safari Mesh",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/awp-safari-mesh.webp",
+  "price": 10
+ },
+ {
+  "id": "five-seven-dark-polymer",
+  "weapon": "Five-SeveN",
+  "skin": "Dark Polymer",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/five-seven-dark-polymer.webp",
+  "price": 9
+ },
+ {
+  "id": "pp-bizon-anolis",
+  "weapon": "PP-Bizon",
+  "skin": "Anolis",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/pp-bizon-anolis.webp",
+  "price": 9
+ },
+ {
+  "id": "scar-20-caged",
+  "weapon": "SCAR-20",
+  "skin": "Caged",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/scar-20-caged.webp",
+  "price": 9
+ },
+ {
+  "id": "m4a1-s-boreal-forest",
+  "weapon": "M4A1-S",
+  "skin": "Boreal Forest",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a1-s-boreal-forest.webp",
+  "price": 8
+ },
+ {
+  "id": "p250-bullfrog",
+  "weapon": "P250",
+  "skin": "Bullfrog",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/p250-bullfrog.webp",
+  "price": 8
+ },
+ {
+  "id": "m249-bock-blocks",
+  "weapon": "M249",
+  "skin": "Bock Blocks",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/m249-bock-blocks.webp",
+  "price": 8
+ },
+ {
+  "id": "m4a4-choppa",
+  "weapon": "M4A4",
+  "skin": "Choppa",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/m4a4-choppa.webp",
+  "price": 7
+ },
+ {
+  "id": "nova-caged-steel",
+  "weapon": "Nova",
+  "skin": "Caged Steel",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/nova-caged-steel.webp",
+  "price": 7
+ },
+ {
+  "id": "xm1014-calicamo",
+  "weapon": "XM1014",
+  "skin": "CaliCamo",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/xm1014-calicamo.webp",
+  "price": 7
+ },
+ {
+  "id": "g3sg1-green-apple",
+  "weapon": "G3SG1",
+  "skin": "Green Apple",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/g3sg1-green-apple.webp",
+  "price": 7
+ },
+ {
+  "id": "ak-47-olive-polycam",
+  "weapon": "AK-47",
+  "skin": "Olive Polycam",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/ak-47-olive-polycam.webp",
+  "price": 6
+ },
+ {
+  "id": "mac-10-calf-skin",
+  "weapon": "MAC-10",
+  "skin": "Calf Skin",
+  "rarity": "industrial",
+  "wear": "FT",
+  "image": "/img/items/cs2/mac-10-calf-skin.webp",
+  "price": 6
+ },
+ {
+  "id": "mag-7-foresight",
+  "weapon": "MAG-7",
+  "skin": "Foresight",
+  "rarity": "milspec",
+  "wear": "FT",
+  "image": "/img/items/cs2/mag-7-foresight.webp",
+  "price": 5
+ }
+]

@@ -1,85 +1,120 @@
 <script setup lang="ts">
 // Figma "OpenControls" (desktop) and "Mobile/OpenControls".
-// State=Result shows "Sell all" next to "Open again"; the Open button keeps its place.
+// One height for the whole dock (48px): amount, main button and switches line up.
+// One spot for the repeated action (docs/motion.md → "One thumb"): the main button never moves and changes role —
+// Open → Skip (while the reel spins) → Open again — so open, skip, open again is tap, tap, tap in one place.
+// "Sell all" gets a slot of its own (desktop: the middle card of the row under the dock, right below the main
+// button; phones: a row that unfolds under the button), so its arrival never pushes the main button.
 const count = defineModel<1 | 2 | 3 | 4 | 5>('count', { required: true })
 const fast = defineModel<boolean>('fast', { required: true })
 const kurwadrop = defineModel<boolean>('kurwadrop', { required: true })
 
-defineProps<{
+const props = defineProps<{
   price: number
   phase: 'idle' | 'spinning' | 'result'
   unsoldTotal: number
+  /** Sell all asks for a second tap (the drops are worth a lot) */
+  confirmSell?: boolean
 }>()
-const emit = defineEmits<{ open: []; sellAll: [] }>()
+const emit = defineEmits<{ open: []; skip: []; sellAll: [] }>()
+const main = () => (props.phase === 'spinning' ? emit('skip') : emit('open'))
+const showSell = computed(() => props.phase === 'result' && props.unsoldTotal > 0)
 
-const COUNTS = [1, 2, 3, 4, 5] as const
+const armed = ref(false)
+let armTimer: ReturnType<typeof setTimeout> | undefined
+function sellAll() {
+  if (props.confirmSell && !armed.value) {
+    armed.value = true
+    clearTimeout(armTimer)
+    armTimer = setTimeout(() => (armed.value = false), 3000)
+    return
+  }
+  armed.value = false
+  emit('sellAll')
+}
+
+const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: `×${n}` }))
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 lg:grid lg:min-h-14 lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-4">
-    <div class="flex items-center justify-between gap-2 lg:justify-start">
-      <div class="flex flex-1 gap-1 lg:flex-none" role="radiogroup">
-        <UiChip
-          v-for="n in COUNTS"
-          :key="n"
-          role="radio"
-          :aria-checked="count === n"
-          :active="count === n"
-          :disabled="phase === 'spinning'"
-          class="flex-1 lg:flex-none"
-          @click="count = n"
-        >
-          x{{ n }}
-        </UiChip>
+  <!-- One dock: amount on the left, the main button dead centre, the two switches on the right.
+       Phones stack it: amount, main button (Sell all unfolds under it), switches. -->
+  <div class="kd-dock flex flex-col gap-3 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-3">
+    <div class="flex items-center gap-2 lg:justify-between">
+      <!-- Amount: the kit's segmented control -->
+      <UiSegmented v-model="count" :options="COUNT_OPTIONS" :disabled="phase === 'spinning'" block class="flex-1 lg:w-60 lg:flex-none" />
+      <!-- Desktop: Sell all lives in the row under the main button (CaseNextHook), centred like it -->
+    </div>
+
+    <div class="flex flex-col lg:items-center">
+      <UiButton size="l" class="kd-main w-full lg:w-72" :variant="phase === 'spinning' ? 'secondary' : 'primary'" @click="main">
+        <UiTextSwap :text="phase === 'spinning' ? $t('case.skip') : phase === 'result' ? $t('case.openAgain') : $t('case.open', { count })" />
+        <UiPrice v-if="phase !== 'spinning'" :amount="price * count" size="m" tone="inverse" />
+        <UiIcon v-else name="chevron-right" :size="18" class="kd-skip-icon" />
+        <span v-if="phase === 'idle'" class="kd-shine" />
+      </UiButton>
+      <!-- Phones: Sell all unfolds under the main button instead of squeezing it -->
+      <div class="kd-unfold lg:hidden" :class="showSell && 'is-open'">
+        <div class="min-h-0">
+          <UiButton :variant="armed ? 'danger' : 'secondary'" size="l" class="mt-2 w-full" :tabindex="showSell ? 0 : -1" @click="sellAll">
+            <UiTextSwap :text="armed ? $t('wallet.sureSell') : $t('wallet.sellAll')" />
+            <UiPrice :amount="unsoldTotal" size="m" />
+          </UiButton>
+        </div>
       </div>
     </div>
 
-    <div class="flex gap-2 lg:justify-center">
-      <UiButton size="l" class="flex-1 lg:w-60 lg:flex-none" :loading="phase === 'spinning'" @click="emit('open')">
-        <template v-if="phase === 'spinning'">{{ $t('case.opening') }}</template>
-        <template v-else-if="phase === 'result'">{{ $t('case.openAgain') }}</template>
-        <template v-else>{{ $t('case.open', { count }) }}</template>
-        <UiPrice v-if="phase !== 'spinning'" :amount="price * count" size="m" tone="inverse" />
-        <span v-if="phase === 'idle'" class="kd-shine" />
-      </UiButton>
-      <Transition name="kd-sellall">
-        <UiButton v-if="phase === 'result' && unsoldTotal > 0" variant="light" size="l" class="flex-1 lg:w-60 lg:flex-none" @click="emit('sellAll')">
-          {{ $t('wallet.sellAll') }}
-          <UiPrice :amount="unsoldTotal" size="m" tone="inverse" />
-        </UiButton>
-      </Transition>
-    </div>
-
-    <div class="flex items-center justify-center gap-4 lg:justify-end">
-      <label class="type-14 flex cursor-pointer items-center gap-2.5">
-        <UiToggle v-model="fast" :label="$t('case.fastOpen')" />
-        {{ $t('case.fastOpen') }}
-      </label>
-      <span class="h-5 w-px bg-neutral-5" />
-      <UiTooltip :text="$t('case.kurwaHint')">
-        <label class="flex cursor-pointer items-center gap-2.5">
-          <UiToggle v-model="kurwadrop" :label="$t('case.kurwadrop')" />
-          <span class="type-14 bg-brand-gradient bg-clip-text text-transparent">{{ $t('case.kurwadrop') }}</span>
-        </label>
+    <!-- Switches: the kit's chips (pressed = tinted fill), the hint lives in the tooltip -->
+    <div class="grid grid-cols-2 gap-2 lg:flex lg:justify-end">
+      <UiChip size="m" tone="coin" icon="fast" class="!h-12 px-4" :active="fast" @click="fast = !fast">{{ $t('case.fastOpen') }}</UiChip>
+      <UiTooltip :text="$t('case.kurwaHint')" class="min-w-0">
+        <UiChip size="m" tone="gold" icon="chicken" class="!h-12 w-full px-4" :active="kurwadrop" @click="kurwadrop = !kurwadrop">
+          <span :class="kurwadrop && 'kd-kurwa-word'">{{ $t('case.kurwadrop') }}</span>
+        </UiChip>
       </UiTooltip>
     </div>
   </div>
 </template>
 
 <style scoped>
-.kd-sellall-enter-active {
-  transition:
-    opacity var(--dur-base) var(--ease-out),
-    transform var(--dur-slow) var(--ease-spring);
+.kd-dock {
+  border-radius: 24px;
+  background: var(--color-neutral-2);
+  padding: 12px;
 }
-.kd-sellall-leave-active {
-  transition:
-    opacity var(--dur-fast) var(--ease-in),
-    transform var(--dur-fast) var(--ease-in);
+.kd-kurwa-word {
+  background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light) 45%, var(--color-item-gold));
+  background-clip: text;
+  color: transparent;
 }
-.kd-sellall-enter-from,
-.kd-sellall-leave-to {
+.kd-skip-icon {
+  animation: kd-skip-nudge 900ms ease-in-out infinite;
+}
+@keyframes kd-skip-nudge {
+  50% {
+    transform: translateX(3px);
+  }
+}
+/* Height animates from 0 with grid rows, so nothing below jumps */
+.kd-unfold {
+  display: grid;
+  grid-template-rows: 0fr;
   opacity: 0;
-  transform: translateX(-12px) scale(0.96);
+  transition:
+    grid-template-rows var(--dur-slow) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out);
+}
+.kd-unfold.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.kd-unfold > div {
+  overflow: hidden;
+}
+/* Phones only (a scoped display rule beats Tailwind's lg:hidden) */
+@media (min-width: 64rem) {
+  .kd-unfold {
+    display: none;
+  }
 }
 </style>

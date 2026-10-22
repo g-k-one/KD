@@ -89,7 +89,7 @@ async function pay() {
           <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
             <UiIcon name="wallet" :size="20" class="text-neutral-13 lg:!size-6" />
             <span class="type-14 lg:type-16-medium flex-1">{{ $t('deposit.paymentMethod') }}</span>
-            <span class="type-12-caps text-neutral-11">{{ $t('deposit.country') }}:</span>
+            <span class="type-12-caps text-neutral-11 max-sm:hidden">{{ $t('deposit.country') }}:</span>
             <UiSelect v-model="country" :options="countryOptions" class="kd-inline-select w-34">
               <template #leading><img src="/img/brand/flag-en.svg" alt="" class="h-3 w-4 shrink-0" /></template>
             </UiSelect>
@@ -132,9 +132,7 @@ async function pay() {
           <UiSelect v-model="currency" :options="currencyOptions" class="kd-inline-select w-24" />
         </div>
         <div class="flex flex-col gap-4 px-4 lg:px-6 lg:pt-2">
-          <label class="flex h-12 items-center rounded-xl border border-neutral-4 bg-neutral-1 px-4 focus-within:border-brand-base">
-            <input id="deposit-amount" v-model.number="amount" type="number" min="1" inputmode="decimal" class="type-16-medium w-full bg-transparent text-center font-semibold outline-none" />
-          </label>
+          <UiInput id="deposit-amount" v-model.number="amount" size="l" type="number" inputmode="decimal" class="kd-amount" />
           <div class="grid grid-cols-6 gap-1 lg:gap-1.5">
             <UiChip v-for="p in PRESETS" :key="p" :active="amount === p" class="w-full" @click="amount = p">{{ p.toLocaleString('en-US').replace(',', ' ') }}</UiChip>
           </div>
@@ -142,15 +140,7 @@ async function pay() {
           <div class="flex flex-col gap-2">
             <span class="type-12-caps text-neutral-12">{{ $t('deposit.promoCode') }}</span>
             <div class="flex gap-2">
-              <label
-                class="flex h-12 flex-1 items-center gap-2 rounded-xl border bg-neutral-1 px-4 focus-within:border-brand-base"
-                :class="promoError ? 'border-danger' : 'border-neutral-4'"
-              >
-                <input id="promo" v-model="promoInput" class="type-14 w-full min-w-0 bg-transparent uppercase outline-none" @keydown.enter="applyPromo" />
-                <button v-if="promoInput" type="button" class="kd-press text-neutral-11 hover:text-neutral-15" :aria-label="$t('common.close')" @click="clearPromo">
-                  <UiIcon name="close" :size="16" />
-                </button>
-              </label>
+              <UiInput id="promo" v-model="promoInput" size="l" icon="bonuses" uppercase clearable :error="!!promoError" class="flex-1" @enter="applyPromo" @clear="clearPromo" />
               <UiButton :variant="promo ? 'success' : 'secondary'" size="l" class="w-30 lg:w-[111px]" :disabled="!promoInput" @click="applyPromo">
                 {{ promo ? $t('deposit.applied') : $t('deposit.apply') }}
               </UiButton>
@@ -191,6 +181,11 @@ async function pay() {
 </template>
 
 <style scoped>
+.kd-amount :deep(input) {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+}
 /* The total pops each time the quote changes, so the user sees the bonus land. */
 .kd-total {
   animation: kd-total-pop var(--dur-slow) var(--ease-spring);
@@ -211,7 +206,7 @@ async function pay() {
   font-size: 12px;
   text-transform: uppercase;
 }
-/* Figma "PaymentMethod": Default neutral-2 / neutral-4, Hover neutral-3 / neutral-7, Selected brand-24 + brand border */
+/* Figma "PaymentMethod": Default neutral-2 / neutral-4, Hover neutral-3 / neutral-6, Selected brand-24 + brand border */
 .kd-method {
   background: var(--color-neutral-2);
   border-color: var(--color-neutral-4);
@@ -222,7 +217,7 @@ async function pay() {
 @media (hover: hover) {
   .kd-method:hover {
     background: var(--color-neutral-3);
-    border-color: var(--color-neutral-7);
+    border-color: var(--color-neutral-6);
   }
 }
 .kd-method[aria-checked='true'] {

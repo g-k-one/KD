@@ -7,8 +7,6 @@ const infoOpen = ref(false)
 
 const pct = (bp: number) => `${(bp / 100).toFixed(1)}%`
 /** "1 in 48" reads better than 2.1% for small chances */
-const oneIn = (bp: number) => (bp > 0 ? `1 ${t('case.in')} ${Math.max(1, Math.round(10000 / bp)).toLocaleString('en-US').replace(/,/g, ' ')}` : '—')
-const { t } = useI18n()
 const rows = computed(() => [
   { key: 'below1x', label: '< x1', value: props.data.odds.below1x, color: 'var(--color-neutral-10)', muted: true },
   { key: 'x2', label: 'x2+', value: props.data.odds.x2, color: 'var(--color-success)' },
@@ -22,26 +20,22 @@ const root = useTemplateRef<HTMLElement>('root')
 const shown = ref(false)
 useIntersectionObserver(root, ([e]) => e?.isIntersecting && (shown.value = true), { threshold: 0.3 })
 
-const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-light', extreme: 'text-danger' } as const
+/** Square-root scale with a visible minimum: 0.2% → 10%, 2.6% → 16%, 9.7% → 31%, 90% → 95% */
+const fill = (bp: number) => Math.min(100, Math.max(10, Math.sqrt(bp / 10_000) * 100))
+
+const RISK_COLOR = { low: 'var(--color-success)', medium: 'var(--color-coin)', high: 'var(--color-brand-light)', extreme: 'var(--color-danger)' } as const
+const isLg = useMediaQuery('(min-width: 1024px)')
 </script>
 
 <template>
   <div
     ref="root"
-    class="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3 rounded-3xl border border-neutral-4 bg-neutral-2 px-4 py-3 lg:flex lg:gap-12 lg:py-[5px]"
+    class="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3 rounded-3xl bg-neutral-2 px-4 py-3 lg:flex lg:gap-12 lg:py-[5px]"
   >
     <div class="relative order-1 flex items-center gap-2 lg:gap-3">
       <span class="text-xl leading-7 font-bold text-neutral-11 lg:type-28">{{ $t('case.rtp') }}</span>
       <span class="bg-brand-gradient bg-clip-text text-xl leading-7 font-bold text-transparent tabular-nums lg:type-28">{{ pct(data.rtp) }}</span>
-      <button
-        type="button"
-        class="kd-press grid size-8 place-items-center rounded-xl text-neutral-12 hover:bg-white-4 hover:text-neutral-15 lg:size-12"
-        :aria-label="$t('case.rtpInfo')"
-        :aria-expanded="infoOpen"
-        @click="infoOpen = !infoOpen"
-      >
-        <UiIcon name="info" :size="20" />
-      </button>
+      <UiButton variant="ghost" :size="isLg ? 'l' : 's'" icon="info" icon-only :aria-label="$t('case.rtpInfo')" :aria-expanded="infoOpen" @click="infoOpen = !infoOpen" />
       <Transition name="kd-tip">
         <p
           v-if="infoOpen"
@@ -58,31 +52,37 @@ const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-
           <span class="type-12-caps text-neutral-12">{{ r.label }}</span>
           <span class="type-14 lg:type-16-medium tabular-nums" :class="r.muted ? 'text-neutral-13' : 'kd-odds-value'">{{ pct(r.value) }}</span>
         </div>
-        <!-- Thicker bar in the multiplier's colour, never thinner than a visible stub -->
-        <div class="h-1.5 overflow-hidden rounded-full bg-neutral-6">
+        <!-- The track is tinted in the multiplier's colour and the fill follows a square-root scale,
+             so 2% still reads as a real bar next to 90% while the order stays honest. -->
+        <div class="kd-odds-track h-2 overflow-hidden rounded-full">
           <div
             class="kd-odds-bar h-full rounded-full"
-            :style="{ width: shown ? `${Math.max(7, r.value / 100)}%` : '0%', transitionDelay: `${i * 70}ms`, background: 'var(--oc)' }"
+            :style="{ width: shown ? `${fill(r.value)}%` : '0%', transitionDelay: `${i * 70}ms` }"
           />
         </div>
-        <span class="type-12-regular hidden text-neutral-11 tabular-nums lg:block">{{ oneIn(r.value) }}</span>
       </div>
     </div>
 
-    <div class="order-2 ml-auto flex w-full max-w-40 flex-col gap-0.5 lg:order-3 lg:ml-0 lg:w-53.5 lg:max-w-none">
-      <div class="flex items-center justify-between">
-        <span class="type-12 text-neutral-12 uppercase">{{ $t('case.risk') }}</span>
-        <span class="type-16-medium normal-case" :class="RISK_TEXT[data.risk]">{{ $t(`risk.${data.risk}`) }}</span>
-      </div>
-      <UiRiskMeter :level="data.risk" />
+    <!-- Risk. Desktop: one more odds column — the label on top, the peppers and the level on one line under it.
+         Phones: the same pieces in one line on the RTP row, right-aligned. -->
+    <div class="order-2 flex min-w-0 items-center justify-end gap-2 lg:order-3 lg:w-44 lg:flex-col lg:items-start lg:justify-center lg:gap-1.5 lg:border-l lg:border-neutral-4 lg:pl-6" :style="{ '--oc': RISK_COLOR[data.risk] }">
+      <span class="type-12-caps text-neutral-12 max-sm:hidden">{{ $t('case.risk') }}</span>
+      <span class="flex items-center gap-2">
+        <UiRiskPeppers :level="data.risk" :size="isLg ? 18 : 16" />
+        <span class="type-14 lg:type-16-medium kd-odds-value leading-none">{{ $t(`risk.${data.risk}`) }}</span>
+      </span>
     </div>
   </div>
 </template>
 
 <style scoped>
+.kd-odds-track {
+  background: color-mix(in srgb, var(--oc) 16%, var(--color-neutral-5));
+}
 .kd-odds-bar {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--oc) 70%, transparent), var(--oc));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--oc) 70%, transparent);
   transition: width 900ms var(--ease-out);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--oc) 60%, transparent);
 }
 .kd-odds-value {
   color: var(--oc);

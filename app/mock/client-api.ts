@@ -1,6 +1,5 @@
 // In-browser mock API for the static artifact build (KD_ARTIFACT=1), where there is no Nitro server.
 // Uses the same router as server/api, so both modes behave the same.
-import { toRaw } from 'vue'
 import { MockError } from '../../server/utils/mock-db'
 import { mockRoute } from '../../server/utils/mock-api'
 
@@ -47,7 +46,8 @@ export async function handleMockRequest(
   }
 
   try {
-    const data = await mockRoute(method, path, structuredClone(toRaw(opts.body ?? {})) as Record<string, unknown>, query, { loggedIn })
+    // JSON copy, not structuredClone: bodies can hold reactive arrays (Proxy), which structuredClone rejects
+    const data = await mockRoute(method, path, JSON.parse(JSON.stringify(opts.body ?? {})) as Record<string, unknown>, query, { loggedIn })
     // Behave like the network: hand the UI a copy, never the mock's live state objects
     return JSON.parse(JSON.stringify(data))
   } catch (e) {

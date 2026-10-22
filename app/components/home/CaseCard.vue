@@ -3,8 +3,17 @@ import type { CaseSummary } from '#shared/types/api'
 
 // Figma "CaseCard" states: Default → Hover (surface lifts to neutral-4, art settles 232→220,
 // price becomes the brand-gradient button, risk reveals its label) → Active (80% opacity).
-defineProps<{ item: CaseSummary }>()
+const props = defineProps<{ item: CaseSummary }>()
 const { onPointerMove } = useSpotlight()
+const { t } = useI18n()
+
+// One badge per card, hottest first: HOT → a big multiplier today → brand new. Fiery ones burn (Forge).
+const badge = computed(() => {
+  if (props.item.tag === 'hot') return { kind: 'hot', text: t('cases.tag.hot') }
+  if ((props.item.bestToday ?? 0) >= 10) return { kind: 'today', text: t('cases.today', { x: props.item.bestToday }) }
+  if (props.item.tag === 'new') return { kind: 'new', text: t('cases.tag.new') }
+  return null
+})
 
 const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-light', extreme: 'text-danger' } as const
 </script>
@@ -45,16 +54,63 @@ const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-
       </div>
     </div>
 
-    <span
-      v-if="item.tag"
-      class="type-10-caps absolute top-3 left-3 rounded-sm bg-brand-base px-1.5 py-1 text-neutral-1 lg:top-4 lg:left-4"
-    >
-      {{ $t(`cases.tag.${item.tag}`) }}
+    <span v-if="badge" class="absolute top-3 left-3 lg:top-4 lg:left-4">
+      <!-- Only HOT cases burn; the other badges stay calm so the fire still means something -->
+      <FxFire :on="badge.kind === 'hot'">
+        <span class="kd-badge type-10-caps relative z-[2] inline-flex items-center gap-1 rounded-sm px-1.5 py-1" :class="`is-${badge.kind}`">
+          <UiIcon :name="badge.kind === 'today' ? 'trophy' : badge.kind === 'new' ? 'sparkle' : 'fire'" :size="12" />
+          {{ badge.text }}
+        </span>
+      </FxFire>
     </span>
   </NuxtLink>
 </template>
 
 <style scoped>
+/* Badges, three different voices: HOT is fire (orange → red, burning on Forge), a big win today is
+   gold like the coin, new is a cool white sheen */
+.kd-badge {
+  color: var(--color-neutral-15);
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.35);
+}
+.kd-badge.is-hot {
+  background: linear-gradient(180deg, #ffb13b, var(--color-brand-base) 60%, #d93a12);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    0 0 12px rgb(255 95 31 / 0.55);
+}
+.kd-badge.is-today {
+  color: #3a2400;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.3);
+  background: linear-gradient(180deg, #ffe58a, #f5b82e 55%, var(--color-gold-dark));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    0 0 10px rgb(245 184 46 / 0.35);
+}
+.kd-badge.is-new {
+  position: relative;
+  overflow: hidden;
+  color: var(--color-neutral-1);
+  text-shadow: none;
+  background: #e8ecf5;
+  box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.12);
+}
+/* the sheen is a strip that slides across (transform only, no repaint of the badge) */
+.kd-badge.is-new::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.9) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: kd-badge-sheen 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes kd-badge-sheen {
+  60%,
+  100% {
+    transform: translateX(100%);
+  }
+}
 .kd-case-card {
   background: var(--color-neutral-2);
   border-color: var(--color-neutral-4);
@@ -103,7 +159,7 @@ const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-
 @media (hover: hover) {
   .kd-case-card:hover {
     background: var(--color-neutral-4);
-    border-color: var(--color-neutral-7);
+    border-color: var(--color-neutral-6);
   }
   .kd-case-card:hover .kd-case-art {
     transform: none;

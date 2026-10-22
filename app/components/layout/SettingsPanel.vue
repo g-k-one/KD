@@ -15,6 +15,7 @@ const currency = computed({
 })
 const sound = computed({ get: () => s.value.sound, set: (v) => settingsStore.update({ sound: v }) })
 const volume = computed({ get: () => s.value.volume, set: (v) => settingsStore.update({ volume: v }) })
+const haptics = computed({ get: () => s.value.haptics, set: (v) => settingsStore.update({ haptics: v }) })
 const streamer = computed({ get: () => s.value.streamerMode, set: (v) => settingsStore.update({ streamerMode: v }) })
 </script>
 
@@ -38,6 +39,15 @@ const streamer = computed({ get: () => s.value.streamerMode, set: (v) => setting
       </div>
       <p class="type-12-regular text-neutral-12">{{ $t('settings.soundHint') }}</p>
       <UiSlider v-if="sound" v-model="volume" :label="$t('settings.volume')" />
+    </div>
+
+    <div class="flex flex-col gap-1.5 rounded-[10px] bg-neutral-3 p-3 lg:hidden">
+      <div class="flex items-center gap-2">
+        <UiIcon name="m-bonus" :size="20" :class="haptics ? 'text-brand-light' : 'text-neutral-12'" />
+        <span class="type-14-caps flex-1">{{ $t('settings.haptics') }}</span>
+        <UiToggle v-model="haptics" :label="$t('settings.haptics')" />
+      </div>
+      <p class="type-12-regular text-neutral-12">{{ $t('settings.hapticsHint') }}</p>
     </div>
 
     <div class="flex flex-col gap-1.5 rounded-[10px] bg-neutral-3 p-3">

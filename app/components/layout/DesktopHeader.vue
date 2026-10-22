@@ -10,6 +10,7 @@ onClickOutside(profileRoot, () => ui.popover === 'profile' && (ui.popover = null
 onKeyStroke('Escape', () => (ui.popover = null))
 
 const desktopNav = MAIN_NAV
+const { dailyReady, dailyIn, claimable } = useBonuses()
 
 const PROFILE_MENU = [
   { key: 'profile', label: 'profile.profile', icon: 'user', to: '/profile' },
@@ -36,7 +37,7 @@ async function logout() {
         v-for="item in desktopNav"
         :key="item.key"
         :to="item.to"
-        class="group type-14-caps relative flex h-10 items-center gap-2 rounded-full px-3 transition-colors duration-200"
+        class="kd-nav-link group type-14-caps relative flex h-10 items-center gap-2 rounded-full px-3 transition-colors duration-200"
         :class="isNavActive(route, item.to) ? 'text-neutral-15' : 'text-neutral-12 hover:text-neutral-15'"
       >
         <UiIcon
@@ -50,6 +51,18 @@ async function logout() {
     </nav>
 
     <div class="flex-1" />
+
+    <!-- Daily case: ready = glowing gift, otherwise the countdown -->
+    <NuxtLink
+      v-if="session.user"
+      to="/bonuses"
+      class="kd-press kd-daily type-12-caps relative mr-1 flex h-10 items-center gap-2 rounded-xl px-3"
+      :class="dailyReady ? 'is-ready text-neutral-15' : 'text-neutral-12 hover:text-neutral-15'"
+    >
+      <UiIcon name="bonuses" :size="20" :class="dailyReady ? 'text-coin' : ''" />
+      <UiTextSwap :text="dailyReady ? $t('bonus.dailyReady') : dailyIn" class="tabular-nums" />
+      <span v-if="claimable" class="type-10-caps grid h-4 min-w-4 place-items-center rounded-full bg-brand-base px-1 text-neutral-1">{{ claimable }}</span>
+    </NuxtLink>
 
     <div ref="settingsRoot" class="relative">
       <UiButton
@@ -103,9 +116,9 @@ async function logout() {
               v-for="m in PROFILE_MENU"
               :key="m.key"
               :to="m.to"
-              class="type-14-caps flex h-12 items-center gap-3 rounded-md px-3 transition-colors"
+              class="kd-press type-14-caps flex h-12 items-center gap-3 rounded-md px-3 active:bg-neutral-4"
               :class="route.fullPath === m.to ? 'bg-neutral-3 text-neutral-15' : 'text-neutral-12 hover:bg-neutral-3 hover:text-neutral-15'"
-              @click="ui.popover = null"
+              @click.capture="ui.popover = null"
             >
               <UiIcon :name="m.icon" :size="20" />
               {{ $t(m.label) }}
@@ -114,7 +127,7 @@ async function logout() {
           <div class="h-px bg-neutral-4" />
           <button
             type="button"
-            class="type-14-caps flex h-12 items-center gap-3 rounded-md px-3 text-neutral-12 hover:bg-neutral-3 hover:text-neutral-15"
+            class="kd-press type-14-caps flex h-12 items-center gap-3 rounded-md px-3 text-neutral-12 hover:bg-neutral-3 hover:text-neutral-15 active:bg-neutral-4"
             @click="logout"
           >
             <UiIcon name="logout" :size="20" />
@@ -129,6 +142,36 @@ async function logout() {
 </template>
 
 <style scoped>
+.kd-daily {
+  position: relative;
+}
+.kd-daily.is-ready {
+  background: rgb(253 176 34 / 0.12);
+  box-shadow: inset 0 0 0 1px rgb(253 176 34 / 0.45);
+}
+.kd-daily.is-ready::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 18px -4px rgb(253 176 34 / 0.8);
+  opacity: 0;
+  pointer-events: none;
+  animation: kd-glow-pulse 2s ease-in-out infinite;
+}
+
+/* Pressed: the label dims and sinks a touch; no background pill */
+.kd-nav-link {
+  transition:
+    color 200ms var(--ease-out),
+    transform var(--dur-base) var(--ease-spring),
+    opacity var(--dur-base) var(--ease-out);
+}
+.kd-nav-link:active {
+  transform: scale(0.95);
+  opacity: 0.7;
+  transition-duration: var(--dur-press);
+}
 
 /* Figma popovers: 0 8 12 black/64 shadow; they open from the corner they hang off */
 .kd-popover {

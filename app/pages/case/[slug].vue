@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CaseResponse, InventoryItem, OpenCaseResponse, SellResponse } from '#shared/types/api'
+import type { CaseResponse, InventoryItem, OpenCaseResponse, PfRoll, SeedPairPublic, SellResponse } from '#shared/types/api'
 
 const route = useRoute()
 const slug = computed(() => String(route.params.slug))
@@ -15,14 +15,26 @@ useHead({ title: () => `${cs.value.name} · KurwaDROP` })
 
 const count = ref<1 | 2 | 3 | 4 | 5>(1)
 const fast = ref(false)
-const kurwadrop = ref(false)
-// KURWADROP costs a bit more: priced so the case keeps its RTP
-const openPrice = computed(() => (kurwadrop.value ? cs.value.kurwadrop.price : cs.value.price))
+const kurwadrop = ref(route.query.kurwa === '1')
+// KURWADROP is free and changes no odds: it only stages top drops (chicken + respin)
+const openPrice = computed(() => cs.value.price)
 const phase = ref<'idle' | 'spinning' | 'result'>('idle')
 const results = ref<InventoryItem[]>([])
 const sold = ref<string[]>([])
 const demo = ref(false)
-const reel = useTemplateRef<{ spin: (w: InventoryItem[], fast: boolean, kurwa?: boolean[]) => Promise<void> }>('reel')
+// Last opening's provably-fair data, for "Check this roll"
+const last = ref<{ rolls: PfRoll[]; kurwa: boolean[]; seed: SeedPairPublic | null }>({ rolls: [], kurwa: [], seed: null })
+const rollsOpen = ref(false)
+const reel = useTemplateRef<{ spin: (w: InventoryItem[], fast: boolean, kurwa?: boolean[]) => Promise<void>; skip: () => void }>('reel')
+
+// One spot, one key: the main button (and Space on desktop) opens, skips the spin, opens again
+const mainAction = () => (phase.value === 'spinning' ? reel.value?.skip() : open())
+onKeyStroke(' ', (e) => {
+  const el = e.target as HTMLElement | null
+  if (el?.closest('input, textarea, button, a, [role=dialog]')) return
+  e.preventDefault()
+  mainAction()
+})
 
 watch(count, () => {
   if (phase.value === 'result') phase.value = 'idle'
@@ -37,8 +49,8 @@ async function open(asDemo = false) {
   if (phase.value === 'spinning') return
   if (!asDemo && !session.user) return ui.openSignIn()
   if (!asDemo && session.user && session.user.balance < openPrice.value * count.value) {
-    toast.show(t('wallet.notEnough'), 'danger')
-    return navigateTo('/deposit')
+    // Top up over the case instead of leaving it
+    return ui.openDeposit(openPrice.value * count.value - session.user.balance)
   }
   phase.value = 'spinning'
   demo.value = asDemo
@@ -51,9 +63,12 @@ async function open(asDemo = false) {
     })
     if (!asDemo && session.user) session.user.balance = res.balance
     results.value = res.drops
+    last.value = { rolls: res.rolls, kurwa: res.kurwa, seed: res.seed }
     await reel.value?.spin(res.drops, fast.value, res.kurwa)
     phase.value = 'result'
     if (asDemo) toast.show(t('case.demoBadge'))
+    // Opening earns XP: pick up a level change (the layout celebrates it)
+    else session.refresh()
   } catch (e) {
     phase.value = 'idle'
     toast.error(e, t('common.error'))
@@ -85,12 +100,25 @@ async function share() {
   }
 }
 
+const unsold = computed(() => (demo.value ? [] : results.value.filter((r) => !sold.value.includes(r.uid))))
+
 const reelSection = useTemplateRef<HTMLElement>('reelSection')
 const scrollToReel = () => reelSection.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
 const chance = (tickets: number) => {
   const p = tickets / 10_000
   return `${p >= 1 ? +p.toFixed(1) : +p.toPrecision(2)}%`
+}
+
+// The odds grid: every few seconds one random item shows how often it dropped today, then hides again
+const flashId = ref<string | null>(null)
+if (import.meta.client) {
+  useIntervalFn(() => {
+    const items = (cs.value?.items ?? []).filter((x) => x.drops24h > 0)
+    if (!items.length) return
+    flashId.value = items[Math.floor(Math.random() * items.length)]!.id
+    setTimeout(() => (flashId.value = null), 2200)
+  }, 5000)
 }
 </script>
 
@@ -105,14 +133,29 @@ const chance = (tickets: number) => {
         ]"
         :right="[
           { label: $t('case.demoSpin'), icon: 'demo', onClick: () => open(true) },
-          { label: $t('case.fairness'), icon: 'shield', to: '/fairness' },
+          // after a drop the same spot checks this roll; before, it explains fairness
+          phase === 'result' && !demo
+            ? { label: $t('case.checkRoll'), icon: 'shield', onClick: () => (rollsOpen = true) }
+            : { label: $t('case.fairness'), icon: 'shield', to: '/fairness' },
         ]"
       />
       <CaseTransparency :data="cs" />
     </div>
 
     <section ref="reelSection" class="flex scroll-mt-24 flex-col gap-4">
-      <CaseReel ref="reel" :data="cs" :count="count" :phase="phase" :results="results" :sold-uids="sold" :demo="demo" :kurwadrop="kurwadrop" @sell="(uid) => sell([uid])" />
+      <CaseReel
+        ref="reel"
+        :data="cs"
+        :count="count"
+        :phase="phase"
+        :results="results"
+        :sold-uids="sold"
+        :demo="demo"
+        :kurwadrop="kurwadrop"
+        :fast="fast"
+        :confirm-from="cs.price * 3"
+        @sell="(uid) => sell([uid])"
+      />
       <CaseOpenControls
         ref="controlsEl"
         v-model:count="count"
@@ -121,34 +164,61 @@ const chance = (tickets: number) => {
         :price="openPrice"
         :phase="phase"
         :unsold-total="unsoldTotal"
+        :confirm-sell="unsoldTotal >= openPrice * count * 3"
         @open="open()"
+        @skip="reel?.skip()"
+        @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"
+      />
+      <!-- Always there with a fixed height: a result only changes what the cards say -->
+      <CaseNextHook
+        v-if="!demo"
+        :data="cs"
+        :unsold="unsold"
+        :count="count"
+        :phase="phase"
+        :confirm-sell="unsoldTotal >= openPrice * count * 3"
         @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"
       />
     </section>
 
+    <CaseRollsModal v-model="rollsOpen" :data="cs" :drops="results" :rolls="last.rolls" :kurwa="last.kurwa" :seed="last.seed" />
+
     <Transition name="kd-sticky">
       <div
         v-if="!controlsVisible"
-        class="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-20 flex items-center gap-3 border-t border-neutral-5 bg-neutral-2/95 px-4 py-3 backdrop-blur lg:hidden"
+        class="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-20 flex items-center gap-3 border-t border-neutral-5 bg-neutral-2 px-4 py-3 lg:hidden"
       >
         <img :src="cs.image" alt="" class="size-10 object-contain" />
         <span class="type-12-caps min-w-0 flex-1 truncate">{{ cs.name }} · x{{ count }}</span>
-        <UiButton :loading="phase === 'spinning'" @click="open(); scrollToReel()">
-          {{ $t('case.open', { count }) }}
-          <UiPrice :amount="openPrice * count" size="s" tone="inverse" />
+        <UiButton :variant="phase === 'spinning' ? 'secondary' : 'primary'" class="w-36" @click="phase === 'spinning' ? reel?.skip() : (open(), scrollToReel())">
+          <UiTextSwap :text="phase === 'spinning' ? $t('case.skip') : phase === 'result' ? $t('case.openAgain') : $t('case.open', { count })" />
+          <UiPrice v-if="phase !== 'spinning'" :amount="openPrice * count" size="s" tone="inverse" />
         </UiButton>
       </div>
     </Transition>
 
     <section class="flex flex-col gap-4">
       <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-3">
-        <ItemDropCard v-for="it in cs.items" :key="it.id" :item="it" :chance="chance(it.tickets)" :range="[it.ticketFrom, it.ticketTo]" />
+        <ItemDropCard v-for="it in cs.items" :key="it.id" :item="it" :chance="chance(it.tickets)" :range="[it.ticketFrom, it.ticketTo]" :drops="it.drops24h" :flash="flashId === it.id" />
       </div>
     </section>
   </div>
 </template>
 
 <style scoped>
+.kd-hook-enter-active,
+.kd-hook-leave-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    max-height var(--dur-slow) var(--ease-out);
+  max-height: 320px;
+  overflow: hidden;
+}
+.kd-hook-enter-from,
+.kd-hook-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
 .kd-sticky-enter-active {
   transition:
     transform var(--dur-slow) var(--ease-out),

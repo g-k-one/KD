@@ -20,6 +20,12 @@ if (existsSync(out)) for (const n of readdirSync(out)) rmSync(join(out, n), { re
 cpSync(src, out, { recursive: true })
 for (const f of ['200.html', '404.html', '_robots.txt']) rmSync(join(out, f), { force: true })
 
+// The artifact host caps a version at 511 files. Forge loads atlases lazily by effect name and the app only
+// plays our own kd* effects, so the stock atlases stay out (fx-strips is always loaded by the engine).
+const FORGE_KEEP = new Set(['forge.js', 'kd-atlas.js', '16e-forge-atlas.js', 'fx-kd.webp', 'fx-strips.webp'])
+const forgeDir = join(out, 'vendor', 'forge')
+if (existsSync(forgeDir)) for (const n of readdirSync(forgeDir)) if (!FORGE_KEEP.has(n)) rmSync(join(forgeDir, n), { force: true })
+
 const walk = (dir) =>
   readdirSync(dir).flatMap((n) => {
     const p = join(dir, n)

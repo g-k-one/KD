@@ -2,8 +2,10 @@
 import type { RiskLevel } from '#shared/types/api'
 import { PRICE_RANGES, RISK_LEVELS, type CaseSort, type PriceRange } from '~/composables/useCaseFilters'
 
-// Figma "CaseFilters". Desktop: labelled fields in one row. Mobile: the same four controls
-// in a tight 2×2 grid without captions, so every option stays one tap away.
+// Case filters (docs/ux-audit-v2.md). Desktop: a short row of dropdowns — price (one choice), risk (several,
+// each with its colour), a "fits my balance" switch, sorting — so nothing is cut off at any width.
+// Phones: a "Filters" button with the active count and the sort select; the button opens a bottom sheet
+// with every group in full. Reset shows up only when something is set.
 const price = defineModel<PriceRange>('price', { required: true })
 const risks = defineModel<RiskLevel[]>('risks', { required: true })
 const affordable = defineModel<boolean>('affordable', { required: true })
@@ -18,76 +20,115 @@ const RISK_SWATCH: Record<RiskLevel, string> = {
   high: 'var(--color-brand-light)',
   extreme: 'var(--color-danger)',
 }
-
-const priceOptions = computed(() =>
-  PRICE_RANGES.map((r) => ({ value: r, label: r === 'any' ? t('filters.any') : r.replace('-', '–'), coin: r !== 'any' })),
-)
+const priceLabel = (r: PriceRange) => (r === 'any' ? t('filters.anyPrice') : r.replace('-', '–'))
+const priceOptions = computed(() => PRICE_RANGES.map((r) => ({ value: r, label: priceLabel(r), coin: r !== 'any' })))
 const riskOptions = computed(() => RISK_LEVELS.map((r) => ({ value: r, label: t(`risk.${r}`), swatch: RISK_SWATCH[r] })))
+const toggleRisk = (r: RiskLevel) => (risks.value = risks.value.includes(r) ? risks.value.filter((x) => x !== r) : [...risks.value, r])
 const sortOptions = computed(() =>
-  (['default', 'priceAsc', 'priceDesc', 'newest'] as const).map((s) => ({ value: s, label: t(`filters.sortOptions.${s}`) })),
+  (['default', 'payback', 'priceAsc', 'priceDesc', 'newest'] as const).map((s) => ({ value: s, label: t(`filters.sortOptions.${s}`) })),
 )
+const dirty = computed(() => price.value !== 'any' || risks.value.length > 0 || affordable.value || sort.value !== 'default')
+const sheet = ref(false)
+const activeCount = computed(() => (price.value !== 'any' ? 1 : 0) + risks.value.length + (affordable.value ? 1 : 0))
+function reset() {
+  price.value = 'any'
+  risks.value = []
+  affordable.value = false
+  sort.value = 'default'
+}
 </script>
 
 <template>
-  <div class="rounded-3xl border border-neutral-4 bg-neutral-2 p-2 lg:rounded-5xl lg:px-4 lg:pt-3 lg:pb-4">
-    <!-- Mobile -->
-    <div class="grid grid-cols-2 gap-2 lg:hidden">
-      <UiSelect v-model="price" :options="priceOptions" menu-width="fixed">
-        <template #leading><UiCoin :size="16" /></template>
+  <!-- concentric corners: 8px controls + 8px padding = 16px (rounded-3xl) -->
+  <div class="kd-filters flex items-center gap-2 rounded-3xl bg-neutral-2 p-2">
+    <!-- Phones: one button, everything in the sheet -->
+    <button type="button" class="kd-press kd-ftrigger flex h-10 min-w-0 flex-1 items-center gap-2 rounded-lg bg-neutral-1 px-3 lg:hidden" @click="sheet = true">
+      <UiIcon name="sliders" :size="18" class="text-neutral-12" />
+      <span class="type-14 min-w-0 truncate">{{ $t('filters.title') }}</span>
+      <span v-if="activeCount" class="type-10-caps grid h-5 min-w-5 place-items-center rounded-full bg-brand-base px-1.5 text-neutral-1">{{ activeCount }}</span>
+      <span class="ml-auto flex shrink-0 items-center gap-1">
+        <span v-for="r in risks" :key="r" class="size-1.5 rounded-full" :style="{ background: RISK_SWATCH[r] }" />
+      </span>
+    </button>
+    <!-- Desktop: dropdowns, not a ribbon of chips -->
+    <div class="hidden min-w-0 flex-1 items-center gap-2 lg:flex">
+      <UiSelect v-model="price" :options="priceOptions" menu-width="fixed" class="kd-fsel w-44" :active="price !== 'any'">
+        <template #leading><UiCoin :size="14" /></template>
       </UiSelect>
-      <UiSelect v-model:values="risks" multiple :options="riskOptions" :placeholder="$t('filters.allLevels')" menu-width="fixed" class="kd-menu-right">
+      <UiSelect v-model:values="risks" multiple :options="riskOptions" :placeholder="$t('filters.anyRisk')" menu-width="fixed" class="kd-fsel w-48" :active="risks.length > 0">
         <template #leading>
-          <span class="grid h-4.5 shrink-0 grid-cols-4 gap-0.5">
-            <span
-              v-for="r in RISK_LEVELS"
-              :key="r"
-              class="w-1.5 rounded-full"
-              :style="{ background: RISK_SWATCH[r], opacity: risks.length && !risks.includes(r) ? 0.25 : 1 }"
-            />
+          <span class="flex items-center gap-0.5">
+            <span v-for="r in risks.length ? risks : RISK_LEVELS" :key="r" class="size-1.5 rounded-full" :class="!risks.length && 'opacity-45'" :style="{ background: RISK_SWATCH[r] }" />
           </span>
         </template>
       </UiSelect>
-      <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed">
-        <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
-      </UiSelect>
-      <label
-        class="type-12 flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-neutral-4 bg-neutral-1 px-3"
-        :class="!session.user && 'opacity-40'"
-      >
-        <UiToggle v-model="affordable" :label="$t('filters.affordable')" :disabled="!session.user" />
-        <span class="leading-tight">{{ $t('filters.affordableShort') }}</span>
-      </label>
+      <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
     </div>
+    <Transition name="kd-reset">
+      <UiButton v-if="dirty" variant="ghost" size="s" icon="refresh" class="max-lg:hidden" @click="reset">{{ $t('filters.reset') }}</UiButton>
+    </Transition>
+    <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:w-48">
+      <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
+    </UiSelect>
 
-    <!-- Desktop -->
-    <div class="hidden items-end gap-6 lg:flex">
-      <UiSelect v-model="price" :options="priceOptions" :label="$t('filters.price')" menu-width="fixed" class="w-52.5" />
-      <UiSelect v-model:values="risks" multiple :options="riskOptions" :label="$t('filters.volatility')" :placeholder="$t('filters.allLevels')" class="w-52.5">
-        <template #leading>
-          <span class="grid h-4.5 shrink-0 grid-cols-4 gap-0.5">
-            <span
-              v-for="r in RISK_LEVELS"
-              :key="r"
-              class="w-1.5 rounded-full"
-              :style="{ background: RISK_SWATCH[r], opacity: risks.length && !risks.includes(r) ? 0.25 : 1 }"
-            />
-          </span>
-        </template>
-      </UiSelect>
-      <label class="type-14 flex h-10 cursor-pointer items-center gap-2.5" :class="!session.user && 'cursor-not-allowed opacity-40'">
+    <UiSheet v-model="sheet" :title="$t('filters.title')">
+      <section class="flex flex-col gap-2">
+        <span class="type-12-caps text-neutral-11">{{ $t('filters.price') }}</span>
+        <div class="flex flex-wrap gap-1.5">
+          <UiChip v-for="r in PRICE_RANGES" :key="r" size="m" class="gap-1.5 normal-case" :active="price === r" @click="price = r">
+            <UiCoin v-if="r !== 'any'" :size="14" />
+            {{ priceLabel(r) }}
+          </UiChip>
+        </div>
+      </section>
+      <section class="flex flex-col gap-2">
+        <span class="type-12-caps text-neutral-11">{{ $t('filters.volatility') }}</span>
+        <div class="grid grid-cols-2 gap-1.5">
+          <UiChip v-for="r in RISK_LEVELS" :key="r" size="m" class="gap-1.5 normal-case" :active="risks.includes(r)" @click="toggleRisk(r)">
+            <span class="size-2 rounded-full" :style="{ background: RISK_SWATCH[r] }" />
+            {{ $t(`risk.${r}`) }}
+          </UiChip>
+        </div>
+      </section>
+      <label class="flex h-12 items-center gap-3 rounded-xl bg-neutral-3 px-3" :class="!session.user && 'opacity-40'">
         <UiToggle v-model="affordable" :label="$t('filters.affordable')" :disabled="!session.user" />
-        {{ $t('filters.affordable') }}
+        <span class="type-14">{{ $t('filters.affordable') }}</span>
       </label>
-      <div class="flex-1" />
-      <UiSelect v-model="sort" :options="sortOptions" :label="$t('filters.sort')" class="w-52.5" />
-    </div>
+      <section class="flex flex-col gap-2">
+        <span class="type-12-caps text-neutral-11">{{ $t('filters.sort') }}</span>
+        <div class="flex flex-wrap gap-1.5">
+          <UiChip v-for="o in sortOptions" :key="o.value" size="m" class="normal-case" :active="sort === o.value" @click="sort = o.value">{{ o.label }}</UiChip>
+        </div>
+      </section>
+      <template #actions>
+        <UiButton variant="secondary" size="l" class="flex-1" :disabled="!dirty" @click="reset">{{ $t('filters.reset') }}</UiButton>
+        <UiButton size="l" class="flex-1" @click="sheet = false">{{ $t('upgrade.done') }}</UiButton>
+      </template>
+    </UiSheet>
   </div>
 </template>
 
 <style scoped>
-/* Right-column menus open towards the left edge so they never overflow the screen */
-:deep(.kd-menu-right > ul) {
+/* Right-aligned menu so it never leaves the screen; on phones the select shrinks to its icon */
+:deep(.kd-sort > ul) {
   left: auto;
   right: 0;
+}
+@media (max-width: 1023.98px) {
+  :deep(.kd-sort button .type-14),
+  :deep(.kd-sort button > :last-child) {
+    display: none;
+  }
+}
+.kd-reset-enter-active,
+.kd-reset-leave-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+.kd-reset-enter-from,
+.kd-reset-leave-to {
+  opacity: 0;
+  transform: translateX(6px);
 }
 </style>

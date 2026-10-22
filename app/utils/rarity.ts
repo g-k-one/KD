@@ -9,6 +9,16 @@ export const RARITY_COLOR: Record<Rarity, string> = {
   gold: 'var(--color-item-gold)',
 }
 
+/** Same colours as plain hex, for canvas effects (Forge tints) that cannot read CSS variables */
+export const RARITY_HEX: Record<Rarity, string> = {
+  covert: '#eb4b4b',
+  classified: '#d32ce6',
+  restricted: '#8847ff',
+  milspec: '#4b69ff',
+  industrial: '#5e98d9',
+  gold: '#e4ae39',
+}
+
 export const RARITIES = Object.keys(RARITY_COLOR) as Rarity[]
 
 /** Soft radial glow behind an item, as in Figma "DropChip" / item cards. */

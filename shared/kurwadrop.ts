@@ -13,6 +13,7 @@ export function goldenChicken(chickenTickets: number): CaseItem {
     tickets: chickenTickets,
     ticketFrom: 1,
     ticketTo: chickenTickets,
+    drops24h: 0,
   }
 }
 

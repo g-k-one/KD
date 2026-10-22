@@ -35,7 +35,9 @@
     "sell": "Sell",
     "sold": "Sold",
     "sellAll": "Sell all",
-    "notEnough": "Not enough balance. Deposit to continue."
+    "notEnough": "Not enough balance. Deposit to continue.",
+    "sure": "Sure?",
+    "sureSell": "Tap to confirm"
   },
   "profile": {
     "profile": "Profile",
@@ -54,27 +56,26 @@
     "soundHint": "Case spins, drops and wins.",
     "volume": "Volume",
     "streamerMode": "Streamer mode",
-    "streamerModeHint": "Shows coins instead of real currency and hides sensitive info on stream."
+    "streamerModeHint": "Shows coins instead of real currency and hides sensitive info on stream.",
+    "haptics": "Vibration",
+    "hapticsHint": "A short buzz on drops and wins. Android only."
   },
   "feed": {
     "live": "Live",
     "top": "Top",
     "highlight": "Highlight",
-    "dropBy": "{item} dropped by {user}"
+    "dropBy": "{item} dropped by {user}",
+    "topHint": "Biggest multipliers: drop price ÷ what was paid",
+    "best": "Best",
+    "paused": "Paused",
+    "pausedNew": "Paused · {n} new",
+    "aria": "Live drops"
   },
   "hero": {
     "eyebrow": "Provably Fair isn’t enough",
     "title": "Stop getting scammed, play KurwaDrop",
     "cta": "Start playing",
-    "howItWorks": "How it works",
-    "slides": {
-      "fairTitle": "Check every roll yourself",
-      "fairEyebrow": "Provably fair",
-      "fairCta": "Verify a roll",
-      "pvpEyebrow": "New · PvP",
-      "pvpTitle": "Open cases against other players",
-      "pvpCta": "Create PvP"
-    }
+    "howItWorks": "How it works"
   },
   "filters": {
     "price": "Price",
@@ -88,14 +89,16 @@
       "default": "Default",
       "priceAsc": "Price: low to high",
       "priceDesc": "Price: high to low",
-      "newest": "Newest"
+      "newest": "Newest",
+      "payback": "Best payback"
     },
     "title": "Filters",
     "apply": "Show {count} cases",
     "show": "Show",
     "anyPrice": "Any price",
     "affordableShort": "Fits my balance",
-    "search": "Search cases"
+    "search": "Search cases",
+    "anyRisk": "Any risk"
   },
   "risk": {
     "label": "Risk",
@@ -109,9 +112,10 @@
     "show": "Show",
     "empty": "No cases match these filters.",
     "tag": {
-      "new": "🔥 Brand new",
-      "hot": "🔥 Hot"
-    }
+      "new": "Brand new",
+      "hot": "Hot"
+    },
+    "today": "x{x} today"
   },
   "footer": {
     "play": "Play",
@@ -131,13 +135,19 @@
     "error": "Something went wrong. Try again.",
     "back": "Back",
     "cancel": "Cancel",
-    "new": "New"
+    "new": "New",
+    "save": "Save",
+    "prev": "Previous page",
+    "next": "Next page",
+    "lvl": "LVL",
+    "coins": "Coins"
   },
   "case": {
     "skipHint": "Click to skip",
     "kurwaHit": "KURWADROP!",
+    "kurwaScream": "KUUUUUUURWAAAA!",
     "kurwaRespin": "Golden respin · top items only",
-    "kurwaHint": "Golden Chicken: 2% to respin among top items",
+    "kurwaHint": "Free, same odds: a top drop lands on the Golden Chicken first, then a golden respin reveals it",
     "in": "in",
     "allCases": "All cases",
     "share": "Share",
@@ -157,7 +167,22 @@
     "demoBadge": "Demo spin — nothing is charged",
     "copied": "Link copied",
     "ticket": "Ticket {ticket}",
-    "checkRoll": "Check this roll"
+    "checkRoll": "Check this roll",
+    "hookUpgrade": "Upgrade it",
+    "rollsTitle": "Your rolls",
+    "rollsHint": "Every ticket from 1 to 1 000 000 falls into one item’s range. Rotate your seed pair to reveal the server seed, then check any roll in the verifier.",
+    "range": "Range {range}",
+    "openVerifier": "Open verifier",
+    "kurwaLine": "Free · top drops get a golden respin",
+    "skip": "Skip",
+    "topX": "top ×{x}",
+    "hookUpgradeIdle": "Your drop, boosted",
+    "checkSeeds": "Seeds and how it works",
+    "sellDrops": "one drop from this opening | {n} drops from this opening",
+    "drops24h": "{n}× today",
+    "topDrops": "Top drops",
+    "topDropsWindow": "Last 7 days",
+    "dropsShort": "1 drop | {n} drops"
   },
   "upgrade": {
     "history": "History",
@@ -186,7 +211,7 @@
     "tipFraction": "Bet {pct}% of your skins and balance",
     "tipAllSkins": "Put all your skins in",
     "tipAllBalance": "Put your whole balance in",
-    "tipMax": "Add balance up to the 95% maximum",
+    "tipMax": "Add balance up to the 80% maximum",
     "win": "Upgrade won",
     "lose": "Upgrade lost",
     "rolled": "Rolled {roll} · needed below {chance}",
@@ -208,7 +233,50 @@
     "clear": "Clear selection",
     "chanceTooLow": "Chance is below 1%. Add more skins or pick a cheaper target.",
     "tabMySkins": "My skins",
-    "tabDesired": "Desired"
+    "tabDesired": "Desired",
+    "myUpgrades": "My upgrades",
+    "allHistory": "All history",
+    "wantChance": "Desired chance",
+    "pieces": "{n} in stake",
+    "chooseSkinsShort": "Add skins",
+    "stakeTotal": "Stake",
+    "done": "Done",
+    "multiplier": "Multiplier",
+    "chance": "Chance",
+    "payout": "Payout",
+    "selectAll": "Select all",
+    "hintStake": "Add skins or balance to aim",
+    "hintTooMuch": "Your stake is worth more than any skin",
+    "targetTooCheap": "Pick a skin worth more than your stake",
+    "rollLine": "Roll {roll} · needed < {chance}",
+    "maxPieces": "Up to {n} items per upgrade (balance counts as one)",
+    "sortDesc": "Expensive first",
+    "sortAsc": "Cheap first",
+    "addSkins": "Add skins",
+    "addSkinsHint": "from your inventory",
+    "pickTarget": "Pick a skin",
+    "pickTargetHint": "what you want to get",
+    "tapToEdit": "Tap to change",
+    "clearAll": "Clear all",
+    "upgradeWin": "Upgrade the win",
+    "verdictWin": "Won!",
+    "verdictLose": "Missed",
+    "rolledLine": "Rolled {roll}",
+    "noPricier": "No pricier skins",
+    "chicken": {
+      "nearWin": [
+        "By a feather!",
+        "Phew!",
+        "Lucky chicken"
+      ],
+      "nearLose": [
+        "LOL, not this time",
+        "So close… nope",
+        "Kurwa! Almost"
+      ]
+    },
+    "verifyRoll": "Verify roll",
+    "backToCase": "Back to case"
   },
   "deposit": {
     "title": "Deposit funds",
@@ -299,7 +367,20 @@
       "a3": "No. The server seed is fixed by its hash before you roll, your client seed is yours, and the nonce only goes up. Changing any value would change the hash you already saw.",
       "q4": "Why does PvP use an EOS block?",
       "a4": "In PvP nobody, including us, should control the client seed. A future EOS block hash is public, unpredictable and can be checked by anyone."
-    }
+    },
+    "history": "Seed log",
+    "historyHint": "Every change of your seed pair. Server seeds of past pairs are revealed, so you can re-check any roll made with them.",
+    "rotated": "Rotated",
+    "rolls": "Rolls",
+    "noHistory": "Rotate your seed pair to start the history.",
+    "period": "Period",
+    "nonces": "Nonces",
+    "inUse": "In use",
+    "since": "since {when}",
+    "noRolls": "no rolls",
+    "hiddenTill": "Revealed after rotation",
+    "pairN": "Pair #{n}",
+    "changed": "changed"
   },
   "account": {
     "title": "Profile",
@@ -329,12 +410,18 @@
       "case": "Case",
       "upgrade": "Upgrade",
       "deposit": "Deposit",
-      "sell": "Sold"
+      "sell": "Sold",
+      "withdraw": "Withdrawn"
     },
     "skinsValue": "Skins value",
     "memberLevel": "Level {level}",
     "allGames": "All",
-    "signInHint": "Sign in to see your profile."
+    "signInHint": "Sign in to see your profile.",
+    "statCases": "Cases opened",
+    "statUpgrades": "Upgrades won",
+    "statWagered": "Played",
+    "statTopX": "Best multiplier",
+    "statBest": "Best drop"
   },
   "pvp": {
     "title": "PvP",
@@ -386,6 +473,78 @@
     "pvpId": "PvP ID",
     "howItWorks": "How it works",
     "verify": "Verify",
-    "maxRounds": "Up to 25 rounds"
+    "maxRounds": "Up to 25 rounds",
+    "watching": "watching",
+    "roundsN": "{n} rounds",
+    "freeSeat": "Free seat",
+    "liveNow": "Live now",
+    "inPlay": "In play",
+    "watchLive": "Watch live",
+    "featuredHint": "The biggest battle running right now",
+    "view_grid": "Tiles",
+    "view_list": "Lines"
+  },
+  "quick": {
+    "title": "Top up and keep playing",
+    "need": "You need",
+    "allMethods": "All methods and promo codes"
+  },
+  "wins": {
+    "title": "Big wins today",
+    "window": "Last 24 h"
+  },
+  "bonus": {
+    "title": "Bonuses",
+    "signIn": "Sign in to get a free case every day and rewards for every level.",
+    "openFree": "Open for free",
+    "nextIn": "Next in",
+    "tier": "Tier {tier}",
+    "dailyText": "One free case every 24 hours. It gets better items every 5 levels, so the more you play, the more it pays.",
+    "levels": "Level rewards",
+    "levelsText": "Every coin you play is XP; each level needs a bit more than the last. Each level pays coins; every 5th also upgrades your daily case.",
+    "dailyUp": "Daily → {tier}",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "locked": "Locked",
+    "levelUp": "Level up!",
+    "rewardReady": "Reward ready:",
+    "dailyReady": "Daily ready",
+    "claimAll": "Claim all · {n}",
+    "rakeback": "Rakeback",
+    "rakebackText": "of every coin you play comes back to you",
+    "rakebackNext": "{rate} from level {level}",
+    "rakebackPending": "Ready to claim",
+    "missions": "Daily missions",
+    "missionsText": "{done} of {total} done today. New ones every 24 hours.",
+    "mission": {
+      "open_cases": "Open {n} cases",
+      "win_upgrade": "Win an upgrade",
+      "play_battle": "Play a PvP battle",
+      "spend": "Play {n} coins"
+    },
+    "go": "Go",
+    "promo": "Promo code",
+    "promoText": "Got a code from a stream or our socials? Enter it here.",
+    "promoPlaceholder": "Enter a code",
+    "redeem": "Redeem",
+    "promoOk": "Code applied · +{coins}",
+    "nextReward": "Next · LVL {level}",
+    "ready": "Ready",
+    "dailyShort": "Daily case"
+  },
+  "withdraw": {
+    "title": "Withdraw to Steam",
+    "short": "Withdraw",
+    "hint": "All selected skins go out in one Steam trade offer.",
+    "tradeLink": "Your Steam trade link",
+    "change": "Change",
+    "whereLink": "Find it in Steam → Inventory → Trade offers → Who can send me trade offers.",
+    "openSteam": "Open in Steam",
+    "send": "Withdraw {n}",
+    "sentTitle": "Trade offer sent",
+    "sentHint": "Accept it in Steam (app or site) before the timer runs out — otherwise the skins come back to your inventory.",
+    "offer": "Offer",
+    "expires": "Accept within",
+    "saved": "Trade link saved"
   }
 }
