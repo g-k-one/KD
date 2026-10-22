@@ -184,10 +184,8 @@ if (import.meta.client) {
         ]"
         :right="[
           { label: $t('settings.sound'), icon: soundOn ? 'sound' : 'sound-off', onClick: toggleSound },
-          // after a drop the same spot checks this roll; before, it explains fairness
-          phase === 'result' && !demo
-            ? { label: $t('case.checkRoll'), icon: 'shield', onClick: () => (rollsOpen = true) }
-            : { label: $t('case.fairness'), icon: 'shield', to: '/fairness' },
+          // always the way to how fairness works; checking this very roll lives in the row under the button
+          { label: $t('case.fairness'), icon: 'shield', to: '/fairness' },
         ]"
       >
         <!-- Phones: the arrows sit at the ends of the centre, the name between them; desktop: a fixed-width name
@@ -257,7 +255,9 @@ if (import.meta.client) {
         :count="count"
         :phase="phase"
         :confirm-sell="unsoldTotal >= openPrice * count * 3"
+        :rolls="last.rolls"
         @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"
+        @check="rollsOpen = true"
       />
       <!-- One quiet line under the controls: what this opening earns (#32) and the promo code (#50, DogDrop) -->
       <div v-if="session.user && !demo" class="type-12-caps flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-neutral-11">

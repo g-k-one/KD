@@ -1,19 +1,22 @@
 <script setup lang="ts">
 import { NuxtLink } from '#components'
 import { upgradeChanceBp } from '#shared/upgrade'
-import type { CaseDetails, InventoryItem, MarketResponse } from '#shared/types/api'
+import type { CaseDetails, InventoryItem, MarketResponse, PfRoll } from '#shared/types/api'
 
 /*
  * The row under the open controls. One fixed height in both states, so nothing below jumps; the contents
  * cross-fade.
  *   Before a drop — this case's best drops of the last 7 days, with their ×, best first (Hellcase-style
  *                   social proof: what this exact case has really paid)
- *   After a drop  — what to do with it: Upgrade it (the unsold drops aimed at ~2.5× their value, chance shown)
- *                   and Sell all (desktop; phones have it under the main button)
+ *   After a drop  — what to do with it, three equal cards across: Upgrade it (the unsold drops aimed at ~2.5×
+ *                   their value, chance shown), Sell all (desktop; phones have it under the main button) and Check
+ *                   this roll (the ticket, opens the rolls with the verifier one tap away; a square on phones)
  */
-const props = defineProps<{ data: CaseDetails; unsold: InventoryItem[]; count: number; phase: 'idle' | 'spinning' | 'result'; confirmSell?: boolean }>()
-const emit = defineEmits<{ sellAll: [] }>()
-const live = computed(() => props.phase === 'result' && props.unsold.length > 0)
+const props = defineProps<{ data: CaseDetails; unsold: InventoryItem[]; count: number; phase: 'idle' | 'spinning' | 'result'; confirmSell?: boolean; rolls?: PfRoll[] }>()
+const emit = defineEmits<{ sellAll: []; check: [] }>()
+// the row stays after selling: the roll can still be checked
+const live = computed(() => props.phase === 'result' && (props.unsold.length > 0 || !!props.rolls?.length))
+const spaced = (n: number) => n.toLocaleString('en-US').replace(/,/g, ' ')
 const isLg = useMediaQuery('(min-width: 1024px)')
 
 // Sell all — expensive drops ask for a second tap
@@ -52,7 +55,7 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
   <div class="kd-hook w-full" :class="phase === 'spinning' && 'is-resting'">
     <Transition name="kd-hc" mode="out-in">
       <!-- After a drop: what to do with it -->
-      <div v-if="live" key="act" class="flex justify-center gap-2">
+      <div v-if="live" key="act" class="flex gap-2 lg:grid lg:grid-cols-3">
         <component :is="upgrade ? NuxtLink : 'div'" :to="upgrade?.to" class="kd-hook-card kd-act" :class="upgrade ? 'kd-press is-live' : 'is-muted'">
           <template v-if="upgrade">
             <ItemArt :image="upgrade.target.image" :rarity="upgrade.target.rarity" :size="40" class="w-14 shrink-0" />
@@ -67,13 +70,22 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
             <span class="type-14 truncate text-neutral-12">{{ $t('case.hookUpgradeIdle') }}</span>
           </template>
         </component>
-        <button v-if="isLg" type="button" class="kd-hook-card kd-act kd-press is-live" :class="armed ? 'is-danger' : 'is-sell'" @click="sellAll">
+        <button v-if="isLg" type="button" class="kd-hook-card kd-act" :class="unsold.length ? ['kd-press is-live', armed ? 'is-danger' : 'is-sell'] : 'is-muted'" :disabled="!unsold.length" @click="sellAll">
           <span class="kd-hc-ic kd-sell-ic"><UiIcon name="wallet" :size="22" /></span>
           <span class="flex min-w-0 flex-col text-left">
             <span class="type-12-caps text-neutral-11">{{ $t('wallet.sellAll') }}</span>
-            <UiTextSwap :text="armed ? $t('wallet.sureSell') : $t('case.dropsShort', unsold.length)" class="type-14" />
+            <UiTextSwap :text="!unsold.length ? $t('wallet.sold') : armed ? $t('wallet.sureSell') : $t('case.dropsShort', unsold.length)" class="type-14" />
           </span>
-          <UiPrice :amount="unsoldTotal" size="m" tone="coin" class="ml-auto" />
+          <UiPrice v-if="unsold.length" :amount="unsoldTotal" size="m" tone="coin" class="ml-auto" />
+        </button>
+        <!-- this very roll: the ticket, a tap to the rolls and the verifier -->
+        <button v-if="rolls?.length" type="button" class="kd-hook-card kd-act kd-check kd-press is-live" :aria-label="$t('case.checkRoll')" @click="emit('check')">
+          <span class="kd-hc-ic kd-check-ic"><UiIcon name="shield-check" :size="22" /></span>
+          <span class="flex min-w-0 flex-col text-left max-lg:hidden">
+            <span class="type-12-caps text-neutral-11">{{ $t('case.checkRoll') }}</span>
+            <span class="type-14 truncate tabular-nums">{{ rolls.length === 1 ? $t('case.ticketN', { n: spaced(rolls[0]!.ticket) }) : $t('case.ticketsN', { n: rolls.length }) }}</span>
+          </span>
+          <UiIcon name="chevron-right" :size="18" class="ml-auto shrink-0 text-neutral-10 max-lg:hidden" />
         </button>
       </div>
 
@@ -121,14 +133,20 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
 .kd-hook-card.kd-top {
   padding: 0 8px 0 16px;
 }
-/* Action cards sit under the main button at a compact, fixed width (the row stays centred, not stretched) */
-.kd-act {
-  flex: 0 1 320px;
-}
+/* Desktop: three equal cards across the row. Phones: the upgrade card takes the width, the check is a square */
 @media (width < 64rem) {
   .kd-act {
     flex: 1 1 auto;
   }
+  .kd-act.kd-check {
+    flex: 0 0 64px;
+    justify-content: center;
+    padding: 0;
+  }
+}
+.kd-check-ic {
+  background: rgb(18 183 106 / 0.14);
+  color: var(--color-success);
 }
 .kd-hc-ic {
   display: grid;

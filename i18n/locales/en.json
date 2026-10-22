@@ -231,7 +231,9 @@
     "skins": "1 skin | {n} skins",
     "promo": "Have a promo code?",
     "earns": "+{n} XP · +{n} pass pts",
-    "earnsEvent": "+{n} event pts"
+    "earnsEvent": "+{n} event pts",
+    "ticketN": "Ticket {n}",
+    "ticketsN": "{n} tickets"
   },
   "upgrade": {
     "history": "History",
