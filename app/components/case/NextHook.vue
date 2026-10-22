@@ -12,27 +12,16 @@ import type { CaseDetails, InventoryItem, MarketResponse, PfRoll } from '#shared
  *                   their value, chance shown), Sell all (desktop; phones have it under the main button) and Check
  *                   this roll (the ticket, opens the rolls with the verifier one tap away; a square on phones)
  */
-const props = defineProps<{ data: CaseDetails; unsold: InventoryItem[]; count: number; phase: 'idle' | 'spinning' | 'result'; confirmSell?: boolean; rolls?: PfRoll[] }>()
+const props = defineProps<{ data: CaseDetails; unsold: InventoryItem[]; count: number; phase: 'idle' | 'spinning' | 'result'; rolls?: PfRoll[] }>()
 const emit = defineEmits<{ sellAll: []; check: [] }>()
 // the row stays after selling: the roll can still be checked
 const live = computed(() => props.phase === 'result' && (props.unsold.length > 0 || !!props.rolls?.length))
 const spaced = (n: number) => n.toLocaleString('en-US').replace(/,/g, ' ')
 const isLg = useMediaQuery('(min-width: 1024px)')
 
-// Sell all — expensive drops ask for a second tap
+// Sell all, in one tap
 const unsoldTotal = computed(() => props.unsold.reduce((a, i) => a + i.price, 0))
-const armed = ref(false)
-let armTimer: ReturnType<typeof setTimeout> | undefined
-function sellAll() {
-  if (props.confirmSell && !armed.value) {
-    armed.value = true
-    clearTimeout(armTimer)
-    armTimer = setTimeout(() => (armed.value = false), 3000)
-    return
-  }
-  armed.value = false
-  emit('sellAll')
-}
+const sellAll = () => emit('sellAll')
 
 // Upgrade it
 const { data: market } = useFetch<MarketResponse>('/api/market', { key: 'market', lazy: true, server: false })
@@ -70,11 +59,11 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
             <span class="type-14 truncate text-neutral-12">{{ $t('case.hookUpgradeIdle') }}</span>
           </template>
         </component>
-        <button v-if="isLg" type="button" class="kd-hook-card kd-act" :class="unsold.length ? ['kd-press is-live', armed ? 'is-danger' : 'is-sell'] : 'is-muted'" :disabled="!unsold.length" @click="sellAll">
+        <button v-if="isLg" type="button" class="kd-hook-card kd-act" :class="unsold.length ? 'kd-press is-live is-sell' : 'is-muted'" :disabled="!unsold.length" @click="sellAll">
           <span class="kd-hc-ic kd-sell-ic"><UiIcon name="wallet" :size="22" /></span>
           <span class="flex min-w-0 flex-col text-left">
             <span class="type-12-caps text-neutral-11">{{ $t('wallet.sellAll') }}</span>
-            <UiTextSwap :text="!unsold.length ? $t('wallet.sold') : armed ? $t('wallet.sureSell') : $t('case.dropsShort', unsold.length)" class="type-14" />
+            <UiTextSwap :text="!unsold.length ? $t('wallet.sold') : $t('case.dropsShort', unsold.length)" class="type-14" />
           </span>
           <UiPrice v-if="unsold.length" :amount="unsoldTotal" size="m" tone="coin" class="ml-auto" />
         </button>
@@ -182,19 +171,11 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
     background-color var(--dur-slow) var(--ease-out),
     color var(--dur-slow) var(--ease-out);
 }
-/* Same card as its neighbours; asking to confirm only warms it up — no flips to white or solid red */
-.kd-hook-card.is-danger {
-  background-color: #2a1517;
-}
-.kd-hook-card.is-danger .kd-sell-ic {
-  background: rgb(240 68 56 / 0.18);
-  color: var(--color-danger);
-}
 .kd-hook-card.is-muted {
   background: rgb(255 255 255 / 0.02);
 }
 @media (hover: hover) {
-  .kd-hook-card.is-live:not(.is-danger):hover {
+  .kd-hook-card.is-live:hover {
     background: var(--color-neutral-3);
   }
 }

@@ -226,7 +226,6 @@ if (import.meta.client) {
         :demo="demo"
         :kurwadrop="kurwadrop"
         :fast="fast"
-        :confirm-from="cs.price * 3"
         @sell="(uid) => sell([uid])"
         try-free
         @demo="open(true)"
@@ -242,7 +241,6 @@ if (import.meta.client) {
         :short="cta.short"
         :phase="phase"
         :unsold-total="unsoldTotal"
-        :confirm-sell="unsoldTotal >= openPrice * count * 3"
         @open="open()"
         @skip="reel?.skip()"
         @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"
@@ -254,7 +252,6 @@ if (import.meta.client) {
         :unsold="unsold"
         :count="count"
         :phase="phase"
-        :confirm-sell="unsoldTotal >= openPrice * count * 3"
         :rolls="last.rolls"
         @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"
         @check="rollsOpen = true"

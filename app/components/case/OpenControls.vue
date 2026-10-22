@@ -22,25 +22,12 @@ const props = defineProps<{
   short?: boolean
   phase: 'idle' | 'spinning' | 'result'
   unsoldTotal: number
-  /** Sell all asks for a second tap (the drops are worth a lot) */
-  confirmSell?: boolean
 }>()
 const emit = defineEmits<{ open: []; skip: []; sellAll: [] }>()
 const main = () => (props.phase === 'spinning' ? emit('skip') : emit('open'))
 const showSell = computed(() => props.phase === 'result' && props.unsoldTotal > 0)
 
-const armed = ref(false)
-let armTimer: ReturnType<typeof setTimeout> | undefined
-function sellAll() {
-  if (props.confirmSell && !armed.value) {
-    armed.value = true
-    clearTimeout(armTimer)
-    armTimer = setTimeout(() => (armed.value = false), 3000)
-    return
-  }
-  armed.value = false
-  emit('sellAll')
-}
+const sellAll = () => emit('sellAll')
 
 const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: `×${n}` }))
 </script>
@@ -63,8 +50,8 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
       <!-- Phones: Sell all unfolds under the main button instead of squeezing it -->
       <div class="kd-unfold lg:hidden" :class="showSell && 'is-open'">
         <div class="min-h-0">
-          <UiButton :variant="armed ? 'danger' : 'secondary'" size="l" class="mt-2 w-full" :tabindex="showSell ? 0 : -1" @click="sellAll">
-            <span>{{ armed ? $t('wallet.sureSell') : $t('wallet.sellAll') }}</span>
+          <UiButton variant="secondary" size="l" class="mt-2 w-full" :tabindex="showSell ? 0 : -1" @click="sellAll">
+            <span>{{ $t('wallet.sellAll') }}</span>
             <span class="btn-value"><UiPrice :amount="unsoldTotal" size="m" /></span>
           </UiButton>
         </div>

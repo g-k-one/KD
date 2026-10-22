@@ -35,9 +35,7 @@
     "sell": "Sell",
     "sold": "Sold",
     "sellAll": "Sell all",
-    "notEnough": "Not enough balance. Deposit to continue.",
-    "sure": "Sure?",
-    "sureSell": "Tap to confirm"
+    "notEnough": "Not enough balance. Deposit to continue."
   },
   "race": {
     "title": "Weekly race",

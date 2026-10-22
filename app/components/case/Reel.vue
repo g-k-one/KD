@@ -35,8 +35,6 @@ const props = defineProps<{
   kurwadrop?: boolean
   /** Fast open: no breath, no tease */
   fast?: boolean
-  /** Sell asks for a second tap when a drop is worth this much or more (coin cents) */
-  confirmFrom?: number
 }>()
 const emit = defineEmits<{ sell: [uid: string]; demo: []; share: [item: InventoryItem] }>()
 
@@ -201,18 +199,8 @@ watch(
   },
 )
 
-// Sell needs a second tap for valuable drops (phones: no accidental sells)
-const armed = ref<string | null>(null)
-let armTimer: ReturnType<typeof setTimeout> | undefined
+// Sell in one tap, whatever the drop is worth
 function askSell(item: InventoryItem) {
-  if (props.confirmFrom != null && item.price >= props.confirmFrom && armed.value !== item.uid) {
-    armed.value = item.uid
-    clearTimeout(armTimer)
-    armTimer = setTimeout(() => (armed.value = null), 3000)
-    haptics.tap()
-    return
-  }
-  armed.value = null
   emit('sell', item.uid)
 }
 
@@ -517,16 +505,13 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
               </span>
               <UiButton
                 v-else-if="phase === 'result' && !demo"
-                :variant="armed === results[col]!.uid ? 'danger' : 'light'"
+                variant="light"
                 size="s"
                 class="max-sm:h-7 max-sm:px-2"
                 @click="askSell(results[col]!)"
               >
-                <span v-if="armed === results[col]!.uid">{{ $t('wallet.sure') }}</span>
-                <template v-else>
-                  <span class="max-sm:hidden">{{ $t('wallet.sell') }}</span>
-                  <UiPrice :amount="results[col]!.price" size="s" tone="inverse" count-up />
-                </template>
+                <span class="max-sm:hidden">{{ $t('wallet.sell') }}</span>
+                <UiPrice :amount="results[col]!.price" size="s" tone="inverse" count-up />
               </UiButton>
               <!-- the best drop of the opening can be shared (an icon on phones) -->
               <UiButton
@@ -580,8 +565,8 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
             <UiPrice :amount="results[0].price" size="s" tone="muted" />
           </span>
           <div v-else-if="!demo" class="flex gap-2">
-            <UiButton :variant="armed === results[0].uid ? 'danger' : 'light'" size="s" @click="askSell(results[0])">
-              <UiTextSwap :text="armed === results[0].uid ? $t('wallet.sureSell') : $t('wallet.sell')" />
+            <UiButton variant="light" size="s" @click="askSell(results[0])">
+              {{ $t('wallet.sell') }}
               <UiPrice :amount="results[0].price" size="s" tone="inverse" count-up />
             </UiButton>
             <UiButton variant="secondary" size="s" icon="upgrade" :to="`/upgrade?item=${results[0].uid}&from=${data.slug}`">{{ $t('upgrade.upgrade') }}</UiButton>
