@@ -13,11 +13,15 @@ import type { Item, Rarity } from '#shared/types/api'
 const props = defineProps<{ item: Item | null; state: 'idle' | 'spinning' | 'win' | 'lose' }>()
 defineEmits<{ clear: [] }>()
 const isLg = useMediaQuery('(min-width: 1024px)')
-// A won skin: the rank reveal bursts from behind it, on a Forge layer under the art (the page calls rank())
+// The card's own Forge layer under the art: the aura while the dial turns and the rank reveal of a won skin
+// (the page calls aura() / rank()). Inside the card, so both scroll with it.
 const fxHost = useTemplateRef<HTMLElement>('fxHost')
 const fx = useForge(fxHost)
 const root = useTemplateRef<HTMLElement>('root')
-defineExpose({ rank: (rarity: Rarity, scale: number) => rarityRank(fx, root.value?.querySelector<HTMLElement>('.kd-art img'), rarity, scale) })
+defineExpose({
+  rank: (rarity: Rarity, scale: number) => rarityRank(fx, root.value?.querySelector<HTMLElement>('.kd-art img'), rarity, scale),
+  aura: (scale: number) => fx.at('kdAura', root.value, scale, true),
+})
 const rc = computed(() => (props.item ? RARITY_COLOR[props.item.rarity] : undefined))
 const priceSrc = computed(() => props.item?.price ?? 0)
 const priceShown = useTransition(priceSrc, { duration: 500, transition: [0.22, 1, 0.36, 1] })

@@ -79,9 +79,10 @@ const stack = computed(() => {
   return Array.from({ length: n }, (_, k) => {
     const rel = k - (n - 1) / 2
     const depth = Math.abs(rel)
-    // two delays: the float's (out of phase per case) and the pop-in's (one after another, so ×1 → ×5 builds up)
-    const delay = `${k * -0.45}s, ${k * 70}ms`
-    if (columns) return { key: k, style: { left: `${((k + 0.5) / n) * 100}%`, width: `${size}px`, height: `${size}px`, animationDelay: delay } }
+    // two delays, as CSS variables so the breath can run on all cases at once: the float's (out of phase per case)
+    // and the pop-in's (one after another, so ×1 → ×5 builds up)
+    const delay = { '--float-delay': `${k * -0.45}s`, '--in-delay': `${k * 70}ms` }
+    if (columns) return { key: k, style: { left: `${((k + 0.5) / n) * 100}%`, width: `${size}px`, height: `${size}px`, ...delay } }
     return {
       key: k,
       style: {
@@ -91,7 +92,7 @@ const stack = computed(() => {
         zIndex: 10 - Math.ceil(depth),
         opacity: 1 - depth * 0.12,
         rotate: `${rel * 5}deg`,
-        animationDelay: delay,
+        ...delay,
       },
     }
   })
@@ -566,7 +567,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
             </UiButton>
             <UiButton variant="secondary" size="s" icon="upgrade" :to="`/upgrade?item=${results[0].uid}&from=${data.slug}`">{{ $t('upgrade.upgrade') }}</UiButton>
             <!-- a big win (2x and up) is worth showing off -->
-            <UiButton v-if="results[0].price >= data.price * 2" variant="secondary" size="s" icon="share" icon-only :aria-label="$t('share.share')" @click="emit('share', results[0])" />
+            <UiButton v-if="results[0].price >= data.price * 2" variant="secondary" size="s" icon="share" @click="emit('share', results[0])">{{ $t('share.share') }}</UiButton>
           </div>
         </div>
       </Transition>
@@ -778,6 +779,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   animation:
     kd-case-float 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite,
     kd-stack-in 420ms var(--ease-spring) both;
+  animation-delay: var(--float-delay, 0s), var(--in-delay, 0s);
   /* the stack re-fans when the amount changes */
   transition:
     left var(--dur-slow) var(--ease-spring),
@@ -803,8 +805,10 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   cursor: pointer;
 }
 /* Breath: the case squashes, jumps and swells before it bursts open into the strip */
+/* every case of the stack winds up together (no per-case delay) */
 .kd-idle.is-breathing .kd-reel-case {
   animation: kd-breath 420ms var(--ease-in-out) both;
+  animation-delay: 0s;
 }
 .kd-idle.is-breathing .kd-drift {
   opacity: 0.2;
@@ -819,11 +823,9 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   }
   60% {
     transform: scale(0.94, 1.1) translateY(-22px);
-    filter: drop-shadow(0 0 24px rgb(255 125 32 / 0.7));
   }
   100% {
     transform: scale(1.25) translateY(-6px);
-    filter: drop-shadow(0 0 40px rgb(255 125 32 / 0.9)) brightness(1.4);
   }
 }
 /* Tease: while a reel hangs on a card edge the markers breathe and a soft glow gathers (no hard rim) */

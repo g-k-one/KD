@@ -218,11 +218,11 @@ const haptics = useHaptics()
 const fxHost = useTemplateRef<HTMLElement>('fxHost')
 const fxDial = useTemplateRef<HTMLElement>('fxDial')
 const fx = useForge(fxHost)
-// The target card gets its own light on the shared top layer: an aura in its rarity while the dial turns,
+// The target card gets its own light: an aura in its rarity while the dial turns,
 // the jackpot burst when it is won, a collapse when it is lost
-const fxTop = useForge()
-// the rank reveal goes behind the won skin: the target card's own layer (desktop), a layer in the mini card (phones)
-const targetCard = useTemplateRef<{ rank: (r: Rarity, s: number) => ReturnType<typeof rarityRank> }>('targetCard')
+// The aura while it turns and the rank reveal go behind the target's skin and scroll with it: the target card's own
+// layer (desktop), a layer in the mini card (phones). A fixed top canvas left the glow hanging on scroll.
+const targetCard = useTemplateRef<{ rank: (r: Rarity, s: number) => ReturnType<typeof rarityRank>; aura: (s: number) => ReturnType<typeof fxMini.at> }>('targetCard')
 const miniFx = useTemplateRef<HTMLElement>('miniFx')
 const fxMini = useForge(miniFx)
 let aura: ForgeHandle | null = null
@@ -252,7 +252,8 @@ async function runUpgrade() {
   playedChance.value = chance.value
   // No particles around the dial while it turns (they distracted from the pointer); light comes only at the result
   const rgb = hexToRgb(RARITY_HEX[target.value.rarity])
-  fxTop.at('kdAura', targetEl(), isLg.value ? 0.95 : 0.7, true).then((h) => {
+  const auraShot = isLg.value ? targetCard.value?.aura(0.95) : fxMini.at('kdAura', targetEl(), 0.7, true)
+  auraShot?.then((h) => {
     if (state.value !== 'spinning') return h?.kill()
     h?.set('tint', rgb)
     aura = h
