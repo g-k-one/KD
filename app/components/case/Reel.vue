@@ -216,6 +216,9 @@ function askSell(item: InventoryItem) {
   emit('sell', item.uid)
 }
 
+/** Multi-open: the column with the most valuable drop (it gets the Share button) */
+const bestCol = computed(() => (props.results.length > 1 ? props.results.reduce((b, r, i, a) => (r.price > a[b]!.price ? i : b), 0) : -1))
+
 // Clicking the reel while it spins jumps straight to the result (Key-Drop's fast-forward)
 let skipping = false
 let active: Animation[] = []
@@ -505,6 +508,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
             <div v-if="landed[col] && results[col]" class="pointer-events-auto flex max-w-full min-w-0 flex-col items-center gap-1 sm:gap-2">
               <span v-if="!compact" class="type-10-caps sm:type-12-caps max-w-full truncate text-weapon">{{ results[col]!.weapon }}</span>
               <span class="type-12 sm:type-14 max-w-full truncate" :style="{ color: RARITY_COLOR[results[col]!.rarity] }">{{ results[col]!.skin }}</span>
+              <div class="flex items-center gap-1.5">
               <span
                 v-if="soldUids.includes(results[col]!.uid)"
                 class="type-12-caps flex h-7 items-center gap-1 rounded-md border border-success bg-success-24 px-2 text-success sm:h-8"
@@ -524,6 +528,20 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
                   <UiPrice :amount="results[col]!.price" size="s" tone="inverse" count-up />
                 </template>
               </UiButton>
+              <!-- the best drop of the opening can be shared (an icon on phones) -->
+              <UiButton
+                v-if="phase === 'result' && !demo && col === bestCol"
+                variant="secondary"
+                size="s"
+                icon="share"
+                :icon-only="compact || isMobile"
+                :aria-label="$t('share.share')"
+                class="max-sm:h-7 max-sm:w-7"
+                @click="emit('share', results[col]!)"
+              >
+                <template v-if="!(compact || isMobile)">{{ $t('share.share') }}</template>
+              </UiButton>
+              </div>
             </div>
           </Transition>
         </div>
@@ -567,8 +585,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
               <UiPrice :amount="results[0].price" size="s" tone="inverse" count-up />
             </UiButton>
             <UiButton variant="secondary" size="s" icon="upgrade" :to="`/upgrade?item=${results[0].uid}&from=${data.slug}`">{{ $t('upgrade.upgrade') }}</UiButton>
-            <!-- a big win (2x and up) is worth showing off -->
-            <UiButton v-if="results[0].price >= data.price * 2" variant="secondary" size="s" icon="share" @click="emit('share', results[0])">{{ $t('share.share') }}</UiButton>
+            <UiButton variant="secondary" size="s" icon="share" @click="emit('share', results[0])">{{ $t('share.share') }}</UiButton>
           </div>
         </div>
       </Transition>
