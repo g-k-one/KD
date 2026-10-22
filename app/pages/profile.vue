@@ -60,6 +60,8 @@ function toggle(uid: string) {
   selected.value = selected.value.includes(uid) ? selected.value.filter((u) => u !== uid) : [...selected.value, uid]
 }
 const selling = ref(false)
+// Selling goes through a preview (what leaves, what arrives) before anything happens
+const sellOpen = ref(false)
 async function sellSelected() {
   selling.value = true
   try {
@@ -67,6 +69,7 @@ async function sellSelected() {
     if (session.user) session.user.balance = res.balance
     toast.show(`${t('wallet.sold')} · ${formatCoins(selectedValue.value)}`, 'success')
     selected.value = []
+    sellOpen.value = false
     await load()
   } catch (e) {
     toast.error(e, t('common.error'))
@@ -240,13 +243,14 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
               <UiButton variant="ghost" size="s" @click="selected = []">{{ $t('account.clear') }}</UiButton>
               <UiButton variant="secondary" size="m" icon="upgrade" :to="`/upgrade?item=${selected.slice(0, 6).join(',')}`">{{ $t('account.upgradeThem') }}</UiButton>
               <UiButton variant="secondary" size="m" icon="steam" @click="withdrawOpen = true">{{ $t('withdraw.short') }}</UiButton>
-              <UiButton variant="light" size="m" :loading="selling" @click="sellSelected">
+              <UiButton variant="light" size="m" @click="sellOpen = true">
                 {{ $t('account.sellSelected') }}
                 <UiPrice :amount="selectedValue" size="s" tone="inverse" />
               </UiButton>
             </div>
           </Transition>
           <WalletWithdrawModal v-model="withdrawOpen" :items="selectedItems" @done="onWithdrawn" />
+          <WalletSellPreview v-model="sellOpen" :items="selectedItems" :loading="selling" @confirm="sellSelected" />
         </section>
 
         <!-- History -->

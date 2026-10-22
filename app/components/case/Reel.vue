@@ -29,6 +29,8 @@ const props = defineProps<{
   results: InventoryItem[]
   soldUids: string[]
   demo?: boolean
+  /** Offer a demo spin on the idle stage ("Try free"); the case page only */
+  tryFree?: boolean
   /** KURWADROP on: the Golden Chicken shows up on the reel at its real odds */
   kurwadrop?: boolean
   /** Fast open: no breath, no tease */
@@ -577,7 +579,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     <!-- Demo spin, on the stage while the case waits (free, nothing is charged) -->
     <Transition name="kd-idle">
       <!-- bottom-6: clears the bottom marker (it reaches 18px into the frame) -->
-      <div v-if="phase === 'idle' && !breathing" class="absolute inset-x-0 bottom-6 z-10 flex justify-center">
+      <div v-if="tryFree && phase === 'idle' && !breathing" class="absolute inset-x-0 bottom-6 z-10 flex justify-center">
         <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
       </div>
     </Transition>

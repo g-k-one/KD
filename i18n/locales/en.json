@@ -39,6 +39,11 @@
     "sure": "Sure?",
     "sureSell": "Tap to confirm"
   },
+  "sell": {
+    "title": "Sell 1 skin | Sell {n} skins",
+    "give": "You give",
+    "get": "You get"
+  },
   "profile": {
     "profile": "Profile",
     "inventory": "Inventory",
@@ -507,6 +512,17 @@
   "wins": {
     "title": "Big wins today",
     "window": "Last 24 h"
+  },
+  "welcome": {
+    "guestTitle": "3 free cases for signing up",
+    "guestText": "Real skins, no deposit. Sign in with Steam and open them in Bonuses.",
+    "userTitle": "1 free case is waiting | {n} free cases are waiting",
+    "userText": "Your welcome cases: real drops, on us.",
+    "get": "Get them",
+    "open": "Open",
+    "name": "Welcome cases",
+    "left": "{n} of {total} left",
+    "openFree": "Open free · {n} left"
   },
   "bonus": {
     "title": "Bonuses",

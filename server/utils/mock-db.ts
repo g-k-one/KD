@@ -296,6 +296,7 @@ export function getCaseSections(): CaseSection[] {
 
 export function getCase(slug: string): CaseDetails {
   if (slug === DAILY_SLUG) return dailyCase()
+  if (slug === WELCOME_SLUG) return welcomeCase()
   const found = CASES.find((c) => c.slug === slug)
   if (!found) throw new MockError(404, 'Case not found')
   return found
@@ -348,11 +349,16 @@ interface MockState {
   claimed: number[]
   /** When the daily case unlocks again (ms), 0 = now */
   dailyAt: number
+  /** Free welcome cases still to open */
+  welcomeLeft: number
   rakeback: { pending: number; claimedTotal: number }
   missions: Mission[]
   missionsResetAt: number
   promoUsed: string[]
 }
+
+/** Free welcome cases a new player gets (admin-configured on the backend) */
+export const WELCOME_TOTAL = 3
 
 /** XP (coin cents spent) for the next level: grows with the level, 25 coins at level 1, ~205 at level 12 */
 export const xpFor = (level: number) => 2500 + level * 1500
@@ -369,6 +375,7 @@ const state: MockState = {
   xp: Math.round((DEFAULT_USER.levelProgress / 100) * xpFor(DEFAULT_USER.level)),
   claimed: Array.from({ length: DEFAULT_USER.level - 1 }, (_, i) => i + 1),
   dailyAt: 0,
+  welcomeLeft: WELCOME_TOTAL,
   rakeback: { pending: 0, claimedTotal: 0 },
   missions: [],
   missionsResetAt: 0,
@@ -481,6 +488,7 @@ export function resetMockUser() {
   state.xp = Math.round((DEFAULT_USER.levelProgress / 100) * xpFor(DEFAULT_USER.level))
   state.claimed = Array.from({ length: DEFAULT_USER.level - 1 }, (_, i) => i + 1)
   state.dailyAt = 0
+  state.welcomeLeft = WELCOME_TOTAL
   state.inventory = STARTER_INVENTORY.map((id) => toInventory(byId(id), 'case'))
   syncSkinsValue()
 }
@@ -625,6 +633,7 @@ export function getStats(): StatsResponse {
 
 export async function openCase(slug: string, count: number, demo: boolean, kurwadrop = false) {
   if (slug === DAILY_SLUG) throw new MockError(400, 'Open the daily case from Bonuses')
+  if (slug === WELCOME_SLUG) throw new MockError(400, 'Open the welcome cases from Bonuses')
   await ensureSeed()
   const cs = getCase(slug)
   const n = Math.min(5, Math.max(1, Math.floor(count)))
@@ -770,9 +779,36 @@ function levelRewards(): LevelReward[] {
   })
 }
 
+// Welcome cases: three free opens for signing up, real drops from a cheap case that pays back on average
+// (RTP 100%, the daily case's first-tier items). The count lives in the admin panel.
+export const WELCOME_SLUG = 'welcome'
+let welcomeCache: CaseDetails | null = null
+function welcomeCase(): CaseDetails {
+  welcomeCache ??= buildCase({
+    id: 'welcome',
+    slug: WELCOME_SLUG,
+    name: 'Welcome Pack',
+    image: '/img/cases/kurwa-classic.webp',
+    price: 150,
+    risk: 'low',
+    targetRtp: 10_000,
+    createdAt: '2026-10-01',
+    itemIds: DAILY_TIERS[0]!,
+  })
+  return welcomeCache
+}
+
+export async function openWelcome() {
+  if (state.welcomeLeft <= 0) throw new MockError(409, 'No welcome cases left')
+  await ensureSeed()
+  state.welcomeLeft -= 1
+  return roll(welcomeCase(), 1, false, false, 0)
+}
+
 export function getBonuses() {
   return {
     daily: { case: dailyCase(), tier: dailyTier(), nextAt: state.dailyAt > Date.now() ? new Date(state.dailyAt).toISOString() : null },
+    welcome: { case: welcomeCase(), left: state.welcomeLeft, total: WELCOME_TOTAL },
     levels: levelRewards(),
     rakeback: rakebackInfo(),
     missions: missions(),
@@ -988,6 +1024,8 @@ export interface DebugStateBody {
   feedPaused?: boolean
   pushDrop?: Rarity
   resetDaily?: boolean
+  /** Give the three welcome cases back */
+  resetWelcome?: boolean
   /** 'empty' clears the inventory; 'loaded' adds 12 skins from across the price range */
   inventory?: 'empty' | 'loaded'
   /** Push n random drops (with a couple of big ones) into the live feed at once */
@@ -1006,6 +1044,7 @@ export function applyDebugState(body: DebugStateBody) {
   if (typeof body.feedPaused === 'boolean') state.feedPaused = body.feedPaused
   if (body.pushDrop) state.queuedDrops.push(makeDropOfRarity(body.pushDrop))
   if (body.resetDaily) state.dailyAt = 0
+  if (body.resetWelcome) state.welcomeLeft = WELCOME_TOTAL
   if (body.inventory === 'empty') for (const i of state.inventory) if (i.status === 'owned') i.status = 'sold'
   if (body.inventory === 'loaded') for (let k = 0; k < 12; k++) state.inventory.unshift(toInventory(CATALOG[Math.floor((k / 12) * CATALOG.length)]!, 'case'))
   if (body.rakeback) state.rakeback.pending += body.rakeback

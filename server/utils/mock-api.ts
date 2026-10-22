@@ -14,6 +14,7 @@ import {
   getBigWins,
   getBonuses,
   openDaily,
+  openWelcome,
   claimLevel,
   claimMission,
   claimRakeback,
@@ -72,6 +73,10 @@ export async function mockRoute(method: string, path: string, body: Body, query:
   if (m === 'POST' && path === '/api/bonuses/daily/open') {
     authed()
     return openDaily()
+  }
+  if (m === 'POST' && path === '/api/bonuses/welcome/open') {
+    authed()
+    return openWelcome()
   }
   if (m === 'POST' && path === '/api/bonuses/rakeback/claim') {
     authed()

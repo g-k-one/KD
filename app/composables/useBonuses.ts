@@ -22,5 +22,7 @@ export function useBonuses() {
   const dailyReady = computed(() => !!data.value && !data.value.daily.nextAt)
   const dailyIn = computed(() => (data.value?.daily.nextAt ? countdown(data.value.daily.nextAt, now.value) : ''))
   const claimable = computed(() => data.value?.levels.filter((l) => l.status === 'claimable').length ?? 0)
-  return { data, refresh, dailyReady, dailyIn, claimable, now }
+  /** Welcome cases still to open (free for signing up) */
+  const welcomeLeft = computed(() => data.value?.welcome?.left ?? 0)
+  return { data, refresh, dailyReady, dailyIn, claimable, welcomeLeft, now }
 }

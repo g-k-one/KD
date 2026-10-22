@@ -1,12 +1,26 @@
 <script setup lang="ts">
 // Figma "Overlays → Modal": optional media, title, description, content slot, actions, close.
+// Phones: a tray (Family) — it rises from the bottom with a handle, and when its content changes (a step, an
+// error, a result) the height glides to the new size instead of jumping.
 const open = defineModel<boolean>({ required: true })
 withDefaults(defineProps<{ title?: string; description?: string; width?: number }>(), { width: 480 })
 
 const panel = useTemplateRef<HTMLElement>('panel')
+const body = useTemplateRef<HTMLElement>('body')
+let lastH = 0
+useResizeObserver(body, () => {
+  const el = panel.value
+  if (!el) return
+  const h = el.offsetHeight
+  if (lastH && Math.abs(h - lastH) > 2 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    el.animate([{ height: `${lastH}px` }, { height: `${h}px` }], { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' })
+  }
+  lastH = h
+})
 const lock = useScrollLock(import.meta.client ? document.body : null)
 watch(open, (v) => {
   lock.value = v
+  lastH = 0
   if (v) nextTick(() => panel.value?.focus())
 })
 onKeyStroke('Escape', () => open.value && (open.value = false))
@@ -35,14 +49,17 @@ onBeforeUnmount(() => (lock.value = false))
           >
             <UiIcon name="close" :size="20" />
           </button>
-          <slot name="media" />
-          <div v-if="title || description" class="flex flex-col gap-6 text-center">
-            <h2 v-if="title" class="type-20-caps">{{ title }}</h2>
-            <p v-if="description" class="type-14-regular text-neutral-12">{{ description }}</p>
-          </div>
-          <slot />
-          <div v-if="$slots.actions" class="flex gap-2">
-            <slot name="actions" />
+          <span class="mx-auto -mt-3 -mb-2 h-1 w-10 shrink-0 rounded-full bg-neutral-7 sm:hidden" aria-hidden="true" />
+          <div ref="body" class="flex flex-col gap-6">
+            <slot name="media" />
+            <div v-if="title || description" class="flex flex-col gap-6 text-center">
+              <h2 v-if="title" class="type-20-caps">{{ title }}</h2>
+              <p v-if="description" class="type-14-regular text-neutral-12">{{ description }}</p>
+            </div>
+            <slot />
+            <div v-if="$slots.actions" class="flex gap-2">
+              <slot name="actions" />
+            </div>
           </div>
         </div>
       </div>

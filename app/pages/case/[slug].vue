@@ -221,6 +221,7 @@ if (import.meta.client) {
         :fast="fast"
         :confirm-from="cs.price * 3"
         @sell="(uid) => sell([uid])"
+        try-free
         @demo="open(true)"
       />
       <CaseOpenControls

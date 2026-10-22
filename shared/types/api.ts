@@ -440,6 +440,14 @@ export interface DailyInfo {
   nextAt: string | null
 }
 
+/** Free cases for signing up (opened from Bonuses, real drops). Configured in the admin panel. */
+export interface WelcomeInfo {
+  case: CaseDetails
+  /** Opens left; 0 once used up */
+  left: number
+  total: number
+}
+
 export interface LevelReward {
   level: number
   /** Coin cents credited on claim */
@@ -479,6 +487,7 @@ export interface Mission {
 
 export interface BonusesResponse {
   daily: DailyInfo
+  welcome: WelcomeInfo
   /** A window of levels around the user's: a few behind, the current one and the next ten */
   levels: LevelReward[]
   rakeback: RakebackInfo
