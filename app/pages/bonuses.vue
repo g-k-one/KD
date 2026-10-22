@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ClaimLevelResponse, InventoryItem, LevelReward, OpenCaseResponse, SellResponse } from '#shared/types/api'
+import type { ClaimLevelResponse, InventoryItem, LevelReward, OpenCaseResponse, PassResponse, SellResponse } from '#shared/types/api'
 
 /*
  * Bonuses (player audit D5 + D6): the reason to come back tomorrow.
@@ -20,6 +20,9 @@ const fx = useForge()
 const { data, refresh, dailyReady, dailyIn, welcomeLeft } = useBonuses()
 
 const daily = computed(() => data.value?.daily ?? null)
+// Season pass: its own endpoint, refreshed with the bonuses (both move when the player plays)
+const { data: pass, refresh: refreshPass } = useFetch<PassResponse>('/api/pass', { key: 'pass', server: false, lazy: true })
+watch(data, () => session.user && refreshPass())
 // Welcome cases (C3) come first on the same reel; once they are used up the daily case takes the spot
 const welcome = computed(() => (welcomeLeft.value > 0 ? (data.value?.welcome ?? null) : null))
 const nextFree = computed(() => welcome.value?.case ?? daily.value?.case ?? null)
@@ -113,6 +116,12 @@ const tierNames = ['I', 'II', 'III', 'IV']
 
     <template v-else-if="daily && data">
       <BonusHero :data="data" :level="session.user.level" :progress="session.user.levelProgress" :daily-ready="dailyReady" :daily-in="dailyIn" @go="go" />
+
+      <!-- Weekly race and the season pass: the reasons to come back this week and this month -->
+      <div id="race" class="scroll-mt-24">
+        <BonusRace />
+      </div>
+      <BonusPass v-if="pass" :data="pass" @update="(p) => (pass = p)" />
 
       <!-- Level rewards: a road, tap a gold node to claim -->
       <section class="flex flex-col gap-2">

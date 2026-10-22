@@ -22,6 +22,10 @@ import type {
   PfRoll,
   Rarity,
   StatsResponse,
+  RaceEntry,
+  RaceResponse,
+  PassResponse,
+  PassTier,
   User,
 } from '#shared/types/api'
 import { PF_TICKETS, pickByTicket, pfRoll, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
@@ -351,6 +355,10 @@ interface MockState {
   dailyAt: number
   /** Free welcome cases still to open */
   welcomeLeft: number
+  /** Coin cents played since the race week began, and the week it counts for */
+  race: { wagered: number; week: number }
+  /** Season pass: points (whole coins played) and the tiers taken */
+  pass: { points: number; claimed: number[] }
   rakeback: { pending: number; claimedTotal: number }
   missions: Mission[]
   missionsResetAt: number
@@ -376,6 +384,8 @@ const state: MockState = {
   claimed: Array.from({ length: DEFAULT_USER.level - 1 }, (_, i) => i + 1),
   dailyAt: 0,
   welcomeLeft: WELCOME_TOTAL,
+  race: { wagered: 0, week: 0 },
+  pass: { points: 0, claimed: [] },
   rakeback: { pending: 0, claimedTotal: 0 },
   missions: [],
   missionsResetAt: 0,
@@ -500,6 +510,11 @@ export function spend(amount: number) {
   // fractions of a cent accrue too, so cheap cases still add up
   state.rakeback.pending += (amount * rakebackRate(state.user.level)) / 10000
   trackMission('spend', amount)
+  // the weekly race and the season pass both count coins played
+  const week = raceWeek()
+  if (state.race.week !== week) state.race = { wagered: 0, week }
+  state.race.wagered += amount
+  state.pass.points += amount / 100
 }
 
 // --- Rakeback, missions, promo codes ------------------------------------------------
@@ -627,6 +642,75 @@ export function getStats(): StatsResponse {
     battles: 82_000 + Math.floor(hours * 21),
     online: 1_400 + Math.round(320 * Math.sin(now / 900_000)) + Math.floor(Math.random() * 24),
   }
+}
+
+// --- Weekly race ----------------------------------------------------------------
+
+const WEEK = 7 * 86_400_000
+// Mondays 00:00 UTC: 1970-01-05 was a Monday
+const RACE_ORIGIN = Date.UTC(1970, 0, 5)
+const raceWeek = (now = Date.now()) => Math.floor((now - RACE_ORIGIN) / WEEK)
+const RACE_POOL = 1_000_000
+/** Share of the pool per place, basis points (top 10) */
+const RACE_SPLIT = [3000, 1800, 1200, 900, 700, 600, 500, 500, 400, 400]
+const RACE_BOTS = ['pierogi_king', 'babcia99', 'zlotyboy', 'kurwa_pro', 'vodkashot', 'krakow_kid', 'ez_drop', 'wroclaw_wolf', 'gdansk_gang', 'poznan_pro', 'bigos_boss', 'lodz_lord', 'kielbasa_k', 'tatra_tiger']
+
+export function getRace(withMe: boolean): RaceResponse {
+  const now = Date.now()
+  const week = raceWeek(now)
+  const start = RACE_ORIGIN + week * WEEK
+  // the week so far: bots climb at their own pace, so the board moves while you look at it
+  const k = Math.max(0.05, (now - start) / WEEK)
+  const rows: Omit<RaceEntry, 'rank' | 'prize'>[] = RACE_BOTS.map((nickname, i) => ({
+    nickname,
+    avatar: '/img/brand/avatar.webp',
+    level: 8 + ((i * 7) % 40),
+    wagered: Math.round((2_400_000 / (i + 1.4)) * k * (0.9 + (hashStr(`${nickname}:${week}`) % 20) / 100)),
+  }))
+  if (withMe) {
+    if (state.race.week !== week) state.race = { wagered: 0, week }
+    rows.push({ nickname: state.user.nickname, avatar: state.user.avatar, level: state.user.level, wagered: state.race.wagered, you: true })
+  }
+  const ranked: RaceEntry[] = rows
+    .sort((a, b) => b.wagered - a.wagered)
+    .map((r, i) => ({ ...r, rank: i + 1, prize: i < RACE_SPLIT.length ? Math.round((RACE_POOL * RACE_SPLIT[i]!) / 10_000) : 0 }))
+  return {
+    endsAt: new Date(start + WEEK).toISOString(),
+    prizePool: RACE_POOL,
+    top: ranked.slice(0, RACE_SPLIT.length),
+    me: ranked.find((r) => r.you) ?? null,
+  }
+}
+
+// --- Season pass ------------------------------------------------------------------
+
+const PASS_SEASON = 'Season 1 · Fowl Play'
+const PASS_ENDS = '2026-11-30T23:59:59Z'
+const PASS_POINTS = [50, 150, 300, 500, 750, 1050, 1400, 1800, 2250, 2750]
+const PASS_REWARD = [100, 200, 300, 500, 700, 1000, 1500, 2000, 3000, 5000]
+
+function passTiers(): PassTier[] {
+  return PASS_POINTS.map((points, i) => ({
+    level: i + 1,
+    points,
+    reward: PASS_REWARD[i]!,
+    premiumReward: PASS_REWARD[i]! * 3,
+    status: state.pass.claimed.includes(i + 1) ? 'claimed' : state.pass.points >= points ? 'claimable' : 'locked',
+  }))
+}
+
+export function getPass(): PassResponse {
+  return { season: PASS_SEASON, endsAt: PASS_ENDS, points: Math.floor(state.pass.points), tiers: passTiers() }
+}
+
+export function claimPass(level: number) {
+  const tier = passTiers().find((t) => t.level === level)
+  if (!tier) throw new MockError(404, 'No such tier')
+  if (tier.status !== 'claimable') throw new MockError(409, tier.status === 'claimed' ? 'Already claimed' : 'Reach this tier first')
+  state.pass.claimed.push(level)
+  state.user.balance += tier.reward
+  record({ game: 'deposit', title: `Pass tier ${level}`, bet: 0, payout: tier.reward, status: 'done' })
+  return { balance: state.user.balance, pass: getPass() }
 }
 
 // --- Cases: open / sell -----------------------------------------------------

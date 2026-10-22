@@ -39,6 +39,25 @@
     "sure": "Sure?",
     "sureSell": "Tap to confirm"
   },
+  "race": {
+    "title": "Weekly race",
+    "chip": "Race",
+    "ends": "Ends in {time}",
+    "pool": "Prize pool",
+    "you": "You",
+    "toPrize": "{amount} to a prize",
+    "how": "Every coin you play on cases, upgrades and battles counts. The top 10 share the pool every Monday at 00:00 UTC."
+  },
+  "pass": {
+    "title": "KURWA Pass",
+    "days": "1 day left | {n} days left",
+    "points": "{n} points",
+    "toNext": "{n} to tier {tier}",
+    "tier": "Tier {n}",
+    "pts": "{n} pts",
+    "premium": "Premium",
+    "how": "One point for every coin you play. Each tier pays coins; the premium track opens later this season."
+  },
   "drawer": {
     "title": "Your skins",
     "skins": "1 skin worth | {n} skins worth",

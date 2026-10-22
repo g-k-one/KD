@@ -440,6 +440,48 @@ export interface DailyInfo {
   nextAt: string | null
 }
 
+// --- Weekly race and the season pass (docs/ux-research-v3.md #5, #6) -------------------
+
+/** One row of the weekly race: coins played this week, the prize for that place */
+export interface RaceEntry {
+  rank: number
+  nickname: string
+  avatar: string
+  level: number
+  wagered: number
+  /** Coin cents for this place; 0 outside the prize places */
+  prize: number
+  you?: boolean
+}
+
+/** GET /api/race. Public; `me` only for a signed-in player. Resets every Monday 00:00 UTC. */
+export interface RaceResponse {
+  endsAt: string
+  prizePool: number
+  /** The prize places (top 10) */
+  top: RaceEntry[]
+  me: RaceEntry | null
+}
+
+export interface PassTier {
+  level: number
+  /** Season points needed for this tier */
+  points: number
+  /** Free track reward, coin cents */
+  reward: number
+  /** Premium track reward, coin cents (the premium track is not open yet) */
+  premiumReward: number
+  status: 'locked' | 'claimable' | 'claimed'
+}
+
+/** GET /api/pass (signed in). 1 point per coin played; the season ends on a date. */
+export interface PassResponse {
+  season: string
+  endsAt: string
+  points: number
+  tiers: PassTier[]
+}
+
 /** Free cases for signing up (opened from Bonuses, real drops). Configured in the admin panel. */
 export interface WelcomeInfo {
   case: CaseDetails

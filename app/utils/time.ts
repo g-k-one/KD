@@ -14,3 +14,13 @@ export function countdown(iso: string | null, now = Date.now()) {
   const p = (n: number) => String(n).padStart(2, '0')
   return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`
 }
+
+/** Long countdowns (the weekly race): "3d 04:12" from a day out, "04:12:05" on the last day */
+export function countdownLong(iso: string | null, now = Date.now()) {
+  if (!iso) return ''
+  const s = Math.max(0, Math.floor((Date.parse(iso) - now) / 1000))
+  const days = Math.floor(s / 86_400)
+  if (!days) return countdown(iso, now)
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${days}d ${p(Math.floor((s % 86_400) / 3600))}:${p(Math.floor((s % 3600) / 60))}`
+}
