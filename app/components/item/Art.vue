@@ -7,8 +7,7 @@ import type { Rarity } from '#shared/types/api'
 // float: the art is alive while it waits — the skin bobs, the rarity star turns slowly, the glow breathes
 // (transform/opacity only, so it stays smooth on phones).
 // reveal: the landing moment, built around the rarity shape (0 = none, 1…4 = rarity tier): the star pops in and
-// turns into place, an echo of the same shape spreads out (two for covert and gold). The sparks come from Forge
-// (rarityRank), burst out of the same shape.
+// turns into place. Everything else comes from Forge (rarityRank), bursting out of the same shape.
 const props = withDefaults(defineProps<{ image: string; rarity: Rarity; size?: number; dim?: boolean; alt?: string; morph?: boolean; float?: boolean; reveal?: number; eager?: boolean }>(), {
   size: 96,
   reveal: 0,
@@ -19,10 +18,6 @@ const props = withDefaults(defineProps<{ image: string; rarity: Rarity; size?: n
   <div class="kd-art relative" :class="[float && 'is-float', morph && 'is-morph']" :style="{ height: `${size}px`, '--rc': RARITY_COLOR[rarity], '--s': size / 96 }">
     <span class="kd-art-glow absolute top-1/2 left-1/2 rounded-full" />
     <span class="kd-rarity-star kd-art-star absolute top-1/2 left-1/2" :class="reveal ? 'is-reveal' : undefined" />
-    <template v-if="reveal">
-      <span class="kd-rarity-star kd-art-echo absolute top-1/2 left-1/2" />
-      <span v-if="reveal >= 3" class="kd-rarity-star kd-art-echo is-late absolute top-1/2 left-1/2" />
-    </template>
     <Transition v-if="morph" name="kd-art-morph">
       <img
         :key="image"
@@ -80,30 +75,7 @@ const props = withDefaults(defineProps<{ image: string; rarity: Rarity; size?: n
     transform: translate(-50%, -50%) scale(1) rotate(0deg);
   }
 }
-.kd-art-echo {
-  width: calc(72px * var(--s));
-  height: calc(72px * var(--s));
-  opacity: 0;
-  pointer-events: none;
-  animation: kd-star-echo 1100ms var(--ease-out) 120ms both;
-}
-.kd-art-echo.is-late {
-  animation-delay: 380ms;
-}
-@keyframes kd-star-echo {
-  0% {
-    transform: translate(-50%, -50%) scale(0.9) rotate(0deg);
-    opacity: 0.55;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(2.3) rotate(30deg);
-    opacity: 0;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  .kd-art-echo {
-    display: none;
-  }
   .kd-art-star.is-reveal {
     animation: none;
   }

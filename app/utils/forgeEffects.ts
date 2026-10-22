@@ -12,7 +12,8 @@ import { RARITY_HEX } from './rarity'
  *               all in the rarity colour (handle.set('tint', rgb)); handle.set('level', 1…3) scales it
  *               (restricted · classified · covert). Covert gets a second ring and rising embers.
  *   kdCoins   — loop for the KURWADROP promo: a small KD-coin fountain every couple of seconds
- *   kdAura    — loop behind a rare result: a breathing glow and a few sparks drifting up.
+ *   kdAura    — loop behind the upgrade target while the dial turns: a glow that pulses and sparks drifting up
+ *               over the whole card.
  *               Colour per rarity: handle.set('tint', [r, g, b])
  *   kdWin     — won upgrade: one beat — a burst of green and gold sparks and a single thin ring that stays
  *               close to the dial (no glow wash, no second wave)
@@ -91,8 +92,9 @@ export function defineKdEffects(engine: Engine) {
         tier.init(s)
         const o = (s as State & { o: { color?: string; level?: number } }).o
         if (o.color) {
+          // a notch dimmer than the stock tiers: it plays right behind the skin
           const c = hexToRgb(o.color)
-          s.pal = [c.map((v) => v * 0.35 + 0.65), c, c.map((v) => v * 0.3)]
+          s.pal = [c.map((v) => (v * 0.35 + 0.65) * 0.8), c.map((v) => v * 0.8), c.map((v) => v * 0.25)]
         }
         if (o.level != null) s.L = o.level
       },
@@ -272,13 +274,13 @@ export function defineKdEffects(engine: Engine) {
     init: (s) => Object.assign(s, { sp: [] as Particle[], tint: GOLD }),
     update(s, dt, at) {
       const { R } = h
-      h.emit(s.acc, 1, 4, dt, () =>
+      h.emit(s.acc, 1, 12, dt, () =>
         h.spawn(s.sp as Particle[], {
-          x: 180 + R(-120, 120),
-          y: R(190, 290),
-          vx: R(-8, 8),
-          vy: R(-70, -30),
-          size: R(10, 18),
+          x: 180 + R(-140, 140),
+          y: R(140, 300),
+          vx: R(-12, 12),
+          vy: R(-90, -35),
+          size: R(8, 18),
           sc: [[0, 0], [0.3, 1], [1, 0]],
           life: R(1.1, 1.9),
           rot: R(0, 6),
@@ -299,7 +301,9 @@ export function defineKdEffects(engine: Engine) {
       const appear = Math.min(1, t / 0.6)
       // only a soft breathing glow in the rarity colour — no ray wheels (they read as cheap)
       const soft = s.soft ? 0.5 : 1
-      h.sprite(c, 180, 180, 330 * (1 + 0.04 * Math.sin(t * 1.6)), 0, (0.42 + 0.06 * Math.sin(t * 1.6)) * appear * soft, 1, m.glow!, 1, tint)
+      // a clear heartbeat: the glow swells by a tenth and brightens with it
+      const beat = Math.sin(t * 2.6)
+      h.sprite(c, 180, 180, 330 * (1 + 0.1 * beat), 0, (0.42 + 0.14 * beat) * appear * soft, 1, m.glow!, 1, tint)
       h.draw(c, s.sp as Particle[])
     },
   }))
@@ -407,14 +411,16 @@ export function defineKdEffects(engine: Engine) {
 type Layer = { at: (name: string, el: HTMLElement | null | undefined, scale?: number, loop?: boolean, opts?: Record<string, unknown>) => Promise<{ stop(): void; kill(): void } | null> }
 
 /**
- * Rarity → rank of the reveal (Forge's tier, split over our six rarities). Every step keeps the last one's layers
- * and adds its own: 0 flash, ring, sparks (industrial, mil-spec) · 1 + twinkling stars (restricted) · 2 + speed lines
- * and the four-point star popping out of the rarity shape (classified) · 3 + light rays shooting up, a wide flash,
- * a freeze frame (covert) · 4 + the big star crown, rising embers and three follow-up bursts (gold)
+ * Rarity → rank of the reveal (Forge's tier, split over our six rarities). Industrial and mil-spec get only the
+ * rarity shape popping in (ItemArt); from restricted up Forge adds a burst, every step keeping the last one's
+ * layers: 0 flash, ring, sparks (restricted) · 1 + twinkling stars (classified) · 2 + speed lines and the
+ * four-point star out of the shape (covert) · 3 + light rays shooting up, a wide flash, a freeze frame (gold).
+ * The crown level (4) is left out: it drowned the skin.
  */
-export const RANK_LEVEL: Record<Rarity, number> = { industrial: 0, milspec: 0, restricted: 1, classified: 2, covert: 3, gold: 4 }
+export const RANK_LEVEL: Record<Rarity, number> = { industrial: -1, milspec: -1, restricted: 0, classified: 1, covert: 2, gold: 3 }
 /** One burst on a landed drop, centred on its picture (where the rarity shape is), in the rarity's colour */
 export function rarityRank(layer: Layer, el: HTMLElement | null | undefined, rarity: Rarity, scale = 1) {
+  if (RANK_LEVEL[rarity] < 0) return Promise.resolve(null)
   return layer.at('kdRank', el, scale, false, { color: RARITY_HEX[rarity], level: RANK_LEVEL[rarity] })
 }
 

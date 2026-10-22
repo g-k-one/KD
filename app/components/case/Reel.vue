@@ -79,7 +79,9 @@ const stack = computed(() => {
   return Array.from({ length: n }, (_, k) => {
     const rel = k - (n - 1) / 2
     const depth = Math.abs(rel)
-    if (columns) return { key: k, style: { left: `${((k + 0.5) / n) * 100}%`, width: `${size}px`, height: `${size}px`, animationDelay: `${k * -0.45}s` } }
+    // two delays: the float's (out of phase per case) and the pop-in's (one after another, so ×1 → ×5 builds up)
+    const delay = `${k * -0.45}s, ${k * 70}ms`
+    if (columns) return { key: k, style: { left: `${((k + 0.5) / n) * 100}%`, width: `${size}px`, height: `${size}px`, animationDelay: delay } }
     return {
       key: k,
       style: {
@@ -89,7 +91,7 @@ const stack = computed(() => {
         zIndex: 10 - Math.ceil(depth),
         opacity: 1 - depth * 0.12,
         rotate: `${rel * 5}deg`,
-        animationDelay: `${k * -0.45}s`,
+        animationDelay: delay,
       },
     }
   })
@@ -166,7 +168,17 @@ function resetPositions() {
   })
 }
 onMounted(() => nextTick(resetPositions))
-watch([rootW, rootH, grid], () => props.phase !== 'spinning' && props.phase !== 'result' && nextTick(resetPositions))
+watch([rootW, rootH, grid], () => {
+  if (props.phase === 'idle') nextTick(resetPositions)
+  // a settled result stays on its drop when the reel's size changes (window resize, a scrollbar)
+  else if (props.phase === 'result' && !reelBusy.value) nextTick(recentre)
+})
+function recentre() {
+  tracks.value.forEach((t) => {
+    const off = horizontal.value ? centre(rootW.value, cardW.value, WIN.value) : centre(cellLen.value, cardH.value, WIN.value)
+    t.style.transform = horizontal.value ? `translateX(${off}px)` : `translateY(${off}px)`
+  })
+}
 
 // Breath: leaving idle, the case winds up before the strip appears
 const breathing = ref(false)
@@ -338,7 +350,8 @@ async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseIt
   cancelAnimationFrame(raf)
   clearTimeout(tensionTimer)
   fx.done = true
-  fx.tension?.stop()
+  // killed, not faded: its amber sparks must not linger round the drop and read as the reveal — that is the rarity's
+  fx.tension?.kill()
   active = []
   tense.value = []
   spunOnce = true
@@ -351,8 +364,8 @@ async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseIt
 /**
  * Rarity reveals (docs/motion.md → rarity steps): the landing itself is ItemArt `reveal` — the rarity shape pops
  * and its echo spreads. Forge bursts the rank reveal out of that shape (Forge's tier split over the six rarities,
- * see RANK_LEVEL: sparks → stars → speed lines and the star → rays and a freeze → the crown) and the gold burst
- * (KD coins + burning gold feathers) for gold.
+ * see RANK_LEVEL: the shape alone → sparks → stars → speed lines and the star → rays and a freeze). The gold burst
+ * (KD coins + burning gold feathers) belongs to KURWADROP only — the Golden Chicken, not every gold drop.
  */
 async function rareFx(winners: Item[]) {
   if (grid.value) return
@@ -369,7 +382,6 @@ async function rareFx(winners: Item[]) {
     if (!w) return
     // centred on the item picture (the rarity shape), on the layer behind the cards: it bursts from behind the skin
     rarityRank(fxBg, el.querySelector<HTMLElement>('.kd-art img') ?? el, w.rarity, 1.7)
-    if (tier >= 4) goldBurst(fxTop, el, 1.6, appBase)
   })
 }
 

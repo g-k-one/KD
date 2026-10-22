@@ -40,11 +40,9 @@ const strip = ref<Item[]>([])
 const landed = ref(false)
 
 // The drop gets the same rarity grade as a case drop: the rank reveal on its rarity shape (more layers the rarer),
-// on a layer under the strip so it bursts from behind the skin, and the gold burst for gold on the shared top layer
+// on a layer under the strip so it bursts from behind the skin
 const fxHost = useTemplateRef<HTMLElement>('fxHost')
 const fxBack = useForge(fxHost)
-const fx = useForge()
-const appBase = useRuntimeConfig().app.baseURL
 let beam: Awaited<ReturnType<typeof rarityRank>> = null
 function stopBeam() {
   beam?.stop()
@@ -57,7 +55,6 @@ async function dropFx(it: Item) {
   if (!card) return
   const scale = props.compact ? 1 : 1.5
   rarityRank(fxBack, card.querySelector<HTMLElement>('.kd-art img') ?? card, it.rarity, scale).then((h) => (landed.value ? (beam = h) : h?.kill()))
-  if (RARITY_TIER[it.rarity] >= 4) goldBurst(fx, card, scale, appBase)
 }
 
 async function spin() {
@@ -122,7 +119,6 @@ watch([height, cell], () => {
           :style="{ height: `${cell}px` }"
           :data-win="(landed && i === WIN) || undefined"
         >
-          <FxBurst v-if="landed && i === WIN && !instant" :tier="RARITY_TIER[it.rarity]" :color="RARITY_COLOR[it.rarity]" :size="compact ? 90 : 150" />
           <ItemArt :image="it.image" :rarity="it.rarity" :size="compact ? 60 : 96" class="relative w-full" />
         </div>
       </div>

@@ -228,7 +228,6 @@ const fxMini = useForge(miniFx)
 let aura: ForgeHandle | null = null
 // the won skin gets its rank reveal (docs/motion.md → rarity steps); the handle goes with the next stake
 let beam: Awaited<ReturnType<typeof rarityRank>> = null
-const appBase = useRuntimeConfig().app.baseURL
 function stopBeam() {
   beam?.stop()
   beam = null
@@ -278,7 +277,6 @@ async function runUpgrade() {
       const scale = isLg.value ? 1.6 : 1.1
       const shot = isLg.value ? targetCard.value?.rank(rarity, scale) : rarityRank(fxMini, el?.querySelector<HTMLElement>('.kd-art img') ?? el, rarity, scale)
       shot?.then((h) => (state.value === 'win' ? (beam = h) : h?.kill()))
-      if (RARITY_TIER[rarity] >= 4) goldBurst(fxTop, el, scale, appBase)
     }
     if (res.win) {
       sfx.reveal(Math.max(2, RARITY_TIER[target.value?.rarity ?? 'covert']))

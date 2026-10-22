@@ -49,7 +49,6 @@ watch(
       <Transition name="kd-target" mode="out-in">
         <div v-if="item" key="item" class="absolute inset-0">
           <span class="kd-target-burst pointer-events-none absolute top-1/2 left-1/2 size-[170px] rounded-full" />
-        <FxBurst v-if="state === 'win'" :tier="Math.max(2, RARITY_TIER[item.rarity])" :color="RARITY_COLOR[item.rarity]" :size="isLg ? 260 : 200" />
           <div class="kd-target-art absolute inset-0">
             <ItemArt morph float :image="item.image" :rarity="item.rarity" :size="isLg ? 150 : 140" class="absolute top-1/2 left-1/2 w-[310px] -translate-1/2" />
           </div>
@@ -132,7 +131,7 @@ watch(
   }
 }
 
-/* Win: a ring of rarity light, the prize pops once and settles, the card washes green */
+/* Win: a soft ring of rarity light, the prize pops once and settles; the card itself stays as it is */
 .is-win .kd-target-burst {
   animation: kd-burst 900ms var(--ease-out) both;
 }
@@ -162,9 +161,7 @@ watch(
     background-color var(--dur-slow) var(--ease-out),
     border-color var(--dur-base) var(--ease-out);
 }
-.kd-target.is-win {
-  background: linear-gradient(180deg, rgb(18 183 106 / 0.2), var(--color-neutral-2) 75%);
-}
+
 
 /* Loss: no shaking — the prize drains to grey and sinks away from reach */
 .kd-target-art {

@@ -252,6 +252,8 @@
  * viewer) inject an unlayered reset, and unlayered rules always beat layered ones.
  */
 html:root {
+  /* the scrollbar's room is always kept: a result growing the page must not shift the reel off centre */
+  scrollbar-gutter: stable;
   color-scheme: dark;
   background: var(--color-neutral-1);
   -webkit-tap-highlight-color: transparent;

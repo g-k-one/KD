@@ -198,10 +198,10 @@ const readout = computed(() =>
       <span class="kd-gauge-value text-[clamp(22px,18cqw,48px)] leading-[1.08] font-extrabold tracking-[-0.01em] tabular-nums">
         {{ readout }}
       </span>
-      <UiTextSwap :text="label" class="max-w-[62%] text-neutral-15" :class="showRoll ? 'type-12 sm:type-14 normal-case' : 'type-12-caps sm:type-16-caps sm:font-bold'" />
-      <!-- after a roll: one tap to check it in the verifier -->
-      <button v-if="showRoll && nonce" type="button" class="kd-press kd-verify type-10-caps mt-1 flex items-center gap-1 rounded-md px-1.5 py-0.5 normal-case" @click.stop="navigateTo(`/fairness?verify=${nonce}`)">
-        <UiIcon name="shield-check" :size="12" />{{ $t('upgrade.verifyRoll') }}
+      <UiTextSwap v-if="!showRoll" :text="label" class="type-12-caps sm:type-16-caps max-w-[62%] text-neutral-15 sm:font-bold" />
+      <!-- after a roll: the verdict above, one tap under it to check the roll in the verifier -->
+      <button v-if="showRoll && nonce" type="button" class="kd-press kd-verify type-12-caps mt-1 flex h-8 items-center gap-1.5 rounded-lg px-3" @click.stop="navigateTo(`/fairness?verify=${nonce}`)">
+        <UiIcon name="shield-check" :size="16" />{{ $t('upgrade.verifyRoll') }}
       </button>
     </div>
 
