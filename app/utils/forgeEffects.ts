@@ -17,7 +17,8 @@ import { RARITY_HEX } from './rarity'
  *               Colour per rarity: handle.set('tint', [r, g, b])
  *   kdWin     — won upgrade: one beat — a burst of green and gold sparks and a single thin ring that stays
  *               close to the dial (no glow wash, no second wave)
- *   kdLose    — lost upgrade: a red ring closes in, embers fall away
+ *   kdLose    — lost upgrade, kept quiet: a few dim embers drop off the rim (no ring, no glow wash — the dial
+ *               greys out by itself)
  *   kdCharge  — loop while the gauge turns: light is drawn into the centre
  *   kdBurn    — loop around a label: a flat warm glow hugging it, licks and embers rising along its width
  *               (the label's middle sits at y ≈ 300)
@@ -68,7 +69,7 @@ interface Engine {
 const GOLD: Rgb = [1, 0.8, 0.32]
 const GOLD_HI: Rgb = [1, 0.94, 0.7]
 const GREEN: Rgb = [0.3, 1, 0.55]
-const RED: Rgb = [1, 0.26, 0.22]
+const DIM_RED: Rgb = [0.7, 0.22, 0.18]
 const ORANGE: Rgb = [1, 0.5, 0.16]
 const AMBER: Rgb = [1, 0.78, 0.38]
 
@@ -339,25 +340,17 @@ export function defineKdEffects(engine: Engine) {
     init: (s) => Object.assign(s, { fired: false, em: [] as Particle[] }),
     update(s, dt, at) {
       const { R } = h
-      if (!s.fired && s.cycle > 0.35) {
+      if (!s.fired) {
         s.fired = true
-        for (let i = 0; i < 22; i++) {
-          const a = R(0, 6.28)
-          const sp = R(50, 170)
-          h.spawn(s.em as Particle[], { x: 180 + Math.cos(a) * 34, y: 180 + Math.sin(a) * 34, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 50, grav: 480, size: R(14, 26), life: R(0.7, 1.2), cells: [at.map.ember], add: 1, tint: RED, fadeIn: 0.02, fadeOut: 0.6 })
+        // off the lower half of the rim, falling: the light just goes out
+        for (let i = 0; i < 9; i++) {
+          const a = R(0.25, 2.9)
+          h.spawn(s.em as Particle[], { x: 180 + Math.cos(a) * 120, y: 180 + Math.sin(a) * 120, vx: R(-20, 20), vy: R(10, 60), grav: 260, size: R(10, 18), life: R(0.7, 1.1), cells: [at.map.ember], add: 1, alpha: 0.6, tint: DIM_RED, fadeIn: 0.05, fadeOut: 0.6 })
         }
       }
       h.step(s.em as Particle[], dt)
     },
     render(s, c) {
-      const m = c.at.map
-      const t = s.cycle
-      if (t < 0.38) {
-        const k = t / 0.38
-        h.sprite(c, 180, 180, 470 - 390 * k * k, 0, 0.3 + 0.6 * k, 1, m.ring!, 1, RED)
-      }
-      const p = t - 0.35
-      if (p > 0 && p < 0.7) h.sprite(c, 180, 180, 260 + 120 * p, 0, (1 - p / 0.7) * 0.6, 1, m.glow!, 1, [0.8, 0.12, 0.1])
       h.draw(c, s.em as Particle[])
     },
   }))
