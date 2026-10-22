@@ -349,9 +349,10 @@ async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseIt
 }
 
 /**
- * Rarity reveals (docs/motion.md → rarity steps): the landing itself is ItemArt `reveal` — the rarity shape pops,
- * its echo spreads, diamond sparks fly off. Forge adds the rarity beam under every drop (more layers the rarer:
- * ring → rising rings → sparks → swirl → light pillar → stars) and the gold burst (KD coins + burning gold feathers) for gold.
+ * Rarity reveals (docs/motion.md → rarity steps): the landing itself is ItemArt `reveal` — the rarity shape pops
+ * and its echo spreads. Forge bursts the rank reveal out of that shape (Forge's tier split over the six rarities,
+ * see RANK_LEVEL: sparks → stars → speed lines and the star → rays and a freeze → the crown) and the gold burst
+ * (KD coins + burning gold feathers) for gold.
  */
 async function rareFx(winners: Item[]) {
   if (grid.value) return
@@ -366,8 +367,8 @@ async function rareFx(winners: Item[]) {
     const w = horizontal.value ? winners[0] : winners[i]
     const tier = w ? RARITY_TIER[w.rarity] : 0
     if (!w) return
-    // the beam stands on the item picture, not on the card
-    rarityBeam(fxBg, el.querySelector<HTMLElement>('.kd-art img') ?? el, w.rarity, 1.8)
+    // centred on the item picture (the rarity shape), not on the card; on top, so the star bursts over the skin
+    rarityRank(fxTop, el.querySelector<HTMLElement>('.kd-art img') ?? el, w.rarity, 1.7)
     if (tier >= 4) goldBurst(fxTop, el, 1.6, appBase)
   })
 }

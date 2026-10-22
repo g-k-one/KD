@@ -39,11 +39,11 @@ const WIN = STRIP - 4
 const strip = ref<Item[]>([])
 const landed = ref(false)
 
-// The drop gets the same rarity grade as a case drop: the beam (more layers the rarer) until the next round,
+// The drop gets the same rarity grade as a case drop: the rank reveal on its rarity shape (more layers the rarer)
 // and the gold burst for gold. Shared top layer: one canvas for every seat
 const fx = useForge()
 const appBase = useRuntimeConfig().app.baseURL
-let beam: Awaited<ReturnType<typeof rarityBeam>> = null
+let beam: Awaited<ReturnType<typeof rarityRank>> = null
 function stopBeam() {
   beam?.stop()
   beam = null
@@ -54,7 +54,7 @@ async function dropFx(it: Item) {
   const card = root.value?.querySelector<HTMLElement>('[data-win]')
   if (!card) return
   const scale = props.compact ? 1 : 1.5
-  rarityBeam(fx, card.querySelector<HTMLElement>('.kd-art img') ?? card, it.rarity, scale).then((h) => (landed.value ? (beam = h) : h?.kill()))
+  rarityRank(fx, card.querySelector<HTMLElement>('.kd-art img') ?? card, it.rarity, scale).then((h) => (landed.value ? (beam = h) : h?.kill()))
   if (RARITY_TIER[it.rarity] >= 4) goldBurst(fx, card, scale, appBase)
 }
 

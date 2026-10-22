@@ -19,10 +19,29 @@ const item = computed<Item | undefined>(() => {
   const it = byRarity.value[art.rarity]
   return it ? { ...it, statTrak: art.statTrak } : undefined
 })
+const fx = useForge()
+const artBox = useTemplateRef<HTMLElement>('artBox')
 function doReveal(tier = RARITY_TIER[art.rarity] || 1) {
   reveal.value = 0
   replay.value++
-  nextTick(() => (reveal.value = tier))
+  nextTick(() => {
+    reveal.value = tier
+    rarityRank(fx, artBox.value?.querySelector<HTMLElement>('.kd-art img'), art.rarity, 1.7)
+  })
+}
+// The rank ladder: the six rarities side by side, each landing in turn, to compare the steps
+const ladder = useTemplateRef<HTMLElement>('ladder')
+const ladderReveal = ref<Partial<Record<Rarity, number>>>({})
+const ladderKey = ref(0)
+async function playLadder() {
+  ladderReveal.value = {}
+  ladderKey.value++
+  await nextTick()
+  for (const r of RARITIES) {
+    ladderReveal.value = { ...ladderReveal.value, [r]: RARITY_TIER[r] || 1 }
+    rarityRank(fx, ladder.value?.querySelector<HTMLElement>(`[data-r="${r}"] .kd-art img`), r, 1.7)
+    await new Promise((res) => setTimeout(res, 900))
+  }
 }
 const caseList = computed(() => (cases.value?.sections ?? []).flatMap((s) => s.cases).slice(0, 8))
 const sel = ref(new Set<number>())
@@ -34,7 +53,7 @@ const flash = ref(true)
     <section class="dbg-card">
       <h2 class="dbg-h">ItemArt</h2>
       <div class="dbg-play">
-        <div class="relative grid min-h-64 flex-1 place-items-center overflow-hidden rounded-2xl bg-neutral-1 p-6">
+        <div ref="artBox" class="relative grid min-h-64 flex-1 place-items-center overflow-hidden rounded-2xl bg-neutral-1 p-6">
           <ItemArt v-if="item" :key="replay" :image="item.image" :rarity="art.rarity" :size="art.size" :float="art.float" :morph="art.morph" :dim="art.dim" :reveal="reveal" class="w-full max-w-80" />
         </div>
         <div class="dbg-knobs">
@@ -54,6 +73,17 @@ const flash = ref(true)
           </div>
         </div>
       </div>
+    </section>
+
+    <section class="dbg-card">
+      <h2 class="dbg-h">Rank reveal <span class="dbg-note">Forge tier split over the rarities</span></h2>
+      <div ref="ladder" class="grid grid-cols-3 gap-2 lg:grid-cols-6">
+        <div v-for="r in RARITIES" :key="`${r}-${ladderKey}`" :data-r="r" class="flex flex-col items-center gap-2 rounded-2xl bg-neutral-1 py-6">
+          <ItemArt v-if="byRarity[r]" :image="byRarity[r]!.image" :rarity="r" :size="88" float :reveal="ladderReveal[r] ?? 0" class="w-full" />
+          <span class="type-12-caps" :style="{ color: RARITY_COLOR[r] }">{{ r }} · {{ RANK_LEVEL[r] }}</span>
+        </div>
+      </div>
+      <UiButton size="s" icon="sparkle" class="self-start" @click="playLadder">Play the ladder</UiButton>
     </section>
 
     <section class="dbg-card">

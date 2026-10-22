@@ -19,6 +19,8 @@ import { RARITY_HEX } from './rarity'
  *   kdCharge  — loop while the gauge turns: light is drawn into the centre
  *   kdBurn    — loop around a label: a flat warm glow hugging it, licks and embers rising along its width
  *               (the label's middle sits at y ≈ 300)
+ *   kdRank    — Forge's rank reveal (motion pack, `tier`: base → luck → mega → ultra → jackpot) in the rarity's own
+ *               colour, one burst on the drop's rarity shape; opts { color: '#hex', level: 0…4 }
  */
 type Cell = number
 type Rgb = number[]
@@ -77,6 +79,25 @@ export function hexToRgb(hex: string): Rgb {
 type Coin = { x: number; y: number; vx: number; vy: number; spin: number; vs: number; size: number; feather: number; rot: number; vr: number }
 
 export function defineKdEffects(engine: Engine) {
+  // The rank reveal, recoloured: the light core, the rarity colour, the dark tail of each spark. Without the
+  // motion pack it draws nothing rather than failing.
+  engine.define('kdRank', (h) => {
+    const tier = (h as unknown as { DEF: Record<string, Def | undefined> }).DEF.tier
+    if (!tier) return { atlas: 'aura', init: () => {}, update: () => {}, render: () => {} }
+    return {
+      ...tier,
+      init(s) {
+        tier.init(s)
+        const o = (s as State & { o: { color?: string; level?: number } }).o
+        if (o.color) {
+          const c = hexToRgb(o.color)
+          s.pal = [c.map((v) => v * 0.35 + 0.65), c, c.map((v) => v * 0.3)]
+        }
+        if (o.level != null) s.L = o.level
+      },
+    }
+  })
+
   /** A spinning KD coin: face, squeezing to the edge and back; feathers tumble instead */
   const coinSprite = (h: Helpers, c: Ctx, k: Coin, alpha: number) => {
     const m = c.at.map
@@ -387,12 +408,16 @@ export function defineKdEffects(engine: Engine) {
 /* ── Forge packs (rarity, matter): rarity beams under drops and the gold burst ── */
 type Layer = { at: (name: string, el: HTMLElement | null | undefined, scale?: number, loop?: boolean, opts?: Record<string, unknown>) => Promise<{ stop(): void; kill(): void } | null> }
 
-/** Rarity → how many layers its beam gets (0 a ring … 5 light pillar, orbiting stars). The colour is the rarity's own */
-const BEAM_LEVEL: Record<Rarity, number> = { industrial: 0, milspec: 1, restricted: 2, classified: 3, covert: 4, gold: 5 }
-/** Loop under a drop: a glow on the ground in the rarity colour, rings rising, sparks; covert gets a light pillar, gold also stars */
-export function rarityBeam(layer: Layer, el: HTMLElement | null | undefined, rarity: Rarity, scale = 1) {
-  // ground 205: the beam's floor sits just under the picture's middle — the name right under the picture stays clear
-  return layer.at('lootbeam', el, scale, true, { color: RARITY_HEX[rarity], level: BEAM_LEVEL[rarity], ground: 205 })
+/**
+ * Rarity → rank of the reveal (Forge's tier, split over our six rarities). Every step keeps the last one's layers
+ * and adds its own: 0 flash, ring, sparks (industrial, mil-spec) · 1 + twinkling stars (restricted) · 2 + speed lines
+ * and the four-point star popping out of the rarity shape (classified) · 3 + light rays shooting up, a wide flash,
+ * a freeze frame (covert) · 4 + the big star crown, rising embers and three follow-up bursts (gold)
+ */
+export const RANK_LEVEL: Record<Rarity, number> = { industrial: 0, milspec: 0, restricted: 1, classified: 2, covert: 3, gold: 4 }
+/** One burst on a landed drop, centred on its picture (where the rarity shape is), in the rarity's colour */
+export function rarityRank(layer: Layer, el: HTMLElement | null | undefined, rarity: Rarity, scale = 1) {
+  return layer.at('kdRank', el, scale, false, { color: RARITY_HEX[rarity], level: RANK_LEVEL[rarity] })
 }
 
 let coinUrl: Promise<string> | null = null

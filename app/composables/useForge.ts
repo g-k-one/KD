@@ -58,8 +58,9 @@ function baseUrl() {
 }
 /** Forge packs we ship (from the Pawn repo: `npm run forge` → dist-forge, *.min.js copied here without .min):
  *  image — image modes the others build on · hits — sharp shapes (rays, rings) · matter — 3D coins and feathers,
- *  gold burst (goldboom, feathers) · rarity — rarity beam under a drop (lootbeam), rarity frame / reveal, appear / vanish */
-const PACKS = ['image', 'hits', 'matter', 'rarity']
+ *  gold burst (goldboom, feathers) · rarity — rarity beam under a drop (lootbeam), rarity frame / reveal, appear / vanish ·
+ *  motion — hits of the second round and the rank reveal (tier), which our kdRank colours per rarity */
+const PACKS = ['image', 'hits', 'matter', 'rarity', 'motion']
 /** Loads the engine (with its atlas map), our own atlas, then the packs — once, in order (classic scripts sharing globals). */
 function ensureForge(base: string) {
   loading ??= loadScript(`${base}forge.js`)
