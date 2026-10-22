@@ -2,7 +2,9 @@
 import type { PromoBody, PromoResponse } from '#shared/types/api'
 
 // Promo code: one field and a button; a valid code credits the balance with a coin burst,
-// a wrong one shakes the field and says why.
+// a wrong one shakes the field and says why. `bare` drops the card for use inside a tray (the case page).
+defineProps<{ bare?: boolean }>()
+const emit = defineEmits<{ done: [] }>()
 const session = useSessionStore()
 const toast = useToast()
 const { t } = useI18n()
@@ -25,6 +27,7 @@ async function redeem() {
     fx.at('kdCoins', box.value, 1)
     sfx.reveal(2)
     code.value = ''
+    emit('done')
   } catch (e) {
     const err = e as { data?: { message?: string }; statusMessage?: string }
     error.value = err?.data?.message ?? err?.statusMessage ?? t('common.error')
@@ -35,8 +38,8 @@ async function redeem() {
 </script>
 
 <template>
-  <div ref="box" class="flex flex-col gap-4 rounded-5xl bg-neutral-2 p-5">
-    <span class="type-12-caps flex items-center gap-1 text-neutral-11" :title="$t('bonus.promoText')">{{ $t('bonus.promo') }}<UiIcon name="info" :size="14" /></span>
+  <div ref="box" class="flex flex-col gap-4" :class="!bare && 'rounded-5xl bg-neutral-2 p-5'">
+    <span v-if="!bare" class="type-12-caps flex items-center gap-1 text-neutral-11" :title="$t('bonus.promoText')">{{ $t('bonus.promo') }}<UiIcon name="info" :size="14" /></span>
     <form class="mt-auto flex flex-col gap-2" @submit.prevent="redeem">
       <div class="flex gap-2">
         <UiInput id="promo-code" v-model="code" size="l" icon="bonuses" uppercase :error="!!error" :placeholder="$t('bonus.promoPlaceholder')" class="min-w-0 flex-1" @update:model-value="error = ''" />

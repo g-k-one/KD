@@ -38,7 +38,7 @@ const props = defineProps<{
   /** Sell asks for a second tap when a drop is worth this much or more (coin cents) */
   confirmFrom?: number
 }>()
-const emit = defineEmits<{ sell: [uid: string]; demo: [] }>()
+const emit = defineEmits<{ sell: [uid: string]; demo: []; share: [item: InventoryItem] }>()
 
 const sfx = useSfx()
 const haptics = useHaptics()
@@ -552,6 +552,8 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
               <UiPrice :amount="results[0].price" size="s" tone="inverse" count-up />
             </UiButton>
             <UiButton variant="secondary" size="s" icon="upgrade" :to="`/upgrade?item=${results[0].uid}&from=${data.slug}`">{{ $t('upgrade.upgrade') }}</UiButton>
+            <!-- a big win (2x and up) is worth showing off -->
+            <UiButton v-if="results[0].price >= data.price * 2" variant="secondary" size="s" icon="share" icon-only :aria-label="$t('share.share')" @click="emit('share', results[0])" />
           </div>
         </div>
       </Transition>

@@ -30,6 +30,9 @@ const demo = ref(false)
 // Last opening's provably-fair data, for "Check this roll"
 const last = ref<{ rolls: PfRoll[]; kurwa: boolean[]; seed: SeedPairPublic | null }>({ rolls: [], kurwa: [], seed: null })
 const rollsOpen = ref(false)
+const promoOpen = ref(false)
+const shareOpen = ref(false)
+const shareItem = shallowRef<InventoryItem | null>(null)
 const reel = useTemplateRef<{ spin: (w: InventoryItem[], fast: boolean, kurwa?: boolean[]) => Promise<void>; skip: () => void }>('reel')
 
 // One spot, one key: the main button (and Space on desktop) opens, skips the spin, opens again
@@ -224,6 +227,7 @@ if (import.meta.client) {
         @sell="(uid) => sell([uid])"
         try-free
         @demo="open(true)"
+        @share="(it) => ((shareItem = it), (shareOpen = true))"
       />
       <CaseOpenControls
         ref="controlsEl"
@@ -250,7 +254,17 @@ if (import.meta.client) {
         :confirm-sell="unsoldTotal >= openPrice * count * 3"
         @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"
       />
+      <!-- Promo code right where the balance is spent (#50, DogDrop): a quiet line, the field opens in a tray -->
+      <button v-if="session.user && !demo" type="button" class="kd-press type-12-caps mx-auto flex h-8 items-center gap-1.5 text-neutral-11 hover:text-neutral-15" @click="promoOpen = true">
+        <UiIcon name="bonuses" :size="14" />{{ $t('case.promo') }}
+      </button>
     </section>
+
+    <CaseShareDrop v-model="shareOpen" :item="shareItem" :case-name="cs.name" :case-image="cs.image" :case-price="cs.price" :slug="cs.slug" />
+
+    <UiModal v-model="promoOpen" :title="$t('bonus.promo')" :description="$t('bonus.promoText')">
+      <BonusPromo bare @done="promoOpen = false" />
+    </UiModal>
 
     <CaseRollsModal v-model="rollsOpen" :data="cs" :drops="results" :rolls="last.rolls" :kurwa="last.kurwa" :seed="last.seed" />
 

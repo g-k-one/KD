@@ -228,7 +228,8 @@
     "prevCase": "Previous case: {name}",
     "nextCase": "Next case: {name}",
     "opens": "{n} opens",
-    "skins": "1 skin | {n} skins"
+    "skins": "1 skin | {n} skins",
+    "promo": "Have a promo code?"
   },
   "upgrade": {
     "history": "History",
@@ -669,5 +670,15 @@
     "section": "Event page",
     "caseBar": "{name} · level {n} of {of}",
     "caseBarHint": "Every coin played here is an event point"
+  },
+  "share": {
+    "title": "Share your drop",
+    "share": "Share",
+    "copyImage": "Copy image",
+    "copyLink": "Copy link",
+    "imageCopied": "Image copied",
+    "longPress": "Press and hold the image to save it",
+    "from": "from {name}",
+    "text": "x{x} on KurwaDROP"
   }
 }
