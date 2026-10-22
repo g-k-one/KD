@@ -1,6 +1,7 @@
-// Synthesized sound (no audio files). Every voice runs into one small mix bus — a compressor, with a send to a short
-// room reverb — so the sounds sit together instead of beeping straight at the speakers. Everything tonal is in one key
-// (E major pentatonic), so a reveal, a coin and a countdown never clash. Respects Settings → Sound and volume.
+// Sound: recorded samples in public/sfx (CS2-like case-opening sounds, generated for us), with the synth below as the
+// fallback while they load, and for the few cues that have no sample (tense, heart, count). Everything runs into one
+// small mix bus — a compressor, with a send to a short room reverb. The synth is in one key (E major pentatonic), so
+// it never clashes with itself. Respects Settings → Sound and volume.
 
 type Bus = { a: AudioContext; master: GainNode; send: GainNode; noise: AudioBuffer }
 let bus: Bus | null = null
@@ -56,6 +57,46 @@ function makeBus(): Bus | null {
   } catch {
     return null
   }
+}
+
+// ── samples ─────────────────────────────────────────────────────────────────────────────────────────────────────
+
+const SAMPLES = ['tick-1', 'tick-2', 'open', 'reveal-0', 'reveal-1', 'reveal-2', 'reveal-3', 'reveal-4', 'coin', 'claim', 'lose', 'win', 'level-up', 'squawk'] as const
+type Sample = (typeof SAMPLES)[number]
+/** Each file is peak-normalized to -1 dBFS; these even out how loud they feel (dense swells sit lower than clicks) */
+const SAMPLE_GAIN: Record<Sample, number> = {
+  'tick-1': 0.42, 'tick-2': 0.36, open: 0.7, 'reveal-0': 0.32, 'reveal-1': 0.5, 'reveal-2': 0.55, 'reveal-3': 0.45,
+  'reveal-4': 0.55, coin: 0.45, claim: 0.55, lose: 0.4, win: 0.4, 'level-up': 0.45, squawk: 0.5,
+}
+const files = new Map<Sample, Promise<ArrayBuffer | null>>()
+const buffers = new Map<Sample, AudioBuffer>()
+
+/** Fetches the files once (no audio context needed yet) */
+function prefetch(base: string) {
+  if (files.size) return
+  for (const n of SAMPLES) files.set(n, fetch(`${base}sfx/${n}.mp3`).then((r) => (r.ok ? r.arrayBuffer() : null), () => null))
+}
+
+/** Decodes them on the bus's context as soon as it exists */
+function decode(b: Bus) {
+  for (const [n, f] of files)
+    void f.then((ab) => ab && !buffers.has(n) && b.a.decodeAudioData(ab.slice(0)).then((buf) => buffers.set(n, buf), () => {}))
+}
+
+type SampleOpts = { rate?: number; gain?: number; wet?: number }
+/** Plays a sample if it has loaded; false sends the caller to its synth fallback */
+function sample(b: Bus, t: number, n: Sample, { rate = 1, gain = 1, wet = 0 }: SampleOpts = {}) {
+  const buf = buffers.get(n)
+  if (!buf) return false
+  const src = b.a.createBufferSource()
+  src.buffer = buf
+  src.playbackRate.value = rate
+  const g = b.a.createGain()
+  g.gain.value = SAMPLE_GAIN[n] * gain
+  src.connect(g)
+  out(b, g, { wet })
+  src.start(t)
+  return true
 }
 
 // ── voices ──────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -234,19 +275,29 @@ function bawk(b: Bus, t: number, f: number, d: number, g: number) {
 
 export function useSfx() {
   const settings = useSettingsStore()
+  const base = useRuntimeConfig().app.baseURL || '/'
+  if (import.meta.client && settings.settings.sound) prefetch(base.endsWith('/') ? base : `${base}/`)
+  // the first tap anywhere opens the audio context and decodes the files, so the first spin already plays samples
+  if (import.meta.client && !bus) window.addEventListener('pointerdown', () => { if (!bus && (bus = makeBus())) decode(bus) }, { once: true, capture: true, passive: true })
 
   /** Runs a sound on the bus at the current volume; t is the start time on the audio clock */
   function play(fn: (b: Bus, t: number) => void) {
     const s = settings.settings
     if (!import.meta.client || !s.sound || s.volume <= 0) return
-    bus ??= makeBus()
-    if (!bus) return
+    if (!bus) {
+      bus = makeBus()
+      if (!bus) return
+      prefetch(base.endsWith('/') ? base : `${base}/`)
+      decode(bus)
+    }
     if (bus.a.state === 'suspended') void bus.a.resume()
     bus.master.gain.value = (s.volume / 100) ** 1.5 * 1.5
     fn(bus, bus.a.currentTime + 0.01)
   }
 
   let lastTick = -1
+  // several reels land within a second on a multi-open: the later reveals play softer, so five do not pile up
+  let lastReveal = -1
 
   return {
     /** Reel passes a card, a gauge notch: a dry ratchet click, slightly different every time */
@@ -255,13 +306,15 @@ export function useSfx() {
         if (t - lastTick < 0.025) return
         lastTick = t
         const r = 1 + (Math.random() - 0.5) * 0.08
+        if (sample(b, t, Math.random() < 0.5 ? 'tick-1' : 'tick-2', { rate: r })) return
         noise(b, { t, d: 0.018, g: 0.35, f: 3800 * r, q: 1.2 })
         tone(b, { t, f: 1900 * r, to: 1500 * r, d: 0.03, g: 0.1 })
         tone(b, { t, f: 420 * r, d: 0.025, g: 0.08, type: 'triangle' })
       }),
-    /** The breath before the reel: air rising into a whoosh */
+    /** The breath before the reel: the case unlatches (synth: air rising into a whoosh) */
     riser: () =>
       play((b, t) => {
+        if (sample(b, t, 'open')) return
         noise(b, { t, a: 0.36, d: 0.1, g: 0.18, f: 500, to: 5000, q: 0.8, wet: 0.3 })
         tone(b, { t, a: 0.34, d: 0.1, g: 0.05, f: N.E3, to: N.E5, wet: 0.3 })
       }),
@@ -278,6 +331,9 @@ export function useSfx() {
     reveal: (tier: number | boolean) =>
       play((b, t) => {
         const k = tier === true ? 3 : tier === false ? 0 : Math.max(0, Math.min(4, tier))
+        const crowd = t - lastReveal < 0.9
+        lastReveal = t
+        if (sample(b, t, `reveal-${k}` as Sample, { gain: crowd ? 0.6 : 1 })) return
         const arp = [[N.E5], [N.B4, N.E5], [N.E5, N.Gs5, N.B5], [N.E5, N.Gs5, N.B5, N.E6], [N.E5, N.Gs5, N.B5, N.E6, N.Gs6, N.B6]][k]!
         const step = [0, 0.075, 0.07, 0.06, 0.05][k]!
         if (k < 3) tone(b, { t, f: 190, to: 110, d: 0.09, g: 0.22 })
@@ -293,10 +349,11 @@ export function useSfx() {
         }
       }),
     /** Coins land on the balance */
-    coin: () => play((b, t) => clink(b, t)),
+    coin: () => play((b, t) => sample(b, t, 'coin', { rate: 0.97 + Math.random() * 0.06 }) || clink(b, t)),
     /** A reward claimed: two bright notes and a few sparkles (the balance clinks on its own) */
     claim: () =>
       play((b, t) => {
+        if (sample(b, t, 'claim')) return
         pluck(b, t, N.B5, 0.2, 0.18, -0.15)
         pluck(b, t + 0.07, N.E6, 0.45, 0.18, 0.15, 0.35)
         sparkle(b, t + 0.1, 4, 0.4)
@@ -304,6 +361,7 @@ export function useSfx() {
     /** A battle won: a hit, a chord and an arpeggio up two octaves, with coins */
     win: () =>
       play((b, t) => {
+        if (sample(b, t, 'win')) return
         hit(b, t, 0.8)
         pad(b, t, [N.E3, N.B3, N.E4, N.Gs4, N.B4], 1.4, 0.03)
         ;[N.E4, N.B4, N.E5, N.Gs5, N.B5, N.E6].forEach((f, i) => pluck(b, t + i * 0.06, f, i === 5 ? 0.8 : 0.22, 0.13, (i / 5 - 0.5) * 0.4, 0.35))
@@ -313,6 +371,7 @@ export function useSfx() {
     /** Level up: a fast run up two octaves that lands on a held chord */
     levelUp: () =>
       play((b, t) => {
+        if (sample(b, t, 'level-up')) return
         const run = [N.E4, N.Gs4, N.B4, N.E5, N.Gs5, N.B5, N.E6]
         run.forEach((f, i) => pluck(b, t + i * 0.045, f, 0.2, 0.11, (i / 6 - 0.5) * 0.5, 0.3))
         const top = t + run.length * 0.045
@@ -344,6 +403,7 @@ export function useSfx() {
     /** A loss: soft and short, three muted notes falling into a minor third, the last one sagging */
     lose: () =>
       play((b, t) => {
+        if (sample(b, t, 'lose')) return
         tone(b, { t, f: 120, to: 60, d: 0.25, g: 0.25 })
         const notes = [N.B4, 392, N.E4]
         notes.forEach((f, i) => {
@@ -355,6 +415,7 @@ export function useSfx() {
     /** Golden Chicken: two squawks and a cluck */
     squawk: () =>
       play((b, t) => {
+        if (sample(b, t, 'squawk')) return
         bawk(b, t, 820, 0.22, 0.5)
         bawk(b, t + 0.26, 980, 0.34, 0.55)
         bawk(b, t + 0.68, 700, 0.1, 0.35)
