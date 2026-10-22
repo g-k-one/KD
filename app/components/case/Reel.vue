@@ -209,7 +209,10 @@ let active: Animation[] = []
 function skip() {
   skipping = true
   active.forEach((a) => a.finish())
+  burst.value?.stop()
 }
+/** The gold 3D "KURWADROP!" over the reel (CaseKurwaBurst); mounted only while KURWADROP is on */
+const burst = ref<{ play(fast?: boolean): Promise<boolean>; stop(): void; active: boolean } | null>(null)
 
 // Gold drops shake the frame once
 const shaking = ref(false)
@@ -394,7 +397,9 @@ async function spin(winners: Item[], fast: boolean, kurwa: boolean[] = []) {
     nextTick(() => root.value?.querySelectorAll<HTMLElement>('.kd-chicken-hit').forEach((el) => el.parentElement?.closest('.kd-chicken-hit') || goldBurst(fxTop, el, 2, appBase)))
     shaking.value = true
     setTimeout(() => (shaking.value = false), 600)
-    await wait(fast ? 900 : 1700)
+    // the 3D label fits the same pause; without 3D (no WebGL, reduced motion) — the plain banner and the pause
+    const shown = !skipping && burst.value ? burst.value.play(fast) : Promise.resolve(false)
+    await Promise.all([wait(fast ? 900 : 1700), shown])
     respinning.value = true
     chickenHit.value = []
     await run(winners, fast, hits, kurwaPool.value)
@@ -474,7 +479,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
           </div>
         </div>
         <Transition name="kd-kurwa">
-          <div v-if="kurwaCols.includes(col)" class="pointer-events-none absolute inset-x-0 top-2 z-20 flex justify-center px-1">
+          <div v-if="kurwaCols.includes(col) && (respinning || !burst?.active)" class="pointer-events-none absolute inset-x-0 top-2 z-20 flex justify-center px-1">
             <span class="kd-kurwa-banner rounded-md px-2 py-0.5 text-neutral-1" :class="grid ? 'type-10-caps' : 'type-12-caps'">{{ respinning ? $t('case.kurwaRespin') : $t('case.kurwaHit') }}</span>
           </div>
         </Transition>
@@ -523,8 +528,10 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 
     <!-- KURWADROP: the chicken screams, then the respin among the expensive items. One reel: centred over it;
          several: the banner sits in the column where the chicken landed (see the column loop). -->
+    <!-- the gold 3D "KURWADROP!" over the top of the reel; while it plays it replaces the banner -->
+    <CaseKurwaBurst v-if="kurwadrop" ref="burst" :text="$t('case.kurwaHit')" class="absolute inset-x-0 top-0 z-30 h-[60%]" />
     <Transition name="kd-kurwa">
-      <div v-if="horizontal && (chickenHit.some(Boolean) || respinning)" class="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center">
+      <div v-if="horizontal && ((chickenHit.some(Boolean) && !burst?.active) || respinning)" class="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center">
         <span class="kd-kurwa-banner type-16-caps rounded-lg px-3 py-1 text-neutral-1">{{ respinning ? $t('case.kurwaRespin') : $t('case.kurwaHit') }}</span>
       </div>
     </Transition>
