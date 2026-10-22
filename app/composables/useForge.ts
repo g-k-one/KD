@@ -110,15 +110,21 @@ export function useForge(host?: Ref<HTMLElement | null | undefined>) {
     return h
   }
 
-  /** One-shot centred on an element (viewport coordinates, or relative to the host). */
-  function at(name: string, el: HTMLElement | null | undefined, scale = 1, loop = false, opts: ForgeOptions = {}) {
+  /**
+   * One-shot centred on an element (viewport coordinates, or relative to the host). opts.sizeEl sizes it by another
+   * element than the one it is centred on; opts.lift moves it up by that share of its size.
+   */
+  function at(name: string, el: HTMLElement | null | undefined, scale = 1, loop = false, opts: ForgeAtOptions = {}) {
     if (!el) return Promise.resolve(null)
+    const { sizeEl, lift = 0, ...rest } = opts
     const r = el.getBoundingClientRect()
+    const sr = sizeEl?.getBoundingClientRect() ?? r
     const hr = host?.value?.getBoundingClientRect()
     // the host may be mid-transform (the reel's punch scales it a touch): the canvas draws in its own unscaled
     // pixels, so measure in those, or the effect lands off its element — more so the further from the host's corner
     const k = host?.value && hr && host.value.offsetWidth ? hr.width / host.value.offsetWidth : 1
-    return play(name, { ...opts, x: (r.left + r.width / 2 - (hr?.left ?? 0)) / k, y: (r.top + r.height / 2 - (hr?.top ?? 0)) / k, size: (Math.max(r.width, r.height) * scale) / k, loop })
+    const size = Math.max(sr.width, sr.height) * scale
+    return play(name, { ...rest, x: (r.left + r.width / 2 - (hr?.left ?? 0)) / k, y: (r.top + r.height / 2 - (hr?.top ?? 0) - size * lift) / k, size: size / k, loop })
   }
 
   function stopAll() {
@@ -140,6 +146,7 @@ export function useForge(host?: Ref<HTMLElement | null | undefined>) {
   return { play, at, stopAll, preload: async (atlas: string) => (await get())?.preload(atlas) }
 }
 
+export type ForgeAtOptions = ForgeOptions & { sizeEl?: HTMLElement | null; lift?: number }
 export type ForgeLayer = ReturnType<typeof useForge>
 export const FORGE_KEY = Symbol('kd-forge') as InjectionKey<ForgeLayer>
 

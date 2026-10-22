@@ -386,7 +386,7 @@ async function rareFx(winners: Item[]) {
     const tier = w ? RARITY_TIER[w.rarity] : 0
     if (!w) return
     // centred on the item picture (the rarity shape), on the layer behind the cards: it bursts from behind the skin
-    rarityRank(fxBg, el.querySelector<HTMLElement>('.kd-art img') ?? el, w.rarity, 1.7)
+    rarityRank(fxBg, el.querySelector<HTMLElement>('.kd-art img') ?? el, w.rarity, 1.3)
   })
 }
 

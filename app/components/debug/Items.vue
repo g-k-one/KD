@@ -30,7 +30,7 @@ function doReveal(tier = RARITY_TIER[art.rarity] || 1) {
   replay.value++
   nextTick(() => {
     reveal.value = tier
-    rarityRank(fx, artBox.value?.querySelector<HTMLElement>('.kd-art img'), art.rarity, 1.7)
+    rarityRank(fx, artBox.value?.querySelector<HTMLElement>('.kd-art img'), art.rarity, 1.3)
   })
 }
 // The rank ladder: the six rarities side by side, each landing in turn, to compare the steps
@@ -43,7 +43,7 @@ async function playLadder() {
   await nextTick()
   for (const r of RARITIES) {
     ladderReveal.value = { ...ladderReveal.value, [r]: RARITY_TIER[r] || 1 }
-    rarityRank(fxLadder, ladder.value?.querySelector<HTMLElement>(`[data-r="${r}"] .kd-art img`), r, 1.7)
+    rarityRank(fxLadder, ladder.value?.querySelector<HTMLElement>(`[data-r="${r}"] .kd-art img`), r, 1.3)
     await new Promise((res) => setTimeout(res, 900))
   }
 }
