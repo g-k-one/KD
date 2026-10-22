@@ -12,7 +12,28 @@ const sfx = useSfx()
 
 const { data, refresh, error } = await useFetch<BattleResponse>(() => `/api/battles/${id.value}`, { key: `battle-${id.value}` })
 if (error.value) throw createError({ statusCode: 404, statusMessage: 'Battle not found', fatal: true })
-const b = computed(() => data.value!.battle)
+// Replay (#7): a finished battle plays again from the countdown — on a tap, or for anyone opening a shared
+// ?replay=1 link. The room just runs its own clock from now.
+const replayAt = ref<number | null>(route.query.replay ? Date.now() : null)
+const b = computed(() => {
+  const x = data.value!.battle
+  return replayAt.value && x.status === 'finished' ? { ...x, status: 'live' as const, startedAt: new Date(replayAt.value + 3500).toISOString() } : x
+})
+const router = useRouter()
+const replayLink = () => new URL(router.resolve({ path: `/pvp/${id.value}`, query: { replay: '1' } }).href, location.href).href
+async function shareBattle() {
+  try {
+    await navigator.clipboard.writeText(replayLink())
+    toast.show(t('pvp.linkCopied'), 'success')
+  } catch {
+    toast.show(replayLink())
+  }
+}
+function replay() {
+  celebrated.value = true
+  replayAt.value = Date.now()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 useHead({ title: () => `PvP #${id.value} · KurwaDROP` })
 
 // Poll while waiting so other players and bots show up
@@ -124,8 +145,15 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
     <UiPageBar
       logo
       :subtitle="`${$t(`pvp.modes.${b.size}`)} · #${b.id}`"
-      :left="[{ label: $t('pvp.back'), icon: 'arrow-left', to: '/pvp' }]"
-      :right="[{ label: $t('pvp.howItWorks'), icon: 'shield', to: '/fairness' }]"
+      fixed-sides
+      :left="[
+        { label: $t('pvp.back'), icon: 'arrow-left', to: '/pvp' },
+        { label: $t('case.share'), icon: 'share', onClick: shareBattle },
+      ]"
+      :right="[
+        ...(data!.battle.status === 'finished' ? [{ label: $t('pvp.replay'), icon: 'refresh', onClick: replay }] : []),
+        { label: $t('pvp.howItWorks'), icon: 'shield', to: '/fairness' },
+      ]"
     />
 
     <!-- Rounds strip (Figma "BattleRounds") -->

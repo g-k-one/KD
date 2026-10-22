@@ -15,7 +15,9 @@ const W = 1200
 const H = 630
 const blob = shallowRef<Blob | null>(null)
 const preview = ref('')
-const link = computed(() => (import.meta.client ? `${location.origin}${location.pathname.replace(/\/case\/.*/, '')}/case/${props.slug}` : ''))
+// through the router, so the link works with hash routing too (the artifact)
+const router = useRouter()
+const link = computed(() => (import.meta.client ? new URL(router.resolve(`/case/${props.slug}`).href, location.href).href : ''))
 const mult = computed(() => (props.item ? Math.round((props.item.price / props.casePrice) * 10) / 10 : 0))
 
 const load = (src: string) =>

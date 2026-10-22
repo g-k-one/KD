@@ -20,8 +20,9 @@ const filtersSentinel = useTemplateRef<HTMLElement>('filtersSentinel')
 const filtersStuck = ref(false)
 useIntersectionObserver(filtersSentinel, ([e]) => (filtersStuck.value = !!e && !e.isIntersecting && e.boundingClientRect.top < 100), { rootMargin: '-72px 0px 0px 0px' })
 
-// The event's section leads the cases while it runs: its clock and a way to the event page
-const { endsIn: eventIn } = useEvent()
+// Sections with a clock (the event, the weekly picks) count down on their header
+const clock = useClock(1000)
+const allCases = computed(() => (data.value?.sections ?? []).flatMap((s) => s.cases))
 
 const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 </script>
@@ -31,6 +32,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
     <HomeHeroBanner @start="scrollToCases" />
     <HomeWelcome />
     <HomeStatsBand />
+    <HomeContinue :cases="allCases" />
 
     <div ref="fxHost" class="relative flex flex-col gap-6 lg:gap-10">
     <HomeBigWins />
@@ -47,18 +49,25 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
       />
       </div>
 
-      <section v-for="s in sections" :key="s.id" class="flex flex-col gap-4">
+      <template v-for="(s, i) in sections" :key="s.id">
+      <section class="flex flex-col gap-4">
         <UiSectionHeader
           :title="s.title"
-          :collapsible="s.id !== 'event'"
+          :collapsible="!s.to"
           :collapsed="collapsed[s.id]"
           @toggle="collapsed[s.id] = !collapsed[s.id]"
         >
-          <template v-if="s.id === 'event'" #actions>
-            <NuxtLink to="/event" class="kd-event-link type-12-caps flex h-8 items-center gap-1.5 rounded-lg px-2.5">
-              <UiIcon name="history" :size="14" /><span class="tabular-nums">{{ eventIn }}</span>
+          <!-- the event leads to its page; the weekly picks say when they change -->
+          <template v-if="s.to && s.endsAt" #actions>
+            <NuxtLink :to="s.to" class="kd-event-link type-12-caps flex h-8 items-center gap-1.5 rounded-lg px-2.5">
+              <UiIcon name="history" :size="14" /><span class="tabular-nums">{{ countdownLong(s.endsAt, clock) }}</span>
               <span class="max-sm:hidden">· {{ $t('event.section') }}</span><UiIcon name="chevron-right" :size="14" />
             </NuxtLink>
+          </template>
+          <template v-else-if="s.endsAt" #actions>
+            <span class="type-12-caps flex shrink-0 items-center gap-1.5 text-neutral-11">
+              <UiIcon name="refresh" :size="14" /><span class="max-sm:hidden">{{ $t('home.newPicks') }}</span><span class="tabular-nums text-neutral-13">{{ countdownLong(s.endsAt, clock) }}</span>
+            </span>
           </template>
         </UiSectionHeader>
         <div
@@ -68,6 +77,9 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
           <HomeCaseCard v-for="c in s.cases" :key="c.id" :item="c" />
         </div>
       </section>
+      <!-- live battles break up the grid after the first two sections -->
+      <HomeLiveBattles v-if="i === Math.min(1, sections.length - 1)" />
+      </template>
 
       <UiEmptyState v-if="!sections.length" :text="$t('cases.empty')">
         <UiButton variant="secondary" @click="filters.reset()">{{ $t('filters.reset') }}</UiButton>

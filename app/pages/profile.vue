@@ -111,6 +111,19 @@ const stats = computed(() => {
   }
 })
 
+// --- Wallet row (#16, Phantom): the balance with today's result, then the four money actions -------------------
+// Result of the last 24 h: what cases and upgrades paid minus what they cost
+const day = computed(() => {
+  const since = Date.now() - 86_400_000
+  return history.value.filter((h) => (h.game === 'case' || h.game === 'upgrade') && Date.parse(h.at) >= since).reduce((a, h) => a + h.payout - h.bet, 0)
+})
+// the sell preview lives on the inventory tab, so selling everything goes there first
+function sellEverything() {
+  tab.value = 'inventory'
+  selected.value = inventory.value.map((i) => i.uid)
+  sellOpen.value = true
+}
+
 // --- Steam trade link (settings) --------------------------------------------------------
 const TRADE_RE = /^https:\/\/steamcommunity\.com\/tradeoffer\/new\/\?partner=\d+&token=[\w-]{6,}$/
 const tradeLink = ref('')
@@ -163,16 +176,28 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
             </div>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-2 md:flex md:gap-3">
-          <div class="flex flex-col gap-1 rounded-2xl bg-neutral-3 px-4 py-3">
-            <span class="type-12-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
-            <UiPrice :amount="session.user.balance" size="l" />
+        <div class="flex flex-col gap-2 md:w-[440px] md:shrink-0">
+          <div class="grid grid-cols-2 gap-2">
+            <div class="flex flex-col gap-1 rounded-2xl bg-neutral-3 px-4 py-3">
+              <span class="type-12-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
+              <UiPrice :amount="session.user.balance" size="l" />
+              <span class="type-12 tabular-nums" :class="day > 0 ? 'text-success' : day < 0 ? 'text-danger' : 'text-neutral-10'">
+                {{ day > 0 ? '+' : day < 0 ? '−' : '' }}{{ formatCoins(Math.abs(day)) }} · {{ $t('account.day') }}
+              </span>
+            </div>
+            <div class="flex flex-col gap-1 rounded-2xl bg-neutral-3 px-4 py-3">
+              <span class="type-12-caps text-neutral-11">{{ $t('account.skinsValue') }}</span>
+              <UiPrice :amount="session.user.skinsValue" size="l" tone="coin" />
+              <span class="type-12 text-neutral-10">{{ $t('account.skinsCount', { n: inventory.length }, inventory.length) }}</span>
+            </div>
           </div>
-          <div class="flex flex-col gap-1 rounded-2xl bg-neutral-3 px-4 py-3">
-            <span class="type-12-caps text-neutral-11">{{ $t('account.skinsValue') }}</span>
-            <UiPrice :amount="session.user.skinsValue" size="l" tone="coin" />
+          <!-- the four money moves, one tap each -->
+          <div class="grid grid-cols-4 gap-2">
+            <NuxtLink to="/deposit" class="kd-act type-10-caps is-main kd-press"><UiIcon name="plus" :size="20" />{{ $t('wallet.deposit') }}</NuxtLink>
+            <button type="button" class="kd-act type-10-caps kd-press" @click="ui.inventoryOpen = true"><UiIcon name="steam" :size="20" />{{ $t('withdraw.short') }}</button>
+            <NuxtLink to="/upgrade" class="kd-act type-10-caps kd-press"><UiIcon name="upgrade" :size="20" />{{ $t('upgrade.upgrade') }}</NuxtLink>
+            <button type="button" class="kd-act type-10-caps kd-press" :disabled="!inventory.length" @click="sellEverything"><UiIcon name="wallet" :size="20" />{{ $t('account.sellAll') }}</button>
           </div>
-          <UiButton size="l" icon="plus" to="/deposit" class="col-span-2 md:col-auto md:self-center">{{ $t('wallet.deposit') }}</UiButton>
         </div>
       </section>
 
@@ -341,6 +366,30 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
 </template>
 
 <style scoped>
+.kd-act {
+  display: flex;
+  height: 64px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 12px;
+  background: var(--color-neutral-3);
+  color: var(--color-neutral-14);
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+.kd-act.is-main {
+  background: var(--color-brand-base);
+  color: var(--color-neutral-15);
+}
+.kd-act:disabled {
+  opacity: 0.4;
+}
+@media (hover: hover) {
+  .kd-act:not(.is-main):not(:disabled):hover {
+    background: var(--color-neutral-4);
+  }
+}
 .kd-stat {
   display: flex;
   min-width: 0;

@@ -229,7 +229,9 @@
     "nextCase": "Next case: {name}",
     "opens": "{n} opens",
     "skins": "1 skin | {n} skins",
-    "promo": "Have a promo code?"
+    "promo": "Have a promo code?",
+    "earns": "+{n} XP · +{n} pass pts",
+    "earnsEvent": "+{n} event pts"
   },
   "upgrade": {
     "history": "History",
@@ -481,7 +483,10 @@
     "statUpgrades": "Upgrades won",
     "statWagered": "Played",
     "statTopX": "Best multiplier",
-    "statBest": "Best drop"
+    "statBest": "Best drop",
+    "sellAll": "Sell all",
+    "day": "24h",
+    "skinsCount": "{n} skin | {n} skins"
   },
   "pvp": {
     "title": "PvP",
@@ -542,7 +547,9 @@
     "watchLive": "Watch live",
     "featuredHint": "The biggest battle running right now",
     "view_grid": "Tiles",
-    "view_list": "Lines"
+    "view_list": "Lines",
+    "replay": "Replay",
+    "linkCopied": "Replay link copied"
   },
   "quick": {
     "title": "Top up and keep playing",
@@ -680,5 +687,11 @@
     "longPress": "Press and hold the image to save it",
     "from": "from {name}",
     "text": "x{x} on KurwaDROP"
+  },
+  "home": {
+    "continue": "Continue",
+    "battles": "PvP battles",
+    "allBattles": "All battles",
+    "newPicks": "New picks in"
   }
 }

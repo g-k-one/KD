@@ -31,6 +31,10 @@ const demo = ref(false)
 const last = ref<{ rolls: PfRoll[]; kurwa: boolean[]; seed: SeedPairPublic | null }>({ rolls: [], kurwa: [], seed: null })
 const rollsOpen = ref(false)
 const promoOpen = ref(false)
+const recent = useRecentCases()
+// What this opening earns besides the drop (#32, Casehug): XP and pass points are coins played, event cases add
+// event points — shown before the player pays
+const earns = computed(() => Math.max(1, Math.round(((kurwadrop.value ? cs.value.kurwadrop.price : openPrice.value) * count.value) / 100)))
 const shareOpen = ref(false)
 const shareItem = shallowRef<InventoryItem | null>(null)
 const reel = useTemplateRef<{ spin: (w: InventoryItem[], fast: boolean, kurwa?: boolean[]) => Promise<void>; skip: () => void }>('reel')
@@ -98,6 +102,7 @@ async function open(asDemo = false) {
       body: { count: count.value, demo: asDemo, kurwadrop: kurwadrop.value },
     })
     if (!asDemo && session.user) session.user.balance = res.balance
+    if (!asDemo) recent.add(slug.value)
     results.value = res.drops
     last.value = { rolls: res.rolls, kurwa: res.kurwa, seed: res.seed }
     await reel.value?.spin(res.drops, fast.value, res.kurwa)
@@ -254,10 +259,15 @@ if (import.meta.client) {
         :confirm-sell="unsoldTotal >= openPrice * count * 3"
         @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"
       />
-      <!-- Promo code right where the balance is spent (#50, DogDrop): a quiet line, the field opens in a tray -->
-      <button v-if="session.user && !demo" type="button" class="kd-press type-12-caps mx-auto flex h-8 items-center gap-1.5 text-neutral-11 hover:text-neutral-15" @click="promoOpen = true">
-        <UiIcon name="bonuses" :size="14" />{{ $t('case.promo') }}
-      </button>
+      <!-- One quiet line under the controls: what this opening earns (#32) and the promo code (#50, DogDrop) -->
+      <div v-if="session.user && !demo" class="type-12-caps flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-neutral-11">
+        <span class="flex h-8 items-center gap-1.5 tabular-nums">
+          <UiIcon name="sparkle" :size="14" class="text-brand-light" />{{ $t('case.earns', { n: earns }) }}<template v-if="cs.event"> · <span class="text-[#c4b5fd]">{{ $t('case.earnsEvent', { n: earns }) }}</span></template>
+        </span>
+        <button type="button" class="kd-press type-12-caps flex h-8 items-center gap-1.5 hover:text-neutral-15" @click="promoOpen = true">
+          <UiIcon name="bonuses" :size="14" />{{ $t('case.promo') }}
+        </button>
+      </div>
     </section>
 
     <CaseShareDrop v-model="shareOpen" :item="shareItem" :case-name="cs.name" :case-image="cs.image" :case-price="cs.price" :slug="cs.slug" />
