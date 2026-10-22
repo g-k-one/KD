@@ -39,6 +39,14 @@ const pot = computed(() => totals.value.reduce((a, x) => a + x, 0))
 const groups = computed(() => groupRounds(b.value.rounds))
 const isMobile = useMediaQuery('(max-width: 767px)')
 
+// The player's own result stays on screen after the toast is gone: won the pot, or who took it
+const outcome = computed(() => {
+  const youSlot = b.value.slots.find((s) => s.player?.you)?.slot
+  if (!done.value || youSlot == null || b.value.winnerSlot == null) return null
+  if (b.value.winnerSlot === youSlot) return { won: true, text: t('pvp.youWon', { amount: formatCoins(pot.value) }) }
+  return { won: false, text: t('pvp.youLost', { name: b.value.slots[b.value.winnerSlot]?.player?.nickname ?? '' }) }
+})
+
 // Celebrate once when the replay finishes
 const celebrated = ref(false)
 watch(done, (d) => {
@@ -141,9 +149,18 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
         <span class="type-12-regular text-neutral-11">{{ $t('pvp.value') }}</span>
       </div>
       <Transition name="kd-recreate">
+        <span
+          v-if="outcome"
+          class="type-12-caps flex h-10 items-center rounded-lg px-3"
+          :class="outcome.won ? 'bg-success-24 text-success' : 'bg-danger-24 text-danger'"
+        >
+          {{ outcome.text }}
+        </span>
+      </Transition>
+      <Transition name="kd-recreate">
         <UiButton v-if="done" size="m" icon="refresh" :loading="recreating" class="kd-recreate" @click="recreate">
           {{ $t('pvp.recreate') }}
-          <UiPrice :amount="b.cost" size="s" tone="inverse" />
+          <span class="btn-value"><UiPrice :amount="b.cost" size="s" tone="inverse" /></span>
         </UiButton>
       </Transition>
     </section>

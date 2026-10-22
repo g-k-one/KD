@@ -10,7 +10,8 @@ const ui = useUiStore()
 const toast = useToast()
 
 const { data } = await useFetch<CasesResponse>('/api/cases', { key: 'cases' })
-const cases = computed(() => data.value?.sections[0]?.cases ?? [])
+// Every case on the site, once each (home lists some in several sections), cheapest first
+const cases = computed(() => [...new Map((data.value?.sections ?? []).flatMap((sec) => sec.cases).map((c) => [c.slug, c])).values()].sort((a, b) => a.price - b.price))
 
 const size = ref<2 | 3 | 4>(2)
 const qty = ref<Record<string, number>>({})
