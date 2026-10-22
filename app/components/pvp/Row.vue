@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import type { Battle } from '#shared/types/api'
 
-// Figma "BattleRow": Desktop = full-width row, Mobile = card. Waiting → Join, Live → Watch, Finished → View.
+// The one battle row (docs/ux-research-v3.md → PvP, Key-Drop / CSGOGem): read left to right — mode and players
+// (× between seats, + on a free one) · the cases as progress (opened dimmed, the current one framed, 3/8) · the
+// pot · the action with the seat price on it. Desktop = one row, phones = the same three parts as a card.
+// Waiting → Join, Live → Watch, Finished → View. Used by the lobby and the home page.
 const props = defineProps<{ battle: Battle }>()
 const now = useClock(1000)
 const { onPointerMove } = useSpotlight()
 
 const joined = computed(() => props.battle.slots.filter((s) => s.player).length)
 const groups = computed(() => groupRounds(props.battle.rounds))
-const visible = computed(() => groups.value.slice(0, 5))
+// phones fit four cases in the card's width, the rest go to +N
+const isPhone = useMediaQuery('(max-width: 639.98px)')
+const visible = computed(() => groups.value.slice(0, isPhone.value ? 4 : 6))
 const more = computed(() => groups.value.length - visible.value.length)
 const value = computed(() => props.battle.cost * props.battle.size)
 const clock = computed(() => battleClock(props.battle, now.value))
@@ -60,8 +65,9 @@ const action = computed(
           {{ battle.viewers }}
         </span>
       </div>
-      <div class="flex shrink-0 items-center gap-1 lg:w-36">
-        <template v-for="s in battle.slots" :key="s.slot">
+      <div class="flex shrink-0 items-center gap-1 lg:w-44">
+        <template v-for="(s, i) in battle.slots" :key="s.slot">
+          <span v-if="i > 0" class="type-12 text-neutral-9" aria-hidden="true">×</span>
           <span v-if="s.player" class="size-8 overflow-hidden rounded-full bg-neutral-7 ring-2 ring-neutral-2" :title="s.player.nickname">
             <img :src="s.player.avatar" alt="" class="size-full object-cover" :class="s.player.bot && 'scale-75 object-contain'" />
           </span>
@@ -75,6 +81,10 @@ const action = computed(
     <div class="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
       <PvpCaseThumb v-for="g in visible" :key="`${g.slug}-${g.from}`" :image="g.image" :name="g.name" :qty="g.qty" :state="groupState(g)" />
       <span v-if="more > 0" class="type-12 shrink-0 rounded-md bg-neutral-6 px-2 py-1">+{{ more }}</span>
+      <!-- progress: the round that rolls now (live), or how many rounds there are (waiting, finished) -->
+      <span class="type-12 flex shrink-0 items-center gap-1 rounded-md bg-neutral-3 px-2 py-1 text-neutral-12 tabular-nums">
+        <UiIcon name="cases" :size="12" class="text-neutral-10" />{{ live ? `${round}/${battle.rounds.length}` : battle.rounds.length }}
+      </span>
       <Transition name="kd-lead" mode="out-in">
         <span v-if="leader" :key="leader.player?.nickname" class="type-12 ml-auto hidden shrink-0 items-center gap-1.5 rounded-lg bg-neutral-3 px-2 py-1 xl:flex">
           <UiIcon name="crown" :size="14" class="text-coin" />
@@ -90,12 +100,9 @@ const action = computed(
         <span class="type-12-regular text-neutral-11">{{ $t('pvp.value') }}</span>
       </div>
       <div class="flex w-36 shrink-0 flex-col items-center gap-1.5 lg:w-40">
-        <span class="kd-btn inline-flex h-10 w-full items-center justify-center rounded-lg type-12-caps" :class="`kd-btn-${action.variant}`">
+        <span class="kd-btn inline-flex h-10 w-full items-center justify-center gap-1 rounded-lg type-12-caps" :class="`kd-btn-${action.variant}`">
           {{ $t(action.label) }}
-        </span>
-        <span class="type-12-regular flex items-center gap-1.5 text-neutral-11">
-          {{ $t('pvp.cost') }}
-          <UiPrice :amount="battle.cost" size="s" />
+          <span v-if="battle.status === 'waiting'" class="btn-value"><UiPrice :amount="battle.cost" size="s" tone="inverse" /></span>
         </span>
       </div>
     </div>

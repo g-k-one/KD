@@ -14,18 +14,21 @@ const counts = computed(() => {
 const tabs = computed(() =>
   (['all', 'waiting', 'live', 'finished'] as const).map((v) => ({ value: v, label: t(`pvp.${v}`), count: counts.value[v] })),
 )
-// The biggest live battle plays at the top; the rest are big cards, live and joinable first
-const featured = computed(() => {
-  const live = (data.value?.battles ?? []).filter((b) => b.status === 'live' && b.results)
-  return live.length ? live.reduce((best, b) => (b.cost * b.size > best.cost * best.size ? b : best)) : null
-})
-const ORDER = { live: 0, waiting: 1, finished: 2 } as const
-const prefs = usePersisted('kd_pvp', { view: 'grid' as 'grid' | 'list' })
-const view = computed({ get: () => prefs.value.view, set: (v: 'grid' | 'list') => (prefs.value = { ...prefs.value, view: v }) })
+// One list of battle rows (docs/ux-research-v3.md → PvP): the open seats first, then what is live, finished last.
+// Filters in one line from the kit: mode, sort by price, and "fits my balance" (seats the player can pay for).
+const session = useSessionStore()
+const ORDER = { waiting: 0, live: 1, finished: 2 } as const
+const mode = ref<'all' | '2' | '3' | '4'>('all')
+const sort = ref<'default' | 'priceDesc' | 'priceAsc'>('default')
+const affordable = ref(false)
+const modeOptions = computed(() => [{ value: 'all' as const, label: t('pvp.anyMode') }, ...(['2', '3', '4'] as const).map((n) => ({ value: n, label: t(`pvp.modes.${n}`) }))])
+const sortOptions = computed(() => (['default', 'priceDesc', 'priceAsc'] as const).map((s) => ({ value: s, label: t(`filters.sortOptions.${s}`) })))
 const list = computed(() =>
   (data.value?.battles ?? [])
-    .filter((b) => b.id !== featured.value?.id && (filter.value === 'all' || b.status === filter.value))
-    .sort((a, b) => ORDER[a.status] - ORDER[b.status]),
+    .filter((b) => filter.value === 'all' || b.status === filter.value)
+    .filter((b) => mode.value === 'all' || String(b.size) === mode.value)
+    .filter((b) => !affordable.value || (b.status === 'waiting' && b.cost <= (session.user?.balance ?? 0)))
+    .sort((a, b) => ORDER[a.status] - ORDER[b.status] || (sort.value === 'priceDesc' ? b.cost - a.cost : sort.value === 'priceAsc' ? a.cost - b.cost : 0)),
 )
 const inPlay = computed(() => (data.value?.battles ?? []).filter((b) => b.status !== 'finished').reduce((a, b) => a + b.cost * b.size, 0))
 const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a + (b.viewers ?? 0), 0))
@@ -40,18 +43,19 @@ const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a +
       <span class="kd-stat type-12-caps max-sm:hidden">{{ $t('pvp.inPlay') }} <UiPrice :amount="inPlay" size="s" tone="coin" /></span>
       <UiButton icon="plus" size="l" class="ml-auto" to="/pvp/create">{{ $t('pvp.create') }}</UiButton>
     </div>
-    <Transition name="kd-feat" mode="out-in">
-      <PvpFeatured v-if="featured" :key="featured.id" :battle="featured" />
-    </Transition>
-    <!-- Tabs and the tiles/lines switch share one line and one rule under it -->
-    <div class="flex items-center gap-3 border-b border-neutral-4">
-      <UiTabs v-model="filter" :tabs="tabs" flush class="min-w-0 flex-1" />
-      <UiSegmented v-model="view" size="s" class="shrink-0" :options="[{ value: 'grid', icon: 'view-grid', title: $t('pvp.view_grid') }, { value: 'list', icon: 'view-list', title: $t('pvp.view_list') }]" />
+    <!-- Status tabs on the left, the filters on the right; one line on desktop, two on phones -->
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <UiTabs v-model="filter" :tabs="tabs" flush class="min-w-0 border-b border-neutral-4 lg:flex-1" />
+      <div class="flex items-center gap-2">
+        <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="min-w-0 flex-1 lg:w-40 lg:flex-none" :active="mode !== 'all'" />
+        <!-- phones: the sort is an icon (as on the cases filter) -->
+        <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:w-48" :active="sort !== 'default'">
+          <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
+        </UiSelect>
+        <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" class="shrink-0" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
+      </div>
     </div>
-    <TransitionGroup v-if="view === 'grid'" key="grid" tag="div" name="kd-list" class="relative grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-      <PvpCard v-for="b in list" :key="b.id" :battle="b" />
-    </TransitionGroup>
-    <TransitionGroup v-else key="list" tag="div" name="kd-list" class="relative flex flex-col gap-2">
+    <TransitionGroup tag="div" name="kd-list" class="relative flex flex-col gap-2">
       <PvpRow v-for="b in list" :key="b.id" :battle="b" />
     </TransitionGroup>
     <UiEmptyState v-if="!list.length" :text="$t('pvp.empty')">
@@ -61,6 +65,16 @@ const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a +
 </template>
 
 <style scoped>
+:deep(.kd-sort > ul) {
+  left: auto;
+  right: 0;
+}
+@media (max-width: 1023.98px) {
+  :deep(.kd-sort button .type-14),
+  :deep(.kd-sort button > :last-child) {
+    display: none;
+  }
+}
 .kd-stat {
   display: inline-flex;
   height: 32px;
@@ -82,19 +96,6 @@ const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a +
   50% {
     opacity: 0.3;
   }
-}
-.kd-feat-enter-active,
-.kd-feat-leave-active {
-  transition:
-    opacity var(--dur-slow) var(--ease-out),
-    translate var(--dur-slow) var(--ease-out);
-}
-.kd-feat-enter-from {
-  opacity: 0;
-  translate: 0 10px;
-}
-.kd-feat-leave-to {
-  opacity: 0;
 }
 .kd-list-enter-active {
   transition:

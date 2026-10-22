@@ -551,7 +551,8 @@
     "view_grid": "Tiles",
     "view_list": "Lines",
     "replay": "Replay",
-    "linkCopied": "Replay link copied"
+    "linkCopied": "Replay link copied",
+    "anyMode": "Any mode"
   },
   "quick": {
     "title": "Top up and keep playing",
