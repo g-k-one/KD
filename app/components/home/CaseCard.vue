@@ -10,6 +10,8 @@ const session = useSessionStore()
 
 // One badge per card, hottest first: HOT → a big multiplier today → brand new. Fiery ones burn (Forge).
 const badge = computed(() => {
+  // event cases wear their step on the ladder instead
+  if (props.item.event) return { kind: 'event', text: props.item.event.level === props.item.event.of ? t('event.boss') : t('event.level', { n: props.item.event.level }) }
   if (props.item.tag === 'hot') return { kind: 'hot', text: t('cases.tag.hot') }
   if ((props.item.bestToday ?? 0) >= 10) return { kind: 'today', text: t('cases.today', { x: props.item.bestToday }) }
   if (props.item.tag === 'new') return { kind: 'new', text: t('cases.tag.new') }
@@ -61,7 +63,7 @@ const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-
       <!-- Only HOT cases burn; the other badges stay calm so the fire still means something -->
       <FxFire :on="badge.kind === 'hot'">
         <span class="kd-badge type-10-caps relative z-[2] inline-flex items-center gap-1 rounded-sm px-1.5 py-1" :class="`is-${badge.kind}`">
-          <UiIcon :name="badge.kind === 'today' ? 'trophy' : badge.kind === 'new' ? 'sparkle' : 'fire'" :size="12" />
+          <UiIcon :name="badge.kind === 'today' ? 'trophy' : badge.kind === 'new' ? 'sparkle' : badge.kind === 'event' ? 'chicken' : 'fire'" :size="12" />
           {{ badge.text }}
         </span>
       </FxFire>
@@ -114,6 +116,12 @@ const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.5),
     0 0 10px rgb(245 184 46 / 0.35);
+}
+.kd-badge.is-event {
+  background: linear-gradient(180deg, #a78bfa, #6d28d9);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    0 0 10px rgb(139 92 246 / 0.5);
 }
 .kd-badge.is-new {
   position: relative;

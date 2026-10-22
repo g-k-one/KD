@@ -20,6 +20,9 @@ const filtersSentinel = useTemplateRef<HTMLElement>('filtersSentinel')
 const filtersStuck = ref(false)
 useIntersectionObserver(filtersSentinel, ([e]) => (filtersStuck.value = !!e && !e.isIntersecting && e.boundingClientRect.top < 100), { rootMargin: '-72px 0px 0px 0px' })
 
+// The event's section leads the cases while it runs: its clock and a way to the event page
+const { endsIn: eventIn } = useEvent()
+
 const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 </script>
 
@@ -47,10 +50,17 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
       <section v-for="s in sections" :key="s.id" class="flex flex-col gap-4">
         <UiSectionHeader
           :title="s.title"
-          collapsible
+          :collapsible="s.id !== 'event'"
           :collapsed="collapsed[s.id]"
           @toggle="collapsed[s.id] = !collapsed[s.id]"
-        />
+        >
+          <template v-if="s.id === 'event'" #actions>
+            <NuxtLink to="/event" class="kd-event-link type-12-caps flex h-8 items-center gap-1.5 rounded-lg px-2.5">
+              <UiIcon name="history" :size="14" /><span class="tabular-nums">{{ eventIn }}</span>
+              <span class="max-sm:hidden">· {{ $t('event.section') }}</span><UiIcon name="chevron-right" :size="14" />
+            </NuxtLink>
+          </template>
+        </UiSectionHeader>
         <div
           v-show="!collapsed[s.id]"
           class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5"
@@ -68,6 +78,11 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
 </template>
 
 <style scoped>
+.kd-event-link {
+  color: #c4b5fd;
+  background: rgb(139 92 246 / 0.14);
+  box-shadow: inset 0 0 0 1px rgb(139 92 246 / 0.24);
+}
 /* Stuck under the header: the bar sheds its labels' air and floats over the cases */
 @media (min-width: 64rem) {
   .kd-filters-wrap {

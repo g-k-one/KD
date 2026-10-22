@@ -12,6 +12,7 @@ onKeyStroke('Escape', () => (ui.popover = null))
 const desktopNav = MAIN_NAV
 const { dailyReady, dailyIn, claimable } = useBonuses()
 const { data: race } = useRace()
+const { data: event, endsIn: eventIn } = useEvent()
 const raceClock = useClock(1000)
 const raceIn = computed(() => (race.value ? countdownLong(race.value.endsAt, raceClock.value) : ''))
 
@@ -55,11 +56,23 @@ async function logout() {
 
     <div class="flex-1" />
 
+    <!-- The running event and its clock (#49); it takes the race chip's place on narrower screens -->
+    <NuxtLink
+      v-if="event"
+      to="/event"
+      class="kd-press kd-event type-12-caps mr-1 flex h-10 items-center gap-2 rounded-xl px-3 whitespace-nowrap text-neutral-14"
+    >
+      <UiIcon name="chicken" :size="18" class="text-[#c4b5fd]" />
+      {{ $t('event.chip') }}
+      <span class="tabular-nums text-neutral-12">{{ eventIn }}</span>
+    </NuxtLink>
+
     <!-- Weekly race: the countdown to the reset is the reason to play today (SkinFans' RACE chip) -->
     <NuxtLink
       v-if="race"
       to="/bonuses#race"
-      class="kd-press kd-race type-12-caps mr-1 flex h-10 items-center gap-2 rounded-xl px-3 text-neutral-14"
+      class="kd-press kd-race type-12-caps mr-1 h-10 items-center gap-2 rounded-xl px-3 whitespace-nowrap text-neutral-14"
+      :class="event ? 'hidden 2xl:flex' : 'flex'"
     >
       <UiIcon name="trophy" :size="18" class="text-coin" />
       {{ $t('race.chip') }}
@@ -159,6 +172,10 @@ async function logout() {
 </template>
 
 <style scoped>
+.kd-event {
+  background: linear-gradient(100deg, rgb(139 92 246 / 0.2), transparent 70%);
+  box-shadow: inset 0 0 0 1px rgb(139 92 246 / 0.34);
+}
 .kd-race {
   background: linear-gradient(100deg, rgb(253 176 34 / 0.14), transparent 70%);
   box-shadow: inset 0 0 0 1px rgb(253 176 34 / 0.28);

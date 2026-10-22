@@ -16,6 +16,7 @@ const { data, error } = await useFetch<CaseResponse>(() => `/api/cases/${slug.va
 if (error.value) throw createError({ statusCode: 404, statusMessage: 'Case not found', fatal: true })
 const cs = computed(() => data.value!.case)
 useHead({ title: () => `${cs.value.name} · KurwaDROP` })
+const { data: eventData, endsIn: eventIn } = useEvent()
 
 const count = ref<1 | 2 | 3 | 4 | 5>(1)
 const fast = ref(false)
@@ -270,6 +271,17 @@ if (import.meta.client) {
       </div>
     </Transition>
 
+    <!-- An event case says which step of the ladder it is and that it earns event points -->
+    <NuxtLink v-if="cs.event" to="/event" class="kd-event-bar kd-press flex items-center gap-3 rounded-2xl px-4 py-3">
+      <UiIcon name="chicken" :size="20" class="shrink-0 text-[#c4b5fd]" />
+      <span class="flex min-w-0 flex-1 flex-col">
+        <span class="type-12-caps truncate">{{ $t('event.caseBar', { name: eventData?.name ?? $t('event.title'), n: cs.event.level, of: cs.event.of }) }}</span>
+        <span class="type-12-regular truncate text-neutral-11">{{ $t('event.caseBarHint') }}</span>
+      </span>
+      <span class="type-12-caps shrink-0 text-neutral-12 tabular-nums max-sm:hidden">{{ eventIn }}</span>
+      <UiIcon name="chevron-right" :size="16" class="shrink-0 text-neutral-11" />
+    </NuxtLink>
+
     <section class="flex flex-col gap-4">
       <UiSectionHeader :title="$t('case.contents')">
         <template #actions>
@@ -289,6 +301,10 @@ if (import.meta.client) {
 </template>
 
 <style scoped>
+.kd-event-bar {
+  background: linear-gradient(100deg, rgb(139 92 246 / 0.18), var(--color-neutral-2) 70%);
+  box-shadow: inset 0 0 0 1px rgb(139 92 246 / 0.24);
+}
 .kd-hook-enter-active,
 .kd-hook-leave-active {
   transition:

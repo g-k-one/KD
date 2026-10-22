@@ -17,6 +17,8 @@ import type {
   Item,
   LevelReward,
   ChainId,
+  EventEntry,
+  EventResponse,
   Mission,
   MissionChain,
   MissionKind,
@@ -237,7 +239,17 @@ const GEM_LOOK: Record<string, Omit<CaseDef, 'price' | 'targetRtp' | 'preset'>> 
 }
 const GEM_DEFS: CaseDef[] = (GEM_CASES as GemCase[]).map((g) => ({ ...GEM_LOOK[g.slug]!, price: g.price, targetRtp: 9200, preset: g.items }))
 
-const CASES: CaseDetails[] = [...CASE_DEFS, ...GEM_DEFS].map(buildCase)
+// Event ladder (Dziady Night): five cases from cheap to the final boss, one story — the chicken's night out
+// among Polish ghosts. Each step costs about twice the last.
+const EVENT_DEFS: CaseDef[] = [
+  { id: 'e1', slug: 'znicz', name: 'Znicz', image: '/img/cases/znicz.webp', price: 99, risk: 'low', targetRtp: 9300, createdAt: '2026-10-20', event: { level: 1, of: 5 } },
+  { id: 'e2', slug: 'cmentarz', name: 'Cmentarz', image: '/img/cases/cmentarz.webp', price: 249, risk: 'medium', targetRtp: 9250, createdAt: '2026-10-20', event: { level: 2, of: 5 } },
+  { id: 'e3', slug: 'strzyga', name: 'Strzyga', image: '/img/cases/strzyga.webp', price: 499, risk: 'high', targetRtp: 9200, createdAt: '2026-10-20', event: { level: 3, of: 5 } },
+  { id: 'e4', slug: 'baba-jaga', name: 'Baba Jaga', image: '/img/cases/baba-jaga.webp', price: 999, risk: 'high', targetRtp: 9150, createdAt: '2026-10-20', event: { level: 4, of: 5 } },
+  { id: 'e5', slug: 'upior', name: 'Upiór', image: '/img/cases/upior.webp', price: 2499, risk: 'extreme', targetRtp: 9100, createdAt: '2026-10-20', event: { level: 5, of: 5 } },
+]
+
+const CASES: CaseDetails[] = [...CASE_DEFS, ...GEM_DEFS, ...EVENT_DEFS].map(buildCase)
 
 // --- Big wins of the day (seeded, then the user's own big drops join) -------------------------------
 
@@ -294,8 +306,10 @@ export function getCaseSections(): CaseSection[] {
   const all = CASES.map(toSummary)
   const pick = (slugs: string[]) => slugs.map((s) => all.find((c) => c.slug === s)!)
   return [
+    // the event's ladder leads while it runs, in ladder order
+    { id: 'event', title: EVENT.name, cases: all.filter((c) => c.event) },
     { id: 'hot', title: 'Hot right now', cases: pick(['pieklo', 'mafia', 'wiosna']) },
-    { id: 'featured', title: 'Featured cases', cases: all.filter((c) => !['pieklo', 'mafia', 'wiosna'].includes(c.slug)) },
+    { id: 'featured', title: 'Featured cases', cases: all.filter((c) => !c.event && !['pieklo', 'mafia', 'wiosna'].includes(c.slug)) },
     { id: 'polish-classics', title: 'Polish classics', cases: pick(['babcias-box', 'vodka-drop', 'golden-kielbasa', 'kurwa-classic', 'pierogi-pack']) },
   ]
 }
@@ -359,6 +373,8 @@ interface MockState {
   welcomeLeft: number
   /** Coin cents played since the race week began, and the week it counts for */
   race: { wagered: number; week: number }
+  /** Event points (whole coins played on event cases), today's play towards the giveaway ticket, joined today */
+  event: { points: number; day: number; played: number; joined: boolean }
   /** Season pass: points (whole coins played) and the tiers taken */
   pass: { points: number; claimed: number[] }
   rakeback: { pending: number; claimedTotal: number }
@@ -389,6 +405,7 @@ const state: MockState = {
   dailyAt: 0,
   welcomeLeft: WELCOME_TOTAL,
   race: { wagered: 0, week: 0 },
+  event: { points: 0, day: 0, played: 0, joined: false },
   pass: { points: 0, claimed: [] },
   rakeback: { pending: 0, claimedTotal: 0 },
   missions: [],
@@ -751,6 +768,69 @@ export function getRace(withMe: boolean): RaceResponse {
   }
 }
 
+// --- Event: Dziady Night ----------------------------------------------------------------
+
+const EVENT = { id: 'dziady', name: 'Dziady Night', endsAt: '2026-11-02T23:59:59Z', prizePool: 1_500_000 }
+const EVENT_SPLIT = [3000, 1800, 1200, 900, 700, 600, 500, 500, 400, 400]
+const GIVEAWAY_GOAL = 1000
+const GIVEAWAY_PRIZES = ['awp-asiimov', 'ak-vulcan', 'm4a4-howl', 'butterfly-fade', 'gloves-crimson']
+const DAY = 86_400_000
+const eventDay = (now = Date.now()) => Math.floor(now / DAY)
+function eventToday() {
+  const day = eventDay()
+  if (state.event.day !== day) Object.assign(state.event, { day, played: 0, joined: false })
+  return state.event
+}
+function eventPlayed(cents: number) {
+  const e = eventToday()
+  e.played += cents
+  e.points += Math.round(cents / 100)
+}
+export function getEvent(withMe: boolean): EventResponse {
+  const now = Date.now()
+  const started = Date.parse('2026-10-20T00:00:00Z')
+  // bots keep collecting points while the event runs
+  const k = Math.max(0.05, Math.min(1, (now - started) / (Date.parse(EVENT.endsAt) - started)))
+  const rows: Omit<EventEntry, 'rank' | 'prize'>[] = RACE_BOTS.map((nickname, i) => ({
+    nickname,
+    avatar: '/img/brand/avatar.webp',
+    level: 8 + ((i * 11) % 40),
+    points: Math.round((90_000 / (i + 1.6)) * k * (0.9 + (hashStr(`${nickname}:dziady`) % 20) / 100)),
+  }))
+  const e = eventToday()
+  if (withMe) rows.push({ nickname: state.user.nickname, avatar: state.user.avatar, level: state.user.level, points: e.points, you: true })
+  const ranked: EventEntry[] = rows
+    .sort((a, b) => b.points - a.points)
+    .map((r, i) => ({ ...r, rank: i + 1, prize: i < EVENT_SPLIT.length ? Math.round((EVENT.prizePool * EVENT_SPLIT[i]!) / 10_000) : 0 }))
+  const day = eventDay(now)
+  const pick = (d: number) => byId(GIVEAWAY_PRIZES[d % GIVEAWAY_PRIZES.length]!)
+  const winner = RACE_BOTS[hashStr(`win:${day - 1}`) % RACE_BOTS.length]!
+  return {
+    ...EVENT,
+    points: withMe ? e.points : 0,
+    cases: CASES.filter((c) => c.event).map(toSummary),
+    top: ranked.slice(0, EVENT_SPLIT.length),
+    me: ranked.find((r) => r.you) ?? null,
+    giveaway: {
+      endsAt: new Date((day + 1) * DAY).toISOString(),
+      prize: pick(day),
+      // entrants trickle in through the day
+      entrants: 140 + Math.round(((now % DAY) / DAY) * 900) + (hashStr(`n:${day}`) % 60) + (withMe && e.joined ? 1 : 0),
+      joined: withMe && e.joined,
+      goal: GIVEAWAY_GOAL,
+      played: withMe ? e.played : 0,
+      lastWinner: { nickname: winner, avatar: '/img/brand/avatar.webp', item: pick(day - 1) },
+    },
+  }
+}
+export function joinGiveaway() {
+  const e = eventToday()
+  if (e.joined) throw new MockError(409, 'You are already in today’s giveaway')
+  if (e.played < GIVEAWAY_GOAL) throw new MockError(409, 'Play the event cases first')
+  e.joined = true
+  return getEvent(true)
+}
+
 // --- Season pass ------------------------------------------------------------------
 
 const PASS_SEASON = 'Season 1 · Fowl Play'
@@ -793,6 +873,7 @@ export async function openCase(slug: string, count: number, demo: boolean, kurwa
   const price = kurwadrop ? cs.kurwadrop.price : cs.price
   if (!demo) spend(price * n)
   if (!demo) trackMission('open_cases', n)
+  if (!demo && cs.event) eventPlayed(price * n)
   if (!demo) {
     cs.opens += n
     ownOpens += n

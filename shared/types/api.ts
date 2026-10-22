@@ -468,6 +468,48 @@ export interface RaceResponse {
   me: RaceEntry | null
 }
 
+/** Event leaderboard row: event points are coins played on the event's cases */
+export interface EventEntry {
+  rank: number
+  nickname: string
+  avatar: string
+  level: number
+  points: number
+  /** Coin cents for this place; 0 outside the prize places */
+  prize: number
+  you?: boolean
+}
+
+/** Daily giveaway: one free ticket a day once the player has played `goal` coin cents on event cases */
+export interface EventGiveaway {
+  endsAt: string
+  prize: Item
+  entrants: number
+  joined: boolean
+  goal: number
+  /** Coin cents played on event cases today */
+  played: number
+  lastWinner: { nickname: string; avatar: string; item: Item } | null
+}
+
+/**
+ * GET /api/event — the running event (docs/ux-research-v3.md #19, #33, #34, #49): a ladder of themed cases from
+ * cheap to the final boss, a leaderboard by event points with a prize pool, and a daily giveaway.
+ * `me` and the giveaway's `joined`/`played` only for a signed-in player.
+ */
+export interface EventResponse {
+  id: string
+  name: string
+  endsAt: string
+  prizePool: number
+  points: number
+  /** The ladder, cheapest first */
+  cases: CaseSummary[]
+  top: EventEntry[]
+  me: EventEntry | null
+  giveaway: EventGiveaway
+}
+
 export interface PassTier {
   level: number
   /** Season points needed for this tier */
