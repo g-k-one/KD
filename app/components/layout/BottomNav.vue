@@ -8,7 +8,9 @@ const TABS = [
   { key: 'bonus', label: 'nav.bonus', to: '/bonuses', icon: 'm-bonus' },
 ]
 
-const { dailyReady, claimable } = useBonuses()
+// The bonus tab doubles as the free case timer on phones (the desktop header has its own chip): the countdown
+// to the next daily case replaces the label until it is ready, then the dot says "come and take it"
+const { dailyReady, dailyIn, claimable } = useBonuses()
 const tabClass = (active: boolean) => (active ? 'text-brand-light' : 'text-neutral-13')
 </script>
 
@@ -29,7 +31,8 @@ const tabClass = (active: boolean) => (active ? 'text-brand-light' : 'text-neutr
           <UiIcon :name="t.icon" :size="20" class="kd-icon" />
           <span v-if="t.key === 'bonus' && (dailyReady || claimable)" class="kd-dot absolute -top-0.5 -right-1 size-2 rounded-full bg-brand-base" />
         </span>
-        {{ $t(t.label) }}
+        <span v-if="t.key === 'bonus' && dailyIn" class="tabular-nums">{{ dailyIn }}</span>
+        <template v-else>{{ $t(t.label) }}</template>
       </NuxtLink>
       <button
         type="button"

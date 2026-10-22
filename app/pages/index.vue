@@ -39,6 +39,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
         v-model:risks="filters.risks.value"
         v-model:affordable="filters.affordable.value"
         v-model:sort="filters.sort.value"
+        v-model:query="filters.query.value"
       />
       </div>
 

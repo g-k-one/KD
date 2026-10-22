@@ -4,12 +4,14 @@ import { PRICE_RANGES, RISK_LEVELS, type CaseSort, type PriceRange } from '~/com
 
 // Case filters (docs/ux-audit-v2.md). Desktop: a short row of dropdowns — price (one choice), risk (several,
 // each with its colour), a "fits my balance" switch, sorting — so nothing is cut off at any width.
-// Phones: a "Filters" button with the active count and the sort select; the button opens a bottom sheet
-// with every group in full. Reset shows up only when something is set.
+// Phones: search, a filters icon with the active count and the sort select; the icon opens a bottom sheet
+// with every group in full. Reset shows up only when something is set. Search by name sits in the same row
+// on every width (the client's filter reference has no search; CSGOGem, CS2Skin and DogDrop all do).
 const price = defineModel<PriceRange>('price', { required: true })
 const risks = defineModel<RiskLevel[]>('risks', { required: true })
 const affordable = defineModel<boolean>('affordable', { required: true })
 const sort = defineModel<CaseSort>('sort', { required: true })
+const query = defineModel<string>('query', { required: true })
 
 const { t } = useI18n()
 const session = useSessionStore()
@@ -27,7 +29,7 @@ const toggleRisk = (r: RiskLevel) => (risks.value = risks.value.includes(r) ? ri
 const sortOptions = computed(() =>
   (['default', 'payback', 'priceAsc', 'priceDesc', 'newest'] as const).map((s) => ({ value: s, label: t(`filters.sortOptions.${s}`) })),
 )
-const dirty = computed(() => price.value !== 'any' || risks.value.length > 0 || affordable.value || sort.value !== 'default')
+const dirty = computed(() => !!query.value.trim() || price.value !== 'any' || risks.value.length > 0 || affordable.value || sort.value !== 'default')
 const sheet = ref(false)
 const activeCount = computed(() => (price.value !== 'any' ? 1 : 0) + risks.value.length + (affordable.value ? 1 : 0))
 function reset() {
@@ -35,20 +37,19 @@ function reset() {
   risks.value = []
   affordable.value = false
   sort.value = 'default'
+  query.value = ''
 }
 </script>
 
 <template>
   <!-- concentric corners: 8px controls + 8px padding = 16px (rounded-3xl) -->
   <div class="kd-filters flex items-center gap-2 rounded-3xl bg-neutral-2 p-2">
-    <!-- Phones: one button, everything in the sheet -->
-    <button type="button" class="kd-press kd-ftrigger flex h-10 min-w-0 flex-1 items-center gap-2 rounded-lg bg-neutral-1 px-3 lg:hidden" @click="sheet = true">
+    <!-- Search: the row's flexible part on phones, a fixed field after the dropdowns on desktop -->
+    <UiInput v-model="query" icon="search" clearable inputmode="search" :placeholder="$t('filters.search')" class="kd-fsearch min-w-0 flex-1 lg:order-2 lg:w-56 lg:flex-none" />
+    <!-- Phones: one icon, everything in the sheet -->
+    <button type="button" :aria-label="$t('filters.title')" class="kd-press kd-ftrigger relative grid size-10 shrink-0 place-items-center rounded-lg bg-neutral-1 lg:hidden" @click="sheet = true">
       <UiIcon name="sliders" :size="18" class="text-neutral-12" />
-      <span class="type-14 min-w-0 truncate">{{ $t('filters.title') }}</span>
-      <span v-if="activeCount" class="type-10-caps grid h-5 min-w-5 place-items-center rounded-full bg-brand-base px-1.5 text-neutral-1">{{ activeCount }}</span>
-      <span class="ml-auto flex shrink-0 items-center gap-1">
-        <span v-for="r in risks" :key="r" class="size-1.5 rounded-full" :style="{ background: RISK_SWATCH[r] }" />
-      </span>
+      <span v-if="activeCount" class="type-10-caps absolute -top-1 -right-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand-base px-1 text-neutral-1">{{ activeCount }}</span>
     </button>
     <!-- Desktop: dropdowns, not a ribbon of chips -->
     <div class="hidden min-w-0 flex-1 items-center gap-2 lg:flex">
@@ -65,9 +66,9 @@ function reset() {
       <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
     </div>
     <Transition name="kd-reset">
-      <UiButton v-if="dirty" variant="ghost" size="s" icon="refresh" class="max-lg:hidden" @click="reset">{{ $t('filters.reset') }}</UiButton>
+      <UiButton v-if="dirty" variant="ghost" size="s" icon="refresh" class="max-lg:hidden lg:order-1" @click="reset">{{ $t('filters.reset') }}</UiButton>
     </Transition>
-    <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:w-48">
+    <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:order-3 lg:w-48">
       <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
     </UiSelect>
 

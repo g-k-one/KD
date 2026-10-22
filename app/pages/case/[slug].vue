@@ -50,8 +50,6 @@ const cta = computed(() => {
   if (shortBy.value > 0) return { label: t('case.topUp'), amount: shortBy.value, short: true }
   return { label: phase.value === 'result' ? t('case.openAgain') : t('case.open', { count: count.value }), amount: total.value, short: false }
 })
-// Guests and short balances get a free demo spin offered right under it
-const offerDemo = computed(() => !session.user || shortBy.value > 0)
 
 // Neighbour cases in home order (wraps around), so the next case is one tap away
 const { data: list } = useFetch<CasesResponse>('/api/cases', { key: 'cases', lazy: true, server: false })
@@ -214,6 +212,7 @@ if (import.meta.client) {
         :fast="fast"
         :confirm-from="cs.price * 3"
         @sell="(uid) => sell([uid])"
+        @demo="open(true)"
       />
       <CaseOpenControls
         ref="controlsEl"
@@ -223,13 +222,11 @@ if (import.meta.client) {
         :label="cta.label"
         :amount="cta.amount"
         :short="cta.short"
-        :offer-demo="offerDemo"
         :phase="phase"
         :unsold-total="unsoldTotal"
         :confirm-sell="unsoldTotal >= openPrice * count * 3"
         @open="open()"
         @skip="reel?.skip()"
-        @demo="open(true)"
         @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"
       />
       <!-- Always there with a fixed height: a result only changes what the cards say -->

@@ -7,7 +7,8 @@ import type { ForgeHandle } from '~/composables/useForge'
  * Figma "CaseReel". x1 = one horizontal reel under the top/bottom markers,
  * x2–x5 = vertical reels side by side with markers on the left and right (desktop).
  * On phones x2–x5 become a grid of mini reels (2 or 3 per row, 2 rows max for x4/x5).
- * The reel keeps one height for x1–x5 (278 desktop, 256 phone); rows split that height.
+ * The reel keeps one height for x1–x5 (278 desktop, 272 phone); rows split that height.
+ * Idle, a "Try free" pill sits on the stage under the case: the demo spin belongs to the reel it spins.
  * so every result keeps room for its name and Sell button.
  *
  * Motion (docs/motion.md → Reel):
@@ -35,7 +36,7 @@ const props = defineProps<{
   /** Sell asks for a second tap when a drop is worth this much or more (coin cents) */
   confirmFrom?: number
 }>()
-const emit = defineEmits<{ sell: [uid: string] }>()
+const emit = defineEmits<{ sell: [uid: string]; demo: [] }>()
 
 const sfx = useSfx()
 const haptics = useHaptics()
@@ -71,8 +72,8 @@ const START = 3
 const horizontal = computed(() => props.count === 1)
 const isMobile = useMediaQuery('(max-width: 639.98px)')
 const cardW = computed(() => (isMobile.value ? 184 : 222))
-// Phone grid for x2–x5, inside the same 256px as x1 (h-64), so switching the amount never moves the page
-const MOBILE_H = 256
+// Phone grid for x2–x5, inside the same 272px as x1 (h-68; 288 pushed Open under the tab bar on an 812px phone), so switching the amount never moves the page
+const MOBILE_H = 272
 const GRID_GAP = 8
 const grid = computed(() => !horizontal.value && isMobile.value)
 const cols = computed(() => (props.count === 2 || props.count === 4 ? 2 : 3))
@@ -388,7 +389,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     class="kd-reel relative rounded-5xl"
     :title="phase === 'spinning' ? $t('case.skipHint') : undefined"
     @click="phase === 'spinning' && skip()"
-    :class="[shaking && 'is-shaking', punch && 'is-punch', tense.some(Boolean) && 'is-tense', (respinning || chickenHit.some(Boolean)) && 'is-kurwa', phase, horizontal ? 'is-h h-64 overflow-hidden sm:h-[278px]' : 'is-v', grid ? 'is-grid' : !horizontal && 'h-[278px] overflow-hidden']"
+    :class="[shaking && 'is-shaking', punch && 'is-punch', tense.some(Boolean) && 'is-tense', (respinning || chickenHit.some(Boolean)) && 'is-kurwa', phase, horizontal ? 'is-h h-68 overflow-hidden sm:h-[278px]' : 'is-v', grid ? 'is-grid' : !horizontal && 'h-[278px] overflow-hidden']"
     :style="{ ...(grid ? { height: `${MOBILE_H}px` } : {}) }"
   >
     <!-- Forge layer: sits behind the cards, clipped by the reel; markerBox is where the tension glow sits -->
@@ -535,8 +536,15 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
         <img
           :src="data.image"
           :alt="data.name"
-          class="kd-reel-case absolute top-1/2 left-1/2 size-40 -translate-x-1/2 -translate-y-1/2 object-contain sm:size-[210px]"
+          class="kd-reel-case absolute top-[46%] left-1/2 size-40 -translate-x-1/2 -translate-y-1/2 object-contain sm:size-[196px]"
         />
+      </div>
+    </Transition>
+
+    <!-- Demo spin, on the stage while the case waits (free, nothing is charged) -->
+    <Transition name="kd-idle">
+      <div v-if="phase === 'idle' && !breathing" class="absolute inset-x-0 bottom-3 z-10 flex justify-center sm:bottom-4">
+        <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
       </div>
     </Transition>
 
@@ -578,6 +586,11 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 }
 .kd-depth.is-v {
   background: linear-gradient(180deg, var(--color-neutral-1) 2%, transparent 30%, transparent 70%, var(--color-neutral-1) 98%);
+}
+/* Glass over the stage so the case art behind stays readable */
+.kd-try-stage {
+  background: rgb(12 13 16 / 0.7);
+  backdrop-filter: blur(6px);
 }
 /* Phone grid: the outer frame steps aside and every mini reel gets its own */
 .kd-reel.is-grid {

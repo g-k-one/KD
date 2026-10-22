@@ -156,9 +156,9 @@ const canReset = computed(() => !!(props.input || props.target))
 
 <template>
   <section class="kd-controls grid grid-cols-[minmax(0,1fr)] gap-2" :class="busy && 'is-busy'">
-    <!-- CTA · fast · reset -->
-    <div v-if="is('cta')" class="flex gap-2" :class="part === 'cta' ? 'lg:flex-wrap' : 'kd-cta-dock max-lg:order-last'">
-      <UiButton size="l" class="kd-cta h-12 min-w-0 flex-1" :class="part === 'cta' && 'lg:h-14 lg:basis-full'" :loading="busy" :disabled="busy" @click="onCta">
+    <!-- CTA, then Reset · Fast as two equal chips under it (the case page's dock has the same block) -->
+    <div v-if="is('cta')" class="flex flex-wrap gap-2" :class="part !== 'cta' && 'kd-cta-dock max-lg:order-last'">
+      <UiButton size="l" class="kd-cta h-12 min-w-0 basis-full lg:h-14" :loading="busy" :disabled="busy" @click="onCta">
         <template v-if="offerAgain && again">
           <UiIcon name="upgrade" :size="20" />
           <UiTextSwap :text="$t('upgrade.upgradeWin')" />
@@ -172,11 +172,11 @@ const canReset = computed(() => !!(props.input || props.target))
         </template>
         <UiTextSwap v-else :text="busy ? $t('upgrade.rolling') : !signedIn ? $t('auth.signInToPlay') : !input ? $t('upgrade.addToUpgrade') : $t('upgrade.chooseTarget')" />
       </UiButton>
-      <UiChip size="l" icon="refresh" class="kd-tool" :class="part === 'cta' && 'is-wide'" :disabled="busy || !canReset" :title="$t('upgrade.reset')" @click="emit('reset')">
-        <span class="truncate" v-if="part === 'cta'">{{ $t('upgrade.reset') }}</span>
+      <UiChip size="m" icon="refresh" class="kd-tool" :disabled="busy || !canReset" @click="emit('reset')">
+        <span class="truncate">{{ $t('upgrade.reset') }}</span>
       </UiChip>
-      <UiChip size="l" tone="coin" icon="fast" class="kd-tool" :class="part === 'cta' && 'is-wide'" :active="fast" :title="$t('upgrade.fast')" @click="fast = !fast">
-        <span class="truncate" v-if="part === 'cta'">{{ $t('upgrade.fast') }}</span>
+      <UiChip size="m" tone="coin" icon="fast" class="kd-tool" :active="fast" @click="fast = !fast">
+        <span class="truncate">{{ $t('upgrade.fast') }}</span>
       </UiChip>
     </div>
 
@@ -330,18 +330,9 @@ const canReset = computed(() => !!(props.input || props.target))
   scale: 0.6;
 }
 .kd-tool {
-  width: 48px;
-  padding: 0;
-}
-.kd-tool.is-wide {
-  /* three equal columns under the CTA, whatever the labels */
+  /* two equal columns under the CTA, whatever the labels */
   flex: 1 1 0;
   min-width: 0;
-  width: auto;
-  height: 36px;
-  gap: 6px;
-  padding: 0 8px;
-  font-size: 14px;
 }
 /* The bar: red track, green winning zone up to the thumb */
 .kd-track {
