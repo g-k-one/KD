@@ -219,9 +219,18 @@ const fx = useForge(fxHost)
 // the jackpot burst when it is won, a collapse when it is lost
 const fxTop = useForge()
 let aura: ForgeHandle | null = null
+// the won skin keeps its rarity beam until the next stake (docs/motion.md → rarity steps)
+let beam: Awaited<ReturnType<typeof rarityBeam>> = null
+const appBase = useRuntimeConfig().app.baseURL
+function stopBeam() {
+  beam?.stop()
+  beam = null
+}
+onBeforeUnmount(stopBeam)
 const targetEl = () => document.querySelector<HTMLElement>(isLg.value ? '.kd-target' : '.kd-mini-target')
 
 function resetResult() {
+  stopBeam()
   if (state.value === 'win' || state.value === 'lose') {
     state.value = 'idle'
     gauge.value?.reset()
@@ -254,8 +263,15 @@ async function runUpgrade() {
     aura = null
     state.value = res.win ? 'win' : 'lose'
     fx.at(res.win ? 'kdWin' : 'kdLose', fxDial.value, 1.2)
-    // The target gets light only when it is won; a loss stays quiet there (the dial already collapses)
-    if (res.win) fxTop.at('kdJackpot', targetEl(), isLg.value ? 0.85 : 0.6)
+    // The target gets light only when it is won, graded by its rarity like a case drop: the beam (more layers
+    // the rarer) and, for gold, the gold burst. A loss stays quiet there (the dial already collapses)
+    if (res.win) {
+      const el = targetEl()
+      const rarity = target.value.rarity
+      const scale = isLg.value ? 1.6 : 1.1
+      rarityBeam(fxTop, el?.querySelector<HTMLElement>('.kd-art img') ?? el, rarity, scale).then((h) => (state.value === 'win' ? (beam = h) : h?.kill()))
+      if (RARITY_TIER[rarity] >= 4) goldBurst(fxTop, el, scale, appBase)
+    }
     if (res.win) {
       sfx.reveal(Math.max(2, RARITY_TIER[target.value?.rarity ?? 'covert']))
       haptics.rare()

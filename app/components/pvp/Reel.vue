@@ -39,10 +39,30 @@ const WIN = STRIP - 4
 const strip = ref<Item[]>([])
 const landed = ref(false)
 
+// The drop gets the same rarity grade as a case drop: the beam (more layers the rarer) until the next round,
+// and the gold burst for gold. Shared top layer: one canvas for every seat
+const fx = useForge()
+const appBase = useRuntimeConfig().app.baseURL
+let beam: Awaited<ReturnType<typeof rarityBeam>> = null
+function stopBeam() {
+  beam?.stop()
+  beam = null
+}
+onBeforeUnmount(stopBeam)
+async function dropFx(it: Item) {
+  await nextTick()
+  const card = root.value?.querySelector<HTMLElement>('[data-win]')
+  if (!card) return
+  const scale = props.compact ? 1 : 1.5
+  rarityBeam(fx, card.querySelector<HTMLElement>('.kd-art img') ?? card, it.rarity, scale).then((h) => (landed.value ? (beam = h) : h?.kill()))
+  if (RARITY_TIER[it.rarity] >= 4) goldBurst(fx, card, scale, appBase)
+}
+
 async function spin() {
   if (!props.target || !track.value) return
   // Filler follows the case's real odds, like the case reel
   const pool = caseItems.value
+  stopBeam()
   strip.value = Array.from({ length: STRIP }, (_, i) => (i === WIN || !pool.length ? props.target! : pickByTickets(pool)))
   landed.value = false
   await nextTick()
@@ -68,6 +88,7 @@ async function spin() {
   anim.cancel()
   settle.cancel()
   landed.value = true
+  if (!props.instant) dropFx(props.target)
 }
 
 watch(
