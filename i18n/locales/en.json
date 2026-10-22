@@ -39,6 +39,13 @@
     "sure": "Sure?",
     "sureSell": "Tap to confirm"
   },
+  "drawer": {
+    "title": "Your skins",
+    "skins": "1 skin worth | {n} skins worth",
+    "all": "Actions apply to all skins · tap to pick",
+    "selected": "{n} selected",
+    "full": "Open the full inventory"
+  },
   "sell": {
     "title": "Sell 1 skin | Sell {n} skins",
     "give": "You give",

@@ -12,7 +12,10 @@ const ui = useUiStore()
 
     <template v-if="session.user">
       <div class="flex h-11 items-center gap-2 rounded-2xl border border-neutral-4 bg-neutral-3 py-1 pr-1.5 pl-4">
-        <LayoutBalance />
+        <button type="button" class="kd-press flex items-center gap-1.5 rounded-md" :aria-label="$t('drawer.title')" @click="ui.openInventory()">
+          <UiIcon name="inventory" :size="16" class="text-neutral-12" />
+          <LayoutBalance />
+        </button>
         <UiButton size="s" icon="plus" icon-only to="/deposit" class="ml-0.5" :aria-label="$t('wallet.deposit')" />
       </div>
       <NuxtLink to="/profile" class="kd-press ml-1 rounded-full" :aria-label="$t('profile.profile')">

@@ -9,6 +9,8 @@ export const useUiStore = defineStore('ui', () => {
   /** Quick top-up modal; need = missing coin cents, pre-filled as the amount */
   const depositOpen = ref(false)
   const depositNeed = ref<number | null>(null)
+  /** Inventory drawer, from the balance chip */
+  const inventoryOpen = ref(false)
 
   function togglePopover(p: Exclude<Popover, null>) {
     popover.value = popover.value === p ? null : p
@@ -30,5 +32,10 @@ export const useUiStore = defineStore('ui', () => {
     depositOpen.value = true
   }
 
-  return { popover, mobileMenuOpen, signInOpen, depositOpen, depositNeed, togglePopover, closeAll, openSignIn, openDeposit }
+  function openInventory() {
+    closeAll()
+    inventoryOpen.value = true
+  }
+
+  return { popover, mobileMenuOpen, signInOpen, depositOpen, depositNeed, inventoryOpen, togglePopover, closeAll, openSignIn, openDeposit, openInventory }
 })

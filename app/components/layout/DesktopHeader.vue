@@ -89,7 +89,10 @@ async function logout() {
         ref="profileRoot"
         class="relative flex h-11 items-center gap-2 rounded-2xl border border-neutral-4 bg-neutral-3 py-1 pr-1.5 pl-4"
       >
-        <LayoutBalance />
+        <button type="button" class="kd-press flex items-center gap-2 rounded-md" :aria-label="$t('drawer.title')" @click="ui.openInventory()">
+          <UiIcon name="inventory" :size="18" class="text-neutral-12" />
+          <LayoutBalance />
+        </button>
         <UiButton size="s" icon="plus" to="/deposit" class="ml-2.5">{{ $t('wallet.deposit') }}</UiButton>
         <span class="h-6 w-px bg-neutral-7" />
         <button

@@ -24,6 +24,7 @@ watch(() => route.fullPath, () => (ui.popover = null))
     <LayoutMobileMenu />
     <LayoutSignInModal />
     <WalletQuickDeposit />
+    <WalletInventoryDrawer />
     <LayoutLevelUp />
     <UiToaster />
     <LayoutDebugDock v-if="debug" />
