@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { CaseDetails, CaseItem, InventoryItem, Item } from '#shared/types/api'
 import { goldenChicken, KURWA_CHICKEN_ID } from '#shared/kurwadrop'
-import type { ForgeHandle } from '~/composables/useForge'
 
 /*
  * Figma "CaseReel". x1 = one horizontal reel under the top/bottom markers,
@@ -229,7 +228,8 @@ const respinning = ref(false)
 let spunOnce = false
 const wait = (ms: number) => new Promise((r) => setTimeout(r, skipping ? 0 : ms))
 
-const markerBox = useTemplateRef<HTMLElement>('markerBox')
+/** The x1 aim: '' hidden, 'aiming' closing in over the last stretch, 'locked' snapping shut on the landing */
+const aim = ref<'' | 'aiming' | 'locked'>('')
 const punch = ref(false)
 
 /** Cells currently hanging on a card edge (the tease) */
@@ -289,17 +289,15 @@ async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseIt
   }
   if (!reduced) raf = requestAnimationFrame(watchTicks)
 
-  // Speed reads as motion blur that melts away as the reel slows; the last stretch builds a glow
-  // under the markers (Forge kdCharge) that ends with the landing
+  // Speed reads as motion blur that melts away as the reel slows; the last stretch closes a reticle in under the
+  // markers (the aim) that snaps shut on the landing
   const blurMs = base * 0.55
   // x1 only: on x2–x5 a blur filter over several tall tracks re-rasterizes them every frame (the lag on multi-open)
   if (!reduced && !skipping && horizontal.value)
     tracks.value.forEach((t, c) => cols.includes(c) && active.push(t.animate([{ filter: `blur(${horizontal.value ? 5 : 4}px)` }, { filter: 'blur(0)' }], { duration: blurMs, easing: 'cubic-bezier(0.2, 0.6, 0.3, 1)' })))
-  const fx = { tension: null as ForgeHandle | null, done: false }
-  // one reel only: on x2–x5 the marker centre is the middle column, and the amber glow sat on that drop
-  const tensionTimer = !reduced && !fast && horizontal.value ? setTimeout(() => {
-    if (!skipping && markerBox.value) fxBg.at('kdCharge', markerBox.value, 1.6, true).then((h) => (fx.done ? h?.kill() : (fx.tension = h)))
-  }, base - 1500) : undefined
+  // one reel only: on x2–x5 the marker centre is the middle column
+  aim.value = ''
+  const aimTimer = !reduced && !fast && horizontal.value ? setTimeout(() => !skipping && (aim.value = 'aiming'), base - 1500) : undefined
 
   await Promise.all(
     cols.map(async (col, order) => {
@@ -341,10 +339,11 @@ async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseIt
     }),
   )
   cancelAnimationFrame(raf)
-  clearTimeout(tensionTimer)
-  fx.done = true
-  // killed, not faded: its amber sparks must not linger round the drop and read as the reveal — that is the rarity's
-  fx.tension?.kill()
+  clearTimeout(aimTimer)
+  if (aim.value === 'aiming') {
+    aim.value = 'locked'
+    setTimeout(() => aim.value === 'locked' && (aim.value = ''), 320)
+  }
   active = []
   tense.value = []
   spunOnce = true
@@ -432,15 +431,31 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     class="kd-reel relative rounded-5xl"
     :title="phase === 'spinning' ? $t('case.skipHint') : undefined"
     @click="phase === 'spinning' && skip()"
-    :class="[shaking && 'is-shaking', punch && 'is-punch', tense.some(Boolean) && 'is-tense', (respinning || chickenHit.some(Boolean)) && 'is-kurwa', phase, horizontal ? 'is-h h-68 overflow-hidden sm:h-[278px]' : 'is-v', grid ? 'is-grid' : !horizontal && 'h-[278px] overflow-hidden']"
+    :class="[shaking && 'is-shaking', punch && 'is-punch', tense.some(Boolean) && 'is-tense', (respinning || chickenHit.some(Boolean)) && 'is-kurwa', phase, horizontal ? 'is-h h-68 sm:h-[278px]' : 'is-v', grid ? 'is-grid' : !horizontal && 'h-[278px]']"
     :style="{ ...(grid ? { height: `${MOBILE_H}px` } : {}) }"
   >
-    <!-- Forge layer: sits behind the cards, clipped by the reel; markerBox is where the tension glow sits -->
-    <div ref="fxHost" class="pointer-events-none absolute inset-0 overflow-hidden rounded-5xl" />
-    <span ref="markerBox" class="pointer-events-none absolute top-1/2 left-1/2 size-40 -translate-1/2" aria-hidden="true" />
+    <!-- Forge layer: behind the cards, and not clipped by the frame — it reaches 128px past the top and the bottom,
+         so a rank burst (rays and sparks well past the drop) is not cut off (the drop sits high in its card, ~90px
+         under the top). Not past the sides: on phones that would widen the page. -->
+    <div ref="fxHost" class="pointer-events-none absolute inset-x-0 -inset-y-32" />
 
-    <!-- Horizontal (x1) -->
-    <div v-if="horizontal" :ref="(el) => (tracks = el ? [el as HTMLElement] : [])" class="kd-reel-track absolute inset-y-0 left-0 flex items-center" :class="phase === 'spinning' && 'will-change-transform'">
+    <!-- The aim (x1): a thin glass reticle under the markers for the last stretch, gone on the landing -->
+    <svg v-if="horizontal" class="kd-aim pointer-events-none absolute top-1/2 left-1/2" :class="aim && `is-${aim}`" viewBox="0 0 200 200" aria-hidden="true">
+      <defs>
+        <radialGradient id="kd-aim-glass" r="0.5">
+          <stop offset="0.6" stop-color="#fff" stop-opacity="0" />
+          <stop offset="1" stop-color="#fff" stop-opacity="0.07" />
+        </radialGradient>
+      </defs>
+      <circle cx="100" cy="100" r="92" fill="url(#kd-aim-glass)" class="kd-aim-ring" />
+      <path d="M38 52 A80 80 0 0 1 72 26" class="kd-aim-shine" />
+      <g class="kd-aim-dash"><circle cx="100" cy="100" r="80" /></g>
+      <path d="M100 2v14M100 184v14M2 100h14M184 100h14" class="kd-aim-tick" />
+    </svg>
+
+    <!-- Horizontal (x1): the strip clips itself (the frame no longer does) -->
+    <div v-if="horizontal" class="absolute inset-0 overflow-hidden rounded-[20px]">
+    <div :ref="(el) => (tracks = el ? [el as HTMLElement] : [])" class="kd-reel-track absolute inset-y-0 left-0 flex items-center" :class="phase === 'spinning' && 'will-change-transform'">
       <div
         v-for="(it, i) in strips[0]"
         :key="i"
@@ -451,6 +466,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
       >
         <ItemArt :image="it.image" :rarity="it.rarity" :size="96" eager :reveal="phase === 'result' && i === WIN && it.id !== 'kurwa-chicken' ? RARITY_TIER[it.rarity] || 1 : 0" class="relative w-full" :class="chickenHit[0] && i === WIN && 'kd-chicken-hit'" />
       </div>
+    </div>
     </div>
 
     <!-- Vertical (x2–x5): one column per reel on desktop, a grid of framed mini reels on phones -->
@@ -613,7 +629,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
       </div>
     </Transition>
 
-    <div v-if="!grid" class="pointer-events-none absolute inset-0" :class="markerClass">
+    <div v-if="!grid" class="pointer-events-none absolute inset-0 overflow-hidden" :class="markerClass">
       <img src="/img/fx/marker-top.svg" alt="" class="kd-marker-a absolute" />
       <img src="/img/fx/marker-top.svg" alt="" class="kd-marker-b absolute" />
     </div>
@@ -832,6 +848,77 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   }
 }
 /* Tease: while a reel hangs on a card edge the markers breathe and a soft glow gathers (no hard rim) */
+/* The aim: white hairlines and a faint glass rim, under the cards. It closes in (scale and turn ease out with the
+   strip) over the last 1.5 s, the dashed ring drifts the other way, and it snaps shut on the landing. */
+.kd-aim {
+  width: 240px;
+  height: 240px;
+  translate: -50% -50%;
+  opacity: 0;
+  fill: none;
+  stroke: #fff;
+}
+@media (max-width: 639px) {
+  .kd-aim {
+    width: 200px;
+    height: 200px;
+  }
+}
+.kd-aim-ring {
+  stroke-opacity: 0.22;
+  stroke-width: 1;
+}
+.kd-aim-shine {
+  stroke-opacity: 0.35;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.kd-aim-dash {
+  transform-origin: 100px 100px;
+  stroke-opacity: 0.28;
+  stroke-width: 1;
+  stroke-dasharray: 2 8;
+}
+.kd-aim-tick {
+  stroke-opacity: 0.4;
+  stroke-width: 1.5;
+}
+.kd-aim.is-aiming {
+  animation: kd-aim-in 1500ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+.kd-aim.is-aiming .kd-aim-dash {
+  animation: kd-aim-drift 6s linear infinite;
+}
+.kd-aim.is-locked {
+  animation: kd-aim-lock 300ms var(--ease-in) forwards;
+}
+@keyframes kd-aim-in {
+  from {
+    opacity: 0;
+    scale: 1.35;
+    rotate: -45deg;
+  }
+  to {
+    opacity: 0.55;
+    scale: 1;
+    rotate: 0deg;
+  }
+}
+@keyframes kd-aim-drift {
+  to {
+    rotate: -360deg;
+  }
+}
+@keyframes kd-aim-lock {
+  from {
+    opacity: 0.55;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 0.88;
+  }
+}
 .kd-reel.is-tense:not(.is-grid),
 .kd-cell.is-framed.is-tense {
   box-shadow: 0 0 44px -10px rgb(255 95 31 / 0.7);

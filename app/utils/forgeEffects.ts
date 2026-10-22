@@ -17,8 +17,6 @@ import { RARITY_HEX } from './rarity'
  *               Colour per rarity: handle.set('tint', [r, g, b])
  *   kdWin     — won upgrade: one beat — a burst of green and gold sparks and a single thin ring that stays
  *               close to the dial (no glow wash, no second wave)
- *   kdCharge  — loop under the marker in a reel's last stretch: white light drawn into the centre (white, so no
- *               colour lingers on a drop that is not the rarity's)
  *   kdBurn    — loop around a label: a flat warm glow hugging it, licks and embers rising along its width
  *               (the label's middle sits at y ≈ 300)
  *   kdRank    — Forge's rank reveal (motion pack, `tier`: base → luck → mega → ultra → jackpot) in the rarity's own
@@ -70,7 +68,6 @@ const GOLD_HI: Rgb = [1, 0.94, 0.7]
 const GREEN: Rgb = [0.3, 1, 0.55]
 const ORANGE: Rgb = [1, 0.5, 0.16]
 const AMBER: Rgb = [1, 0.78, 0.38]
-const WHITE_COOL: Rgb = [0.92, 0.95, 1]
 
 /** '#eb4b4b' → [0.92, 0.29, 0.29] for handle.set('tint', …) */
 export function hexToRgb(hex: string): Rgb {
@@ -88,6 +85,19 @@ export function defineKdEffects(engine: Engine) {
     if (!tier) return { atlas: 'aura', init: () => {}, update: () => {}, render: () => {} }
     return {
       ...tier,
+      // the tier's sparks are thrown with a downward bias and fall hard (grav 260), so its mass sat under the shape:
+      // halve the fall and drop the bias, once per spark
+      update(s, dt, at) {
+        tier.update(s, dt, at)
+        for (const p of (s.p as Particle[] | undefined) ?? []) {
+          if (p.kd) continue
+          p.kd = 1
+          if ((p.grav as number) > 0) {
+            p.grav = (p.grav as number) * 0.45
+            p.vy = (p.vy as number) + 40
+          }
+        }
+      },
       init(s) {
         tier.init(s)
         const o = (s as State & { o: { color?: string; level?: number } }).o
@@ -336,29 +346,6 @@ export function defineKdEffects(engine: Engine) {
     },
   }))
 
-  engine.define('kdCharge', (h) => ({
-    atlas: 'kd',
-    init: (s) => Object.assign(s, { inS: [] as Particle[], rip: [] as Particle[] }),
-    update(s, dt, at) {
-      const { R } = h
-      const pre = Math.min(1, s.t / 1.6)
-      h.emit(s.acc, 1, 16 + 30 * pre, dt, () => {
-        const a = R(0, 6.28)
-        const d = R(130, 175)
-        h.spawn(s.inS as Particle[], { x: 180 + Math.cos(a) * d, y: 180 + Math.sin(a) * d, vx: -Math.cos(a) * d * 1.6, vy: -Math.sin(a) * d * 1.6, size: R(16, 28), life: 0.55, rot: R(0, 1), cells: [at.map.spark], add: 1, tint: WHITE_COOL, fadeIn: 0.3, fadeOut: 0.3 })
-      })
-      h.emit(s.acc, 2, 2, dt, () => h.spawn(s.rip as Particle[], { x: 180, y: 180, size: 330, grow: -0.7, life: 0.7, cells: [at.map.ring], add: 1, alpha: 0.3, tint: WHITE_COOL, fadeIn: 0.2, fadeOut: 0.5 }))
-      h.step(s.inS as Particle[], dt)
-      h.step(s.rip as Particle[], dt)
-    },
-    render(s, c) {
-      const pre = Math.min(1, s.t / 1.6)
-      h.sprite(c, 180, 180, 240 * (1 + 0.08 * Math.sin(s.t * (5 + pre * 9))), 0, 0.12 + 0.22 * pre, 1, c.at.map.glow!, 1, WHITE_COOL)
-      h.draw(c, s.rip as Particle[])
-      h.draw(c, s.inS as Particle[])
-    },
-  }))
-
   engine.define('kdBurn', (h) => ({
     atlas: 'kd',
     init: (s) => Object.assign(s, { em: [] as Particle[], lick: [] as Particle[] }),
@@ -394,13 +381,12 @@ type Layer = { at: (name: string, el: HTMLElement | null | undefined, scale?: nu
 export const RANK_LEVEL: Record<Rarity, number> = { industrial: -1, milspec: -1, restricted: 0, classified: 1, covert: 2, gold: 3 }
 /**
  * One burst on a landed drop in the rarity's colour. el is the drop's picture: the burst is centred on its rarity shape
- * (ItemArt's star) and sized by the picture, then lifted by 7% of its size — the tier effect's sparks are born a little
- * below its centre and fall, so it read as sitting low.
+ * (ItemArt's star) and sized by the picture. No lift: it only looked low because the frame cut its top off.
  */
 export function rarityRank(layer: Layer, el: HTMLElement | null | undefined, rarity: Rarity, scale = 1) {
   if (RANK_LEVEL[rarity] < 0) return Promise.resolve(null)
   const star = el?.closest('.kd-art')?.querySelector<HTMLElement>('.kd-art-star') ?? el
-  return layer.at('kdRank', star, scale, false, { color: RARITY_HEX[rarity], level: RANK_LEVEL[rarity], sizeEl: el, lift: 0.07 })
+  return layer.at('kdRank', star, scale, false, { color: RARITY_HEX[rarity], level: RANK_LEVEL[rarity], sizeEl: el })
 }
 
 let coinUrl: Promise<string> | null = null
