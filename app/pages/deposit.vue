@@ -80,7 +80,7 @@ async function pay() {
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
-    <h1 class="type-20-caps md:type-28 text-center uppercase lg:leading-10">{{ $t('deposit.title') }}</h1>
+    <UiPageBar :title="$t('deposit.title')" :left="[{ label: $t('case.allCases'), icon: 'arrow-left', to: '/' }]" />
 
     <div class="grid items-start gap-4 lg:grid-cols-[1fr_440px] lg:gap-5">
       <!-- Methods -->

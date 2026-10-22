@@ -52,7 +52,8 @@ const cta = computed(() => {
   if (phase.value === 'spinning') return { label: t('case.skip'), amount: total.value, short: false }
   if (!session.user) return { label: t('case.signInToOpen'), amount: total.value, short: false }
   if (shortBy.value > 0) return { label: t('case.topUp'), amount: shortBy.value, short: true }
-  return { label: phase.value === 'result' ? t('case.openAgain') : t('case.open', { count: count.value }), amount: total.value, short: false }
+  // the same words before and after a drop: the button that opens again should not change its text
+  return { label: t('case.open', { count: count.value }), amount: total.value, short: false }
 })
 
 // Neighbour cases in home order (wraps around), so the next case is one tap away
@@ -259,7 +260,7 @@ if (import.meta.client) {
         <img :src="cs.image" alt="" class="size-10 object-contain" />
         <span class="type-12-caps min-w-0 flex-1 truncate">{{ cs.name }} · x{{ count }}</span>
         <UiButton :variant="phase === 'spinning' ? 'secondary' : 'primary'" class="min-w-36 shrink-0" @click="phase === 'spinning' ? reel?.skip() : (open(), scrollToReel())">
-          <UiTextSwap :text="cta.label" />
+          <span>{{ cta.label }}</span>
           <span v-if="phase !== 'spinning'" class="flex items-center gap-0.5">
             <span v-if="cta.short" class="type-12">+</span>
             <UiPrice :amount="cta.amount" size="s" tone="inverse" />

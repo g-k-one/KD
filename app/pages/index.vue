@@ -58,10 +58,9 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
         </div>
       </section>
 
-      <div v-if="!sections.length" class="flex flex-col items-center gap-4 rounded-5xl bg-neutral-2 py-16 text-center">
-        <p class="type-14-regular text-neutral-12">{{ $t('cases.empty') }}</p>
+      <UiEmptyState v-if="!sections.length" :text="$t('cases.empty')">
         <UiButton variant="secondary" @click="filters.reset()">{{ $t('filters.reset') }}</UiButton>
-      </div>
+      </UiEmptyState>
     </div>
     </div>
   </div>

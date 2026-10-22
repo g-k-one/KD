@@ -174,7 +174,7 @@ const readout = computed(() =>
 
 <template>
   <div
-    class="kd-gauge @container relative aspect-square w-full max-w-72 select-none lg:max-w-84"
+    class="kd-gauge @container relative aspect-square w-full max-w-72 select-none lg:max-w-80"
     :class="[`is-${state}`, `tier-${tier}`, `ph-${phase}`, inside && 'is-inside', live != null && !inside && 'is-outside', !pct && 'is-empty']"
     :title="state === 'spinning' ? t('case.skipHint') : undefined"
     :style="{ '--chance': pct / 100 }"

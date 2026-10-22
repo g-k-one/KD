@@ -33,8 +33,8 @@ const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a +
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10">
+    <UiPageBar :title="$t('pvp.title')" :left="[{ label: $t('case.allCases'), icon: 'arrow-left', to: '/' }]" />
     <div class="flex flex-wrap items-center gap-3">
-      <h1 class="type-20-caps md:type-28 uppercase">{{ $t('pvp.title') }}</h1>
       <span class="kd-stat type-12-caps"><span class="kd-stat-dot" />{{ counts.live }} {{ $t('pvp.live') }}</span>
       <span class="kd-stat type-12-caps"><UiIcon name="eye" :size="14" />{{ watching }}</span>
       <span class="kd-stat type-12-caps max-sm:hidden">{{ $t('pvp.inPlay') }} <UiPrice :amount="inPlay" size="s" tone="coin" /></span>
@@ -54,7 +54,9 @@ const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a +
     <TransitionGroup v-else key="list" tag="div" name="kd-list" class="relative flex flex-col gap-2">
       <PvpRow v-for="b in list" :key="b.id" :battle="b" />
     </TransitionGroup>
-    <p v-if="!list.length" class="type-14-regular rounded-3xl bg-neutral-2 py-12 text-center text-neutral-12">{{ $t('pvp.empty') }}</p>
+    <UiEmptyState v-if="!list.length" :text="$t('pvp.empty')">
+      <UiButton icon="plus" to="/pvp/create">{{ $t('pvp.create') }}</UiButton>
+    </UiEmptyState>
   </div>
 </template>
 

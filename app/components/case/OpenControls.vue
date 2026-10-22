@@ -8,7 +8,8 @@
 // "Sell all" gets a slot of its own (desktop: the middle card of the row under the dock, right below the main
 // button; phones: a row that unfolds under the button), so its arrival never pushes the main button.
 // The page decides what the main button says (open · sign in · top up the shortfall). The demo spin is on the
-// reel's stage (CaseReel), not here.
+// reel's stage (CaseReel), not here. Labels change at once (no letter-by-letter swap: rapid taps made the text
+// jitter), and every control in the block is 48px high (56px main button on desktop).
 const count = defineModel<1 | 2 | 3 | 4 | 5>('count', { required: true })
 const fast = defineModel<boolean>('fast', { required: true })
 const kurwadrop = defineModel<boolean>('kurwadrop', { required: true })
@@ -51,7 +52,7 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
 
     <div class="flex flex-col">
       <UiButton size="l" class="kd-main w-full lg:h-14 lg:w-80" :variant="phase === 'spinning' ? 'secondary' : 'primary'" @click="main">
-        <UiTextSwap :text="label" />
+        <span>{{ label }}</span>
         <span v-if="phase !== 'spinning'" class="flex items-center gap-0.5">
           <span v-if="short" class="type-14">+</span>
           <UiPrice :amount="amount" size="m" tone="inverse" />
@@ -63,7 +64,7 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
       <div class="kd-unfold lg:hidden" :class="showSell && 'is-open'">
         <div class="min-h-0">
           <UiButton :variant="armed ? 'danger' : 'secondary'" size="l" class="mt-2 w-full" :tabindex="showSell ? 0 : -1" @click="sellAll">
-            <UiTextSwap :text="armed ? $t('wallet.sureSell') : $t('wallet.sellAll')" />
+            <span>{{ armed ? $t('wallet.sureSell') : $t('wallet.sellAll') }}</span>
             <UiPrice :amount="unsoldTotal" size="m" />
           </UiButton>
         </div>
@@ -73,9 +74,9 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
     <!-- Switches (pressed = tinted fill, the hint lives in the tooltip): phones, two equal chips under the main
          button; desktop, the right end of the row -->
     <div class="grid grid-cols-2 gap-2 lg:flex lg:justify-end">
-      <UiChip size="m" tone="coin" icon="fast" class="w-full lg:!h-12 lg:w-auto lg:px-4" :active="fast" @click="fast = !fast">{{ $t('upgrade.fast') }}</UiChip>
+      <UiChip size="m" tone="coin" icon="fast" class="!h-12 w-full lg:w-auto lg:px-4" :active="fast" @click="fast = !fast">{{ $t('upgrade.fast') }}</UiChip>
       <UiTooltip :text="$t('case.kurwaHint')" class="min-w-0">
-        <UiChip size="m" tone="gold" icon="chicken" class="w-full lg:!h-12 lg:px-4" :active="kurwadrop" @click="kurwadrop = !kurwadrop">
+        <UiChip size="m" tone="gold" icon="chicken" class="!h-12 w-full lg:px-4" :active="kurwadrop" @click="kurwadrop = !kurwadrop">
           <span :class="kurwadrop && 'kd-kurwa-word'">{{ $t('case.kurwadrop') }}</span>
         </UiChip>
       </UiTooltip>

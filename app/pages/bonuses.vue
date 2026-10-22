@@ -91,7 +91,7 @@ const tierNames = ['I', 'II', 'III', 'IV']
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
-    <h1 class="type-20-caps md:type-28 uppercase">{{ $t('bonus.title') }}</h1>
+    <UiPageBar :title="$t('bonus.title')" :left="[{ label: $t('case.allCases'), icon: 'arrow-left', to: '/' }]" />
 
     <div v-if="!session.user" class="flex flex-col items-center gap-4 rounded-5xl bg-neutral-2 py-16 text-center">
       <p class="type-14-regular text-neutral-12">{{ $t('bonus.signIn') }}</p>

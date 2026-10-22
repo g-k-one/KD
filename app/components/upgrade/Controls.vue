@@ -161,7 +161,7 @@ const canReset = computed(() => !!(props.input || props.target))
       <UiButton size="l" class="kd-cta h-12 min-w-0 basis-full lg:h-14" :loading="busy" :disabled="busy" @click="onCta">
         <template v-if="offerAgain && again">
           <UiIcon name="upgrade" :size="20" />
-          <UiTextSwap :text="$t('upgrade.upgradeWin')" />
+          <span>{{ $t('upgrade.upgradeWin') }}</span>
           <UiPrice :amount="again.price" size="s" tone="inverse" class="kd-cta-flow" />
         </template>
         <template v-else-if="!busy && target && input">
@@ -170,7 +170,7 @@ const canReset = computed(() => !!(props.input || props.target))
           <!-- the chance, not coins: an upgrade pays out a skin, never change -->
           <span class="kd-cta-flow tabular-nums">{{ real.toFixed(real < 10 ? 2 : 1) }}%</span>
         </template>
-        <UiTextSwap v-else :text="busy ? $t('upgrade.rolling') : !signedIn ? $t('auth.signInToPlay') : !input ? $t('upgrade.addToUpgrade') : $t('upgrade.chooseTarget')" />
+        <span v-else>{{ busy ? $t('upgrade.rolling') : !signedIn ? $t('auth.signInToPlay') : !input ? $t('upgrade.addToUpgrade') : $t('upgrade.chooseTarget') }}</span>
       </UiButton>
       <UiChip size="m" icon="refresh" class="kd-tool" :disabled="busy || !canReset" @click="emit('reset')">
         <span class="truncate">{{ $t('upgrade.reset') }}</span>
@@ -330,9 +330,10 @@ const canReset = computed(() => !!(props.input || props.target))
   scale: 0.6;
 }
 .kd-tool {
-  /* two equal columns under the CTA, whatever the labels */
+  /* two equal columns under the CTA, whatever the labels; 48px like every control of the case page's dock */
   flex: 1 1 0;
   min-width: 0;
+  height: 48px;
 }
 /* The bar: red track, green winning zone up to the thumb */
 .kd-track {

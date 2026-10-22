@@ -132,6 +132,7 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
+    <UiPageBar :title="$t('account.title')" :left="[{ label: $t('case.allCases'), icon: 'arrow-left', to: '/' }]" />
     <div v-if="!session.user" class="flex flex-col items-center gap-4 rounded-5xl bg-neutral-2 px-6 py-16 text-center">
       <p class="type-14-regular text-neutral-12">{{ $t('account.signInHint') }}</p>
       <UiButton icon="sign-in" size="l" @click="ui.openSignIn()">{{ $t('auth.signInToPlay') }}</UiButton>
@@ -225,11 +226,9 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
           <div v-else-if="inventory.length" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
             <ItemTile v-for="it in sortedInventory" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
           </div>
-          <div v-else class="flex flex-col items-center gap-4 rounded-5xl bg-neutral-2 px-6 py-16 text-center">
-            <UiIcon name="pistol" :size="48" class="text-neutral-8" />
-            <p class="type-14-regular max-w-72 text-neutral-12">{{ $t('account.emptyInventory') }}</p>
+          <UiEmptyState v-else :text="$t('account.emptyInventory')">
             <UiButton to="/" icon="cases">{{ $t('account.openCases') }}</UiButton>
-          </div>
+          </UiEmptyState>
 
           <!-- Selection bar floats above the bottom nav on mobile -->
           <Transition name="kd-bar">
@@ -259,7 +258,7 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
             </UiChip>
           </div>
 
-          <p v-if="!filteredHistory.length" class="type-14-regular rounded-3xl bg-neutral-2 px-6 py-12 text-center text-neutral-12">{{ $t('account.emptyHistory') }}</p>
+          <UiEmptyState v-if="!filteredHistory.length" :text="$t('account.emptyHistory')" />
 
           <!-- Desktop table -->
           <div v-else class="hidden overflow-hidden rounded-3xl bg-neutral-2 md:block">
