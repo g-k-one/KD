@@ -17,8 +17,6 @@ import { RARITY_HEX } from './rarity'
  *               Colour per rarity: handle.set('tint', [r, g, b])
  *   kdWin     — won upgrade: one beat — a burst of green and gold sparks and a single thin ring that stays
  *               close to the dial (no glow wash, no second wave)
- *   kdLose    — lost upgrade, kept quiet: a few dim embers drop off the rim (no ring, no glow wash — the dial
- *               greys out by itself)
  *   kdCharge  — loop while the gauge turns: light is drawn into the centre
  *   kdBurn    — loop around a label: a flat warm glow hugging it, licks and embers rising along its width
  *               (the label's middle sits at y ≈ 300)
@@ -69,7 +67,6 @@ interface Engine {
 const GOLD: Rgb = [1, 0.8, 0.32]
 const GOLD_HI: Rgb = [1, 0.94, 0.7]
 const GREEN: Rgb = [0.3, 1, 0.55]
-const DIM_RED: Rgb = [0.7, 0.22, 0.18]
 const ORANGE: Rgb = [1, 0.5, 0.16]
 const AMBER: Rgb = [1, 0.78, 0.38]
 
@@ -331,27 +328,6 @@ export function defineKdEffects(engine: Engine) {
       const k = t / 0.55
       if (k < 1) h.sprite(c, 180, 180, 220 + 120 * h.easeOut(k), 0, (1 - k) * 0.55, 1, m.ring!, 1, GREEN)
       h.draw(c, s.sp as Particle[])
-    },
-  }))
-
-  engine.define('kdLose', (h) => ({
-    atlas: 'kd',
-    period: 1.8,
-    init: (s) => Object.assign(s, { fired: false, em: [] as Particle[] }),
-    update(s, dt, at) {
-      const { R } = h
-      if (!s.fired) {
-        s.fired = true
-        // off the lower half of the rim, falling: the light just goes out
-        for (let i = 0; i < 9; i++) {
-          const a = R(0.25, 2.9)
-          h.spawn(s.em as Particle[], { x: 180 + Math.cos(a) * 120, y: 180 + Math.sin(a) * 120, vx: R(-20, 20), vy: R(10, 60), grav: 260, size: R(10, 18), life: R(0.7, 1.1), cells: [at.map.ember], add: 1, alpha: 0.6, tint: DIM_RED, fadeIn: 0.05, fadeOut: 0.6 })
-        }
-      }
-      h.step(s.em as Particle[], dt)
-    },
-    render(s, c) {
-      h.draw(c, s.em as Particle[])
     },
   }))
 

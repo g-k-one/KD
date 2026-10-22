@@ -298,26 +298,14 @@ const readout = computed(() =>
     transform: scale(1.16);
   }
 }
-/* Lost: the colour drains out of the arc, the number shakes once */
+/* Lost: one light beat — the arc's colour drains in the same 500 ms as the target card's (no shake, no particles) */
 .kd-gauge-arc {
-  transition: filter 800ms var(--ease-out);
+  transition: filter 500ms var(--ease-out);
 }
 .is-lose .kd-gauge-arc {
   filter: grayscale(1) brightness(0.5);
 }
 .is-lose .kd-gauge-value {
   color: var(--color-danger);
-  animation: kd-value-shake 380ms var(--ease-out);
-}
-@keyframes kd-value-shake {
-  25% {
-    translate: -5px 0;
-  }
-  50% {
-    translate: 4px 0;
-  }
-  75% {
-    translate: -2px 0;
-  }
 }
 </style>

@@ -269,7 +269,8 @@ async function runUpgrade() {
     aura?.stop()
     aura = null
     state.value = res.win ? 'win' : 'lose'
-    fx.at(res.win ? 'kdWin' : 'kdLose', fxDial.value, 1.2)
+    // a win gets its beat around the dial; a loss stays one quiet fade of the dial and the target together
+    if (res.win) fx.at('kdWin', fxDial.value, 1.2)
     // The target gets light only when it is won, graded by its rarity like a case drop: the rank reveal (more
     // layers the rarer) and, for gold, the gold burst. A loss stays quiet there (the dial already collapses)
     if (res.win) {
@@ -678,7 +679,7 @@ async function runUpgrade() {
 }
 .kd-mini.is-lose .kd-mini-art {
   translate: 0 4px;
-  transition: translate var(--dur-slow) var(--ease-out);
+  transition: translate 500ms var(--ease-out);
 }
 .kd-mini-swap-enter-active {
   transition:

@@ -170,9 +170,9 @@ watch(
 /* Loss: no shaking — the prize drains to grey and sinks away from reach */
 .kd-target-art {
   transition:
-    filter 700ms var(--ease-out),
-    opacity 700ms var(--ease-out),
-    translate 700ms var(--ease-out);
+    filter 500ms var(--ease-out),
+    opacity 500ms var(--ease-out),
+    translate 500ms var(--ease-out);
 }
 .is-lose .kd-target-art {
   filter: grayscale(1) brightness(0.5);
