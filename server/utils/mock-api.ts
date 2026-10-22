@@ -17,6 +17,7 @@ import {
   openWelcome,
   claimLevel,
   claimMission,
+  openChain,
   claimRakeback,
   redeemPromo,
   getInventory,
@@ -89,6 +90,10 @@ export async function mockRoute(method: string, path: string, body: Body, query:
   if (m === 'POST' && path === '/api/bonuses/welcome/open') {
     authed()
     return openWelcome()
+  }
+  if (m === 'POST' && (match = path.match(/^\/api\/bonuses\/chains\/([\w-]+)\/open$/))) {
+    authed()
+    return openChain(match[1]!)
   }
   if (m === 'POST' && path === '/api/bonuses/rakeback/claim') {
     authed()

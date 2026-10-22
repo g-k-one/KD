@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type { ClaimLevelResponse, InventoryItem, LevelReward, OpenCaseResponse, PassResponse, SellResponse } from '#shared/types/api'
+import type { ClaimLevelResponse, InventoryItem, LevelReward, MissionChain, OpenCaseResponse, PassResponse, SellResponse } from '#shared/types/api'
 
 /*
  * Bonuses (player audit D5 + D6): the reason to come back tomorrow.
  *   Daily case — free once every 24 h, opened on the same reel as paid cases; it gets better every 5 levels.
  *   Level rewards — every level pays coins, every 5th also upgrades the daily case. Claim with a coin burst.
  *   Rakeback — a share of every coin played comes back; the share grows every 10 levels.
+ *   Mission chains — three one-time paths of three steps, each ends with a free case on the same reel.
  *   Daily missions — three small goals a day with a coin reward each.
  *   Promo code — one field.
  * XP = coins played (cases, upgrades, battles), 25 coins a level.
@@ -60,6 +61,32 @@ async function openDaily() {
     toast.error(e, t('common.error'))
   }
 }
+// A finished mission chain pays its case on the same reel: swap it onto the stage, scroll there, spin
+const opening = ref<string | null>(null)
+async function openChain(c: MissionChain) {
+  if (phase.value === 'spinning') return
+  opening.value = c.id
+  freeCase.value = c.case
+  await nextTick()
+  sections.daily.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  phase.value = 'spinning'
+  sold.value = []
+  try {
+    const res = await $fetch<OpenCaseResponse>(`/api/bonuses/chains/${c.id}/open`, { method: 'POST' })
+    results.value = res.drops
+    await reel.value?.spin(res.drops, false)
+    phase.value = 'result'
+    refresh()
+  } catch (e) {
+    phase.value = 'idle'
+    toast.error(e, t('common.error'))
+  } finally {
+    opening.value = null
+  }
+}
+// What the stage shows: a chain case keeps its own name next to the reel
+const onChain = computed(() => !!freeCase.value?.slug.startsWith('chain-'))
+
 async function sell(uid: string) {
   try {
     const res = await $fetch<SellResponse>('/api/inventory/sell', { method: 'POST', body: { uids: [uid] } })
@@ -153,8 +180,14 @@ const tierNames = ['I', 'II', 'III', 'IV']
           <div class="flex items-center gap-3">
             <img :src="freeCase!.image" alt="" class="size-14 object-contain" />
             <div class="flex flex-col gap-0.5">
-              <span class="type-16-caps">{{ welcome ? $t('welcome.name') : $t('bonus.dailyShort') }}</span>
-              <span class="type-12-caps text-coin">{{ welcome ? $t('welcome.left', { n: welcome.left, total: welcome.total }) : $t('bonus.tier', { tier: tierNames[daily.tier] }) }}</span>
+              <template v-if="onChain">
+                <span class="type-16-caps">{{ freeCase!.name }}</span>
+                <span class="type-12-caps text-coin">{{ $t('chain.reward') }}</span>
+              </template>
+              <template v-else>
+                <span class="type-16-caps">{{ welcome ? $t('welcome.name') : $t('bonus.dailyShort') }}</span>
+                <span class="type-12-caps text-coin">{{ welcome ? $t('welcome.left', { n: welcome.left, total: welcome.total }) : $t('bonus.tier', { tier: tierNames[daily.tier] }) }}</span>
+              </template>
             </div>
           </div>
           <div class="grid grid-cols-3 gap-2">
@@ -166,7 +199,8 @@ const tierNames = ['I', 'II', 'III', 'IV']
         </aside>
       </section>
 
-      <div ref="secMissions" class="scroll-mt-24">
+      <div ref="secMissions" class="flex scroll-mt-24 flex-col gap-6 lg:gap-10">
+        <BonusChains :chains="data.chains" :opening="opening" @open="openChain" />
         <BonusMissions :missions="data.missions" :reset-at="data.missionsResetAt" @update="(b) => (data = b)" />
       </div>
 

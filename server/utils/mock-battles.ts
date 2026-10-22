@@ -92,6 +92,7 @@ async function start(b: StoredBattle) {
   const youSlot = b.slots.findIndex((s) => s.player?.you)
   if (youSlot >= 0) {
     const won = b.winnerSlot === youSlot
+    if (won) trackMission('win_battle')
     if (won) {
       const st = getMockState()
       for (const r of results) for (const d of r.drops) st.inventory.unshift(toInventory(d, 'case'))
@@ -189,6 +190,7 @@ export async function createBattle(req: CreateBattleRequest) {
   if (rounds.length > 25) throw new MockError(400, 'A battle can have up to 25 rounds')
   const b = await newBattle(size, rounds)
   spend(b.cost)
+  trackMission('create_battle')
   trackMission('play_battle')
   b.slots[0]!.player = you()
   battles.unshift(b)

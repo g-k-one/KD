@@ -518,7 +518,7 @@ export interface RakebackInfo {
   claimedTotal: number
 }
 
-export type MissionKind = 'open_cases' | 'win_upgrade' | 'play_battle' | 'spend'
+export type MissionKind = 'open_cases' | 'win_upgrade' | 'play_battle' | 'spend' | 'try_upgrade' | 'sell_skin' | 'create_battle' | 'win_battle'
 
 /** Daily missions: three small goals, reset every 24 h (missionsResetAt). Titles come from i18n by kind. */
 export interface Mission {
@@ -532,9 +532,30 @@ export interface Mission {
   status: 'active' | 'claimable' | 'claimed'
 }
 
+/**
+ * Mission chains (docs/ux-research-v3.md #10): themed three-step paths that teach the site, one time each.
+ * Steps go in order — only the current one counts. The last step unlocks a free case, opened on the bonus reel
+ * (POST /api/bonuses/chains/:id/open).
+ */
+export type ChainId = 'rookie' | 'investor' | 'battler'
+export interface ChainStep {
+  kind: MissionKind
+  goal: number
+  progress: number
+}
+export interface MissionChain {
+  id: ChainId
+  steps: ChainStep[]
+  /** Index of the step that counts now; steps.length once all are done */
+  current: number
+  case: CaseDetails
+  status: 'active' | 'claimable' | 'claimed'
+}
+
 export interface BonusesResponse {
   daily: DailyInfo
   welcome: WelcomeInfo
+  chains: MissionChain[]
   /** A window of levels around the user's: a few behind, the current one and the next ten */
   levels: LevelReward[]
   rakeback: RakebackInfo

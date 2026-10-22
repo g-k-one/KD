@@ -587,10 +587,14 @@
     "missions": "Daily missions",
     "missionsText": "{done} of {total} done today. New ones every 24 hours.",
     "mission": {
-      "open_cases": "Open {n} cases",
+      "open_cases": "Open a case | Open {n} cases",
       "win_upgrade": "Win an upgrade",
-      "play_battle": "Play a PvP battle",
-      "spend": "Play {n} coins"
+      "play_battle": "Play a PvP battle | Play {n} PvP battles",
+      "spend": "Play {n} coins",
+      "try_upgrade": "Try an upgrade",
+      "sell_skin": "Sell a skin | Sell {n} skins",
+      "create_battle": "Create a PvP battle",
+      "win_battle": "Win a PvP battle"
     },
     "go": "Go",
     "promo": "Promo code",
@@ -616,5 +620,18 @@
     "offer": "Offer",
     "expires": "Accept within",
     "saved": "Trade link saved"
+  },
+  "chain": {
+    "title": "Mission chains",
+    "hint": "Three steps each, in order. Finish a chain to open its case for free.",
+    "rookie": "Rookie",
+    "investor": "Investor",
+    "battler": "Battle master",
+    "free": "Free {name}",
+    "open": "Open free case",
+    "opened": "Case opened",
+    "step": "Step {n} of {total}",
+    "done": "Done",
+    "reward": "Chain reward"
   }
 }

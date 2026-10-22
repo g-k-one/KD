@@ -12,10 +12,9 @@ const sfx = useSfx()
 const fx = useForge()
 const now = useClock(1000)
 
-const LINK: Record<Mission['kind'], string> = { open_cases: '/', win_upgrade: '/upgrade', play_battle: '/pvp', spend: '/' }
-const ICON: Record<Mission['kind'], string> = { open_cases: 'cases', win_upgrade: 'upgrade', play_battle: 'pvp', spend: 'wallet' }
 const done = computed(() => props.missions.filter((m) => m.status === 'claimed').length)
 const left = computed(() => countdown(props.resetAt, now.value))
+const missionText = (m: Mission) => missionTitle(t, m.kind, m.goal)
 const label = (m: Mission) => (m.kind === 'spend' ? `${formatCoins(m.progress)} / ${formatCoins(m.goal)}` : `${m.progress} / ${m.goal}`)
 
 const cards = ref<Record<string, HTMLElement>>({})
@@ -53,9 +52,9 @@ async function claim(m: Mission) {
         :class="`is-${m.status}`"
       >
         <div class="flex items-center gap-3">
-          <span class="kd-mission-icon grid size-10 shrink-0 place-items-center rounded-xl"><UiIcon :name="ICON[m.kind]" :size="20" /></span>
+          <span class="kd-mission-icon grid size-10 shrink-0 place-items-center rounded-xl"><UiIcon :name="MISSION_ICON[m.kind]" :size="20" /></span>
           <span class="flex min-w-0 flex-1 flex-col">
-            <span class="type-14 truncate">{{ $t(`bonus.mission.${m.kind}`, { n: m.kind === 'spend' ? formatCoins(m.goal) : m.goal }) }}</span>
+            <span class="type-14 truncate">{{ missionText(m) }}</span>
             <span class="type-12 text-neutral-11 tabular-nums">{{ label(m) }}</span>
           </span>
           <UiPrice :amount="m.reward" size="m" tone="coin" />
@@ -65,7 +64,7 @@ async function claim(m: Mission) {
         </div>
         <UiButton v-if="m.status === 'claimable'" variant="gold" size="s" block :loading="busy === m.id" @click="claim(m)">{{ $t('bonus.claim') }}</UiButton>
         <span v-else-if="m.status === 'claimed'" class="type-12-caps flex h-8 items-center justify-center gap-1 text-success"><UiIcon name="check-sm" :size="16" />{{ $t('bonus.claimed') }}</span>
-        <NuxtLink v-else :to="LINK[m.kind]" class="kd-press type-12-caps flex h-8 items-center justify-center gap-1 rounded-lg text-neutral-12 hover:text-neutral-15">{{ $t('bonus.go') }}<UiIcon name="chevron-right" :size="14" /></NuxtLink>
+        <NuxtLink v-else :to="MISSION_LINK[m.kind]" class="kd-press type-12-caps flex h-8 items-center justify-center gap-1 rounded-lg text-neutral-12 hover:text-neutral-15">{{ $t('bonus.go') }}<UiIcon name="chevron-right" :size="14" /></NuxtLink>
       </div>
     </div>
   </section>
