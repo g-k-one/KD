@@ -18,12 +18,25 @@ const badge = computed(() => {
 
 const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-light', extreme: 'text-danger' } as const
 
-// Animated art plays only while the card is on screen and holds a playback slot; until the
-// AVIF has loaded (and after it stops) the static WebP stays in place.
+// Skeletal art plays only while the card is on screen and holds a playback slot; until the rig's
+// first frame is drawn (and after it stops, or if it never loads) the static WebP stays in place.
 const artBox = useTemplateRef<HTMLElement>('artBox')
-const playing = useArtPlayback(artBox, () => !!props.item.animation)
+const rigCanvas = useTemplateRef<HTMLCanvasElement>('rigCanvas')
+const playing = useArtPlayback(artBox, () => !!props.item.rig)
 const animReady = ref(false)
-watch(playing, (v) => !v && (animReady.value = false))
+// The rig is square: fit it into the art box like object-contain, drawn at device resolution
+const { width: boxW, height: boxH } = useElementSize(artBox)
+const side = computed(() => Math.floor(Math.min(boxW.value, boxH.value)))
+watch(
+  [rigCanvas, side],
+  ([canvas, s], _, onCleanup) => {
+    animReady.value = false
+    if (!canvas || !s || !props.item.rig) return
+    canvas.width = canvas.height = Math.min(512, Math.round(s * Math.min(2, window.devicePixelRatio || 1)))
+    onCleanup(playRig(canvas, props.item.rig, () => (animReady.value = true)))
+  },
+  { flush: 'post' },
+)
 </script>
 
 <template>
@@ -43,15 +56,13 @@ watch(playing, (v) => !v && (animReady.value = false))
         class="kd-case-art size-full object-contain"
         :class="{ invisible: animReady }"
       />
-      <img
-        v-if="playing && item.animation"
-        :src="item.animation"
-        alt=""
+      <canvas
+        v-if="playing && item.rig"
+        ref="rigCanvas"
         aria-hidden="true"
-        draggable="false"
-        class="kd-case-art absolute inset-0 size-full object-contain"
+        class="kd-case-art absolute top-1/2 left-1/2 -translate-1/2"
         :class="{ invisible: !animReady }"
-        @load="animReady = true"
+        :style="{ width: `${side}px`, height: `${side}px` }"
       />
     </div>
 

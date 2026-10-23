@@ -1,0 +1,15 @@
+zloty-rush.webp
+size:1024,512
+filter:Linear,Linear
+big
+bounds:424,0,280,259
+left
+bounds:748,0,190,192
+right
+bounds:0,277,148,165
+gun
+bounds:0,0,422,275
+rim
+bounds:706,0,40,256
+spark
+bounds:150,277,96,96

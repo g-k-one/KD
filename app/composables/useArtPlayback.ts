@@ -1,7 +1,7 @@
 import type { MaybeElementRef } from '@vueuse/core'
 
 /*
- * Animated case art is decoded on the CPU frame by frame, so only a few may play at once.
+ * Animated case art costs a frame of work per card, so only a few may play at once.
  * Each card asks for a slot while it is on screen; slots go to cards in the order they came into
  * view, and a card that scrolls away hands its slot to the next one waiting. Fewer slots on touch
  * devices (weaker CPUs), none at all with reduced motion.

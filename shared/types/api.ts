@@ -16,8 +16,8 @@ export interface CaseSummary {
   slug: string
   name: string
   image: string
-  /** Looping animated art (AVIF, transparent). Cards play it only while on screen, a few at a time. */
-  animation?: string
+  /** Skeletal (Spine) art. Cards play it only while on screen, a few at a time; `image` stays the fallback. */
+  rig?: CaseRig
   price: number
   risk: RiskLevel
   tag?: CaseTag
@@ -28,6 +28,14 @@ export interface CaseSummary {
   /** Biggest multiplier (drop price / case price) this case paid in the last 24 h; null if nothing notable */
   bestToday: number | null
   createdAt: string
+}
+
+/** A Spine 4.2 rig: skeleton JSON plus its atlas (the atlas names its page image, next to it). */
+export interface CaseRig {
+  skeleton: string
+  atlas: string
+  /** Looping animation to play; `idle` when omitted */
+  animation?: string
 }
 
 export interface CaseSection {
