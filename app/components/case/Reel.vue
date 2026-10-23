@@ -271,8 +271,6 @@ async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseIt
   const from = centre(len, size, START)
   const to = centre(len, size, WIN.value)
 
-  // a bed of air under the clicks, thinning out as the strip slows (csgogem's spin sound)
-  if (!reduced && !skipping) sfx.roll(base)
   // Tick when a card crosses the marker
   let raf = 0
   let lastIdx = START

@@ -35,7 +35,6 @@ const SOUNDS: [string, () => void][] = [
   ['count last', () => sfx.count(true)],
   ['lose', sfx.lose],
   ['riser', sfx.riser],
-  ['roll', () => sfx.roll(6000)],
   ['tense', sfx.tense],
   ['claim', sfx.claim],
   ['win', sfx.win],
