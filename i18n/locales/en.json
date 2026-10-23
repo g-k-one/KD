@@ -530,7 +530,8 @@
     "view_list": "Lines",
     "replay": "Replay",
     "linkCopied": "Replay link copied",
-    "anyMode": "Any mode"
+    "anyMode": "Any mode",
+    "wonBy": "{name} won"
   },
   "quick": {
     "title": "Top up and keep playing",

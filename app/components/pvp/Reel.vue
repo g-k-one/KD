@@ -15,6 +15,8 @@ const props = defineProps<{
   waiting?: boolean
   /** Jump straight to the target (finished battles) */
   instant?: boolean
+  /** Inside the room's shared arena: no frame or markers of its own (the arena has them) */
+  bare?: boolean
 }>()
 
 const root = useTemplateRef<HTMLElement>('root')
@@ -103,7 +105,7 @@ watch([height, cell], () => {
 </script>
 
 <template>
-  <div ref="root" class="kd-preel relative overflow-hidden rounded-2xl" :class="compact ? 'h-50' : 'h-80'">
+  <div ref="root" class="relative overflow-hidden" :class="[compact ? 'h-50' : 'h-80', bare ? '' : 'kd-preel rounded-2xl']">
     <div v-if="waiting || !target" class="flex h-full flex-col items-center justify-center gap-3 px-2 text-center">
       <img v-if="caseRef" :src="caseRef.image" alt="" class="kd-preel-wait object-contain" :class="compact ? 'size-16' : 'size-32'" />
       <span class="type-12-regular text-neutral-11">{{ compact ? $t('pvp.waiting') : $t('pvp.waitingForPlayers') }}</span>
@@ -124,8 +126,10 @@ watch([height, cell], () => {
       </div>
       <div class="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-neutral-1 to-transparent" :class="compact ? 'h-12' : 'h-20'" />
       <div class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-neutral-1 to-transparent" :class="compact ? 'h-12' : 'h-20'" />
-      <img src="/img/fx/marker-top.svg" alt="" class="kd-pmark absolute top-1/2 left-0 -ml-0.5 -rotate-90" :class="compact ? 'w-3' : 'w-5'" />
-      <img src="/img/fx/marker-top.svg" alt="" class="kd-pmark absolute top-1/2 right-0 -mr-0.5 rotate-90" :class="compact ? 'w-3' : 'w-5'" />
+      <template v-if="!bare">
+        <img src="/img/fx/marker-top.svg" alt="" class="kd-pmark absolute top-1/2 left-0 -ml-0.5 -rotate-90" :class="compact ? 'w-3' : 'w-5'" />
+        <img src="/img/fx/marker-top.svg" alt="" class="kd-pmark absolute top-1/2 right-0 -mr-0.5 rotate-90" :class="compact ? 'w-3' : 'w-5'" />
+      </template>
     </template>
   </div>
 </template>

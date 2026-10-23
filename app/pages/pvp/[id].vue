@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { BattleResponse } from '#shared/types/api'
 
-// Battle room: round strip, one column per seat (player header → reel → won drops), PF strip.
+// Battle room (after csgogem): the mode as the title; cost · case strip · rounds and viewers in one line; one arena
+// holding every seat's reel, the markers on its edges and, at the end, the result; the player bars under it; a fixed
+// grid of round slots per player that fills as the rounds land (the page never jumps); the PF strip.
 const route = useRoute()
 const id = computed(() => String(route.params.id))
 const { t } = useI18n()
@@ -137,14 +139,21 @@ async function bot(slot: number) {
   }
 }
 
+/** Who took the pot: "You" for the player, else the nickname */
+const winnerName = computed(() => {
+  const w = b.value.winnerSlot != null ? b.value.slots[b.value.winnerSlot]?.player : null
+  return w ? (w.you ? t('pvp.you') : w.nickname) : ''
+})
+const pad2 = (n: number) => String(n).padStart(2, '0')
+
 const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` : '—')
 </script>
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10">
     <UiPageBar
-      logo
-      :subtitle="`${$t(`pvp.modes.${b.size}`)} · #${b.id}`"
+      :title="$t(`pvp.modes.${b.size}`)"
+      :subtitle="`#${b.id}`"
       fixed-sides
       :left="[
         { label: $t('pvp.back'), icon: 'arrow-left', to: '/pvp' },
@@ -156,13 +165,13 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
       ]"
     />
 
-    <!-- Rounds strip (Figma "BattleRounds") -->
-    <section class="flex flex-col gap-3 rounded-3xl bg-neutral-2 p-4 md:flex-row md:items-center md:gap-6 md:px-5">
-      <div class="flex items-baseline gap-2 md:flex-col md:gap-0">
-        <span class="type-12-regular text-neutral-11">{{ $t('pvp.round') }}</span>
-        <span class="type-16-caps tabular-nums">{{ Math.min(b.rounds.length, Math.max(1, clock.round + 1)) }} / {{ b.rounds.length }}</span>
+    <!-- One line: what a seat costs · the cases, the current one marked · rounds and viewers -->
+    <section class="grid grid-cols-2 items-center gap-x-4 gap-y-3 md:grid-cols-[auto_1fr_auto] md:gap-6">
+      <div class="flex items-center gap-2">
+        <span class="type-12-caps text-neutral-11">{{ $t('pvp.cost') }}</span>
+        <UiPrice :amount="b.cost" size="m" />
       </div>
-      <div class="scrollbar-none flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1">
+      <div class="scrollbar-none col-span-2 row-start-2 flex min-w-0 items-center gap-2 overflow-x-auto py-1 md:col-span-1 md:row-start-auto md:justify-center">
         <PvpCaseThumb
           v-for="(r, i) in b.rounds"
           :key="i"
@@ -172,63 +181,84 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
           :state="b.status === 'waiting' ? 'default' : i < revealed ? 'done' : i === roundIdx && !done ? 'current' : 'default'"
         />
       </div>
-      <div class="flex flex-col items-start md:items-end">
-        <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="l" class="kd-pot" />
-        <span class="type-12-regular text-neutral-11">{{ $t('pvp.value') }}</span>
-      </div>
-      <Transition name="kd-recreate">
-        <span
-          v-if="outcome"
-          class="type-12-caps flex h-10 items-center rounded-lg px-3"
-          :class="outcome.won ? 'bg-success-24 text-success' : 'bg-danger-24 text-danger'"
-        >
-          {{ outcome.text }}
+      <div class="flex items-center justify-end gap-4">
+        <span class="type-12 flex items-center gap-1.5 text-neutral-11 tabular-nums"><UiIcon name="eye" :size="16" />{{ b.viewers }}</span>
+        <span class="type-12-caps text-neutral-11">
+          {{ $t('pvp.rounds') }} <span class="text-neutral-15 tabular-nums">{{ Math.min(b.rounds.length, Math.max(0, revealed)) }}/{{ b.rounds.length }}</span>
         </span>
-      </Transition>
-      <Transition name="kd-recreate">
-        <UiButton v-if="done" size="m" icon="refresh" :loading="recreating" class="kd-recreate" @click="recreate">
-          {{ $t('pvp.recreate') }}
-          <span class="btn-value"><UiPrice :amount="b.cost" size="s" tone="inverse" /></span>
-        </UiButton>
-      </Transition>
+      </div>
     </section>
 
-    <!-- Seats -->
-    <section class="relative grid gap-2 md:gap-4" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
-      <!-- One card per seat: player, reel, won drops — the same surface and spacing for every seat -->
-      <div v-for="s in b.slots" :key="s.slot" class="kd-seat flex min-w-0 flex-col gap-2 rounded-[18px] bg-neutral-2 p-1.5 md:gap-3 md:rounded-5xl md:p-3" :class="done && b.winnerSlot === s.slot && 'is-winner'">
-        <PvpPlayerSlot
-          :player="s.player"
-          :total="totals[s.slot]"
-          :winner="done && b.winnerSlot === s.slot"
-          :compact="isMobile"
-          :can-join="!s.player && b.status === 'waiting' && !youIn"
-          :can-call-bot="!s.player && b.status === 'waiting' && isCreator"
-          @join="join(s.slot)"
-          @bot="bot(s.slot)"
-        />
-        <PvpReel
-          :case-ref="b.rounds[roundIdx] ?? null"
-          :target="clock.round >= 0 || done ? (b.results?.[roundIdx]?.drops[s.slot] ?? null) : null"
-          :spin-key="done ? 'done' : `${clock.round}`"
-          :spin-ms="b.roundMs - 1300"
-          :instant="done"
-          :compact="isMobile"
-          :waiting="b.status === 'waiting' || (clock.round < 0 && !done)"
-        />
-        <!-- Won drops, newest first: the same skin card as the inventory and the stake -->
-        <TransitionGroup tag="div" name="kd-drop" class="grid grid-cols-[repeat(auto-fill,minmax(112px,1fr))] gap-1.5">
-          <ItemTile v-for="ri in Array.from({ length: revealed }, (_, k) => revealed - 1 - k)" :key="ri" :item="b.results![ri]!.drops[s.slot]!" readonly />
-        </TransitionGroup>
+    <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
+    <section class="kd-arena relative overflow-hidden rounded-5xl">
+      <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
+        <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="done && b.winnerSlot === s.slot && 'is-winner'">
+          <PvpReel
+            bare
+            :case-ref="b.rounds[roundIdx] ?? null"
+            :target="clock.round >= 0 || done ? (b.results?.[roundIdx]?.drops[s.slot] ?? null) : null"
+            :spin-key="done ? 'done' : `${clock.round}`"
+            :spin-ms="b.roundMs - 1300"
+            :instant="done"
+            :compact="isMobile"
+            :waiting="b.status === 'waiting' || (clock.round < 0 && !done)"
+          />
+        </div>
       </div>
-
-      <span class="type-12 flex items-center gap-1.5 text-neutral-11 tabular-nums"><UiIcon name="eye" :size="16" />{{ b.viewers }} {{ $t('pvp.watching') }}</span>
+      <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 left-0 -rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
+      <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 right-0 rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
 
       <!-- Countdown hex, flips on every second -->
-      <div v-if="countdown > 0" class="pointer-events-none absolute inset-x-0 top-24 z-10 flex justify-center md:top-32">
+      <div v-if="countdown > 0" class="pointer-events-none absolute inset-0 z-10 grid place-items-center">
         <span :key="countdown" class="kd-count grid size-20 place-items-center md:size-24">
           <span class="type-48-caps text-success">{{ countdown }}</span>
         </span>
+      </div>
+
+      <!-- The result, inside the arena: who took the pot, how much, and the same battle again -->
+      <Transition name="kd-result">
+        <div v-if="done && b.winnerSlot != null" class="kd-arena-result absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-4 text-center">
+          <span class="type-12-caps text-neutral-11">{{ $t('pvp.statusFinished') }}</span>
+          <span class="type-20-caps">{{ $t('pvp.wonBy', { name: winnerName }) }}</span>
+          <UiPrice :amount="pot" size="l" tone="success" />
+          <span v-if="outcome" class="type-12-caps" :class="outcome.won ? 'text-success' : 'text-danger'">{{ outcome.text }}</span>
+          <div class="flex flex-wrap justify-center gap-2">
+            <UiButton size="m" icon="refresh" :loading="recreating" @click="recreate">
+              {{ $t('pvp.recreate') }}
+              <span class="btn-value"><UiPrice :amount="b.cost" size="s" tone="inverse" /></span>
+            </UiButton>
+            <UiButton v-if="data!.battle.status === 'finished'" variant="secondary" size="m" icon="refresh" @click="replay">{{ $t('pvp.replay') }}</UiButton>
+          </div>
+        </div>
+      </Transition>
+    </section>
+
+    <!-- Player bars: who sits where and what they have so far; join or call a bot on a free seat -->
+    <section class="grid gap-2 md:gap-4" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
+      <PvpPlayerSlot
+        v-for="s in b.slots"
+        :key="s.slot"
+        :player="s.player"
+        :total="totals[s.slot]"
+        :winner="done && b.winnerSlot === s.slot"
+        :compact="isMobile"
+        :can-join="!s.player && b.status === 'waiting' && !youIn"
+        :can-call-bot="!s.player && b.status === 'waiting' && isCreator"
+        @join="join(s.slot)"
+        @bot="bot(s.slot)"
+      />
+    </section>
+
+    <!-- Round slots: one per round per player, in order, filled as the rounds land -->
+    <section class="grid gap-2 md:gap-4" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
+      <div v-for="s in b.slots" :key="s.slot" class="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(112px,1fr))] content-start gap-1.5">
+        <template v-for="(_, ri) in b.rounds" :key="ri">
+          <ItemTile v-if="ri < revealed && b.results?.[ri]" :item="b.results[ri]!.drops[s.slot]!" readonly class="kd-slot-in" />
+          <div v-else class="kd-round-slot flex aspect-[112/132] flex-col items-center justify-center rounded-2xl">
+            <span class="type-10-caps text-neutral-9">{{ $t('pvp.round') }}</span>
+            <span class="type-20-caps text-neutral-8 tabular-nums">{{ pad2(ri + 1) }}</span>
+          </div>
+        </template>
       </div>
     </section>
 
@@ -280,41 +310,46 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
     transform: scale(0.85);
   }
 }
-.kd-recreate-enter-active {
-  transition:
-    opacity var(--dur-slow) var(--ease-out),
-    transform var(--dur-slow) var(--ease-spring);
+.kd-arena {
+  border: 4px solid transparent;
+  background:
+    linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
+    linear-gradient(180deg, var(--color-neutral-4) 15%, rgb(255 95 31 / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
 }
-.kd-recreate-enter-from {
+.kd-amark {
+  translate: 0 -50%;
+  z-index: 2;
+}
+.kd-arena-seat + .kd-arena-seat {
+  border-left: 1px solid var(--color-neutral-4);
+}
+.kd-arena-seat {
+  transition: background-color var(--dur-slow) var(--ease-out);
+}
+.kd-arena-seat.is-winner {
+  background: radial-gradient(60% 50% at 50% 50%, rgb(18 183 106 / 0.18), transparent);
+}
+.kd-arena-result {
+  background: rgb(12 13 16 / 0.82);
+  backdrop-filter: blur(4px);
+}
+.kd-result-enter-active {
+  transition: opacity var(--dur-slow) var(--ease-out) 600ms;
+}
+.kd-result-enter-from {
   opacity: 0;
-  transform: translateY(8px) scale(0.9);
 }
-.kd-pot {
-  animation: kd-pot 500ms var(--ease-spring);
+.kd-round-slot {
+  background: var(--color-neutral-2);
+  box-shadow: inset 0 0 0 1px var(--color-neutral-3);
 }
-@keyframes kd-pot {
+.kd-slot-in {
+  animation: kd-slot-in var(--dur-slow) var(--ease-spring);
+}
+@keyframes kd-slot-in {
   from {
-    transform: scale(1.12);
+    opacity: 0;
+    transform: scale(0.9);
   }
-}
-.kd-drop-enter-active {
-  transition:
-    opacity var(--dur-slow) var(--ease-out),
-    transform var(--dur-slow) var(--ease-spring);
-}
-.kd-drop-enter-from {
-  opacity: 0;
-  transform: translateY(-12px) scale(0.9);
-}
-.kd-drop-move {
-  transition: transform var(--dur-slow) var(--ease-out);
-}
-.kd-seat {
-  transition: box-shadow var(--dur-slow) var(--ease-out);
-}
-.kd-seat.is-winner {
-  box-shadow:
-    inset 0 0 0 1px rgb(18 183 106 / 0.35),
-    0 0 40px -12px rgb(18 183 106 / 0.6);
 }
 </style>
