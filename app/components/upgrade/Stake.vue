@@ -148,26 +148,26 @@ function removePiece(p: Piece) {
                 <span class="absolute inset-0 grid place-items-center">
                   <ItemArt :image="p.item.image" :rarity="p.item.rarity" :size="56" class="kd-morph w-full" />
                 </span>
-                <div class="absolute inset-x-0 top-0 flex flex-col gap-0.5 px-1.5 py-1">
+                <div class="kd-piece-text absolute inset-x-0 top-0 flex flex-col gap-0.5 px-1.5 py-1">
                   <UiPrice :amount="p.item.price" size="s" />
                   <span class="type-10-caps flex gap-1">
                     <span v-if="p.item.statTrak" class="text-brand-light">ST</span>
                     <span class="text-neutral-15/48">{{ p.item.wear }}</span>
                   </span>
                 </div>
-                <div class="absolute inset-x-0 bottom-0 flex min-w-0 flex-col px-1.5 py-0.5">
+                <div class="kd-piece-text absolute inset-x-0 bottom-0 flex min-w-0 flex-col px-1.5 py-0.5">
                   <span class="type-10-caps truncate text-weapon">{{ p.item.weapon }}</span>
                   <span class="type-12 truncate" :style="{ color: RARITY_COLOR[p.item.rarity] }">{{ p.item.skin }}</span>
                 </div>
               </template>
               <template v-else>
                 <!-- the coin pictures are square (a skin is wide and low), so they may run under the price and the label like a
-                     skin does; the text sits above them with a shadow so it reads over the orange -->
+                     skin does; the text sits above them (every tile has that shadow) -->
                 <span class="absolute inset-0 grid place-items-center"><UiCoinStack :size="32" :amount="coins" class="kd-morph" /></span>
-                <div class="kd-coin-text absolute inset-x-0 top-0 px-1.5 py-1">
+                <div class="kd-piece-text absolute inset-x-0 top-0 px-1.5 py-1">
                   <UiPrice :amount="p.amount" size="s" />
                 </div>
-                <div class="kd-coin-text absolute inset-x-0 bottom-0 flex flex-col px-1.5 py-0.5">
+                <div class="kd-piece-text absolute inset-x-0 bottom-0 flex flex-col px-1.5 py-0.5">
                   <span class="type-10-caps text-neutral-15/48">KD</span>
                   <span class="type-12 text-item-gold">{{ $t('common.coins') }}</span>
                 </div>
@@ -253,8 +253,8 @@ function removePiece(p: Piece) {
     transform: translate(-50%, -50%);
   }
 }
-/* the coins tile: its labels stay readable over the picture */
-.kd-coin-text {
+/* every tile: its labels sit above the art with a soft shadow, so they read where the art runs under them */
+.kd-piece-text {
   z-index: 1;
   text-shadow: 0 1px 3px rgb(0 0 0 / 0.85);
 }
