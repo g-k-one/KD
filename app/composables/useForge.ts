@@ -116,7 +116,8 @@ export function useForge(host?: Ref<HTMLElement | null | undefined>) {
    */
   function at(name: string, el: HTMLElement | null | undefined, scale = 1, loop = false, opts: ForgeAtOptions = {}) {
     if (!el) return Promise.resolve(null)
-    const { sizeEl, lift = 0, ...rest } = opts
+    const { sizeEl, lift = 0, follow, ...rest } = opts
+    if (follow && host?.value) return play(name, { ...rest, el: anchorOn(el, sizeEl ?? el, scale, lift), loop })
     const r = el.getBoundingClientRect()
     const sr = sizeEl?.getBoundingClientRect() ?? r
     const hr = host?.value?.getBoundingClientRect()
@@ -125,6 +126,35 @@ export function useForge(host?: Ref<HTMLElement | null | undefined>) {
     const k = host?.value && hr && host.value.offsetWidth ? hr.width / host.value.offsetWidth : 1
     const size = Math.max(sr.width, sr.height) * scale
     return play(name, { ...rest, x: (r.left + r.width / 2 - (hr?.left ?? 0)) / k, y: (r.top + r.height / 2 - (hr?.top ?? 0) - size * lift) / k, size: size / k, loop })
+  }
+
+  /**
+   * An invisible square the effect's size, centred on el and riding with it: Forge re-reads an `el` every frame, so
+   * the effect stays on its element whatever moves after the start (a skipped reel settling, the frame's punch, a
+   * re-centre). Sized in layout pixels, so a transform on the way does not skew it; gone after 4 s (one-shots end by then).
+   */
+  function anchorOn(el: HTMLElement, sizeEl: HTMLElement, scale: number, lift: number) {
+    const size = Math.max(sizeEl.offsetWidth, sizeEl.offsetHeight) * scale
+    const a = document.createElement('span')
+    a.setAttribute('aria-hidden', 'true')
+    const parent = (el.offsetParent as HTMLElement | null) ?? el.parentElement!
+    // the centre from the rendered boxes (offsetLeft misses el's own translate), back in the parent's layout pixels
+    const er = el.getBoundingClientRect()
+    const pr = parent.getBoundingClientRect()
+    const k = parent.offsetWidth ? pr.width / parent.offsetWidth : 1
+    const cx = (er.left + er.width / 2 - pr.left) / k - parent.clientLeft
+    const cy = (er.top + er.height / 2 - pr.top) / k - parent.clientTop
+    Object.assign(a.style, {
+      position: 'absolute',
+      pointerEvents: 'none',
+      width: `${size}px`,
+      height: `${size}px`,
+      left: `${cx - size / 2}px`,
+      top: `${cy - size / 2 - size * lift}px`,
+    })
+    parent.appendChild(a)
+    setTimeout(() => a.remove(), 4000)
+    return a
   }
 
   function stopAll() {
@@ -146,7 +176,8 @@ export function useForge(host?: Ref<HTMLElement | null | undefined>) {
   return { play, at, stopAll, preload: async (atlas: string) => (await get())?.preload(atlas) }
 }
 
-export type ForgeAtOptions = ForgeOptions & { sizeEl?: HTMLElement | null; lift?: number }
+/** sizeEl sizes it by another element; lift moves it up by that share of its size; follow keeps it on el as el moves */
+export type ForgeAtOptions = ForgeOptions & { sizeEl?: HTMLElement | null; lift?: number; follow?: boolean }
 export type ForgeLayer = ReturnType<typeof useForge>
 export const FORGE_KEY = Symbol('kd-forge') as InjectionKey<ForgeLayer>
 

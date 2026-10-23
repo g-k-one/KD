@@ -382,10 +382,11 @@ export const RANK_LEVEL: Record<Rarity, number> = { industrial: -1, milspec: -1,
 /**
  * One burst on a landed drop in the rarity's colour, centred on the drop's picture (el, the skin image) and sized by
  * it — the same rule everywhere (reel, PvP, upgrade): the middle of the skin, not the rarity shape or a lift off it.
+ * It rides with the skin (follow): measured once, a skipped reel still settling or the frame's punch left it off-centre.
  */
 export function rarityRank(layer: Layer, el: HTMLElement | null | undefined, rarity: Rarity, scale = 1) {
   if (RANK_LEVEL[rarity] < 0) return Promise.resolve(null)
-  return layer.at('kdRank', el, scale, false, { color: RARITY_HEX[rarity], level: RANK_LEVEL[rarity] })
+  return layer.at('kdRank', el, scale, false, { color: RARITY_HEX[rarity], level: RANK_LEVEL[rarity], follow: true })
 }
 
 let coinUrl: Promise<string> | null = null
