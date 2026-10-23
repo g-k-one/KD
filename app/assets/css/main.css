@@ -589,7 +589,7 @@ html body {
     background: radial-gradient(circle, var(--rc) 0%, color-mix(in srgb, var(--rc) 16%, transparent) 100%);
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'%3E%3Cpath d='M1.66 21.38C-4.78 8.73 8.73-4.78 21.38 1.66l7.97 4.06c4.18 2.13 9.13 2.13 13.31 0l7.96-4.06c12.66-6.44 26.17 7.07 19.72 19.72l-4.06 7.97c-2.13 4.18-2.13 9.13 0 13.31l4.06 7.96c6.45 12.66-7.06 26.17-19.72 19.72l-7.96-4.06c-4.18-2.13-9.13-2.13-13.31 0l-7.97 4.06C8.73 76.78-4.78 63.27 1.66 50.62l4.06-7.96c2.13-4.18 2.13-9.13 0-13.31z'/%3E%3C/svg%3E")
       center / contain no-repeat;
-    opacity: 0.48;
+    opacity: 0.32;
   }
 }
 

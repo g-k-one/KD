@@ -91,13 +91,13 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
 @keyframes kd-star-flash {
   0%,
   20% {
-    opacity: 0.48;
+    opacity: 0.32;
   }
   35% {
     opacity: 1;
   }
   100% {
-    opacity: 0.48;
+    opacity: 0.32;
   }
 }
 /* A wave: the same shape, filled, grows out and fades (transform/opacity only) */
@@ -204,9 +204,10 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
      cards stays cheap to paint and move */
   width: calc(152px * var(--s));
   height: calc(152px * var(--s));
-  background: radial-gradient(closest-side, var(--rc), color-mix(in srgb, var(--rc) 45%, transparent) 40%, color-mix(in srgb, var(--rc) 12%, transparent) 70%, transparent);
+  /* at rest the glow is a hint of the rarity, not a light: drops and reveals push it up for a moment */
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--rc) 75%, transparent), color-mix(in srgb, var(--rc) 32%, transparent) 40%, color-mix(in srgb, var(--rc) 8%, transparent) 70%, transparent);
   transform: translate(-50%, -50%);
-  opacity: 0.9;
+  opacity: 0.6;
   transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
 }
 .kd-art-star {
