@@ -202,8 +202,8 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
 .kd-art-glow {
   /* A soft gradient as wide as the old 88px blob blurred by 32px — no filter, so a reel of hundreds of
      cards stays cheap to paint and move */
-  width: calc(152px * var(--s));
-  height: calc(152px * var(--s));
+  width: calc(196px * var(--s));
+  height: calc(196px * var(--s));
   /* at rest the glow is a hint of the rarity, not a light: drops and reveals push it up for a moment */
   background: radial-gradient(closest-side, color-mix(in srgb, var(--rc) 75%, transparent), color-mix(in srgb, var(--rc) 32%, transparent) 40%, color-mix(in srgb, var(--rc) 8%, transparent) 70%, transparent);
   transform: translate(-50%, -50%);
