@@ -174,7 +174,7 @@ const shownIcons = computed(() => ICONS.filter((n) => n.includes(iconQuery.value
         </UiSectionHeader>
         <UiAccordion title="How does KURWADROP work?" default-open>Presentation only: no extra chance, no surcharge.</UiAccordion>
         <UiAccordion title="Closed by default">Hidden content.</UiAccordion>
-        <UiPageBar title="Page title" subtitle="Subtitle" :left="[{ to: '/history', label: 'History', icon: 'history' }]" :right="[{ to: '/fairness', label: 'Fairness', icon: 'shield-check' }]" />
+        <UiPageBar title="Page title" subtitle="Subtitle" :left="[{ to: '/history', label: 'History', icon: 'history' }]" />
       </section>
 
       <!-- TextSwap -->

@@ -114,12 +114,6 @@ const stats = computed(() => {
   }
 })
 
-// --- Money line: the balance with today's result, the skins' value -------------------
-// Result of the last 24 h: what cases and upgrades paid minus what they cost
-const day = computed(() => {
-  const since = Date.now() - 86_400_000
-  return history.value.filter((h) => (h.game === 'case' || h.game === 'upgrade') && Date.parse(h.at) >= since).reduce((a, h) => a + h.payout - h.bet, 0)
-})
 // the sell preview lives on the inventory tab, so selling everything goes there first
 function sellEverything() {
   tab.value = 'inventory'
@@ -146,7 +140,6 @@ async function saveTrade() {
   }
 }
 
-const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.slice(0, 4)}…${session.user.steamId.slice(-4)}` : ''))
 </script>
 
 <template>
@@ -168,7 +161,6 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
                 <h1 class="type-20-caps truncate">{{ session.user.nickname }}</h1>
                 <UiLevelBadge :level="session.user.level" />
               </div>
-              <span class="type-12-regular text-neutral-11">{{ $t('profile.steamId', { id: maskedSteamId }) }}</span>
               <div class="flex max-w-80 flex-col gap-1">
                 <div class="type-12 flex justify-between text-neutral-13">
                   <span>{{ $t('profile.level', { from: session.user.level, to: session.user.level + 1 }) }}</span>
@@ -185,23 +177,17 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
             <div class="flex min-w-0 flex-1 flex-col md:flex-none">
               <span class="type-10-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
               <UiPrice :amount="session.user.balance" size="l" />
-              <span class="type-12 tabular-nums" :class="day > 0 ? 'text-success' : day < 0 ? 'text-danger' : 'text-neutral-10'">
-                {{ day > 0 ? '+' : day < 0 ? '−' : '' }}{{ formatCoins(Math.abs(day)) }} · {{ $t('account.day') }}
-              </span>
             </div>
             <span class="h-10 w-px shrink-0 bg-neutral-5" />
             <div class="flex min-w-0 flex-1 flex-col md:flex-none">
               <span class="type-10-caps text-neutral-11">{{ $t('account.skinsValue') }}</span>
               <UiPrice :amount="session.user.skinsValue" size="l" tone="coin" />
-              <span class="type-12 text-neutral-10">{{ $t('account.skinsCount', { n: inventory.length }, inventory.length) }}</span>
             </div>
-            <UiButton icon="plus" size="l" to="/deposit" class="shrink-0 max-md:-ml-2 max-md:basis-[calc(100%+8px)]">{{ $t('wallet.deposit') }}</UiButton>
+            <UiButton icon="plus" size="m" to="/deposit" class="shrink-0 max-md:-ml-2 max-md:basis-[calc(100%+8px)]">{{ $t('wallet.deposit') }}</UiButton>
           </div>
         </div>
         <dl class="kd-stats scrollbar-none flex overflow-x-auto border-t border-neutral-4 pt-4">
           <div class="kd-stat"><dt class="type-10-caps text-neutral-11">{{ $t('account.statCases') }}</dt><dd class="type-16-caps tabular-nums">{{ stats.cases }}</dd></div>
-          <div class="kd-stat"><dt class="type-10-caps text-neutral-11">{{ $t('account.statUpgrades') }}</dt><dd class="type-16-caps tabular-nums">{{ stats.upgrades }}</dd></div>
-          <div class="kd-stat"><dt class="type-10-caps text-neutral-11">{{ $t('account.statWagered') }}</dt><dd><UiPrice :amount="stats.wagered" size="m" /></dd></div>
           <div class="kd-stat"><dt class="type-10-caps text-neutral-11">{{ $t('account.statTopX') }}</dt><dd class="type-16-caps text-coin tabular-nums">{{ stats.topX ? `x${stats.topX.toFixed(stats.topX >= 10 ? 0 : 2)}` : '—' }}</dd></div>
           <div class="kd-stat"><dt class="type-10-caps text-neutral-11">{{ $t('account.statBest') }}</dt>
             <dd v-if="stats.best" class="flex min-w-0 items-baseline gap-2"><UiPrice :amount="stats.best.payout" size="m" tone="coin" /><span class="type-12-regular truncate text-neutral-11">{{ stats.best.title }}</span></dd>
@@ -221,11 +207,11 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
               <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
             </UiSelect>
             <!-- phones: one tap cycles the sort, the title says which -->
-            <UiChip size="l" variant="field" icon="sort" class="w-12 shrink-0 justify-center px-0 sm:hidden" :title="invSortOptions.find((o) => o.value === invSort)?.label" @click="invSort = invSortOptions[(invSortOptions.findIndex((o) => o.value === invSort) + 1) % invSortOptions.length]!.value" />
-            <UiChip size="l" variant="field" :active="!!selected.length" class="shrink-0" @click="selected.length ? (selected = []) : selectAll()">
+            <UiChip size="m" variant="field" icon="sort" class="w-10 shrink-0 justify-center px-0 sm:hidden" :title="invSortOptions.find((o) => o.value === invSort)?.label" @click="invSort = invSortOptions[(invSortOptions.findIndex((o) => o.value === invSort) + 1) % invSortOptions.length]!.value" />
+            <UiChip size="m" variant="field" :active="!!selected.length" class="shrink-0" @click="selected.length ? (selected = []) : selectAll()">
               <UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" />
             </UiChip>
-            <UiButton variant="light" size="l" class="shrink-0 max-sm:hidden" @click="sellEverything">
+            <UiButton variant="light" size="m" class="shrink-0 max-sm:hidden" @click="sellEverything">
               {{ $t('account.sellAll') }}
               <UiPrice :amount="session.user.skinsValue" size="s" tone="inverse" />
             </UiButton>
@@ -247,7 +233,7 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
               class="sticky bottom-[calc(76px+env(safe-area-inset-bottom))] z-20 flex flex-wrap items-center gap-2 rounded-3xl border border-neutral-5 bg-neutral-3 p-3 shadow-elevation-2 lg:bottom-6"
             >
               <span class="type-14 flex-1">{{ $t('account.selected', { count: selected.length }) }}</span>
-              <UiButton variant="ghost" size="s" @click="selected = []">{{ $t('account.clear') }}</UiButton>
+              <UiButton variant="ghost" size="m" @click="selected = []">{{ $t('account.clear') }}</UiButton>
               <UiButton variant="secondary" size="m" icon="upgrade" :to="`/upgrade?item=${selected.slice(0, 6).join(',')}`">{{ $t('account.upgradeThem') }}</UiButton>
               <UiButton variant="secondary" size="m" icon="steam" @click="withdrawOpen = true">{{ $t('withdraw.short') }}</UiButton>
               <UiButton variant="light" size="m" @click="sellOpen = true">

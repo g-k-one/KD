@@ -32,9 +32,10 @@ const props = defineProps<{
 const is = (p: 'cta' | 'chance' | 'balance') => !props.part || props.part === 'all' || props.part === p
 const extra = defineModel<number>('extra', { required: true })
 const fast = defineModel<boolean>('fast', { required: true })
-const emit = defineEmits<{ aim: [chancePct: number]; upgrade: []; reset: []; again: [] }>()
+const emit = defineEmits<{ aim: [chancePct: number]; upgrade: []; reset: []; again: []; skip: [] }>()
 const offerAgain = computed(() => !!props.again && !props.input && props.state !== 'spinning')
-const onCta = () => (offerAgain.value ? emit('again') : emit('upgrade'))
+// one spot, like the case page: Upgrade → Skip while the dial turns → Upgrade again
+const onCta = () => (busy.value ? emit('skip') : offerAgain.value ? emit('again') : emit('upgrade'))
 
 const busy = computed(() => props.state === 'spinning')
 const real = computed(() => props.chance / 100)
@@ -158,7 +159,7 @@ const canReset = computed(() => !!(props.input || props.target))
   <section class="kd-controls grid grid-cols-[minmax(0,1fr)] gap-2" :class="busy && 'is-busy'">
     <!-- CTA, then Reset · Fast as two equal chips under it (the case page's dock has the same block) -->
     <div v-if="is('cta')" class="flex flex-wrap gap-2" :class="part !== 'cta' && 'kd-cta-dock max-lg:order-last'">
-      <UiButton size="l" class="kd-cta h-12 min-w-0 basis-full lg:h-14" :loading="busy" :disabled="busy" @click="onCta">
+      <UiButton size="l" class="kd-cta h-12 min-w-0 basis-full lg:h-14" :variant="busy ? 'secondary' : 'primary'" @click="onCta">
         <template v-if="offerAgain && again">
           <UiIcon name="upgrade" :size="20" />
           <span>{{ $t('upgrade.upgradeWin') }}</span>
@@ -170,7 +171,11 @@ const canReset = computed(() => !!(props.input || props.target))
           <!-- the chance, not coins: an upgrade pays out a skin, never change -->
           <span class="btn-value type-14 tabular-nums">{{ real.toFixed(real < 10 ? 2 : 1) }}%</span>
         </template>
-        <span v-else>{{ busy ? $t('upgrade.rolling') : !signedIn ? $t('auth.signInToPlay') : !input ? $t('upgrade.addToUpgrade') : $t('upgrade.chooseTarget') }}</span>
+        <template v-else-if="busy">
+          <span>{{ $t('case.skip') }}</span>
+          <UiIcon name="chevron-right" :size="18" class="kd-skip-icon" />
+        </template>
+        <span v-else>{{ !signedIn ? $t('auth.signInToPlay') : !input ? $t('upgrade.addToUpgrade') : $t('upgrade.chooseTarget') }}</span>
       </UiButton>
       <UiChip size="m" icon="refresh" class="kd-tool" :disabled="busy || !canReset" @click="emit('reset')">
         <span class="truncate">{{ $t('upgrade.reset') }}</span>
@@ -280,6 +285,14 @@ const canReset = computed(() => !!(props.input || props.target))
 </template>
 
 <style scoped>
+.kd-skip-icon {
+  animation: kd-skip-nudge 900ms ease-in-out infinite;
+}
+@keyframes kd-skip-nudge {
+  50% {
+    transform: translateX(3px);
+  }
+}
 .kd-panel {
   border-radius: 16px;
   background: var(--color-neutral-2);

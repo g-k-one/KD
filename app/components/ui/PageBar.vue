@@ -3,7 +3,8 @@
 import { NuxtLink } from '#components'
 import type { RouteLocationRaw } from 'vue-router'
 
-// Figma "PageBar": left links · title (or logo) · right links.
+// Figma "PageBar": left links · title (or logo) · right links. The right side is the same on every page — Sound and
+// Fairness (Sound alone on the PF page) — so pages set only the left links.
 // Mobile ("Mobile/CaseTitleBar"): the same links collapse to icons around the title.
 export interface PageBarLink {
   label: string
@@ -14,7 +15,14 @@ export interface PageBarLink {
 
 /** fixedSides (phones): the link groups take just their icons and the centre takes the rest, so whatever sits at
  *  the centre's ends (e.g. ‹ title ›) stays put from page to page with an even gap to the icons */
-defineProps<{ title?: string; logo?: boolean; subtitle?: string; left?: PageBarLink[]; right?: PageBarLink[]; fixedSides?: boolean }>()
+defineProps<{ title?: string; logo?: boolean; subtitle?: string; left?: PageBarLink[]; fixedSides?: boolean }>()
+const { t } = useI18n()
+const route = useRoute()
+const settings = useSettingsStore()
+const right = computed<PageBarLink[]>(() => [
+  { label: t('settings.sound'), icon: settings.settings.sound ? 'sound' : 'sound-off', onClick: () => settings.update({ sound: !settings.settings.sound }) },
+  ...(route.path === '/fairness' ? [] : [{ label: t('case.fairness'), icon: 'shield', to: '/fairness' }]),
+])
 </script>
 
 <template>

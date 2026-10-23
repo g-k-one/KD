@@ -17,6 +17,7 @@ const backCase = computed(() => {
 const barLeft = computed(() => [
   ...(backCase.value ? [{ label: backCase.value.name ?? t('upgrade.backToCase'), icon: 'arrow-left', to: `/case/${backCase.value.slug}` }] : []),
   { label: t('upgrade.history'), icon: 'history', to: '/history' },
+  { label: t('upgrade.howItWorks'), icon: 'info', to: '/fairness' },
 ])
 const session = useSessionStore()
 const ui = useUiStore()
@@ -209,7 +210,7 @@ const state = ref<'idle' | 'spinning' | 'win' | 'lose'>('idle')
 // While a result is on screen the dial keeps the chance that was played, not the cleared selection
 const playedChance = ref(0)
 const shownChance = computed(() => (state.value === 'win' || state.value === 'lose' ? playedChance.value : chance.value))
-const gauge = useTemplateRef<{ spin: (roll: number, fast: boolean) => Promise<void>; reset: () => void }>('gauge')
+const gauge = useTemplateRef<{ spin: (roll: number, fast: boolean) => Promise<void>; reset: () => void; skip: () => void }>('gauge')
 const sfx = useSfx()
 const haptics = useHaptics()
 
@@ -312,10 +313,6 @@ async function runUpgrade() {
     <UiPageBar
       logo
       :left="barLeft"
-      :right="[
-        { label: $t('upgrade.howItWorks'), icon: 'info', to: '/fairness' },
-        { label: $t('upgrade.fairness'), icon: 'shield', to: '/fairness' },
-      ]"
     />
 
 
@@ -372,6 +369,7 @@ async function runUpgrade() {
           :again="won"
       @upgrade="runUpgrade"
       @again="upgradeWin"
+      @skip="gauge?.skip()"
           @reset="resetAll"
         />
       </div>
@@ -398,6 +396,7 @@ async function runUpgrade() {
           :again="won"
       @upgrade="runUpgrade"
       @again="upgradeWin"
+      @skip="gauge?.skip()"
           @reset="resetAll"
         />
       </div>
@@ -433,6 +432,7 @@ async function runUpgrade() {
           :again="won"
       @upgrade="runUpgrade"
       @again="upgradeWin"
+      @skip="gauge?.skip()"
           @reset="resetAll"
         />
       </div>
@@ -454,6 +454,7 @@ async function runUpgrade() {
       :again="won"
       @upgrade="runUpgrade"
       @again="upgradeWin"
+      @skip="gauge?.skip()"
       @reset="resetAll"
     />
 

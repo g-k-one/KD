@@ -7,10 +7,7 @@ const { t } = useI18n()
 const session = useSessionStore()
 const ui = useUiStore()
 const toast = useToast()
-const settingsStore = useSettingsStore()
 // Sound sits in the bar (CSGOGem, Casehug): three icons a side on phones — back · share · ‹ | › · sound · fairness
-const soundOn = computed(() => settingsStore.settings.sound)
-const toggleSound = () => settingsStore.update({ sound: !soundOn.value })
 
 const { data, error } = await useFetch<CaseResponse>(() => `/api/cases/${slug.value}`, { key: `case-${slug.value}` })
 if (error.value) throw createError({ statusCode: 404, statusMessage: 'Case not found', fatal: true })
@@ -29,11 +26,7 @@ const demo = ref(false)
 // Last opening's provably-fair data, for "Check this roll"
 const last = ref<{ rolls: PfRoll[]; kurwa: boolean[]; seed: SeedPairPublic | null }>({ rolls: [], kurwa: [], seed: null })
 const rollsOpen = ref(false)
-const promoOpen = ref(false)
 const recent = useRecentCases()
-// What this opening earns besides the drop (#32, Casehug): XP and pass points are coins played — shown before the
-// player pays
-const earns = computed(() => Math.max(1, Math.round(((kurwadrop.value ? cs.value.kurwadrop.price : openPrice.value) * count.value) / 100)))
 const shareOpen = ref(false)
 const shareItem = shallowRef<InventoryItem | null>(null)
 const reel = useTemplateRef<{ spin: (w: InventoryItem[], fast: boolean, kurwa?: boolean[]) => Promise<void>; skip: () => void }>('reel')
@@ -181,11 +174,6 @@ if (import.meta.client) {
           { label: $t('case.allCases'), icon: 'arrow-left', to: '/' },
           { label: $t('case.share'), icon: 'share', onClick: share },
         ]"
-        :right="[
-          { label: $t('settings.sound'), icon: soundOn ? 'sound' : 'sound-off', onClick: toggleSound },
-          // always the way to how fairness works; checking this very roll lives in the row under the button
-          { label: $t('case.fairness'), icon: 'shield', to: '/fairness' },
-        ]"
       >
         <!-- Phones: the arrows sit at the ends of the centre, the name between them; desktop: a fixed-width name
              between the arrows. Either way the arrows stay put from case to case. -->
@@ -255,22 +243,9 @@ if (import.meta.client) {
         @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"
         @check="rollsOpen = true"
       />
-      <!-- One quiet line under the controls: what this opening earns (#32) and the promo code (#50, DogDrop) -->
-      <div v-if="session.user && !demo" class="type-12-caps flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-neutral-11">
-        <span class="flex h-8 items-center gap-1.5 tabular-nums">
-          <UiIcon name="sparkle" :size="14" class="text-brand-light" />{{ $t('case.earns', { n: earns }) }}
-        </span>
-        <button type="button" class="kd-press type-12-caps flex h-8 items-center gap-1.5 hover:text-neutral-15" @click="promoOpen = true">
-          <UiIcon name="bonuses" :size="14" />{{ $t('case.promo') }}
-        </button>
-      </div>
     </section>
 
     <CaseShareDrop v-model="shareOpen" :item="shareItem" :case-price="cs.price" :slug="cs.slug" />
-
-    <UiModal v-model="promoOpen" :title="$t('bonus.promo')" :description="$t('bonus.promoText')">
-      <BonusPromo bare @done="promoOpen = false" />
-    </UiModal>
 
     <CaseRollsModal v-model="rollsOpen" :data="cs" :drops="results" :rolls="last.rolls" :kurwa="last.kurwa" :seed="last.seed" />
 

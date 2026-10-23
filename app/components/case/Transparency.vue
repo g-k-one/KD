@@ -4,6 +4,13 @@ import type { CaseDetails } from '#shared/types/api'
 // Figma "TransparencyBlock": RTP + chances to hit <x1, x2+, x3+, x5+, x10+ of the price, plus risk.
 const props = defineProps<{ data: CaseDetails }>()
 const infoOpen = ref(false)
+// the risk explains itself too: hover on desktop, a tap anywhere
+const riskOpen = ref(false)
+const hoverRisk = (e: PointerEvent, v: boolean) => e.pointerType === 'mouse' && (riskOpen.value = v)
+// a mouse already opened it on hover: its click must not close it again; a tap toggles
+let viaMouse = false
+const markPointer = (e: PointerEvent) => (viaMouse = e.pointerType === 'mouse')
+const tapRisk = () => (viaMouse ? (riskOpen.value = true) : (riskOpen.value = !riskOpen.value))
 
 const pct = (bp: number) => `${(bp / 100).toFixed(1)}%`
 /** "1 in 48" reads better than 2.1% for small chances */
@@ -65,14 +72,34 @@ const isLg = useMediaQuery('(min-width: 1024px)')
 
     <!-- Risk. Desktop: one more odds column — the label on top, the peppers and the level on one line under it.
          Phones: the same pieces in one line on the RTP row, right-aligned. -->
-    <div class="order-2 flex min-w-0 items-center justify-end gap-2 lg:order-3 lg:w-44 lg:flex-col lg:items-start lg:justify-center lg:gap-1 lg:border-l lg:border-neutral-4 lg:pl-6" :style="{ '--oc': RISK_COLOR[data.risk] }">
+    <button
+      type="button"
+      class="relative order-2 flex min-w-0 items-center justify-end gap-2 text-left lg:order-3 lg:w-44 lg:flex-col lg:items-start lg:justify-center lg:gap-1 lg:border-l lg:border-neutral-4 lg:pl-6"
+      :style="{ '--oc': RISK_COLOR[data.risk] }"
+      :aria-expanded="riskOpen"
+      :aria-label="$t('case.riskInfo')"
+      @pointerdown="markPointer"
+      @click="tapRisk"
+      @pointerenter="hoverRisk($event, true)"
+      @pointerleave="hoverRisk($event, false)"
+    >
       <!-- nudged down to sit on the odds labels' line (x2+, x3+…) -->
       <span class="type-12-caps text-neutral-12 max-sm:hidden lg:translate-y-1.5">{{ $t('case.risk') }}</span>
       <span class="flex items-center gap-2">
         <UiRiskPeppers :level="data.risk" :size="isLg ? 18 : 16" />
         <span class="type-14 lg:type-16-medium kd-odds-value leading-none">{{ $t(`risk.${data.risk}`) }}</span>
       </span>
-    </div>
+      <Transition name="kd-tip">
+        <p
+          v-if="riskOpen"
+          class="type-12-regular absolute top-full right-0 z-20 mt-2 w-72 rounded-2xl border border-neutral-5 bg-neutral-3 p-3 text-left text-neutral-13 shadow-elevation-2"
+        >
+          <span class="type-12-caps mb-1 block text-neutral-15">{{ $t(`risk.${data.risk}`) }}</span>
+          {{ $t(`case.riskText.${data.risk}`) }}
+          <span class="mt-2 block text-neutral-11">{{ $t('case.riskInfo') }}</span>
+        </p>
+      </Transition>
+    </button>
   </div>
 </template>
 
