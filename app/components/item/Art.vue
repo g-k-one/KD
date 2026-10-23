@@ -6,18 +6,25 @@ import type { Rarity } from '#shared/types/api'
 // weapon turns into the next (the old one twists away blurred while the new one twists in), no remount.
 // float: the art is alive while it waits — the skin bobs, the rarity star turns slowly, the glow breathes
 // (transform/opacity only, so it stays smooth on phones).
-// reveal: the landing moment, built around the rarity shape (0 = none, 1…4 = rarity tier): the star pops in and
-// turns into place. Everything else comes from Forge (rarityRank), bursting out of the same shape.
+// reveal: the landing moment, built on the rarity shape (any value > 0 plays it; the step comes from the rarity):
+// the shape pops in and turns into place, then waves of the same shape spread from behind the skin — none for
+// mil-spec and below, 1 restricted, 2 classified, 3 covert and gold; classified flashes the shape, covert and gold
+// bloom the glow. Forge (rarityRank) only adds sparks on covert and the full rank on gold.
 const props = withDefaults(defineProps<{ image: string; rarity: Rarity; size?: number; dim?: boolean; alt?: string; morph?: boolean; float?: boolean; reveal?: number; eager?: boolean }>(), {
   size: 96,
   reveal: 0,
 })
+/** The reveal step by rarity: -1 none, 0 mil-spec and below … 4 gold */
+const step = computed(() => (props.reveal ? RARITY_TIER[props.rarity] : -1))
+const waves = computed(() => Math.min(3, Math.max(0, step.value)))
 </script>
 
 <template>
-  <div class="kd-art relative" :class="[float && 'is-float', morph && 'is-morph']" :style="{ height: `${size}px`, '--rc': RARITY_COLOR[rarity], '--s': size / 96 }">
+  <div class="kd-art relative" :class="[float && 'is-float', morph && 'is-morph', step >= 3 && 'is-bloom']" :style="{ height: `${size}px`, '--rc': RARITY_COLOR[rarity], '--s': size / 96 }">
     <span class="kd-art-glow absolute top-1/2 left-1/2 rounded-full" />
-    <span class="kd-rarity-star kd-art-star absolute top-1/2 left-1/2" :class="reveal ? 'is-reveal' : undefined" />
+    <!-- waves of the rarity shape, behind the skin; each starts a beat after the pop -->
+    <span v-for="n in waves" :key="`w${n}`" class="kd-rarity-star kd-art-wave absolute top-1/2 left-1/2" :style="{ animationDelay: `${160 + (n - 1) * 150}ms` }" />
+    <span class="kd-rarity-star kd-art-star absolute top-1/2 left-1/2" :class="[reveal && 'is-reveal', step >= 2 && 'is-flash']" />
     <Transition v-if="morph" name="kd-art-morph">
       <img
         :key="image"
@@ -75,9 +82,62 @@ const props = withDefaults(defineProps<{ image: string; rarity: Rarity; size?: n
     transform: translate(-50%, -50%) scale(1) rotate(0deg);
   }
 }
+/* the flash: from classified the shape lands brighter and keeps a short afterglow */
+.kd-art-star.is-reveal.is-flash {
+  animation:
+    kd-star-in 900ms var(--ease-spring) both,
+    kd-star-flash 1100ms var(--ease-out) both;
+}
+@keyframes kd-star-flash {
+  0%,
+  20% {
+    opacity: 0.48;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.48;
+  }
+}
+/* A wave: the same shape, filled, grows out and fades (transform/opacity only) */
+.kd-art-wave {
+  width: calc(72px * var(--s));
+  height: calc(72px * var(--s));
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation: kd-wave 900ms var(--ease-out) both;
+  pointer-events: none;
+}
+@keyframes kd-wave {
+  0% {
+    opacity: 0.75;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.5) rotate(20deg);
+  }
+}
+/* covert and gold: the glow swells once behind it all */
+.kd-art.is-bloom .kd-art-glow {
+  animation: kd-bloom 1200ms var(--ease-out) both;
+}
+@keyframes kd-bloom {
+  30% {
+    transform: translate(-50%, -50%) scale(1.45);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .kd-art-star.is-reveal {
     animation: none;
+  }
+  .kd-art-wave {
+    display: none;
   }
 }
 .kd-art.is-float .kd-art-img {

@@ -372,13 +372,11 @@ export function defineKdEffects(engine: Engine) {
 type Layer = { at: (name: string, el: HTMLElement | null | undefined, scale?: number, loop?: boolean, opts?: ForgeAtOptions) => Promise<{ stop(): void; kill(): void } | null> }
 
 /**
- * Rarity → rank of the reveal (Forge's tier, split over our six rarities). Industrial and mil-spec get only the
- * rarity shape popping in (ItemArt); from restricted up Forge adds a burst, every step keeping the last one's
- * layers: 0 flash, ring, sparks (restricted) · 1 + twinkling stars (classified) · 2 + speed lines and the
- * four-point star out of the shape (covert) · 3 + light rays shooting up, a wide flash, a freeze frame (gold).
- * The crown level (4) is left out: it drowned the skin.
+ * Rarity → rank of Forge's accent on the reveal. The reveal itself is the rarity shape (ItemArt: the pop, then waves
+ * of the shape, a flash, a bloom); Forge adds only sparks and stars on covert (rank 1) and the full rank on gold
+ * (rank 3: rays up, a wide flash, a freeze frame). Below covert, Forge stays out: its round rings fought the shape.
  */
-export const RANK_LEVEL: Record<Rarity, number> = { industrial: -1, milspec: -1, restricted: 0, classified: 1, covert: 2, gold: 3 }
+export const RANK_LEVEL: Record<Rarity, number> = { industrial: -1, milspec: -1, restricted: -1, classified: -1, covert: 1, gold: 3 }
 /**
  * One burst on a landed drop in the rarity's colour, centred on the drop's picture (el, the skin image) and sized by
  * it — the same rule everywhere (reel, PvP, upgrade): the middle of the skin, not the rarity shape or a lift off it.
