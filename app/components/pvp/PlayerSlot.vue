@@ -18,7 +18,7 @@ const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22,
   <div
     class="kd-slot relative flex items-center"
     :class="[
-      compact ? 'flex-col justify-center gap-1 rounded-2xl px-1 py-2 text-center' : 'h-16 gap-3 rounded-2xl p-3',
+      compact ? 'flex-col justify-center gap-1 rounded-2xl px-1 py-2 text-center' : 'h-20 gap-4 rounded-2xl px-4',
       winner ? 'is-winner' : lead ? 'is-lead' : '',
     ]"
   >
@@ -30,21 +30,21 @@ const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22,
         <span v-if="lead && !winner" class="kd-lead-tag type-10-caps absolute -top-2 left-1/2 rounded-sm bg-brand-base px-1.5 py-0.5 text-neutral-15">{{ $t('pvp.lead') }}</span>
       </Transition>
       <span class="relative shrink-0">
-        <span class="block overflow-hidden rounded-full bg-neutral-7" :class="compact ? 'size-8' : 'size-10'">
+        <span class="block overflow-hidden rounded-full bg-neutral-7" :class="compact ? 'size-8' : 'size-12'">
           <img :src="player.avatar" alt="" class="size-full object-cover" :class="player.bot && 'scale-75 object-contain'" />
         </span>
       </span>
       <span class="flex min-w-0 flex-col gap-0.5" :class="compact ? 'items-center' : 'flex-1 items-start'">
         <span class="flex max-w-full items-center gap-1.5">
           <UiIcon v-if="winner && !compact" name="crown" :size="16" class="kd-crown shrink-0 text-coin" />
-          <span class="truncate" :class="compact ? 'type-12' : 'type-14'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
+          <span class="truncate" :class="compact ? 'type-12' : 'type-16-medium'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
           <span v-if="!compact" class="type-12 rounded-xs border border-white-12 bg-[#277cc1] px-1 leading-4">{{ player.level }}</span>
         </span>
-        <UiPrice :amount="Math.round(totalShown)" :size="compact ? 'xs' : 's'" :tone="winner ? 'success' : 'default'" class="tabular-nums" />
+        <UiPrice :amount="Math.round(totalShown)" :size="compact ? 'xs' : 'm'" :tone="winner ? 'success' : 'default'" class="tabular-nums" />
       </span>
       <!-- chance to win: the number on the right, a line along the bottom -->
       <span v-if="chance != null" class="kd-chance flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end'">
-        <span class="tabular-nums" :class="[compact ? 'type-12' : 'type-16-caps', chanceShown >= 50 ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15']">{{ Math.round(chanceShown) }}%</span>
+        <span class="tabular-nums" :class="[compact ? 'type-12' : 'type-20-caps', chanceShown >= 50 ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15']">{{ Math.round(chanceShown) }}%</span>
         <span v-if="!compact" class="type-10-caps text-neutral-11">{{ $t('pvp.toWin') }}</span>
       </span>
       <span v-if="chance != null" class="kd-chance-track absolute inset-x-3 bottom-1 h-1 overflow-hidden rounded-full">
