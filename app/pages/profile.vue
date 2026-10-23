@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import type { HistoryEntry, HistoryGame, HistoryResponse, InventoryItem, InventoryResponse, SellResponse } from '#shared/types/api'
 
-// Figma "Account" side navigation + "Tables" history rows (desktop) / "MobileHistoryRow" (mobile).
+// Profile: one header — who, the level, the money in one line and Deposit — with the stats as one line under it;
+// tabs on top (Inventory · History · Settings) for every size; the money moves sit where they act: on the inventory
+// (Sell all next to the search, Upgrade / Withdraw / Sell on the selection bar). History rows: Figma "Tables"
+// (desktop) / "MobileHistoryRow" (mobile).
 useHead({ title: 'Profile · KurwaDROP' })
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -111,7 +114,7 @@ const stats = computed(() => {
   }
 })
 
-// --- Wallet row (#16, Phantom): the balance with today's result, then the four money actions -------------------
+// --- Money line: the balance with today's result, the skins' value -------------------
 // Result of the last 24 h: what cases and upgrades paid minus what they cost
 const day = computed(() => {
   const since = Date.now() - 86_400_000
@@ -155,85 +158,60 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
     </div>
 
     <template v-else>
-      <!-- Profile summary -->
-      <section class="flex flex-col gap-4 rounded-5xl bg-neutral-2 p-4 md:flex-row md:items-center md:gap-6 md:p-6">
-        <div class="flex min-w-0 flex-1 items-center gap-4">
-          <UiAvatar :src="session.user.avatar" :size="72" />
-          <div class="flex min-w-0 flex-1 flex-col gap-2">
-            <div class="flex items-center gap-2">
-              <h1 class="type-20-caps truncate">{{ session.user.nickname }}</h1>
-              <UiLevelBadge :level="session.user.level" />
-            </div>
-            <span class="type-12-regular text-neutral-11">{{ $t('profile.steamId', { id: maskedSteamId }) }}</span>
-            <div class="flex max-w-80 flex-col gap-1">
-              <div class="type-12 flex justify-between text-neutral-13">
-                <span>{{ $t('profile.level', { from: session.user.level, to: session.user.level + 1 }) }}</span>
-                <span>{{ session.user.levelProgress }}%</span>
+      <!-- Who, the level, the money and Deposit; the stats as one line under them -->
+      <section class="flex flex-col gap-4 rounded-5xl bg-neutral-2 p-4 md:p-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
+          <div class="flex min-w-0 flex-1 items-center gap-4">
+            <UiAvatar :src="session.user.avatar" :size="72" />
+            <div class="flex min-w-0 flex-1 flex-col gap-2">
+              <div class="flex items-center gap-2">
+                <h1 class="type-20-caps truncate">{{ session.user.nickname }}</h1>
+                <UiLevelBadge :level="session.user.level" />
               </div>
-              <div class="h-1 overflow-hidden rounded-full bg-neutral-8">
-                <div class="bg-brand-gradient h-full rounded-full transition-[width] duration-700" :style="{ width: `${session.user.levelProgress}%` }" />
+              <span class="type-12-regular text-neutral-11">{{ $t('profile.steamId', { id: maskedSteamId }) }}</span>
+              <div class="flex max-w-80 flex-col gap-1">
+                <div class="type-12 flex justify-between text-neutral-13">
+                  <span>{{ $t('profile.level', { from: session.user.level, to: session.user.level + 1 }) }}</span>
+                  <span>{{ session.user.levelProgress }}%</span>
+                </div>
+                <div class="h-1 overflow-hidden rounded-full bg-neutral-8">
+                  <div class="bg-brand-gradient h-full rounded-full transition-[width] duration-700" :style="{ width: `${session.user.levelProgress}%` }" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="flex flex-col gap-2 md:w-[440px] md:shrink-0">
-          <div class="grid grid-cols-2 gap-2">
-            <div class="flex flex-col gap-1 rounded-2xl bg-neutral-3 px-4 py-3">
-              <span class="type-12-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
+          <!-- the money in one line: balance (and today's result) · skins (and how many) · Deposit -->
+          <div class="flex flex-wrap items-center gap-3 rounded-3xl bg-neutral-3 p-2 pl-4 max-md:pt-3 md:shrink-0 md:flex-nowrap">
+            <div class="flex min-w-0 flex-1 flex-col md:flex-none">
+              <span class="type-10-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
               <UiPrice :amount="session.user.balance" size="l" />
               <span class="type-12 tabular-nums" :class="day > 0 ? 'text-success' : day < 0 ? 'text-danger' : 'text-neutral-10'">
                 {{ day > 0 ? '+' : day < 0 ? '−' : '' }}{{ formatCoins(Math.abs(day)) }} · {{ $t('account.day') }}
               </span>
             </div>
-            <div class="flex flex-col gap-1 rounded-2xl bg-neutral-3 px-4 py-3">
-              <span class="type-12-caps text-neutral-11">{{ $t('account.skinsValue') }}</span>
+            <span class="h-10 w-px shrink-0 bg-neutral-5" />
+            <div class="flex min-w-0 flex-1 flex-col md:flex-none">
+              <span class="type-10-caps text-neutral-11">{{ $t('account.skinsValue') }}</span>
               <UiPrice :amount="session.user.skinsValue" size="l" tone="coin" />
               <span class="type-12 text-neutral-10">{{ $t('account.skinsCount', { n: inventory.length }, inventory.length) }}</span>
             </div>
-          </div>
-          <!-- the four money moves, one tap each -->
-          <div class="grid grid-cols-4 gap-2">
-            <NuxtLink to="/deposit" class="kd-act type-10-caps is-main kd-press"><UiIcon name="plus" :size="20" />{{ $t('wallet.deposit') }}</NuxtLink>
-            <button type="button" class="kd-act type-10-caps kd-press" @click="ui.inventoryOpen = true"><UiIcon name="steam" :size="20" />{{ $t('withdraw.short') }}</button>
-            <NuxtLink to="/upgrade" class="kd-act type-10-caps kd-press"><UiIcon name="upgrade" :size="20" />{{ $t('upgrade.upgrade') }}</NuxtLink>
-            <button type="button" class="kd-act type-10-caps kd-press" :disabled="!inventory.length" @click="sellEverything"><UiIcon name="wallet" :size="20" />{{ $t('account.sellAll') }}</button>
+            <UiButton icon="plus" size="l" to="/deposit" class="shrink-0 max-md:-ml-2 max-md:basis-[calc(100%+8px)]">{{ $t('wallet.deposit') }}</UiButton>
           </div>
         </div>
+        <dl class="kd-stats scrollbar-none flex overflow-x-auto border-t border-neutral-4 pt-4">
+          <div class="kd-stat"><dt class="type-10-caps text-neutral-11">{{ $t('account.statCases') }}</dt><dd class="type-16-caps tabular-nums">{{ stats.cases }}</dd></div>
+          <div class="kd-stat"><dt class="type-10-caps text-neutral-11">{{ $t('account.statUpgrades') }}</dt><dd class="type-16-caps tabular-nums">{{ stats.upgrades }}</dd></div>
+          <div class="kd-stat"><dt class="type-10-caps text-neutral-11">{{ $t('account.statWagered') }}</dt><dd><UiPrice :amount="stats.wagered" size="m" /></dd></div>
+          <div class="kd-stat"><dt class="type-10-caps text-neutral-11">{{ $t('account.statTopX') }}</dt><dd class="type-16-caps text-coin tabular-nums">{{ stats.topX ? `x${stats.topX.toFixed(stats.topX >= 10 ? 0 : 2)}` : '—' }}</dd></div>
+          <div class="kd-stat"><dt class="type-10-caps text-neutral-11">{{ $t('account.statBest') }}</dt>
+            <dd v-if="stats.best" class="flex min-w-0 items-baseline gap-2"><UiPrice :amount="stats.best.payout" size="m" tone="coin" /><span class="type-12-regular truncate text-neutral-11">{{ stats.best.title }}</span></dd>
+            <dd v-else class="type-16-caps">—</dd>
+          </div>
+        </dl>
       </section>
 
-      <!-- Stats -->
-      <section class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-        <div class="kd-stat"><span class="type-10-caps text-neutral-11">{{ $t('account.statCases') }}</span><span class="type-20-caps tabular-nums">{{ stats.cases }}</span></div>
-        <div class="kd-stat"><span class="type-10-caps text-neutral-11">{{ $t('account.statUpgrades') }}</span><span class="type-20-caps tabular-nums">{{ stats.upgrades }}</span></div>
-        <div class="kd-stat"><span class="type-10-caps text-neutral-11">{{ $t('account.statWagered') }}</span><UiPrice :amount="stats.wagered" size="l" /></div>
-        <div class="kd-stat"><span class="type-10-caps text-neutral-11">{{ $t('account.statTopX') }}</span><span class="type-20-caps text-coin tabular-nums">{{ stats.topX ? `x${stats.topX.toFixed(stats.topX >= 10 ? 0 : 2)}` : '—' }}</span></div>
-        <div class="kd-stat max-sm:col-span-2"><span class="type-10-caps text-neutral-11">{{ $t('account.statBest') }}</span>
-          <span v-if="stats.best" class="flex min-w-0 flex-col"><UiPrice :amount="stats.best.payout" size="l" tone="coin" /><span class="type-12-regular truncate text-neutral-11">{{ stats.best.title }}</span></span>
-          <span v-else class="type-20-caps">—</span>
-        </div>
-      </section>
-
-      <div class="grid gap-4 lg:grid-cols-[240px_1fr] lg:gap-6">
-        <!-- Account nav: side list on desktop (Figma "Account"), tabs on mobile -->
-        <nav class="hidden flex-col gap-1 lg:flex">
-          <button
-            v-for="n in NAV"
-            :key="n.value"
-            type="button"
-            class="kd-press type-14-caps flex h-12 items-center gap-3 rounded-lg px-3 text-left"
-            :class="tab === n.value ? 'bg-neutral-3 text-neutral-15' : 'text-neutral-12 hover:bg-neutral-3 hover:text-neutral-15'"
-            @click="tab = n.value"
-          >
-            <UiIcon :name="n.icon" :size="20" :class="tab === n.value && 'text-brand-light'" />
-            <span class="flex-1">{{ n.label }}</span>
-            <span v-if="n.count" class="type-12 text-neutral-11">{{ n.count }}</span>
-          </button>
-          <NuxtLink to="/fairness" class="kd-press type-14-caps flex h-12 items-center gap-3 rounded-lg px-3 text-neutral-12 hover:bg-neutral-3 hover:text-neutral-15">
-            <UiIcon name="shield" :size="20" />
-            {{ $t('account.fairness') }}
-          </NuxtLink>
-        </nav>
-        <UiTabs v-model="tab" :tabs="NAV" class="lg:hidden" />
+      <div class="flex flex-col gap-4 lg:gap-6">
+        <UiTabs v-model="tab" :tabs="NAV" />
 
         <!-- Inventory -->
         <section v-if="tab === 'inventory'" class="flex min-w-0 flex-col gap-4">
@@ -247,6 +225,10 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
             <UiChip size="l" variant="field" :active="!!selected.length" class="shrink-0" @click="selected.length ? (selected = []) : selectAll()">
               <UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" />
             </UiChip>
+            <UiButton variant="light" size="l" class="shrink-0 max-sm:hidden" @click="sellEverything">
+              {{ $t('account.sellAll') }}
+              <UiPrice :amount="session.user.skinsValue" size="s" tone="inverse" />
+            </UiButton>
           </div>
           <div v-if="loading" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
             <span v-for="n in 12" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl" />
@@ -366,38 +348,19 @@ const maskedSteamId = computed(() => (session.user ? `${session.user.steamId.sli
 </template>
 
 <style scoped>
-.kd-act {
-  display: flex;
-  height: 64px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  border-radius: 12px;
-  background: var(--color-neutral-3);
-  color: var(--color-neutral-14);
-  transition: background-color var(--dur-base) var(--ease-out);
-}
-.kd-act.is-main {
-  background: var(--color-brand-base);
-  color: var(--color-neutral-15);
-}
-.kd-act:disabled {
-  opacity: 0.4;
-}
-@media (hover: hover) {
-  .kd-act:not(.is-main):not(:disabled):hover {
-    background: var(--color-neutral-4);
-  }
-}
 .kd-stat {
   display: flex;
   min-width: 0;
+  flex-shrink: 0;
   flex-direction: column;
-  gap: 4px;
-  border-radius: 16px;
-  background: var(--color-neutral-2);
-  padding: 12px 14px;
+  gap: 2px;
+  padding: 0 20px;
+}
+.kd-stat:first-child {
+  padding-left: 0;
+}
+.kd-stat + .kd-stat {
+  border-left: 1px solid var(--color-neutral-4);
 }
 .kd-bar-enter-active {
   transition:
