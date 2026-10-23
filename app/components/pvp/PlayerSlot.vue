@@ -18,7 +18,7 @@ const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22,
   <div
     class="kd-slot relative flex items-center"
     :class="[
-      compact ? 'flex-col justify-center gap-1 rounded-2xl px-1 py-2 text-center' : 'h-20 gap-4 rounded-2xl px-4',
+      compact ? 'flex-col justify-center gap-1 rounded-2xl px-1 py-2 text-center' : 'h-16 gap-3 rounded-2xl px-3',
       winner ? 'is-winner' : lead ? 'is-lead' : '',
     ]"
   >
@@ -30,7 +30,7 @@ const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22,
         <span v-if="lead && !winner" class="kd-lead-tag type-10-caps absolute -top-2 left-1/2 rounded-sm bg-brand-base px-1.5 py-0.5 text-neutral-15">{{ $t('pvp.lead') }}</span>
       </Transition>
       <span class="relative shrink-0">
-        <span class="block overflow-hidden rounded-full bg-neutral-7" :class="compact ? 'size-8' : 'size-12'">
+        <span class="block overflow-hidden rounded-full bg-neutral-7" :class="compact ? 'size-8' : 'size-11'">
           <img :src="player.avatar" alt="" class="size-full object-cover" :class="player.bot && 'scale-75 object-contain'" />
         </span>
       </span>

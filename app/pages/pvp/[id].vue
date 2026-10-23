@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { BattleResponse, CaseItem, CaseResponse } from '#shared/types/api'
 
-// Battle room, on the case page's skeleton: the mode as the title; a battle bar like the RTP bar (the pot · every
-// round as a column with its own fill bar · the seat's cost); one arena; the one main action in a dock under it
+// Battle room (after csgogem): the mode as the title; one meta line (cost and pot · the case strip · viewers and
+// rounds); a short stage so the players and their drops stay on screen; every action once — join / call a bot in
+// the seat's bar, recreate and replay in the result
 // holding every seat's reel, the markers on its edges and, at the end, the result; the player bars under it, each
 // player's drops right under their bar, newest first. Fairness lives in the page bar (picked from three layouts,
 // 2026-10-24).
@@ -207,20 +208,8 @@ const chances = computed<number[]>(() => {
   }
   return wins.map((w) => (w / SIMS) * 100)
 })
-/** The dock's one main action: join a free seat, call a bot to it, or the same battle again once it is over */
-const firstFree = computed(() => b.value.slots.find((s) => !s.player)?.slot ?? null)
-const cta = computed(() => {
-  if (done.value) return { label: t('pvp.recreate'), icon: 'refresh', price: b.value.cost, run: recreate, loading: recreating.value }
-  if (b.value.status === 'waiting' && firstFree.value != null) {
-    const seat = firstFree.value
-    if (!youIn.value) return { label: t('pvp.join'), icon: 'plus', price: b.value.cost, run: () => join(seat) }
-    if (isCreator.value) return { label: t('pvp.callBot'), variant: 'secondary' as const, run: () => bot(seat) }
-    return { label: t('pvp.waitingForPlayers'), variant: 'secondary' as const, disabled: true }
-  }
-  return { label: roundLine.value.label, variant: 'secondary' as const, disabled: true }
-})
-/** A round column's state in the battle bar */
-const roundState = (i: number) => (b.value.status === 'waiting' ? 'next' : i < revealed.value ? 'done' : i === roundIdx.value && !done.value && clock.value.round >= 0 ? 'current' : 'next')
+/** A round's state in the case strip */
+const roundState = (i: number) => (b.value.status === 'waiting' ? 'default' : i < revealed.value ? 'done' : i === roundIdx.value && !done.value && clock.value.round >= 0 ? 'current' : 'default')
 /** Under the case strip: the round now, its case and price */
 const roundLine = computed(() => {
   const r = b.value.rounds[roundIdx.value]
@@ -232,7 +221,7 @@ const roundLine = computed(() => {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
+  <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-5 lg:px-0 lg:pt-10">
     <UiPageBar
       :title="$t(`pvp.modeName.${b.mode}`)"
       :subtitle="`${$t(`pvp.modeRule.${b.mode}`)} · #${b.id}`"
@@ -244,33 +233,19 @@ const roundLine = computed(() => {
     />
 
 
-    <!-- Battle bar, the case page's RTP bar for a battle: the pot · every round as a column (its case and price, a
-         bar that fills while it spins and stays full once it landed) · the seat's cost and who is watching -->
-    <section class="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3 rounded-3xl bg-neutral-2 px-4 py-3 lg:flex lg:gap-12 lg:py-2">
-      <div class="flex items-center gap-2 lg:gap-3">
-        <span class="type-14-caps whitespace-nowrap text-neutral-11 lg:type-28 lg:uppercase">{{ $t('pvp.value') }}</span>
-        <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" :size="isMobile ? 'xl' : 'xxl'" tone="coin" class="kd-pot tabular-nums" />
+    <!-- Meta line: what a seat costs and what is in the pot · the battle's cases (the current one lit, spent ones dim)
+         · who is watching and the round -->
+    <section class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 lg:grid lg:grid-cols-[1fr_auto_1fr]">
+      <div class="type-12-caps flex items-center gap-4 text-neutral-11">
+        <span class="flex items-center gap-2">{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="m" /></span>
+        <span class="flex items-center gap-2">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" class="kd-pot tabular-nums" /></span>
       </div>
-      <div class="scrollbar-none col-span-2 row-start-2 flex min-w-0 flex-1 gap-3 overflow-x-auto lg:col-span-1 lg:row-start-auto lg:gap-6">
-        <div v-for="(r, i) in b.rounds" :key="i" class="kd-round flex min-w-28 flex-1 flex-col gap-1.5" :class="`is-${roundState(i)}`" :title="r.name">
-          <div class="flex items-center gap-2">
-            <img :src="r.image" :alt="r.name" class="kd-round-img size-9 shrink-0 object-contain" />
-            <span class="flex min-w-0 flex-col">
-              <span class="type-12-caps truncate text-neutral-12">{{ r.name }}</span>
-              <UiPrice :amount="r.price" size="s" />
-            </span>
-          </div>
-          <div class="kd-round-track h-2 overflow-hidden rounded-full">
-            <div :key="roundState(i) === 'current' ? `c${clock.round}` : roundState(i)" class="kd-round-bar bg-brand-gradient h-full rounded-full" :style="{ '--round-ms': `${b.roundMs}ms` }" />
-          </div>
-        </div>
+      <div class="scrollbar-none flex max-w-full items-center gap-2 overflow-x-auto py-1 max-lg:order-last max-lg:w-full">
+        <PvpCaseThumb v-for="(r, i) in b.rounds" :key="i" :image="r.image" :name="`${r.name} · ${formatCoins(r.price)}`" size="m" :state="roundState(i)" />
       </div>
-      <div class="col-start-2 row-start-1 flex items-center justify-end gap-3 lg:w-44 lg:flex-col lg:items-start lg:justify-center lg:gap-1 lg:border-l lg:border-neutral-4 lg:pl-6">
-        <span class="type-12-caps text-neutral-12">{{ $t('pvp.cost') }}</span>
-        <span class="flex items-center gap-3">
-          <UiPrice :amount="b.cost" size="m" />
-          <span class="type-12 flex items-center gap-1 text-neutral-11 tabular-nums"><UiIcon name="eye" :size="14" />{{ b.viewers }}</span>
-        </span>
+      <div class="type-12-caps flex items-center justify-end gap-4 text-neutral-11 tabular-nums">
+        <span class="flex items-center gap-1.5"><UiIcon name="eye" :size="16" />{{ b.viewers }}</span>
+        <span>{{ $t('pvp.rounds') }} <span class="text-neutral-15">{{ Math.min(b.rounds.length, revealed) }}/{{ b.rounds.length }}</span></span>
       </div>
     </section>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
@@ -315,22 +290,17 @@ const roundLine = computed(() => {
           <span class="kd-result-title type-20-caps">{{ winnerName }}</span>
           <UiPrice :amount="pot" size="l" tone="success" class="kd-result-pot" />
           <span v-if="outcome" class="type-12-caps" :class="outcome.won ? 'text-success' : 'text-danger'">{{ outcome.text }}</span>
+          <div class="flex flex-wrap justify-center gap-2">
+            <UiButton size="m" icon="refresh" :loading="recreating" @click="recreate">
+              {{ $t('pvp.recreate') }}
+              <span class="btn-value"><UiPrice :amount="b.cost" size="s" tone="inverse" /></span>
+            </UiButton>
+            <UiButton v-if="data!.battle.status === 'finished'" variant="secondary" size="m" icon="refresh" @click="replay">{{ $t('pvp.replay') }}</UiButton>
+          </div>
         </div>
       </Transition>
     </section>
 
-    <!-- Dock under the stage, as on the case page: who is watching · the one main action · replay -->
-    <div class="flex flex-col gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-3">
-      <span class="type-12-caps flex items-center gap-1.5 text-neutral-11 tabular-nums max-lg:hidden"><UiIcon name="eye" :size="16" />{{ b.viewers }} {{ $t('pvp.watching') }}</span>
-      <UiButton size="l" class="w-full lg:h-14 lg:w-80" :variant="cta.variant ?? 'primary'" :disabled="cta.disabled" :loading="cta.loading" @click="cta.run?.()">
-        <UiIcon v-if="cta.icon" :name="cta.icon" :size="20" />
-        <span class="tabular-nums">{{ cta.label }}</span>
-        <span v-if="cta.price != null" class="btn-value"><UiPrice :amount="cta.price" size="m" tone="inverse" /></span>
-      </UiButton>
-      <div class="flex justify-end gap-2">
-        <UiChip v-if="data!.battle.status === 'finished'" size="m" icon="refresh" class="max-lg:flex-1" @click="replay">{{ $t('pvp.replay') }}</UiChip>
-      </div>
-    </div>
 
     <!-- Player bars: who sits where and what they have so far; join or call a bot on a free seat -->
     <section class="grid gap-2 md:gap-4" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
@@ -350,9 +320,8 @@ const roundLine = computed(() => {
       />
     </section>
 
-    <!-- Drops: each player's column under their card, newest first -->
-    <section v-if="revealed > 0" class="flex flex-col gap-4">
-      <UiSectionHeader :title="$t('pvp.drops')" />
+    <!-- Drops: each player's right under their bar, newest first -->
+    <section v-if="revealed > 0" class="-mt-1">
       <div class="grid gap-2 md:gap-4" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
         <TransitionGroup v-for="seat in b.slots" :key="seat.slot" tag="div" name="kd-drop" class="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(110px,1fr))] content-start gap-2">
           <ItemTile v-for="ri in Array.from({ length: revealed }, (_, k) => revealed - 1 - k)" :key="ri" :item="b.results![ri]!.drops[seat.slot]!" readonly />
@@ -485,30 +454,6 @@ const roundLine = computed(() => {
 }
 .kd-drop-move {
   transition: transform var(--dur-slow) var(--ease-out);
-}
-/* battle bar: a round's bar fills over its spin, stays full once it landed; the case dims when it is spent */
-.kd-round-track {
-  background: var(--color-neutral-4);
-}
-.kd-round-bar {
-  width: 0;
-}
-.kd-round.is-done .kd-round-bar {
-  width: 100%;
-}
-.kd-round.is-current .kd-round-bar {
-  animation: kd-round-fill var(--round-ms) linear both;
-}
-@keyframes kd-round-fill {
-  to {
-    width: 100%;
-  }
-}
-.kd-round.is-done .kd-round-img {
-  opacity: 0.5;
-}
-.kd-round.is-current .kd-round-img {
-  filter: drop-shadow(0 0 10px rgb(255 95 31 / 0.6));
 }
 .kd-pot {
   animation: kd-pot 500ms var(--ease-spring);

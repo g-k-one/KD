@@ -26,7 +26,7 @@ const sfx = useSfx()
 const root = useTemplateRef<HTMLElement>('root')
 const track = useTemplateRef<HTMLElement>('track')
 const { height } = useElementSize(root)
-const cell = computed(() => (props.compact ? 84 : 180))
+const cell = computed(() => (props.compact ? 84 : 150))
 
 // Filler items come from the case being opened this round
 const caseItems = ref<CaseItem[]>([])
@@ -129,10 +129,9 @@ watch([height, cell], () => {
 </script>
 
 <template>
-  <div ref="root" class="relative overflow-hidden" :class="[compact ? 'h-50' : 'h-96', bare ? '' : 'kd-preel rounded-2xl']">
+  <div ref="root" class="relative overflow-hidden" :class="[compact ? 'h-50' : 'h-72', bare ? '' : 'kd-preel rounded-2xl']">
     <div v-if="waiting || !target" class="flex h-full flex-col items-center justify-center gap-3 px-2 text-center">
-      <img v-if="caseRef" :src="caseRef.image" alt="" class="kd-preel-wait object-contain" :class="compact ? 'size-16' : 'size-32'" />
-      <span class="type-12-regular text-neutral-11">{{ compact ? $t('pvp.waiting') : $t('pvp.waitingForPlayers') }}</span>
+      <img v-if="caseRef" :src="caseRef.image" alt="" class="kd-preel-wait object-contain" :class="compact ? 'size-16' : 'size-28'" />
     </div>
     <template v-else>
       <div ref="fxHost" class="pointer-events-none absolute inset-0" />
@@ -145,7 +144,7 @@ watch([height, cell], () => {
           :style="{ height: `${cell}px` }"
           :data-win="(landed && i === WIN) || undefined"
         >
-          <ItemArt :image="it.image" :rarity="it.rarity" :size="compact ? 60 : 124" class="relative w-full" />
+          <ItemArt :image="it.image" :rarity="it.rarity" :size="compact ? 60 : 108" class="relative w-full" />
         </div>
       </div>
       <div class="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-neutral-1 to-transparent" :class="compact ? 'h-12' : 'h-20'" />
