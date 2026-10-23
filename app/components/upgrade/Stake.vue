@@ -161,12 +161,13 @@ function removePiece(p: Piece) {
                 </div>
               </template>
               <template v-else>
-                <!-- the coin pictures are square (a skin is wide and low), so they get the band between the price and the label -->
-                <span class="absolute inset-0 grid place-items-center"><UiCoinStack :size="24" :amount="coins" class="kd-morph" /></span>
-                <div class="absolute inset-x-0 top-0 px-1.5 py-1">
+                <!-- the coin pictures are square (a skin is wide and low), so they may run under the price and the label like a
+                     skin does; the text sits above them with a shadow so it reads over the orange -->
+                <span class="absolute inset-0 grid place-items-center"><UiCoinStack :size="32" :amount="coins" class="kd-morph" /></span>
+                <div class="kd-coin-text absolute inset-x-0 top-0 px-1.5 py-1">
                   <UiPrice :amount="p.amount" size="s" />
                 </div>
-                <div class="absolute inset-x-0 bottom-0 flex flex-col px-1.5 py-0.5">
+                <div class="kd-coin-text absolute inset-x-0 bottom-0 flex flex-col px-1.5 py-0.5">
                   <span class="type-10-caps text-neutral-15/48">KD</span>
                   <span class="type-12 text-item-gold">{{ $t('common.coins') }}</span>
                 </div>
@@ -252,6 +253,12 @@ function removePiece(p: Piece) {
     transform: translate(-50%, -50%);
   }
 }
+/* the coins tile: its labels stay readable over the picture */
+.kd-coin-text {
+  z-index: 1;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.85);
+}
+
 /* Slots: empty ones show a faint gun; the next free one a quiet + (only while idle) */
 .kd-slot.is-next {
   color: var(--color-neutral-11);
