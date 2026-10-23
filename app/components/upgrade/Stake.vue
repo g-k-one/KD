@@ -38,12 +38,6 @@ const isLg = useMediaQuery('(min-width: 1024px)')
 const totalSrc = computed(() => props.total)
 const totalShown = useTransition(totalSrc, { duration: 450, transition: [0.22, 1, 0.36, 1] })
 
-// Coin flips each time the balance part changes
-const coinFlip = ref(0)
-watch(
-  () => props.coins,
-  (v, old) => v !== old && v > 0 && coinFlip.value++,
-)
 
 // One big piece ↔ slots: the piece that stays morphs (FLIP) from where it was to where it lands —
 // the big art shrinks into its slot when a second skin arrives, and grows back when only one is left.
@@ -103,7 +97,7 @@ function removePiece(p: Piece) {
             <div :key="single.key" class="absolute inset-0">
               <div class="kd-single-art absolute inset-0 grid place-items-center" :data-key="single.key">
                 <ItemArt v-if="single.kind === 'skin'" float :image="single.item.image" :rarity="single.item.rarity" :size="isLg ? 150 : 120" class="kd-morph w-[260px]" />
-                <UiCoinStack v-else :key="coinFlip" :size="isLg ? 96 : 76" :amount="coins" class="kd-morph kd-coin-big" />
+                <UiCoinStack v-else :size="isLg ? 96 : 76" :amount="coins" class="kd-morph kd-coin-big" />
               </div>
               <div class="absolute inset-x-0 top-0 flex items-start justify-between p-4">
                 <div v-if="single.kind === 'skin'" class="flex min-w-0 flex-col gap-1">
@@ -167,7 +161,7 @@ function removePiece(p: Piece) {
                 </div>
               </template>
               <template v-else>
-                <span class="absolute inset-0 grid place-items-center"><UiCoinStack :key="coinFlip" :size="40" :amount="coins" class="kd-morph" /></span>
+                <span class="absolute inset-0 grid place-items-center"><UiCoinStack :size="40" :amount="coins" class="kd-morph" /></span>
                 <div class="absolute inset-x-0 top-0 px-1.5 py-1">
                   <UiPrice :amount="p.amount" size="s" />
                 </div>
