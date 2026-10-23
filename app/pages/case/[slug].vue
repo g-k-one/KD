@@ -266,7 +266,7 @@ if (import.meta.client) {
       </div>
     </section>
 
-    <CaseShareDrop v-model="shareOpen" :item="shareItem" :case-name="cs.name" :case-image="cs.image" :case-price="cs.price" :slug="cs.slug" />
+    <CaseShareDrop v-model="shareOpen" :item="shareItem" :case-price="cs.price" :slug="cs.slug" />
 
     <UiModal v-model="promoOpen" :title="$t('bonus.promo')" :description="$t('bonus.promoText')">
       <BonusPromo bare @done="promoOpen = false" />

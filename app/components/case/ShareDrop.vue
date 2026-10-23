@@ -2,12 +2,12 @@
 import type { InventoryItem } from '#shared/types/api'
 
 /*
- * Share a drop (docs/ux-research-v3.md #7): after a big win the player gets a ready picture — the skin on its
- * rarity glow, the multiplier, the case, our logo and the link — to post anywhere. Phones hand it to the system
+ * Share a drop (docs/ux-research-v3.md #7): after a win the player gets a ready picture — the skin, big, on its
+ * rarity glow, the multiplier and our logo; no price, case or link on it (the link goes with the post) — to post anywhere. Phones hand it to the system
  * share sheet; desktop copies the picture or the link. The card is drawn on a canvas, 1200×630 (link preview size).
  */
 const open = defineModel<boolean>({ required: true })
-const props = defineProps<{ item: InventoryItem | null; caseName: string; caseImage: string; casePrice: number; slug: string }>()
+const props = defineProps<{ item: InventoryItem | null; casePrice: number; slug: string }>()
 const toast = useToast()
 const { t } = useI18n()
 
@@ -41,55 +41,40 @@ async function draw() {
   // ground: the site's near-black with the drop's rarity glowing behind the skin
   g.fillStyle = '#0c0d10'
   g.fillRect(0, 0, W, H)
-  const glow = g.createRadialGradient(820, 330, 20, 820, 330, 420)
+  const glow = g.createRadialGradient(800, 315, 20, 800, 315, 470)
   glow.addColorStop(0, `${tint}cc`)
   glow.addColorStop(0.45, `${tint}33`)
   glow.addColorStop(1, '#0c0d1000')
   g.fillStyle = glow
   g.fillRect(0, 0, W, H)
 
-  const [skin, box, logo, coin] = await Promise.all([
-    load(it.image),
-    load(props.caseImage).catch(() => null),
-    load('/img/brand/logo-word.svg').catch(() => null),
-    load('/img/brand/coin.svg').catch(() => null),
-  ])
-  // the skin, big, slightly tilted
+  const [skin, logo] = await Promise.all([load(it.image), load('/img/brand/logo-word.svg').catch(() => null)])
+  // the skin, as big as the right side holds, slightly tilted; the catalog art is 320×240, so it is scaled up ~2.7×:
+  // the browser's best resampling keeps its edges clean
   g.save()
-  g.translate(820, 320)
+  g.imageSmoothingEnabled = true
+  g.imageSmoothingQuality = 'high'
+  g.translate(800, 315)
   g.rotate(-0.08)
-  const s = Math.min(760 / skin.width, 480 / skin.height)
+  const s = Math.min(880 / skin.width, 580 / skin.height)
   g.shadowColor = 'rgba(0,0,0,0.6)'
   g.shadowBlur = 40
   g.shadowOffsetY = 20
   g.drawImage(skin, (-skin.width * s) / 2, (-skin.height * s) / 2, skin.width * s, skin.height * s)
   g.restore()
 
-  // left column: logo, multiplier, name, price, case
-  if (logo?.width) g.drawImage(logo, 64, 56, 200, (200 * logo.height) / logo.width)
+  // left column, centred on the height: logo, multiplier, weapon, skin
+  if (logo?.width) g.drawImage(logo, 64, 110, 200, (200 * logo.height) / logo.width)
   g.textBaseline = 'alphabetic'
   g.fillStyle = '#ffc93b'
   g.font = `800 150px ${font}`
-  g.fillText(`x${mult.value}`, 56, 300)
+  g.fillText(`x${mult.value}`, 56, 370)
   g.fillStyle = '#9aa0ad'
   g.font = `600 30px ${font}`
-  g.fillText(it.weapon.toUpperCase(), 64, 362)
+  g.fillText(it.weapon.toUpperCase(), 64, 432)
   g.fillStyle = tint
   g.font = `800 48px ${font}`
-  g.fillText(it.skin.toUpperCase(), 64, 416, 560)
-  g.fillStyle = '#ffffff'
-  g.font = `700 36px ${font}`
-  if (coin) g.drawImage(coin, 64, 446, 34, 34)
-  g.fillText(formatCoins(it.price), coin ? 108 : 64, 474)
-
-  // the case it came from and where to open it
-  if (box) g.drawImage(box, 56, 504, 80, 80)
-  g.fillStyle = '#ffffff'
-  g.font = `700 26px ${font}`
-  g.fillText(t('share.from', { name: props.caseName }).toUpperCase(), 148, 538)
-  g.fillStyle = '#9aa0ad'
-  g.font = `500 24px ${font}`
-  g.fillText(link.value.replace(/^https?:\/\//, ''), 148, 572)
+  g.fillText(it.skin.toUpperCase(), 64, 486, 460)
 
   blob.value = await new Promise<Blob | null>((res) => c.toBlob(res, 'image/png'))
   if (preview.value) URL.revokeObjectURL(preview.value)

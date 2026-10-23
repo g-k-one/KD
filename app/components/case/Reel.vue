@@ -530,9 +530,9 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
                 <span class="max-sm:hidden">{{ $t('wallet.sell') }}</span>
                 <UiPrice :amount="results[col]!.price" size="s" tone="inverse" count-up />
               </UiButton>
-              <!-- the best drop of the opening can be shared (an icon on phones) -->
+              <!-- the best drop of the opening can be shared (an icon on phones), if it paid at least the case -->
               <UiButton
-                v-if="phase === 'result' && !demo && col === bestCol"
+                v-if="phase === 'result' && !demo && col === bestCol && results[col]!.price >= data.price"
                 variant="secondary"
                 size="s"
                 icon="share"
@@ -587,7 +587,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
               <UiPrice :amount="results[0].price" size="s" tone="inverse" count-up />
             </UiButton>
             <UiButton variant="secondary" size="s" icon="upgrade" :to="`/upgrade?item=${results[0].uid}&from=${data.slug}`">{{ $t('upgrade.upgrade') }}</UiButton>
-            <UiButton variant="secondary" size="s" icon="share" @click="emit('share', results[0])">{{ $t('share.share') }}</UiButton>
+            <UiButton v-if="results[0].price >= data.price" variant="secondary" size="s" icon="share" @click="emit('share', results[0])">{{ $t('share.share') }}</UiButton>
           </div>
         </div>
       </Transition>
