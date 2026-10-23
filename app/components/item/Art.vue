@@ -20,7 +20,7 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
 </script>
 
 <template>
-  <div class="kd-art relative" :class="[float && 'is-float', morph && 'is-morph', step >= 3 && 'is-bloom']" :style="{ height: `${size}px`, '--rc': RARITY_COLOR[rarity], '--s': size / 96 }">
+  <div class="kd-art relative" :class="[float && 'is-float', morph && 'is-morph', step >= 3 && 'is-bloom', size < 64 && 'is-small']" :style="{ height: `${size}px`, '--rc': RARITY_COLOR[rarity], '--s': size / 96 }">
     <span class="kd-art-glow absolute top-1/2 left-1/2 rounded-full" />
     <!-- waves of the rarity shape, behind the skin; each starts a beat after the pop -->
     <span v-for="n in waves" :key="`w${n}`" class="kd-rarity-star kd-art-wave absolute top-1/2 left-1/2" :style="{ animationDelay: `${160 + (n - 1) * 150}ms` }" />
@@ -209,6 +209,13 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
   transform: translate(-50%, -50%);
   opacity: 0.6;
   transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+}
+/* small art (the live feed, tiles): the shape carries the rarity there, so it stays visible and the glow steps back */
+.kd-art.is-small .kd-art-star {
+  opacity: 0.62;
+}
+.kd-art.is-small .kd-art-glow {
+  opacity: 0.42;
 }
 .kd-art-star {
   width: calc(72px * var(--s));
