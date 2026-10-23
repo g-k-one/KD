@@ -21,8 +21,6 @@ export interface CaseSummary {
   price: number
   risk: RiskLevel
   tag?: CaseTag
-  /** Event cases: the step on the event's price ladder (1 = cheapest, `of` = the final boss) */
-  event?: { level: number; of: number }
   /** Return to player, basis points (9240 = 92.40%). Configured in the admin panel. */
   rtp: number
   /** Chance that one drop is worth at least the case price, basis points. Home sorts by it. */
@@ -36,10 +34,8 @@ export interface CaseSection {
   id: string
   title: string
   cases: CaseSummary[]
-  /** A section with a clock: the event's end, or when the weekly picks rotate */
+  /** A section with a clock: when the weekly picks rotate */
   endsAt?: string
-  /** Where the section's header leads (the event page) */
-  to?: string
 }
 
 export interface CasesResponse {
@@ -169,15 +165,6 @@ export interface KurwadropInfo {
 
 export interface CaseResponse {
   case: CaseDetails
-}
-
-/** Site-wide counters for the trust band on home. Counts, not coins. */
-export interface StatsResponse {
-  casesOpened: number
-  upgrades: number
-  battles: number
-  /** Players on the site right now */
-  online: number
 }
 
 export interface OpenCaseRequest {
@@ -476,47 +463,6 @@ export interface RaceResponse {
   me: RaceEntry | null
 }
 
-/** Event leaderboard row: event points are coins played on the event's cases */
-export interface EventEntry {
-  rank: number
-  nickname: string
-  avatar: string
-  level: number
-  points: number
-  /** Coin cents for this place; 0 outside the prize places */
-  prize: number
-  you?: boolean
-}
-
-/** Daily giveaway: one free ticket a day once the player has played `goal` coin cents on event cases */
-export interface EventGiveaway {
-  endsAt: string
-  prize: Item
-  entrants: number
-  joined: boolean
-  goal: number
-  /** Coin cents played on event cases today */
-  played: number
-  lastWinner: { nickname: string; avatar: string; item: Item } | null
-}
-
-/**
- * GET /api/event — the running event (docs/ux-research-v3.md #19, #33, #34, #49): a ladder of themed cases from
- * cheap to the final boss, a leaderboard by event points with a prize pool, and a daily giveaway.
- * `me` and the giveaway's `joined`/`played` only for a signed-in player.
- */
-export interface EventResponse {
-  id: string
-  name: string
-  endsAt: string
-  prizePool: number
-  points: number
-  /** The ladder, cheapest first */
-  cases: CaseSummary[]
-  top: EventEntry[]
-  me: EventEntry | null
-  giveaway: EventGiveaway
-}
 
 export interface PassTier {
   level: number

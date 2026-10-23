@@ -17,8 +17,6 @@ import {
   openWelcome,
   claimLevel,
   claimMission,
-  getEvent,
-  joinGiveaway,
   openChain,
   claimRakeback,
   redeemPromo,
@@ -26,7 +24,6 @@ import {
   getMarket,
   getMockState,
   getSeeds,
-  getStats,
   getRace,
   getPass,
   claimPass,
@@ -70,13 +67,7 @@ export async function mockRoute(method: string, path: string, body: Body, query:
 
   if (m === 'GET' && path === '/api/feed') return getFeed()
   if (m === 'GET' && path === '/api/wins/today') return getBigWins()
-  if (m === 'GET' && path === '/api/stats') return getStats()
   if (m === 'GET' && path === '/api/race') return getRace(ctx.loggedIn)
-  if (m === 'GET' && path === '/api/event') return getEvent(ctx.loggedIn)
-  if (m === 'POST' && path === '/api/event/giveaway/join') {
-    authed()
-    return joinGiveaway()
-  }
   if (m === 'GET' && path === '/api/pass') {
     authed()
     return getPass()

@@ -340,7 +340,8 @@ async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseIt
   )
   cancelAnimationFrame(raf)
   clearTimeout(aimTimer)
-  if (aim.value === 'aiming') {
+  // set by the timer while the strip ran, which TS cannot see from here
+  if ((aim.value as string) === 'aiming') {
     aim.value = 'locked'
     setTimeout(() => aim.value === 'locked' && (aim.value = ''), 320)
   }

@@ -17,8 +17,8 @@ function start() {
     style="background-image: linear-gradient(144deg, var(--color-neutral-3) 11%, #652210 75%, #922000 97%)"
   >
     <!-- Mobile: art sits in the flow above the text -->
-    <div class="relative -mx-4 -mt-4 mb-2 h-40 overflow-hidden sm:hidden">
-      <img src="/img/brand/hero-mascot.webp" alt="" class="absolute -top-2 left-1 h-48 w-auto max-w-none" draggable="false" />
+    <div class="relative -mx-4 -mt-4 mb-2 h-28 overflow-hidden sm:hidden">
+      <img src="/img/brand/hero-mascot.webp" alt="" class="absolute -top-2 left-1 h-36 w-auto max-w-none" draggable="false" />
     </div>
 
     <div class="relative z-10 flex flex-col justify-between gap-4 sm:max-w-[58%] sm:gap-6 lg:h-full lg:w-[709px] lg:max-w-none">
