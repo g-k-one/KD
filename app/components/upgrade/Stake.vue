@@ -161,7 +161,8 @@ function removePiece(p: Piece) {
                 </div>
               </template>
               <template v-else>
-                <span class="absolute inset-0 grid place-items-center"><UiCoinStack :size="40" :amount="coins" class="kd-morph" /></span>
+                <!-- the coin pictures are square (a skin is wide and low), so they get the band between the price and the label -->
+                <span class="absolute inset-0 grid place-items-center"><UiCoinStack :size="24" :amount="coins" class="kd-morph" /></span>
                 <div class="absolute inset-x-0 top-0 px-1.5 py-1">
                   <UiPrice :amount="p.amount" size="s" />
                 </div>
