@@ -84,6 +84,8 @@ async function sellSelected() {
 // Withdraw the selected skins to Steam (one trade offer)
 const withdrawOpen = ref(false)
 const selectedItems = computed(() => inventory.value.filter((i) => selected.value.includes(i.uid)))
+/** Withdraw takes the picked skins, or all of them when none is picked */
+const withdrawItems = computed(() => (selected.value.length ? selectedItems.value : inventory.value))
 async function onWithdrawn() {
   selected.value = []
   await load()
@@ -151,10 +153,9 @@ async function saveTrade() {
     </div>
 
     <template v-else>
-      <!-- Who, the level, the money and Deposit; the stats as one line under them -->
-      <section class="flex flex-col gap-4 rounded-5xl bg-neutral-2 p-4 md:p-6">
-        <div class="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
-          <div class="flex min-w-0 flex-1 items-center gap-4">
+      <!-- One row: who and the level · the stats, big · the money and Deposit -->
+      <section class="grid gap-4 rounded-5xl bg-neutral-2 p-4 md:p-6 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center lg:gap-8">
+          <div class="flex min-w-0 items-center gap-4">
             <UiAvatar :src="session.user.avatar" :size="72" />
             <div class="flex min-w-0 flex-1 flex-col gap-2">
               <div class="flex items-center gap-2">
@@ -172,8 +173,16 @@ async function saveTrade() {
               </div>
             </div>
           </div>
-          <!-- the money in one line: balance (and today's result) · skins (and how many) · Deposit -->
-          <div class="flex flex-wrap items-center gap-3 rounded-3xl bg-neutral-3 p-2 pl-4 max-md:pt-3 md:shrink-0 md:flex-nowrap">
+          <dl class="kd-stats grid grid-cols-3 border-neutral-4 max-lg:order-last max-lg:border-t max-lg:pt-4">
+            <div class="kd-stat"><dt class="type-12-caps text-neutral-11">{{ $t('account.statCases') }}</dt><dd class="type-20-caps tabular-nums">{{ stats.cases }}</dd></div>
+            <div class="kd-stat"><dt class="type-12-caps text-neutral-11">{{ $t('account.statTopX') }}</dt><dd class="type-20-caps text-coin tabular-nums">{{ stats.topX ? `x${stats.topX.toFixed(stats.topX >= 10 ? 0 : 2)}` : '—' }}</dd></div>
+            <div class="kd-stat"><dt class="type-12-caps text-neutral-11">{{ $t('account.statBest') }}</dt>
+              <dd v-if="stats.best" class="flex min-w-0 flex-col"><UiPrice :amount="stats.best.payout" size="l" tone="coin" /><span class="type-12-regular truncate text-neutral-11">{{ stats.best.title }}</span></dd>
+              <dd v-else class="type-20-caps">—</dd>
+            </div>
+          </dl>
+          <!-- the money in one line: balance · skins · Deposit -->
+          <div class="flex flex-wrap items-center gap-3 rounded-3xl bg-neutral-3 p-2 pl-4 max-md:pt-3 md:flex-nowrap">
             <div class="flex min-w-0 flex-1 flex-col md:flex-none">
               <span class="type-10-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
               <UiPrice :amount="session.user.balance" size="l" />
@@ -185,15 +194,6 @@ async function saveTrade() {
             </div>
             <UiButton icon="plus" size="m" to="/deposit" class="shrink-0 max-md:-ml-2 max-md:basis-[calc(100%+8px)]">{{ $t('wallet.deposit') }}</UiButton>
           </div>
-        </div>
-        <dl class="kd-stats scrollbar-none flex overflow-x-auto border-t border-neutral-4 pt-4">
-          <div class="kd-stat"><dt class="type-10-caps text-neutral-11">{{ $t('account.statCases') }}</dt><dd class="type-16-caps tabular-nums">{{ stats.cases }}</dd></div>
-          <div class="kd-stat"><dt class="type-10-caps text-neutral-11">{{ $t('account.statTopX') }}</dt><dd class="type-16-caps text-coin tabular-nums">{{ stats.topX ? `x${stats.topX.toFixed(stats.topX >= 10 ? 0 : 2)}` : '—' }}</dd></div>
-          <div class="kd-stat"><dt class="type-10-caps text-neutral-11">{{ $t('account.statBest') }}</dt>
-            <dd v-if="stats.best" class="flex min-w-0 items-baseline gap-2"><UiPrice :amount="stats.best.payout" size="m" tone="coin" /><span class="type-12-regular truncate text-neutral-11">{{ stats.best.title }}</span></dd>
-            <dd v-else class="type-16-caps">—</dd>
-          </div>
-        </dl>
       </section>
 
       <div class="flex flex-col gap-4 lg:gap-6">
@@ -211,15 +211,19 @@ async function saveTrade() {
             <UiChip size="m" variant="field" :active="!!selected.length" class="shrink-0" @click="selected.length ? (selected = []) : selectAll()">
               <UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" />
             </UiChip>
+            <UiButton variant="secondary" size="m" icon="steam" class="shrink-0" @click="withdrawOpen = true">
+              <UiTextSwap :text="selected.length ? $t('withdraw.send', { n: selected.length }) : $t('account.withdrawAll')" />
+            </UiButton>
             <UiButton variant="light" size="m" class="shrink-0 max-sm:hidden" @click="sellEverything">
               {{ $t('account.sellAll') }}
               <UiPrice :amount="session.user.skinsValue" size="s" tone="inverse" />
             </UiButton>
           </div>
-          <div v-if="loading" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+          <p v-if="inventory.length && !selected.length" class="type-12-regular -mt-1 text-neutral-11">{{ $t('account.pickHint') }}</p>
+          <div v-if="loading" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
             <span v-for="n in 12" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl" />
           </div>
-          <div v-else-if="inventory.length" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+          <div v-else-if="inventory.length" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
             <ItemTile v-for="it in sortedInventory" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
           </div>
           <UiEmptyState v-else :text="$t('account.emptyInventory')">
@@ -242,7 +246,7 @@ async function saveTrade() {
               </UiButton>
             </div>
           </Transition>
-          <WalletWithdrawModal v-model="withdrawOpen" :items="selectedItems" @done="onWithdrawn" />
+          <WalletWithdrawModal v-model="withdrawOpen" :items="withdrawItems" @done="onWithdrawn" />
           <WalletSellPreview v-model="sellOpen" :items="selectedItems" :loading="selling" @confirm="sellSelected" />
         </section>
 
@@ -337,10 +341,14 @@ async function saveTrade() {
 .kd-stat {
   display: flex;
   min-width: 0;
-  flex-shrink: 0;
   flex-direction: column;
-  gap: 2px;
-  padding: 0 20px;
+  gap: 4px;
+  padding: 0 12px;
+}
+@media (min-width: 64rem) {
+  .kd-stat {
+    padding: 0 24px;
+  }
 }
 .kd-stat:first-child {
   padding-left: 0;
