@@ -1,4 +1,4 @@
-// Sound: recorded samples in public/sfx (CS2-like case-opening sounds, generated for us), with the synth below as the
+// Sound: recorded samples (CS2-like case-opening sounds, generated for us; one sprite, public/sfx/sprite.mp3), with the synth below as the
 // fallback while they load, and for the few cues that have no sample (tense, heart, count). Everything runs into one
 // small mix bus — a compressor, with a send to a short room reverb. The synth is in one key (E major pentatonic), so
 // it never clashes with itself. Respects Settings → Sound and volume.
@@ -61,26 +61,52 @@ function makeBus(): Bus | null {
 
 // ── samples ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
-const SAMPLES = ['tick-1', 'tick-2', 'open', 'reveal-0', 'reveal-1', 'reveal-2', 'reveal-3', 'reveal-4', 'coin', 'claim', 'lose', 'win', 'level-up', 'squawk'] as const
-type Sample = (typeof SAMPLES)[number]
+/**
+ * Where each clip sits in the sprite: [offset s, duration s], 0.25 s of silence between clips. One file, not fourteen:
+ * the artifact holds at most 511 files. Rebuilt from the clips by scratchpad tooling (trim, -1 dBFS peak, pack).
+ */
+const SPRITE = {
+  'tick-1': [0.25, 0.05], 'tick-2': [0.55, 0.055], open: [0.855, 0.359], 'reveal-0': [1.464, 0.6565], 'reveal-1': [2.3705, 0.9379],
+  'reveal-2': [3.5585, 1.2976], 'reveal-3': [5.1061, 2.742], 'reveal-4': [8.0981, 2.3913], coin: [10.7395, 0.6198],
+  claim: [11.6093, 0.5595], lose: [12.4188, 0.6196], win: [13.2885, 0.9954], 'level-up': [14.5339, 1.5934], squawk: [16.3772, 0.92],
+} as const
+type Sample = keyof typeof SPRITE
 /** Each file is peak-normalized to -1 dBFS; these even out how loud they feel (dense swells sit lower than clicks) */
 const SAMPLE_GAIN: Record<Sample, number> = {
   'tick-1': 0.42, 'tick-2': 0.36, open: 0.7, 'reveal-0': 0.32, 'reveal-1': 0.5, 'reveal-2': 0.55, 'reveal-3': 0.45,
   'reveal-4': 0.55, coin: 0.45, claim: 0.55, lose: 0.4, win: 0.4, 'level-up': 0.45, squawk: 0.5,
 }
-const files = new Map<Sample, Promise<ArrayBuffer | null>>()
+let file: Promise<ArrayBuffer | null> | null = null
+let decoding = false
 const buffers = new Map<Sample, AudioBuffer>()
 
-/** Fetches the files once (no audio context needed yet) */
+/** Fetches the sprite once (no audio context needed yet) */
 function prefetch(base: string) {
-  if (files.size) return
-  for (const n of SAMPLES) files.set(n, fetch(`${base}sfx/${n}.mp3`).then((r) => (r.ok ? r.arrayBuffer() : null), () => null))
+  file ??= fetch(`${base}sfx/sprite.mp3`).then((r) => (r.ok ? r.arrayBuffer() : null), () => null)
 }
 
-/** Decodes them on the bus's context as soon as it exists */
+/**
+ * Decodes the sprite on the bus's context and cuts it into one buffer per clip. Each cut starts at the first sound
+ * after (offset - 0.1 s), so a decoder that pads the start a little still lands on the clip.
+ */
 function decode(b: Bus) {
-  for (const [n, f] of files)
-    void f.then((ab) => ab && !buffers.has(n) && b.a.decodeAudioData(ab.slice(0)).then((buf) => buffers.set(n, buf), () => {}))
+  if (decoding || !file) return
+  decoding = true
+  void file.then(async (ab) => {
+    if (!ab) return
+    const all = await b.a.decodeAudioData(ab.slice(0)).catch(() => null)
+    if (!all) return
+    const d = all.getChannelData(0)
+    const sr = all.sampleRate
+    for (const [n, [off, dur]] of Object.entries(SPRITE) as [Sample, readonly [number, number]][]) {
+      let i = Math.max(0, Math.floor((off - 0.1) * sr))
+      while (i < d.length && Math.abs(d[i]!) < 1e-3) i++
+      const len = Math.min(Math.ceil(dur * sr), d.length - i)
+      const buf = b.a.createBuffer(1, len, sr)
+      buf.copyToChannel(d.subarray(i, i + len), 0)
+      buffers.set(n, buf)
+    }
+  })
 }
 
 type SampleOpts = { rate?: number; gain?: number; wet?: number }
@@ -284,12 +310,11 @@ export function useSfx() {
   function play(fn: (b: Bus, t: number) => void) {
     const s = settings.settings
     if (!import.meta.client || !s.sound || s.volume <= 0) return
-    if (!bus) {
-      bus = makeBus()
-      if (!bus) return
-      prefetch(base.endsWith('/') ? base : `${base}/`)
-      decode(bus)
-    }
+    bus ??= makeBus()
+    if (!bus) return
+    // both run once: fetch the sprite, then decode it on this context
+    prefetch(base.endsWith('/') ? base : `${base}/`)
+    decode(bus)
     if (bus.a.state === 'suspended') void bus.a.resume()
     bus.master.gain.value = (s.volume / 100) ** 1.5 * 1.5
     fn(bus, bus.a.currentTime + 0.01)
