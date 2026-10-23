@@ -3,12 +3,15 @@ import type { BattlePlayerRef } from '#shared/types/api'
 
 // Figma "BattlePlayer": Desktop = column header, Compact = mobile column header.
 // Empty shows Call bot; Winner = success tint + 1px success stroke.
-const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean }>()
+const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number }>()
 defineEmits<{ bot: []; join: [] }>()
 
 // The running total rolls up to each new value like an odometer
 const totalSrc = computed(() => props.total ?? 0)
 const totalShown = useTransition(totalSrc, { duration: 700, transition: [0.22, 1, 0.36, 1] })
+// the chance to win rolls to each new estimate too
+const chanceSrc = computed(() => props.chance ?? 0)
+const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22, 1, 0.36, 1] })
 </script>
 
 <template>
@@ -39,6 +42,14 @@ const totalShown = useTransition(totalSrc, { duration: 700, transition: [0.22, 1
         </span>
         <UiPrice :amount="Math.round(totalShown)" :size="compact ? 'xs' : 's'" :tone="winner ? 'success' : 'default'" class="tabular-nums" />
       </span>
+      <!-- chance to win: the number on the right, a line along the bottom -->
+      <span v-if="chance != null" class="kd-chance flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end'">
+        <span class="tabular-nums" :class="[compact ? 'type-12' : 'type-16-caps', chanceShown >= 50 ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15']">{{ Math.round(chanceShown) }}%</span>
+        <span v-if="!compact" class="type-10-caps text-neutral-11">{{ $t('pvp.toWin') }}</span>
+      </span>
+      <span v-if="chance != null" class="kd-chance-track absolute inset-x-3 bottom-1 h-1 overflow-hidden rounded-full">
+        <span class="kd-chance-fill block h-full rounded-full" :style="{ width: `${Math.max(2, chanceShown)}%` }" />
+      </span>
     </template>
     <template v-else>
       <span class="grid shrink-0 place-items-center rounded-full border border-dashed border-neutral-8 text-neutral-11" :class="compact ? 'size-8' : 'size-10'">
@@ -65,6 +76,15 @@ const totalShown = useTransition(totalSrc, { duration: 700, transition: [0.22, 1
   transition:
     background-color var(--dur-slow) var(--ease-out),
     border-color var(--dur-slow) var(--ease-out);
+}
+.kd-chance-track {
+  background: var(--color-neutral-4);
+}
+.kd-chance-fill {
+  background: linear-gradient(90deg, var(--color-brand-base), #ffb13b);
+}
+.kd-slot.is-winner .kd-chance-fill {
+  background: var(--color-success);
 }
 .kd-slot.is-lead {
   border-color: rgb(255 95 31 / 0.45);

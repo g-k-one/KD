@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { BattleResponse } from '#shared/types/api'
+import type { BattleResponse, CaseItem, CaseResponse } from '#shared/types/api'
 
-// Battle room: the mode as the title; one params line (mode and its rule · cost · rounds · pot · viewers); one arena
+// Battle room: the mode as the title; an info panel (the mode and its rule · the battle's cases, the current one
+// marked, with its name and price · the pot and the seat's cost); one arena
 // holding every seat's reel, the markers on its edges and, at the end, the result; the player bars under it, each
 // player's drops right under their bar, newest first. Fairness lives in the page bar (picked from three layouts,
 // 2026-10-24).
@@ -60,7 +61,11 @@ const revealed = computed(() => {
 })
 const totals = computed(() => slotTotals(b.value, revealed.value))
 const pot = computed(() => totals.value.reduce((a, x) => a + x, 0))
-const isMobile = useMediaQuery('(max-width: 767px)')
+// false on the server and through hydration (both render desktop), then the real width: a mismatch here left
+// hydrated slots with the desktop classes on phones
+const mounted = useMounted()
+const phoneQuery = useMediaQuery('(max-width: 767px)')
+const isMobile = computed(() => mounted.value && phoneQuery.value)
 
 // The player's own result stays on screen after the toast is gone: won the pot, or who took it
 const outcome = computed(() => {
@@ -70,13 +75,24 @@ const outcome = computed(() => {
   return { won: false, text: t('pvp.youLost', { name: b.value.slots[b.value.winnerSlot]?.player?.nickname ?? '' }) }
 })
 
+// The round's best drop rings its rarity once, when the first reel lands (they land together)
+let rungRound = -1
+function roundLanded() {
+  const r = clock.value.round
+  if (r === rungRound) return
+  rungRound = r
+  const drops = b.value.results?.[r]?.drops ?? []
+  sfx.reveal(Math.max(0, ...drops.map((d) => RARITY_TIER[d.rarity])))
+}
+
 // Celebrate once when the replay finishes
 const celebrated = ref(false)
 watch(done, (d) => {
   if (!d || celebrated.value || !b.value.results) return
   celebrated.value = true
   const youSlot = b.value.slots.find((s) => s.player?.you)?.slot
-  if (youSlot == null) return
+  // spectators hear the winner's fanfare, no toast
+  if (youSlot == null) return sfx.win()
   if (winners.value.includes(youSlot)) {
     sfx.win()
     toast.show(t('pvp.youWon', { amount: formatCoins(pot.value) }), 'success', 5000)
@@ -156,6 +172,49 @@ const leaders = computed(() => {
 })
 const isTeam = computed(() => b.value.mode === 'team')
 
+// --- Win chances: the rounds still to come played out SIMS times by the cases' real odds (tickets), judged by the
+// mode's rule (most value · least value · the richer team); ties split. 100 / 0 once it is over, even before round 1.
+const caseItems = shallowRef<Record<string, CaseItem[]>>({})
+onMounted(async () => {
+  const slugs = [...new Set(b.value.rounds.map((r) => r.slug))]
+  try {
+    const got = await Promise.all(slugs.map(async (slug) => [slug, (await $fetch<CaseResponse>(`/api/cases/${slug}`)).case.items] as const))
+    caseItems.value = Object.fromEntries(got)
+  } catch {
+    /* chances stay even */
+  }
+})
+const SIMS = 600
+function winnersBy(tt: number[]) {
+  if (b.value.mode === 'team') return tt[0]! + tt[1]! >= tt[2]! + tt[3]! ? [0, 1] : [2, 3]
+  const pick = b.value.mode === 'crazy' ? Math.min(...tt) : Math.max(...tt)
+  return tt.flatMap((v, i) => (v === pick ? [i] : []))
+}
+const chances = computed<number[]>(() => {
+  const n = b.value.size
+  if (done.value) return b.value.slots.map((x) => (winners.value.includes(x.slot) ? 100 : 0))
+  const even = b.value.slots.map(() => (isTeam.value ? 50 : 100 / n))
+  const left = b.value.rounds.slice(revealed.value)
+  const items = caseItems.value
+  if (left.some((r) => !items[r.slug]?.length)) return even
+  const wins = new Array<number>(n).fill(0)
+  for (let k = 0; k < SIMS; k++) {
+    const tt = [...totals.value]
+    for (const r of left) for (let x = 0; x < n; x++) tt[x]! += pickByTickets(items[r.slug]!).price
+    const w = winnersBy(tt)
+    // a team wins together; tied players share the win
+    for (const x of w) wins[x]! += isTeam.value ? 1 : 1 / w.length
+  }
+  return wins.map((w) => (w / SIMS) * 100)
+})
+/** Under the case strip: the round now, its case and price */
+const roundLine = computed(() => {
+  const r = b.value.rounds[roundIdx.value]
+  if (b.value.status === 'waiting' || clock.value.round < 0) return { label: t('pvp.roundsN', { n: b.value.rounds.length }), r: null }
+  if (done.value) return { label: t('pvp.statusFinished'), r: null }
+  return { label: `${t('pvp.round')} ${Math.min(b.value.rounds.length, clock.value.round + 1)}/${b.value.rounds.length}`, r }
+})
+
 </script>
 
 <template>
@@ -172,13 +231,42 @@ const isTeam = computed(() => b.value.mode === 'team')
     />
 
 
-      <section class="type-12-caps flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-neutral-11">
-        <span>{{ $t(`pvp.modeName.${b.mode}`) }} · <span class="text-neutral-13">{{ $t(`pvp.modeRule.${b.mode}`) }}</span></span>
-        <span>{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="s" class="inline-flex align-middle" /></span>
-        <span class="tabular-nums">{{ $t('pvp.rounds') }} {{ Math.min(b.rounds.length, revealed) }}/{{ b.rounds.length }}</span>
-        <span>{{ $t('pvp.value') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="s" tone="coin" class="inline-flex align-middle" /></span>
-        <span class="flex items-center gap-1 tabular-nums"><UiIcon name="eye" :size="14" />{{ b.viewers }}</span>
-      </section>
+    <!-- Info panel: the mode and its rule · the battle's cases (the current one marked) · the pot -->
+    <section class="grid grid-cols-2 items-center gap-x-4 gap-y-4 rounded-3xl bg-neutral-2 p-4 lg:grid-cols-[220px_minmax(0,1fr)_220px] lg:gap-6 lg:px-6">
+      <div class="flex min-w-0 flex-col gap-1">
+        <span class="type-20-caps truncate">{{ $t(`pvp.modeName.${b.mode}`) }}</span>
+        <span class="type-12-regular text-neutral-11">{{ $t(`pvp.modeRule.${b.mode}`) }}</span>
+      </div>
+      <div class="col-span-2 row-start-2 flex min-w-0 flex-col items-center gap-2 lg:col-span-1 lg:row-start-auto">
+        <div class="scrollbar-none flex max-w-full items-center gap-2 overflow-x-auto px-1 py-1.5">
+          <span v-for="(r, i) in b.rounds" :key="i" class="flex shrink-0 flex-col items-center gap-1">
+            <PvpCaseThumb
+              :image="r.image"
+              :name="r.name"
+              :size="isMobile ? 's' : 'm'"
+              :state="b.status === 'waiting' ? 'default' : i < revealed ? 'done' : i === roundIdx && !done ? 'current' : 'default'"
+            />
+            <UiPrice v-if="!isMobile" :amount="r.price" size="xs" tone="muted" />
+          </span>
+        </div>
+        <span class="type-12-caps flex flex-wrap items-center justify-center gap-x-2 text-neutral-11 tabular-nums">
+          <span>{{ roundLine.label }}</span>
+          <template v-if="roundLine.r">
+            <span>·</span>
+            <span class="text-neutral-15">{{ roundLine.r.name }}</span>
+            <UiPrice :amount="roundLine.r.price" size="s" />
+          </template>
+        </span>
+      </div>
+      <div class="flex flex-col items-end gap-0.5 text-right">
+        <span class="type-12-caps text-neutral-11">{{ $t('pvp.value') }}</span>
+        <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" :size="isMobile ? 'l' : 'xl'" tone="coin" class="kd-pot" />
+        <span class="type-12 flex items-center gap-2 text-neutral-11">
+          {{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="s" />
+          <span class="flex items-center gap-1 tabular-nums"><UiIcon name="eye" :size="14" />{{ b.viewers }}</span>
+        </span>
+      </div>
+    </section>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
     <section class="kd-arena relative overflow-hidden rounded-5xl">
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
@@ -193,6 +281,8 @@ const isTeam = computed(() => b.value.mode === 'team')
             :instant="done"
             :compact="isMobile"
             :waiting="b.status === 'waiting' || (clock.round < 0 && !done)"
+            :voiced="s.slot === 0"
+            @landed="roundLanded"
           />
         </div>
       </div>
@@ -239,6 +329,7 @@ const isTeam = computed(() => b.value.mode === 'team')
         :total="totals[s.slot]"
         :winner="done && winners.includes(s.slot)"
         :lead="leaders.includes(s.slot)"
+        :chance="s.player ? chances[s.slot] : undefined"
         :compact="isMobile"
         :can-join="!s.player && b.status === 'waiting' && !youIn"
         :can-call-bot="!s.player && b.status === 'waiting' && isCreator"
@@ -379,5 +470,13 @@ const isTeam = computed(() => b.value.mode === 'team')
 }
 .kd-drop-move {
   transition: transform var(--dur-slow) var(--ease-out);
+}
+.kd-pot {
+  animation: kd-pot 500ms var(--ease-spring);
+}
+@keyframes kd-pot {
+  from {
+    transform: scale(1.12);
+  }
 }
 </style>

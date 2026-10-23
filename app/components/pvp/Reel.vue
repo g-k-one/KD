@@ -17,7 +17,11 @@ const props = defineProps<{
   instant?: boolean
   /** Inside the room's shared arena: no frame or markers of its own (the arena has them) */
   bare?: boolean
+  /** This reel voices the spin: a riser at the start, a tick per card past the marker (one reel per room) */
+  voiced?: boolean
 }>()
+const emit = defineEmits<{ landed: [item: Item] }>()
+const sfx = useSfx()
 
 const root = useTemplateRef<HTMLElement>('root')
 const track = useTemplateRef<HTMLElement>('track')
@@ -78,7 +82,24 @@ async function spin() {
     easing: 'cubic-bezier(0.1, 0.6, 0.12, 1)',
     fill: 'forwards',
   })
+  // Tick when a card crosses the marker, like the case reel
+  let raf = 0
+  if (props.voiced && !props.instant) {
+    sfx.riser()
+    let last = -1
+    const ticks = () => {
+      const y = new DOMMatrixReadOnly(getComputedStyle(el).transform).m42
+      const idx = Math.floor((len / 2 - y) / cell.value)
+      if (idx !== last) {
+        if (last >= 0) sfx.tick()
+        last = idx
+      }
+      raf = requestAnimationFrame(ticks)
+    }
+    raf = requestAnimationFrame(ticks)
+  }
   await animationDone(anim, duration)
+  cancelAnimationFrame(raf)
   const settle = el.animate([{ transform: `translateY(${to + jitter}px)` }, { transform: `translateY(${to}px)` }], {
     duration: props.instant ? 1 : 300,
     easing: 'cubic-bezier(0.65, 0, 0.35, 1)',
@@ -89,7 +110,10 @@ async function spin() {
   anim.cancel()
   settle.cancel()
   landed.value = true
-  if (!props.instant) dropFx(props.target)
+  if (!props.instant) {
+    dropFx(props.target)
+    emit('landed', props.target)
+  }
 }
 
 watch(

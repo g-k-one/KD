@@ -551,7 +551,8 @@
     },
     "lead": "Leads",
     "vs": "VS",
-    "teamWon": "{a} & {b} won"
+    "teamWon": "{a} & {b} won",
+    "toWin": "to win"
   },
   "quick": {
     "title": "Top up and keep playing",
