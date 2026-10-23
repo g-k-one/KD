@@ -5,7 +5,8 @@ import type { FeedDrop } from '#shared/types/api'
  * Live drops strip under the header.
  *   Live — newest first. Top — the biggest multipliers (drop price / what was paid), not the priciest skins.
  *   Highlight — the best multiplier right now, burning (Forge) with its "x".
- *   Hover (desktop) — the strip freezes; a card shows who, which case, for how much; click opens the case.
+ *   Hover (desktop) — the strip freezes; a card shows who, which case, for how much; click opens the case. The
+ *   highlight shows the same card.
  *   Phones — sticks under the header, slides away while scrolling down and comes back on the way up.
  */
 const { feed } = useLiveFeed()
@@ -94,6 +95,8 @@ watch(y, (v) => {
       :to="linkOf(feed.highlight)"
       class="kd-press relative flex h-13 w-30 shrink-0 items-center gap-1 overflow-hidden rounded-xl pr-2 pl-0.5 lg:h-18 lg:w-62.5 lg:gap-2.5 lg:pr-3 lg:pl-1"
       :style="{ background: `linear-gradient(90deg, color-mix(in srgb, ${RARITY_COLOR[feed.highlight.rarity]} 22%, var(--color-neutral-4)), var(--color-neutral-4) 75%)` }"
+      @mouseenter="show(feed.highlight, $event)"
+      @mouseleave="hover = null"
     >
       <ItemArt :image="feed.highlight.image" :rarity="feed.highlight.rarity" :size="44" class="w-12 shrink-0 lg:w-18" />
       <div class="relative z-[2] flex min-w-0 flex-1 flex-col gap-0.5 lg:gap-1">

@@ -97,7 +97,7 @@ function removePiece(p: Piece) {
             <div :key="single.key" class="absolute inset-0">
               <div class="kd-single-art absolute inset-0 grid place-items-center" :data-key="single.key">
                 <ItemArt v-if="single.kind === 'skin'" float :image="single.item.image" :rarity="single.item.rarity" :size="isLg ? 150 : 120" class="kd-morph w-[260px]" />
-                <UiCoinStack v-else :size="isLg ? 96 : 76" :amount="coins" class="kd-morph kd-coin-big" />
+                <UiCoinStack v-else :size="isLg ? 96 : 76" :amount="coins" class="kd-morph" />
               </div>
               <div class="absolute inset-x-0 top-0 flex items-start justify-between p-4">
                 <div v-if="single.kind === 'skin'" class="flex min-w-0 flex-col gap-1">
@@ -251,16 +251,6 @@ function removePiece(p: Piece) {
     transform: translate(-50%, -50%);
   }
 }
-.kd-coin-big {
-  animation: kd-coin-big 700ms var(--ease-spring) both;
-}
-@keyframes kd-coin-big {
-  from {
-    transform: rotateY(-180deg) scale(0.6);
-    opacity: 0;
-  }
-}
-
 /* Slots: empty ones show a faint gun; the next free one a quiet + (only while idle) */
 .kd-slot.is-next {
   color: var(--color-neutral-11);
