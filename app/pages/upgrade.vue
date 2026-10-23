@@ -252,7 +252,7 @@ async function runUpgrade() {
   playedChance.value = chance.value
   // No particles around the dial while it turns (they distracted from the pointer); light comes only at the result
   const rgb = hexToRgb(RARITY_HEX[target.value.rarity])
-  const auraShot = isLg.value ? targetCard.value?.aura(0.95) : fxMini.at('kdAura', targetEl(), 0.7, true)
+  const auraShot = isLg.value ? targetCard.value?.aura(0.95) : fxMini.at('kdAura', targetEl()?.querySelector<HTMLElement>('.kd-art img') ?? targetEl(), 0.7, true, { sizeEl: targetEl() })
   auraShot?.then((h) => {
     if (state.value !== 'spinning') return h?.kill()
     h?.set('tint', rgb)

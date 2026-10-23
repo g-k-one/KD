@@ -380,14 +380,12 @@ type Layer = { at: (name: string, el: HTMLElement | null | undefined, scale?: nu
  */
 export const RANK_LEVEL: Record<Rarity, number> = { industrial: -1, milspec: -1, restricted: 0, classified: 1, covert: 2, gold: 3 }
 /**
- * One burst on a landed drop in the rarity's colour. el is the drop's picture: the burst is centred on its rarity shape
- * (ItemArt's star) and sized by the picture, then lifted by 16% of its size: the shape sits in the lower half of a
- * skin's silhouette, and a burst right on it read as low.
+ * One burst on a landed drop in the rarity's colour, centred on the drop's picture (el, the skin image) and sized by
+ * it — the same rule everywhere (reel, PvP, upgrade): the middle of the skin, not the rarity shape or a lift off it.
  */
 export function rarityRank(layer: Layer, el: HTMLElement | null | undefined, rarity: Rarity, scale = 1) {
   if (RANK_LEVEL[rarity] < 0) return Promise.resolve(null)
-  const star = el?.closest('.kd-art')?.querySelector<HTMLElement>('.kd-art-star') ?? el
-  return layer.at('kdRank', star, scale, false, { color: RARITY_HEX[rarity], level: RANK_LEVEL[rarity], sizeEl: el, lift: 0.16 })
+  return layer.at('kdRank', el, scale, false, { color: RARITY_HEX[rarity], level: RANK_LEVEL[rarity] })
 }
 
 let coinUrl: Promise<string> | null = null

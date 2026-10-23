@@ -20,7 +20,8 @@ const fx = useForge(fxHost)
 const root = useTemplateRef<HTMLElement>('root')
 defineExpose({
   rank: (rarity: Rarity, scale: number) => rarityRank(fx, root.value?.querySelector<HTMLElement>('.kd-art img'), rarity, scale),
-  aura: (scale: number) => fx.at('kdAura', root.value, scale, true),
+  // centred on the skin like the rank reveal, sized by the card as before
+  aura: (scale: number) => fx.at('kdAura', root.value?.querySelector<HTMLElement>('.kd-art img') ?? root.value, scale, true, { sizeEl: root.value }),
 })
 const rc = computed(() => (props.item ? RARITY_COLOR[props.item.rarity] : undefined))
 const priceSrc = computed(() => props.item?.price ?? 0)
