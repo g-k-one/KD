@@ -30,10 +30,10 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
     <HomeHeroBanner @start="scrollToCases" />
-    <HomeContinue :cases="allCases" />
+    <HomeBigWins />
 
-    <!-- Cases come right after the hero (and the cases to continue): big wins and live battles break up the grid
-         further down instead of pushing it off the first screen -->
+    <!-- Cases right after the hero and the big wins; the cases to continue and the live battles break up the grid
+         further down -->
     <div ref="fxHost" class="relative flex flex-col gap-6 lg:gap-10">
 
     <div ref="casesEl" class="flex scroll-mt-40 flex-col gap-4 lg:gap-10">
@@ -70,7 +70,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
           <HomeCaseCard v-for="c in s.cases" :key="c.id" :item="c" />
         </div>
       </section>
-      <HomeBigWins v-if="i === 0" />
+      <HomeContinue v-if="i === 0" :cases="allCases" />
       <HomeLiveBattles v-if="i === Math.min(2, sections.length - 1)" />
       </template>
 
