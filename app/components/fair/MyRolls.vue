@@ -4,8 +4,9 @@ import type { HistoryEntry, HistoryResponse, SeedsResponse } from '#shared/types
 /*
  * "Your rolls" — the PF page starts from the player's own results, not from theory. Every case and upgrade roll
  * knows its seed pair: rolls of a revealed pair verify in one tap (the verifier checks them against the result),
- * rolls of the active pair are sealed until the pair is rotated — the banner says so and rotates in place.
- * `focus` (a nonce from "Check this roll" on a case or upgrade) highlights that roll of the active pair.
+ * rolls of the current seed wait for it to be revealed — the banner says so in plain words and reveals in place.
+ * `focus` (a nonce from "Check this roll" on a case or upgrade) highlights that roll and, once its seed is
+ * revealed, opens the check by itself: one tap from the case to "matches".
  */
 const props = defineProps<{ seeds: SeedsResponse | null; focus?: number; rotating?: boolean }>()
 const emit = defineEmits<{
@@ -48,6 +49,18 @@ function verify(r: (typeof rows.value)[number]) {
   if (!r.pair) return
   emit('verify', { serverSeed: r.pair.serverSeed, clientSeed: r.pair.clientSeed, nonce: r.e.nonce!, expect: r.e.ticket != null ? { ticket: r.e.ticket } : { roll: r.e.roll } })
 }
+
+// The roll the player came to check: as soon as its seed is revealed, check it (once)
+// (remembered by id while it is still on the current seed: an older pair can have a roll with the same nonce)
+let focusId: string | null = null
+let autoChecked = false
+watch(rows, (list) => {
+  focusId ??= list.find((r) => r.focus)?.e.id ?? null
+  const r = focusId ? list.find((x) => x.e.id === focusId) : null
+  if (!r?.pair || autoChecked) return
+  autoChecked = true
+  verify(r)
+})
 
 // Bring the focused roll into view once it is there
 const list = ref<HTMLElement>()

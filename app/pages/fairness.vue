@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { SeedsResponse } from '#shared/types/api'
 
-// Figma "Fairness", reordered around the player's own results: hero, "Your rolls" (check any roll in one tap),
-// how it works, the formula, per-mode table, the seed log, FAQ.
+// Figma "Fairness", around one path: the player's own rolls, each with one action (Check, or Reveal and check).
+// Order: hero, Your rolls, how it works in three steps, then "Under the hood" folded (the formula, per mode, the seed
+// log, a manual check and the seeds), FAQ. The page bar holds no shortcuts: they duplicated the rolls and the log.
 useHead({ title: 'Provably Fair · KurwaDROP' })
 
 const { data: seedsData } = await useFetch<SeedsResponse>('/api/seeds', { key: 'seeds' })
@@ -10,6 +11,9 @@ const seeds = ref<SeedsResponse | null>(seedsData.value ?? null)
 watch(seedsData, (v) => (seeds.value = v ?? null))
 
 const seedsOpen = ref(false)
+// the theory is there for whoever wants it, folded by default; a link from elsewhere (#seeds) opens it
+const route = useRoute()
+const hood = ref(route.hash === '#seeds')
 const verifierOpen = ref(false)
 const verifierInit = ref<{ serverSeed?: string; clientSeed?: string; nonce?: number; expect?: { ticket?: number; roll?: number } }>({})
 
@@ -20,8 +24,7 @@ function openVerifier(init?: typeof verifierInit.value) {
 }
 
 // "Check this roll" on a case or upgrade lands here with ?verify=<nonce>: a roll of the active pair, so
-// "Your rolls" highlights it next to the rotation that reveals its seed
-const route = useRoute()
+// "Your rolls" highlights it next to the rotation that reveals its seed (and checks it once revealed)
 const focusNonce = computed(() => Number(route.query.verify) || undefined)
 
 const toast = useToast()
@@ -65,11 +68,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
-    <UiPageBar
-      :title="$t('fair.title')"
-      :left="[{ label: $t('fair.mySeeds'), icon: 'seeds', onClick: () => (seedsOpen = true) }]"
-      :right="[{ label: $t('fair.verify'), icon: 'check-circle', onClick: () => openVerifier() }]"
-    />
+    <UiPageBar :title="$t('fair.title')" :left="[{ label: $t('case.allCases'), icon: 'arrow-left', to: '/' }]" />
 
     <!-- Hero -->
     <section
@@ -109,7 +108,17 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
       </div>
     </section>
 
-    <!-- Formula -->
+    <!-- Under the hood: folded; the formula, per mode, the seed log, a manual check and the seeds -->
+    <section id="seeds" class="flex scroll-mt-24 flex-col gap-4 lg:gap-6">
+      <button type="button" class="kd-press flex min-h-16 items-center gap-3 rounded-3xl bg-neutral-2 px-5 text-left hover:text-neutral-15" :aria-expanded="hood" @click="hood = !hood">
+        <UiIcon name="function" :size="22" class="shrink-0 text-neutral-12" />
+        <span class="flex min-w-0 flex-1 flex-col">
+          <span class="type-16-caps">{{ $t('fair.hood') }}</span>
+          <span class="type-12-regular text-neutral-11">{{ $t('fair.hoodHint') }}</span>
+        </span>
+        <UiIcon name="chevron-down" :size="20" class="shrink-0 text-neutral-12 transition-transform duration-300" :class="hood && 'rotate-180'" />
+      </button>
+      <template v-if="hood">
     <section class="flex flex-col rounded-5xl bg-neutral-2">
       <div class="flex h-18 items-center gap-3 border-b border-neutral-4 px-6">
         <UiIcon name="function" :size="24" class="text-neutral-13" />
@@ -150,7 +159,10 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
           <h2 class="type-20-caps">{{ $t('fair.history') }}</h2>
           <p class="type-14-regular text-neutral-12">{{ $t('fair.historyHint') }}</p>
         </div>
-        <UiButton variant="secondary" size="l" icon="seeds" class="shrink-0" @click="seedsOpen = true">{{ $t('fair.manageSeeds') }}</UiButton>
+        <div class="flex shrink-0 gap-2">
+          <UiButton variant="secondary" size="l" icon="check-circle" @click="openVerifier()">{{ $t('fair.verify') }}</UiButton>
+          <UiButton variant="secondary" size="l" icon="seeds" @click="seedsOpen = true">{{ $t('fair.manageSeeds') }}</UiButton>
+        </div>
       </div>
       <div class="type-10-caps hidden grid-cols-[150px_110px_1fr_1.3fr_auto] gap-4 px-4 text-neutral-10 lg:grid">
         <span>{{ $t('fair.period') }}</span>
@@ -191,6 +203,8 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
           <UiButton variant="fair" size="s" class="w-36 justify-self-end max-lg:col-start-2 max-lg:row-start-1" :disabled="!h.nonce" @click="openVerifier({ serverSeed: h.serverSeed, clientSeed: h.clientSeed, nonce: h.nonce })">{{ $t('fair.verify') }}</UiButton>
         </li>
       </TransitionGroup>
+    </section>
+      </template>
     </section>
 
     <!-- FAQ -->
