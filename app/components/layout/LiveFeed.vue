@@ -98,7 +98,7 @@ watch(y, (v) => {
       @mouseenter="show(feed.highlight, $event)"
       @mouseleave="hover = null"
     >
-      <ItemArt :image="feed.highlight.image" :rarity="feed.highlight.rarity" :size="44" class="w-12 shrink-0 lg:w-18" />
+      <ItemArt :image="feed.highlight.image" :rarity="feed.highlight.rarity" :size="isLg ? 56 : 44" class="w-12 shrink-0 lg:w-20" />
       <div class="relative z-[2] flex min-w-0 flex-1 flex-col gap-0.5 lg:gap-1">
         <span class="type-10-caps flex items-center gap-1 text-brand-light max-lg:hidden"><UiIcon name="fire" :size="12" />{{ $t('feed.highlight') }}</span>
         <span class="type-12 truncate max-lg:hidden">{{ feed.highlight.itemName }} | {{ feed.highlight.skinName }}</span>
@@ -123,12 +123,12 @@ watch(y, (v) => {
           v-for="d in shown"
           :key="d.id"
           :to="linkOf(d)"
-          class="kd-feed-tile kd-press group relative grid h-13 w-16 shrink-0 place-items-center overflow-hidden rounded-lg border lg:h-18 lg:w-22"
+          class="kd-feed-tile kd-press group relative grid h-13 w-16 shrink-0 place-items-center overflow-hidden rounded-lg border lg:h-18 lg:w-24"
           :aria-label="$t('feed.dropBy', { item: `${d.itemName} | ${d.skinName}`, user: d.userNickname })"
           @mouseenter="show(d, $event)"
           @mouseleave="hover = null"
         >
-          <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 44 : 32" class="w-full" />
+          <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 56 : 40" class="w-full" />
           <span v-if="mode === 'top'" class="type-10-caps absolute top-1 right-1 rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
           <!-- not a case drop: a small mark for upgrade / PvP wins -->
           <span v-if="sourceOf(d.caseSlug) !== 'case'" class="absolute top-1 left-1 grid size-4 place-items-center rounded-xs bg-neutral-1/80 text-brand-light">
