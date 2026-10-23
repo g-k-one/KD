@@ -184,12 +184,8 @@ const motionKey = ref(0)
             <UiButton size="s" variant="secondary" @click="applyProgress">Apply</UiButton>
           </div>
           <div class="flex flex-wrap gap-2">
-            <UiButton size="s" variant="secondary" @click="refreshing({ levels: 1 }, '+1 level to claim', 'bonuses')">+1 level</UiButton>
-            <UiButton size="s" variant="secondary" @click="refreshing({ levels: 5 }, '+5 levels to claim', 'bonuses')">+5 levels</UiButton>
-            <UiButton size="s" variant="secondary" @click="refreshing({ rakeback: 5000 }, '+50 rakeback', 'bonuses')">+50 rakeback</UiButton>
-            <UiButton size="s" variant="secondary" @click="refreshing({ rakeback: 500000 }, '+5 000 rakeback', 'bonuses')">+5 000 rakeback</UiButton>
-            <UiButton size="s" variant="secondary" @click="refreshing({ missions: 'done' }, 'Missions done', 'bonuses')">Missions done</UiButton>
-            <UiButton size="s" variant="secondary" @click="refreshing({ missions: 'reset' }, 'Fresh missions', 'bonuses')">Fresh missions</UiButton>
+            <UiButton size="s" variant="secondary" @click="refreshing({ levels: 1 }, '+1 level', 'bonuses')">+1 level</UiButton>
+            <UiButton size="s" variant="secondary" @click="refreshing({ levels: 5 }, '+5 levels', 'bonuses')">+5 levels</UiButton>
             <UiButton size="s" variant="secondary" @click="refreshing({ resetDaily: true }, 'Daily case ready', 'bonuses')">Daily ready</UiButton>
           </div>
         </section>

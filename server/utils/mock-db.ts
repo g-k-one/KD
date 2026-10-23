@@ -15,18 +15,9 @@ import type {
   HistoryEntry,
   InventoryItem,
   Item,
-  LevelReward,
-  ChainId,
-  Mission,
-  MissionChain,
-  MissionKind,
   PaymentMethod,
   PfRoll,
   Rarity,
-  RaceEntry,
-  RaceResponse,
-  PassResponse,
-  PassTier,
   User,
 } from '#shared/types/api'
 import { PF_TICKETS, pickByTicket, pfRoll, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
@@ -361,21 +352,10 @@ interface MockState {
   history: HistoryEntry[]
   /** XP inside the current level (coin cents spent) */
   xp: number
-  /** Levels whose reward was taken */
-  claimed: number[]
   /** When the daily case unlocks again (ms), 0 = now */
   dailyAt: number
   /** Free welcome cases still to open */
   welcomeLeft: number
-  /** Coin cents played since the race week began, and the week it counts for */
-  race: { wagered: number; week: number }
-  /** Season pass: points (whole coins played) and the tiers taken */
-  pass: { points: number; claimed: number[] }
-  rakeback: { pending: number; claimedTotal: number }
-  missions: Mission[]
-  missionsResetAt: number
-  /** Mission chains: the step index and the progress of that step, per chain */
-  chains: Record<ChainId, { current: number; progress: number; claimed: boolean }>
   promoUsed: string[]
 }
 
@@ -395,15 +375,8 @@ const state: MockState = {
   queuedDrops: [],
   history: [],
   xp: Math.round((DEFAULT_USER.levelProgress / 100) * xpFor(DEFAULT_USER.level)),
-  claimed: Array.from({ length: DEFAULT_USER.level - 1 }, (_, i) => i + 1),
   dailyAt: 0,
   welcomeLeft: WELCOME_TOTAL,
-  race: { wagered: 0, week: 0 },
-  pass: { points: 0, claimed: [] },
-  rakeback: { pending: 0, claimedTotal: 0 },
-  missions: [],
-  missionsResetAt: 0,
-  chains: freshChains(),
   promoUsed: [],
 }
 
@@ -513,7 +486,6 @@ export function syncSkinsValue() {
 export function resetMockUser() {
   state.user = structuredClone(DEFAULT_USER)
   state.xp = Math.round((DEFAULT_USER.levelProgress / 100) * xpFor(DEFAULT_USER.level))
-  state.claimed = Array.from({ length: DEFAULT_USER.level - 1 }, (_, i) => i + 1)
   state.dailyAt = 0
   state.welcomeLeft = WELCOME_TOTAL
   state.inventory = STARTER_INVENTORY.map((id) => toInventory(byId(id), 'case'))
@@ -524,134 +496,9 @@ export function spend(amount: number) {
   if (state.user.balance < amount) throw new MockError(402, 'Not enough balance')
   state.user.balance -= amount
   addXp(amount)
-  // fractions of a cent accrue too, so cheap cases still add up
-  state.rakeback.pending += (amount * rakebackRate(state.user.level)) / 10000
-  trackMission('spend', amount)
-  // the weekly race and the season pass both count coins played
-  const week = raceWeek()
-  if (state.race.week !== week) state.race = { wagered: 0, week }
-  state.race.wagered += amount
-  state.pass.points += amount / 100
 }
 
-// --- Rakeback, missions, promo codes ------------------------------------------------
-
-/** 0.5% from the start, +0.25% every 10 levels, 2% at the top (level 60+) */
-export const rakebackRate = (level: number) => Math.min(200, 50 + Math.floor(level / 10) * 25)
-function rakebackInfo() {
-  const rateBp = rakebackRate(state.user.level)
-  const nextLevel = (Math.floor(state.user.level / 10) + 1) * 10
-  return {
-    rateBp,
-    next: rateBp >= 200 ? null : { level: nextLevel, rateBp: rakebackRate(nextLevel) },
-    pending: Math.floor(state.rakeback.pending),
-    claimedTotal: state.rakeback.claimedTotal,
-  }
-}
-export function claimRakeback() {
-  const amount = Math.floor(state.rakeback.pending)
-  if (amount < 1) throw new MockError(409, 'Nothing to claim yet')
-  state.user.balance += amount
-  state.rakeback.claimedTotal += amount
-  state.rakeback.pending -= amount
-  record({ game: 'deposit', title: 'Rakeback', bet: 0, payout: amount, status: 'done' })
-  return { balance: state.user.balance, bonuses: getBonuses() }
-}
-
-/** Three goals a day; rewards grow a little every 10 levels */
-function freshMissions(): Mission[] {
-  const k = 1 + Math.floor(state.user.level / 10) * 0.25
-  return [
-    { id: 'm-open', kind: 'open_cases', goal: 5, progress: 0, reward: Math.round(150 * k), status: 'active' },
-    { id: 'm-upgrade', kind: 'win_upgrade', goal: 1, progress: 0, reward: Math.round(200 * k), status: 'active' },
-    { id: 'm-battle', kind: 'play_battle', goal: 1, progress: 0, reward: Math.round(200 * k), status: 'active' },
-  ]
-}
-function missions() {
-  if (state.missionsResetAt <= Date.now()) {
-    state.missions = freshMissions()
-    state.missionsResetAt = Date.now() + 24 * 3600_000
-  }
-  return state.missions
-}
-export function trackMission(kind: MissionKind, n = 1) {
-  for (const m of missions()) {
-    if (m.kind !== kind || m.status !== 'active') continue
-    m.progress = Math.min(m.goal, m.progress + n)
-    if (m.progress >= m.goal) m.status = 'claimable'
-  }
-  // Chains: only the current step of each counts; a finished step hands over to the next with zero progress
-  for (const id of CHAIN_IDS) {
-    const c = state.chains[id]
-    const step = CHAINS[id].steps[c.current]
-    if (!step || step.kind !== kind) continue
-    c.progress += n
-    if (c.progress >= step.goal) Object.assign(c, { current: c.current + 1, progress: 0 })
-  }
-}
-
-// --- Mission chains (#10) ------------------------------------------------------------
-// One time each, all three at once; every chain ends with its own free case (RTP 100%, the daily case tiers)
-const CHAINS: Record<ChainId, { steps: { kind: MissionKind; goal: number }[]; tier: number; image: string; name: string }> = {
-  rookie: {
-    steps: [{ kind: 'open_cases', goal: 1 }, { kind: 'try_upgrade', goal: 1 }, { kind: 'play_battle', goal: 1 }],
-    tier: 0,
-    image: '/img/cases/budget-boom.webp',
-    name: 'Rookie Case',
-  },
-  investor: {
-    steps: [{ kind: 'sell_skin', goal: 1 }, { kind: 'win_upgrade', goal: 1 }, { kind: 'spend', goal: 5000 }],
-    tier: 1,
-    image: '/img/cases/golden-kielbasa.webp',
-    name: 'Investor Case',
-  },
-  battler: {
-    steps: [{ kind: 'create_battle', goal: 1 }, { kind: 'play_battle', goal: 3 }, { kind: 'win_battle', goal: 1 }],
-    tier: 2,
-    image: '/img/cases/krakow-knife.webp',
-    name: 'Battle Case',
-  },
-}
-const CHAIN_IDS = Object.keys(CHAINS) as ChainId[]
-function freshChains(): Record<ChainId, { current: number; progress: number; claimed: boolean }> {
-  return { rookie: { current: 0, progress: 0, claimed: false }, investor: { current: 0, progress: 0, claimed: false }, battler: { current: 0, progress: 0, claimed: false } }
-}
-const chainCache = new Map<ChainId, CaseDetails>()
-function chainCase(id: ChainId): CaseDetails {
-  let cs = chainCache.get(id)
-  if (!cs) {
-    const d = CHAINS[id]
-    cs = buildCase({ id: `chain-${id}`, slug: `chain-${id}`, name: d.name, image: d.image, price: 150 * (d.tier + 1) ** 2, risk: 'low', targetRtp: 10_000, createdAt: '2026-10-01', itemIds: DAILY_TIERS[d.tier]! })
-    chainCache.set(id, cs)
-  }
-  return cs
-}
-function chains(): MissionChain[] {
-  return CHAIN_IDS.map((id) => {
-    const c = state.chains[id]
-    const steps = CHAINS[id].steps.map((s, i) => ({ ...s, progress: i < c.current ? s.goal : i === c.current ? c.progress : 0 }))
-    const status = c.claimed ? 'claimed' : c.current >= steps.length ? 'claimable' : 'active'
-    return { id, steps, current: c.current, case: chainCase(id), status }
-  })
-}
-export async function openChain(id: string) {
-  if (!CHAIN_IDS.includes(id as ChainId)) throw new MockError(404, 'No such chain')
-  const c = state.chains[id as ChainId]
-  if (c.claimed) throw new MockError(409, 'Already opened')
-  if (c.current < CHAINS[id as ChainId].steps.length) throw new MockError(409, 'Finish the chain first')
-  await ensureSeed()
-  c.claimed = true
-  return roll(chainCase(id as ChainId), 1, false, false, 0)
-}
-export function claimMission(id: string) {
-  const m = missions().find((x) => x.id === id)
-  if (!m) throw new MockError(404, 'No such mission')
-  if (m.status !== 'claimable') throw new MockError(409, m.status === 'claimed' ? 'Already claimed' : 'Finish the mission first')
-  m.status = 'claimed'
-  state.user.balance += m.reward
-  record({ game: 'deposit', title: 'Daily mission', bet: 0, payout: m.reward, status: 'done' })
-  return { balance: state.user.balance, bonuses: getBonuses() }
-}
+// --- Promo codes ------------------------------------------------------------------
 
 /** Demo codes; the real ones live in the admin panel */
 const PROMO: Record<string, number> = { KURWA: 500, WELCOME: 250, PIEROGI: 100 }
@@ -707,75 +554,6 @@ export async function rotateSeeds(clientSeed?: string) {
 
 const publicSeed = () => ({ serverSeedHash: state.seed.serverSeedHash, clientSeed: state.seed.clientSeed, nonce: state.seed.nonce })
 
-// --- Weekly race ----------------------------------------------------------------
-
-const WEEK = 7 * 86_400_000
-// Mondays 00:00 UTC: 1970-01-05 was a Monday
-const RACE_ORIGIN = Date.UTC(1970, 0, 5)
-const raceWeek = (now = Date.now()) => Math.floor((now - RACE_ORIGIN) / WEEK)
-const RACE_POOL = 1_000_000
-/** Share of the pool per place, basis points (top 10) */
-const RACE_SPLIT = [3000, 1800, 1200, 900, 700, 600, 500, 500, 400, 400]
-const RACE_BOTS = ['pierogi_king', 'babcia99', 'zlotyboy', 'kurwa_pro', 'vodkashot', 'krakow_kid', 'ez_drop', 'wroclaw_wolf', 'gdansk_gang', 'poznan_pro', 'bigos_boss', 'lodz_lord', 'kielbasa_k', 'tatra_tiger']
-
-export function getRace(withMe: boolean): RaceResponse {
-  const now = Date.now()
-  const week = raceWeek(now)
-  const start = RACE_ORIGIN + week * WEEK
-  // the week so far: bots climb at their own pace, so the board moves while you look at it
-  const k = Math.max(0.05, (now - start) / WEEK)
-  const rows: Omit<RaceEntry, 'rank' | 'prize'>[] = RACE_BOTS.map((nickname, i) => ({
-    nickname,
-    avatar: '/img/brand/avatar.webp',
-    level: 8 + ((i * 7) % 40),
-    wagered: Math.round((2_400_000 / (i + 1.4)) * k * (0.9 + (hashStr(`${nickname}:${week}`) % 20) / 100)),
-  }))
-  if (withMe) {
-    if (state.race.week !== week) state.race = { wagered: 0, week }
-    rows.push({ nickname: state.user.nickname, avatar: state.user.avatar, level: state.user.level, wagered: state.race.wagered, you: true })
-  }
-  const ranked: RaceEntry[] = rows
-    .sort((a, b) => b.wagered - a.wagered)
-    .map((r, i) => ({ ...r, rank: i + 1, prize: i < RACE_SPLIT.length ? Math.round((RACE_POOL * RACE_SPLIT[i]!) / 10_000) : 0 }))
-  return {
-    endsAt: new Date(start + WEEK).toISOString(),
-    prizePool: RACE_POOL,
-    top: ranked.slice(0, RACE_SPLIT.length),
-    me: ranked.find((r) => r.you) ?? null,
-  }
-}
-
-// --- Season pass ------------------------------------------------------------------
-
-const PASS_SEASON = 'Season 1 · Fowl Play'
-const PASS_ENDS = '2026-11-30T23:59:59Z'
-const PASS_POINTS = [50, 150, 300, 500, 750, 1050, 1400, 1800, 2250, 2750]
-const PASS_REWARD = [100, 200, 300, 500, 700, 1000, 1500, 2000, 3000, 5000]
-
-function passTiers(): PassTier[] {
-  return PASS_POINTS.map((points, i) => ({
-    level: i + 1,
-    points,
-    reward: PASS_REWARD[i]!,
-    premiumReward: PASS_REWARD[i]! * 3,
-    status: state.pass.claimed.includes(i + 1) ? 'claimed' : state.pass.points >= points ? 'claimable' : 'locked',
-  }))
-}
-
-export function getPass(): PassResponse {
-  return { season: PASS_SEASON, endsAt: PASS_ENDS, points: Math.floor(state.pass.points), tiers: passTiers() }
-}
-
-export function claimPass(level: number) {
-  const tier = passTiers().find((t) => t.level === level)
-  if (!tier) throw new MockError(404, 'No such tier')
-  if (tier.status !== 'claimable') throw new MockError(409, tier.status === 'claimed' ? 'Already claimed' : 'Reach this tier first')
-  state.pass.claimed.push(level)
-  state.user.balance += tier.reward
-  record({ game: 'deposit', title: `Pass tier ${level}`, bet: 0, payout: tier.reward, status: 'done' })
-  return { balance: state.user.balance, pass: getPass() }
-}
-
 // --- Cases: open / sell -----------------------------------------------------
 
 export async function openCase(slug: string, count: number, demo: boolean, kurwadrop = false) {
@@ -786,7 +564,6 @@ export async function openCase(slug: string, count: number, demo: boolean, kurwa
   const n = Math.min(5, Math.max(1, Math.floor(count)))
   const price = kurwadrop ? cs.kurwadrop.price : cs.price
   if (!demo) spend(price * n)
-  if (!demo) trackMission('open_cases', n)
   if (!demo) {
     cs.opens += n
   }
@@ -842,7 +619,6 @@ export function sellItems(uids: string[]) {
       record({ game: 'sell', title: `${it.weapon} | ${it.skin}`, bet: 0, payout: it.price, status: 'done' })
     }
   }
-  if (sold.length) trackMission('sell_skin', sold.length)
   syncSkinsValue()
   return { sold, balance: state.user.balance }
 }
@@ -878,7 +654,7 @@ export function getInventory() {
   return { items: ownedItems() }
 }
 
-// --- Bonuses: daily case + level rewards --------------------------------------------
+// --- Bonuses: the daily case and the welcome cases --------------------------------------------
 
 export const DAILY_SLUG = 'daily'
 const DAILY_TIERS = [
@@ -908,22 +684,6 @@ function dailyCase(): CaseDetails {
     dailyCache.set(tier, cs)
   }
   return cs
-}
-
-const levelCoins = (level: number) => level * 25 + (level % 5 === 0 ? 500 : 0)
-function levelRewards(): LevelReward[] {
-  const lv = state.user.level
-  const from = Math.max(2, lv - 3)
-  return Array.from({ length: 14 }, (_, i) => {
-    const level = from + i
-    const r: LevelReward = {
-      level,
-      coins: levelCoins(level),
-      status: state.claimed.includes(level) ? 'claimed' : level <= lv ? 'claimable' : 'locked',
-    }
-    if (level % 5 === 0) r.dailyTier = Math.min(DAILY_TIERS.length - 1, level / 5 - 1) + 1
-    return r
-  })
 }
 
 // Welcome cases: three free opens for signing up, real drops from a cheap case that pays back on average
@@ -956,11 +716,6 @@ export function getBonuses() {
   return {
     daily: { case: dailyCase(), tier: dailyTier(), nextAt: state.dailyAt > Date.now() ? new Date(state.dailyAt).toISOString() : null },
     welcome: { case: welcomeCase(), left: state.welcomeLeft, total: WELCOME_TOTAL },
-    chains: chains(),
-    levels: levelRewards(),
-    rakeback: rakebackInfo(),
-    missions: missions(),
-    missionsResetAt: new Date(state.missionsResetAt).toISOString(),
   }
 }
 
@@ -969,15 +724,6 @@ export async function openDaily() {
   await ensureSeed()
   state.dailyAt = Date.now() + 24 * 3600_000
   return roll(dailyCase(), 1, false, false, 0)
-}
-
-export function claimLevel(level: number) {
-  if (level > state.user.level) throw new MockError(409, 'Reach this level first')
-  if (state.claimed.includes(level)) throw new MockError(409, 'Already claimed')
-  state.claimed.push(level)
-  state.user.balance += levelCoins(level)
-  record({ game: 'deposit', title: `Level ${level} reward`, bet: 0, payout: levelCoins(level), status: 'done' })
-  return { balance: state.user.balance, levels: levelRewards() }
 }
 
 // --- Upgrade ----------------------------------------------------------------
@@ -1039,8 +785,6 @@ export async function upgrade(itemUids: string[], balanceAmount: number, targetI
     if (target.price >= input * 10) pushBigWin({ slug: 'upgrade', name: 'Upgrade', image: '' }, target, input, state.user)
     state.queuedDrops.push(makeDrop({ ...target, itemName: target.weapon, skinName: target.skin, caseSlug: 'upgrade', caseName: 'Upgrade', casePrice: input, userNickname: state.user.nickname }))
   }
-  trackMission('try_upgrade')
-  if (win) trackMission('win_upgrade')
   record({ game: 'upgrade', title: `${target.weapon} | ${target.skin}`, bet: input, payout: win ? target.price : 0, status: win ? 'won' : 'lost', nonce, seedHash: state.seed.serverSeedHash, chance, roll, targetPrice: target.price })
   syncSkinsValue()
   return { win, roll, chance, item: won, balance: state.user.balance, nonce, seed: publicSeed() }
@@ -1179,11 +923,7 @@ export interface DebugStateBody {
   inventory?: 'empty' | 'loaded'
   /** Push n random drops (with a couple of big ones) into the live feed at once */
   feedBurst?: number
-  /** Coin cents added to the rakeback waiting to be claimed */
-  rakeback?: number
-  /** 'done' makes every daily mission claimable and finishes the current step of every chain; 'reset' deals a fresh set and restarts the chains */
-  missions?: 'done' | 'reset'
-  /** Levels gained at once (each one's reward becomes claimable) */
+  /** Levels gained at once (the level-up plate shows) */
   levels?: number
 }
 
@@ -1196,15 +936,6 @@ export function applyDebugState(body: DebugStateBody) {
   if (body.resetWelcome) state.welcomeLeft = WELCOME_TOTAL
   if (body.inventory === 'empty') for (const i of state.inventory) if (i.status === 'owned') i.status = 'sold'
   if (body.inventory === 'loaded') for (let k = 0; k < 12; k++) state.inventory.unshift(toInventory(CATALOG[Math.floor((k / 12) * CATALOG.length)]!, 'case'))
-  if (body.rakeback) state.rakeback.pending += body.rakeback
-  if (body.missions === 'reset') Object.assign(state, { missionsResetAt: 0, chains: freshChains() })
-  if (body.missions === 'done') {
-    for (const m of missions()) if (m.status === 'active') Object.assign(m, { progress: m.goal, status: 'claimable' })
-    for (const id of CHAIN_IDS) {
-      const c = state.chains[id]
-      if (c.current < CHAINS[id].steps.length) Object.assign(c, { current: c.current + 1, progress: 0 })
-    }
-  }
   if (body.levels) {
     state.user.level += body.levels
     state.user.levelProgress = 5

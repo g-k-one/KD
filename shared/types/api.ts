@@ -430,7 +430,7 @@ export interface BigWinsResponse {
   wins: BigWin[]
 }
 
-// --- Bonuses: daily case and level rewards ---------------------------------------------
+// --- Bonuses: the daily case and the welcome cases ---------------------------------------------
 
 export interface DailyInfo {
   /** The free case; its contents get better every 5 levels */
@@ -438,49 +438,6 @@ export interface DailyInfo {
   tier: number
   /** null = can be opened now; otherwise when it unlocks */
   nextAt: string | null
-}
-
-// --- Weekly race and the season pass (docs/ux-research-v3.md #5, #6) -------------------
-
-/** One row of the weekly race: coins played this week, the prize for that place */
-export interface RaceEntry {
-  rank: number
-  nickname: string
-  avatar: string
-  level: number
-  wagered: number
-  /** Coin cents for this place; 0 outside the prize places */
-  prize: number
-  you?: boolean
-}
-
-/** GET /api/race. Public; `me` only for a signed-in player. Resets every Monday 00:00 UTC. */
-export interface RaceResponse {
-  endsAt: string
-  prizePool: number
-  /** The prize places (top 10) */
-  top: RaceEntry[]
-  me: RaceEntry | null
-}
-
-
-export interface PassTier {
-  level: number
-  /** Season points needed for this tier */
-  points: number
-  /** Free track reward, coin cents */
-  reward: number
-  /** Premium track reward, coin cents (the premium track is not open yet) */
-  premiumReward: number
-  status: 'locked' | 'claimable' | 'claimed'
-}
-
-/** GET /api/pass (signed in). 1 point per coin played; the season ends on a date. */
-export interface PassResponse {
-  season: string
-  endsAt: string
-  points: number
-  tiers: PassTier[]
 }
 
 /** Free cases for signing up (opened from Bonuses, real drops). Configured in the admin panel. */
@@ -491,72 +448,10 @@ export interface WelcomeInfo {
   total: number
 }
 
-export interface LevelReward {
-  level: number
-  /** Coin cents credited on claim */
-  coins: number
-  /** Set on levels where the daily case moves up a tier */
-  dailyTier?: number
-  status: 'locked' | 'claimable' | 'claimed'
-}
-
-/**
- * Rakeback: a share of every coin played comes back, the share grows with the level.
- * `pending` accrues on each spend and is claimed by hand (POST /api/bonuses/rakeback/claim).
- */
-export interface RakebackInfo {
-  /** Current share in basis points (50 = 0.5%) */
-  rateBp: number
-  /** The share at the next step and the level it unlocks at; null at the top */
-  next: { level: number; rateBp: number } | null
-  /** Coin cents waiting to be claimed */
-  pending: number
-  claimedTotal: number
-}
-
-export type MissionKind = 'open_cases' | 'win_upgrade' | 'play_battle' | 'spend' | 'try_upgrade' | 'sell_skin' | 'create_battle' | 'win_battle'
-
-/** Daily missions: three small goals, reset every 24 h (missionsResetAt). Titles come from i18n by kind. */
-export interface Mission {
-  id: string
-  kind: MissionKind
-  /** Target count; for `spend` coin cents */
-  goal: number
-  progress: number
-  /** Coin cents paid on claim (POST /api/bonuses/missions/:id/claim) */
-  reward: number
-  status: 'active' | 'claimable' | 'claimed'
-}
-
-/**
- * Mission chains (docs/ux-research-v3.md #10): themed three-step paths that teach the site, one time each.
- * Steps go in order — only the current one counts. The last step unlocks a free case, opened on the bonus reel
- * (POST /api/bonuses/chains/:id/open).
- */
-export type ChainId = 'rookie' | 'investor' | 'battler'
-export interface ChainStep {
-  kind: MissionKind
-  goal: number
-  progress: number
-}
-export interface MissionChain {
-  id: ChainId
-  steps: ChainStep[]
-  /** Index of the step that counts now; steps.length once all are done */
-  current: number
-  case: CaseDetails
-  status: 'active' | 'claimable' | 'claimed'
-}
-
+/** GET /api/bonuses: what the Bonuses page offers (the promo code is a form of its own) */
 export interface BonusesResponse {
   daily: DailyInfo
   welcome: WelcomeInfo
-  chains: MissionChain[]
-  /** A window of levels around the user's: a few behind, the current one and the next ten */
-  levels: LevelReward[]
-  rakeback: RakebackInfo
-  missions: Mission[]
-  missionsResetAt: string
 }
 
 /** POST /api/bonuses/promo. 400 for an unknown or already used code. */
@@ -568,13 +463,3 @@ export interface PromoResponse {
   credited: number
 }
 
-/** Rakeback and mission claims: the new balance and the fresh bonuses state */
-export interface BonusClaimResponse {
-  balance: number
-  bonuses: BonusesResponse
-}
-
-export interface ClaimLevelResponse {
-  balance: number
-  levels: LevelReward[]
-}

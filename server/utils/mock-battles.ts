@@ -3,7 +3,7 @@
 // the rounds from startedAt + roundMs.
 import type { Battle, BattleCaseRef, BattlePlayerRef, BattleRoundResult, CreateBattleRequest } from '#shared/types/api'
 import { pickByTicket, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
-import { getCase, getCaseSections, getMockState, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory, trackMission } from './mock-db'
+import { getCase, getCaseSections, getMockState, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory } from './mock-db'
 
 const ROUND_MS = 4200
 const BOT_NAMES = ['Bot Pierogi', 'Bot Babcia', 'Bot Zloty', 'Bot Vodka']
@@ -92,7 +92,6 @@ async function start(b: StoredBattle) {
   const youSlot = b.slots.findIndex((s) => s.player?.you)
   if (youSlot >= 0) {
     const won = b.winnerSlot === youSlot
-    if (won) trackMission('win_battle')
     if (won) {
       const st = getMockState()
       for (const r of results) for (const d of r.drops) st.inventory.unshift(toInventory(d, 'case'))
@@ -190,8 +189,6 @@ export async function createBattle(req: CreateBattleRequest) {
   if (rounds.length > 25) throw new MockError(400, 'A battle can have up to 25 rounds')
   const b = await newBattle(size, rounds)
   spend(b.cost)
-  trackMission('create_battle')
-  trackMission('play_battle')
   b.slots[0]!.player = you()
   battles.unshift(b)
   return { battle: publicBattle(b, true), balance: getMockState().user.balance }
@@ -205,7 +202,6 @@ export async function joinBattle(id: string, slot?: number) {
   const free = b.slots.find((s) => !s.player && (slot == null || s.slot === slot))
   if (!free) throw new MockError(409, 'No free seats')
   spend(b.cost)
-  trackMission('play_battle')
   free.player = you()
   if (b.slots.every((s) => s.player)) await start(b)
   return { battle: publicBattle(b, true), balance: getMockState().user.balance }

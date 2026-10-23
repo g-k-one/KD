@@ -37,25 +37,6 @@
     "sellAll": "Sell all",
     "notEnough": "Not enough balance. Deposit to continue."
   },
-  "race": {
-    "title": "Weekly race",
-    "chip": "Race",
-    "ends": "Ends in {time}",
-    "pool": "Prize pool",
-    "you": "You",
-    "toPrize": "{amount} to a prize",
-    "how": "Every coin you play on cases, upgrades and battles counts. The top 10 share the pool every Monday at 00:00 UTC."
-  },
-  "pass": {
-    "title": "KURWA Pass",
-    "days": "1 day left | {n} days left",
-    "points": "{n} points",
-    "toNext": "{n} to tier {tier}",
-    "tier": "Tier {n}",
-    "pts": "{n} pts",
-    "premium": "Premium",
-    "how": "One point for every coin you play. Each tier pays coins; the premium track opens later this season."
-  },
   "drawer": {
     "title": "Your skins",
     "skins": "1 skin worth | {n} skins worth",
@@ -228,7 +209,7 @@
     "opens": "{n} opens",
     "skins": "1 skin | {n} skins",
     "promo": "Have a promo code?",
-    "earns": "+{n} XP · +{n} pass pts",
+    "earns": "+{n} XP",
     "ticketN": "Ticket {n}",
     "ticketsN": "{n} tickets"
   },
@@ -575,44 +556,17 @@
     "title": "Bonuses",
     "signIn": "Sign in to get a free case every day and rewards for every level.",
     "openFree": "Open for free",
-    "nextIn": "Next in",
     "tier": "Tier {tier}",
-    "dailyText": "One free case every 24 hours. It gets better items every 5 levels, so the more you play, the more it pays.",
-    "levels": "Level rewards",
-    "levelsText": "Every coin you play is XP; each level needs a bit more than the last. Each level pays coins; every 5th also upgrades your daily case.",
     "dailyUp": "Daily → {tier}",
-    "claim": "Claim",
-    "claimed": "Claimed",
-    "locked": "Locked",
     "levelUp": "Level up!",
-    "rewardReady": "Reward ready:",
     "dailyReady": "Daily ready",
-    "claimAll": "Claim all · {n}",
-    "rakeback": "Rakeback",
-    "rakebackText": "of every coin you play comes back to you",
-    "rakebackNext": "{rate} from level {level}",
-    "rakebackPending": "Ready to claim",
-    "missions": "Daily missions",
-    "missionsText": "{done} of {total} done today. New ones every 24 hours.",
-    "mission": {
-      "open_cases": "Open a case | Open {n} cases",
-      "win_upgrade": "Win an upgrade",
-      "play_battle": "Play a PvP battle | Play {n} PvP battles",
-      "spend": "Play {n} coins",
-      "try_upgrade": "Try an upgrade",
-      "sell_skin": "Sell a skin | Sell {n} skins",
-      "create_battle": "Create a PvP battle",
-      "win_battle": "Win a PvP battle"
-    },
-    "go": "Go",
     "promo": "Promo code",
     "promoText": "Got a code from a stream or our socials? Enter it here.",
     "promoPlaceholder": "Enter a code",
     "redeem": "Redeem",
     "promoOk": "Code applied · +{coins}",
-    "nextReward": "Next · LVL {level}",
-    "ready": "Ready",
-    "dailyShort": "Daily case"
+    "dailyShort": "Daily case",
+    "open": "Open"
   },
   "withdraw": {
     "title": "Withdraw to Steam",
@@ -628,19 +582,6 @@
     "offer": "Offer",
     "expires": "Accept within",
     "saved": "Trade link saved"
-  },
-  "chain": {
-    "title": "Mission chains",
-    "hint": "Three steps each, in order. Finish a chain to open its case for free.",
-    "rookie": "Rookie",
-    "investor": "Investor",
-    "battler": "Battle master",
-    "free": "Free {name}",
-    "open": "Open free case",
-    "opened": "Case opened",
-    "step": "Step {n} of {total}",
-    "done": "Done",
-    "reward": "Chain reward"
   },
   "share": {
     "title": "Share your drop",

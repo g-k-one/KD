@@ -2,8 +2,8 @@
 /*
  * Level-up moment (player audit D6). When the level goes up a plate drops in at the top centre:
  *   the level badge (same art as the header) with the number rolling from the old level to the new one,
- *   the reward that is now waiting (real numbers from /api/bonuses) and, on milestones, the daily-case step,
- *   a Claim button that opens Bonuses. A thin bar runs down the time left; hovering holds it.
+ *   and, on milestones (every 5th level), the daily case's new step with a link to Bonuses. Levels pay no coins
+ *   (level rewards were cut on 2026-10-23). A thin bar runs down the time left; hovering holds it.
  * Light: our kdReveal in gold behind the badge.
  */
 const session = useSessionStore()
@@ -57,7 +57,8 @@ watch(
     arm(DURATION)
   },
 )
-const reward = computed(() => (shown.value ? bonuses.value?.levels.find((l) => l.level === shown.value) ?? null : null))
+/** The daily case's step when this level moved it up (every 5th level), else null */
+const dailyUp = computed(() => (shown.value && shown.value % 5 === 0 && bonuses.value ? bonuses.value.daily.tier : null))
 const tierNames = ['I', 'II', 'III', 'IV']
 </script>
 
@@ -76,12 +77,9 @@ const tierNames = ['I', 'II', 'III', 'IV']
         </span>
         <span class="flex min-w-0 flex-1 flex-col gap-1">
           <span class="type-16-caps kd-lvl-title">{{ $t('bonus.levelUp') }}</span>
-          <span v-if="reward" class="flex flex-wrap items-center gap-1.5">
-            <UiPrice :amount="reward.coins" size="m" tone="coin" />
-            <span v-if="reward.dailyTier" class="type-10-caps rounded-sm bg-warning-24 px-1.5 py-0.5 text-coin">{{ $t('bonus.dailyUp', { tier: tierNames[reward.dailyTier - 1] }) }}</span>
-          </span>
+          <span v-if="dailyUp != null" class="type-10-caps self-start rounded-sm bg-warning-24 px-1.5 py-0.5 text-coin">{{ $t('bonus.dailyUp', { tier: tierNames[dailyUp] }) }}</span>
         </span>
-        <UiButton variant="gold" size="s" to="/bonuses" @click.capture="shown = null">{{ $t('bonus.claim') }}</UiButton>
+        <UiButton v-if="dailyUp != null" variant="gold" size="s" to="/bonuses" @click.capture="shown = null">{{ $t('bonus.open') }}</UiButton>
       </div>
       <!-- time left before it goes away by itself -->
       <span class="h-0.5 w-full bg-neutral-4">

@@ -10,10 +10,7 @@ onClickOutside(profileRoot, () => ui.popover === 'profile' && (ui.popover = null
 onKeyStroke('Escape', () => (ui.popover = null))
 
 const desktopNav = MAIN_NAV
-const { dailyReady, dailyIn, claimable } = useBonuses()
-const { data: race } = useRace()
-const raceClock = useClock(1000)
-const raceIn = computed(() => (race.value ? countdownLong(race.value.endsAt, raceClock.value) : ''))
+const { dailyReady, dailyIn, welcomeLeft } = useBonuses()
 
 const PROFILE_MENU = [
   { key: 'profile', label: 'profile.profile', icon: 'user', to: '/profile' },
@@ -55,16 +52,6 @@ async function logout() {
 
     <div class="flex-1" />
 
-    <!-- Weekly race: the countdown to the reset is the reason to play today (SkinFans' RACE chip) -->
-    <NuxtLink
-      v-if="race"
-      to="/bonuses#race"
-      class="kd-press kd-race type-12-caps mr-1 flex h-10 items-center gap-2 rounded-xl px-3 whitespace-nowrap text-neutral-14"
-    >
-      <UiIcon name="trophy" :size="18" class="text-coin" />
-      {{ $t('race.chip') }}
-      <span class="tabular-nums text-neutral-12">{{ raceIn }}</span>
-    </NuxtLink>
 
     <!-- Daily case: ready = glowing gift, otherwise the countdown -->
     <NuxtLink
@@ -75,7 +62,7 @@ async function logout() {
     >
       <UiIcon name="bonuses" :size="20" :class="dailyReady ? 'text-coin' : ''" />
       <UiTextSwap :text="dailyReady ? $t('bonus.dailyReady') : dailyIn" class="tabular-nums" />
-      <span v-if="claimable" class="type-10-caps grid h-4 min-w-4 place-items-center rounded-full bg-brand-base px-1 text-neutral-1">{{ claimable }}</span>
+      <span v-if="welcomeLeft" class="type-10-caps grid h-4 min-w-4 place-items-center rounded-full bg-brand-base px-1 text-neutral-1">{{ welcomeLeft }}</span>
     </NuxtLink>
 
     <div ref="settingsRoot" class="relative">
@@ -159,10 +146,6 @@ async function logout() {
 </template>
 
 <style scoped>
-.kd-race {
-  background: linear-gradient(100deg, rgb(253 176 34 / 0.14), transparent 70%);
-  box-shadow: inset 0 0 0 1px rgb(253 176 34 / 0.28);
-}
 .kd-daily {
   position: relative;
 }

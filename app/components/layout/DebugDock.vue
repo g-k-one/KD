@@ -7,7 +7,7 @@ import type { Rarity } from '#shared/types/api'
  * can be checked without waiting for luck:
  *   cases   — next drops by rarity, or the Golden Chicken (KURWADROP on)
  *   upgrade — win / lose / near-miss on either side of the chance line,  *             and a ready setup (your top skin aimed at about ×2) one tap away
- *   bonuses — several levels at once, rakeback to claim, missions done / fresh
+ *   bonuses — several levels at once (the level-up plate), the daily case ready again
  *   PvP     — who takes the next battle that fills
  *   events  — balance credit, rare drop in the live feed, level up, reset
  * Toggle with the bug button or the backquote key.
@@ -176,10 +176,8 @@ const resetDaily = async () => {
         <section class="flex flex-col gap-2">
           <span class="type-12-caps text-neutral-12">Bonuses</span>
           <div class="grid grid-cols-2 gap-1">
-            <UiButton size="s" variant="secondary" @click="bonuses({ levels: 5 }, '+5 levels to claim')">+5 levels</UiButton>
-            <UiButton size="s" variant="secondary" @click="bonuses({ rakeback: 5000 }, '+50 rakeback')">+50 rakeback</UiButton>
-            <UiButton size="s" variant="secondary" @click="bonuses({ missions: 'done' }, 'Missions done')">Missions done</UiButton>
-            <UiButton size="s" variant="secondary" @click="bonuses({ missions: 'reset' }, 'Fresh missions')">Fresh missions</UiButton>
+            <UiButton size="s" variant="secondary" @click="bonuses({ levels: 5 }, '+5 levels')">+5 levels</UiButton>
+            <UiButton size="s" variant="secondary" @click="resetDaily">Daily ready</UiButton>
           </div>
         </section>
 
