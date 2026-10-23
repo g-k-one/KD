@@ -84,8 +84,8 @@ async function sellSelected() {
 // Withdraw the selected skins to Steam (one trade offer)
 const withdrawOpen = ref(false)
 const selectedItems = computed(() => inventory.value.filter((i) => selected.value.includes(i.uid)))
-/** Withdraw takes the picked skins, or all of them when none is picked */
-const withdrawItems = computed(() => (selected.value.length ? selectedItems.value : inventory.value))
+/** Skins leave one at a time: withdraw works only with exactly one picked */
+const canWithdraw = computed(() => selectedItems.value.length === 1)
 async function onWithdrawn() {
   selected.value = []
   await load()
@@ -115,6 +115,16 @@ const stats = computed(() => {
     wagered: played.reduce((a, h) => a + h.bet, 0),
   }
 })
+
+/** The stats as small label | number cards (csgogem's profile) */
+const statCards = computed(() => [
+  { key: 'played', icon: 'wallet', label: t('account.statWagered'), price: stats.value.wagered },
+  { key: 'cases', icon: 'cases', label: t('account.statCases'), value: String(stats.value.cases) },
+  { key: 'ups', icon: 'upgrade', label: t('account.statUpgrades'), value: stats.value.upgrades },
+  { key: 'topx', icon: 'fire', label: t('account.statTopX'), value: stats.value.topX ? `x${stats.value.topX.toFixed(stats.value.topX >= 10 ? 0 : 2)}` : '—', coin: true },
+  { key: 'best', icon: 'trophy', label: t('account.statBest'), price: stats.value.best?.payout ?? 0, title: stats.value.best?.title },
+  { key: 'skins', icon: 'inventory', label: t('account.skinsValue'), price: session.user?.skinsValue ?? 0 },
+])
 
 // the sell preview lives on the inventory tab, so selling everything goes there first
 function sellEverything() {
@@ -153,51 +163,62 @@ async function saveTrade() {
     </div>
 
     <template v-else>
-      <!-- One row: who and the level · the stats, big · the money and Deposit -->
-      <section class="grid gap-4 rounded-5xl bg-neutral-2 p-4 md:p-6 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center lg:gap-8">
-          <div class="flex min-w-0 items-center gap-4">
-            <UiAvatar :src="session.user.avatar" :size="72" />
-            <div class="flex min-w-0 flex-1 flex-col gap-2">
-              <div class="flex items-center gap-2">
-                <h1 class="type-20-caps truncate">{{ session.user.nickname }}</h1>
-                <UiLevelBadge :level="session.user.level" />
-              </div>
-              <div class="flex max-w-80 flex-col gap-1">
-                <div class="type-12 flex justify-between text-neutral-13">
-                  <span>{{ $t('profile.level', { from: session.user.level, to: session.user.level + 1 }) }}</span>
-                  <span>{{ session.user.levelProgress }}%</span>
+      <div class="flex flex-col gap-6 lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start lg:gap-8">
+        <!-- Side nav (desktop): the sections as a list, csgogem's way; phones keep the tabs -->
+        <nav class="flex flex-col gap-1 max-lg:hidden lg:sticky lg:top-24">
+          <button
+            v-for="n in NAV"
+            :key="n.value"
+            type="button"
+            class="type-14-caps flex h-11 items-center gap-3 rounded-xl px-3 text-left transition-colors"
+            :class="tab === n.value ? 'bg-neutral-3 text-neutral-15' : 'text-neutral-11 hover:text-neutral-13'"
+            @click="tab = n.value"
+          >
+            <UiIcon :name="n.icon" :size="18" />
+            <span class="flex-1">{{ n.label }}</span>
+            <span v-if="n.count" class="type-12 rounded-md bg-neutral-4 px-1.5 text-neutral-13">{{ n.count }}</span>
+          </button>
+        </nav>
+
+        <div class="flex min-w-0 flex-col gap-4 lg:gap-6">
+          <!-- Overview: who, the level's progress, the balance and Deposit -->
+          <section class="flex flex-wrap items-center gap-x-6 gap-y-4 rounded-3xl bg-neutral-2 p-4 lg:flex-nowrap lg:px-6">
+            <div class="flex min-w-0 flex-1 items-center gap-4">
+              <UiAvatar :src="session.user.avatar" :size="56" />
+              <div class="flex min-w-0 flex-1 flex-col gap-2">
+                <div class="flex items-center gap-2">
+                  <h1 class="type-20-caps truncate">{{ session.user.nickname }}</h1>
+                  <UiLevelBadge :level="session.user.level" />
                 </div>
-                <div class="h-1 overflow-hidden rounded-full bg-neutral-8">
-                  <div class="bg-brand-gradient h-full rounded-full transition-[width] duration-700" :style="{ width: `${session.user.levelProgress}%` }" />
+                <div class="flex items-center gap-3">
+                  <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-5">
+                    <div class="bg-brand-gradient h-full rounded-full transition-[width] duration-700" :style="{ width: `${session.user.levelProgress}%` }" />
+                  </div>
+                  <span class="type-12 shrink-0 text-neutral-11 tabular-nums">{{ $t('profile.level', { from: session.user.level, to: session.user.level + 1 }) }} · {{ session.user.levelProgress }}%</span>
                 </div>
               </div>
             </div>
-          </div>
-          <dl class="kd-stats grid grid-cols-3 border-neutral-4 max-lg:order-last max-lg:border-t max-lg:pt-4">
-            <div class="kd-stat"><dt class="type-12-caps text-neutral-11">{{ $t('account.statCases') }}</dt><dd class="type-20-caps tabular-nums">{{ stats.cases }}</dd></div>
-            <div class="kd-stat"><dt class="type-12-caps text-neutral-11">{{ $t('account.statTopX') }}</dt><dd class="type-20-caps text-coin tabular-nums">{{ stats.topX ? `x${stats.topX.toFixed(stats.topX >= 10 ? 0 : 2)}` : '—' }}</dd></div>
-            <div class="kd-stat"><dt class="type-12-caps text-neutral-11">{{ $t('account.statBest') }}</dt>
-              <dd v-if="stats.best" class="flex min-w-0 flex-col"><UiPrice :amount="stats.best.payout" size="l" tone="coin" /><span class="type-12-regular truncate text-neutral-11">{{ stats.best.title }}</span></dd>
-              <dd v-else class="type-20-caps">—</dd>
+            <div class="flex items-center gap-4 max-lg:w-full max-lg:justify-between">
+              <div class="flex flex-col">
+                <span class="type-10-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
+                <UiPrice :amount="session.user.balance" size="l" />
+              </div>
+              <UiButton icon="plus" size="m" to="/deposit" class="shrink-0">{{ $t('wallet.deposit') }}</UiButton>
+            </div>
+          </section>
+
+          <!-- Stats, csgogem's way: small cards, the label on the left, the number on the right -->
+          <dl class="grid grid-cols-2 gap-2 lg:grid-cols-3">
+            <div v-for="s in statCards" :key="s.key" class="flex min-w-0 flex-col items-start gap-1 rounded-2xl bg-neutral-2 px-3 py-2.5 sm:h-12 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-4 sm:py-0" :title="s.title">
+              <dt class="type-12-caps flex min-w-0 items-center gap-2 text-neutral-11"><UiIcon :name="s.icon" :size="16" class="shrink-0" /><span class="truncate">{{ s.label }}</span></dt>
+              <dd class="type-14 shrink-0 tabular-nums" :class="s.coin && 'text-coin'">
+                <UiPrice v-if="s.price != null" :amount="s.price" size="s" tone="coin" />
+                <template v-else>{{ s.value }}</template>
+              </dd>
             </div>
           </dl>
-          <!-- the money in one line: balance · skins · Deposit -->
-          <div class="flex flex-wrap items-center gap-3 rounded-3xl bg-neutral-3 p-2 pl-4 max-md:pt-3 md:flex-nowrap">
-            <div class="flex min-w-0 flex-1 flex-col md:flex-none">
-              <span class="type-10-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
-              <UiPrice :amount="session.user.balance" size="l" />
-            </div>
-            <span class="h-10 w-px shrink-0 bg-neutral-5" />
-            <div class="flex min-w-0 flex-1 flex-col md:flex-none">
-              <span class="type-10-caps text-neutral-11">{{ $t('account.skinsValue') }}</span>
-              <UiPrice :amount="session.user.skinsValue" size="l" tone="coin" />
-            </div>
-            <UiButton icon="plus" size="m" to="/deposit" class="shrink-0 max-md:-ml-2 max-md:basis-[calc(100%+8px)]">{{ $t('wallet.deposit') }}</UiButton>
-          </div>
-      </section>
 
-      <div class="flex flex-col gap-4 lg:gap-6">
-        <UiTabs v-model="tab" :tabs="NAV" />
+          <UiTabs v-model="tab" :tabs="NAV" class="lg:hidden" />
 
         <!-- Inventory -->
         <section v-if="tab === 'inventory'" class="flex min-w-0 flex-col gap-4">
@@ -211,19 +232,16 @@ async function saveTrade() {
             <UiChip size="m" variant="field" :active="!!selected.length" class="shrink-0" @click="selected.length ? (selected = []) : selectAll()">
               <UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" />
             </UiChip>
-            <UiButton variant="secondary" size="m" icon="steam" class="shrink-0" @click="withdrawOpen = true">
-              <UiTextSwap :text="selected.length ? $t('withdraw.send', { n: selected.length }) : $t('account.withdrawAll')" />
-            </UiButton>
             <UiButton variant="light" size="m" class="shrink-0 max-sm:hidden" @click="sellEverything">
               {{ $t('account.sellAll') }}
               <UiPrice :amount="session.user.skinsValue" size="s" tone="inverse" />
             </UiButton>
           </div>
           <p v-if="inventory.length && !selected.length" class="type-12-regular -mt-1 text-neutral-11">{{ $t('account.pickHint') }}</p>
-          <div v-if="loading" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+          <div v-if="loading" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
             <span v-for="n in 12" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl" />
           </div>
-          <div v-else-if="inventory.length" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+          <div v-else-if="inventory.length" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
             <ItemTile v-for="it in sortedInventory" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
           </div>
           <UiEmptyState v-else :text="$t('account.emptyInventory')">
@@ -239,14 +257,15 @@ async function saveTrade() {
               <span class="type-14 flex-1">{{ $t('account.selected', { count: selected.length }) }}</span>
               <UiButton variant="ghost" size="m" @click="selected = []">{{ $t('account.clear') }}</UiButton>
               <UiButton variant="secondary" size="m" icon="upgrade" :to="`/upgrade?item=${selected.slice(0, 6).join(',')}`">{{ $t('account.upgradeThem') }}</UiButton>
-              <UiButton variant="secondary" size="m" icon="steam" @click="withdrawOpen = true">{{ $t('withdraw.short') }}</UiButton>
+              <!-- skins leave one at a time -->
+              <UiButton variant="secondary" size="m" icon="steam" :disabled="!canWithdraw" :title="canWithdraw ? undefined : $t('account.withdrawOne')" @click="withdrawOpen = true">{{ $t('withdraw.short') }}</UiButton>
               <UiButton variant="light" size="m" @click="sellOpen = true">
                 {{ $t('account.sellSelected') }}
                 <UiPrice :amount="selectedValue" size="s" tone="inverse" />
               </UiButton>
             </div>
           </Transition>
-          <WalletWithdrawModal v-model="withdrawOpen" :items="withdrawItems" @done="onWithdrawn" />
+          <WalletWithdrawModal v-model="withdrawOpen" :items="selectedItems.slice(0, 1)" @done="onWithdrawn" />
           <WalletSellPreview v-model="sellOpen" :items="selectedItems" :loading="selling" @confirm="sellSelected" />
         </section>
 
@@ -332,30 +351,13 @@ async function saveTrade() {
             <LayoutSettingsPanel />
           </div>
         </section>
+        </div>
       </div>
     </template>
   </div>
 </template>
 
 <style scoped>
-.kd-stat {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 4px;
-  padding: 0 12px;
-}
-@media (min-width: 64rem) {
-  .kd-stat {
-    padding: 0 24px;
-  }
-}
-.kd-stat:first-child {
-  padding-left: 0;
-}
-.kd-stat + .kd-stat {
-  border-left: 1px solid var(--color-neutral-4);
-}
 .kd-bar-enter-active {
   transition:
     opacity var(--dur-base) var(--ease-out),

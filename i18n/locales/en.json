@@ -474,8 +474,8 @@
     "sellAll": "Sell all",
     "day": "24h",
     "skinsCount": "{n} skin | {n} skins",
-    "withdrawAll": "Withdraw all",
-    "pickHint": "Tap skins to pick them: withdraw to Steam, sell for coins or upgrade."
+    "pickHint": "Tap skins to pick them: sell for coins, upgrade, or withdraw one to Steam.",
+    "withdrawOne": "Withdraw one skin at a time"
   },
   "pvp": {
     "title": "PvP",
