@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BattleResponse, CasesResponse } from '#shared/types/api'
+import type { BattleMode, BattleResponse, CasesResponse } from '#shared/types/api'
 
 // Figma "BattleCaseTile" picker: Default → Added (brand tint + counter). Summary sticks to the side
 // on desktop and to the bottom on phones.
@@ -13,7 +13,12 @@ const { data } = await useFetch<CasesResponse>('/api/cases', { key: 'cases' })
 // Every case on the site, once each (home lists some in several sections), cheapest first
 const cases = computed(() => [...new Map((data.value?.sections ?? []).flatMap((sec) => sec.cases).map((c) => [c.slug, c])).values()].sort((a, b) => a.price - b.price))
 
-const size = ref<2 | 3 | 4>(2)
+const mode = ref<BattleMode>('classic')
+const players = ref<2 | 3 | 4>(2)
+// a team battle is always 2 vs 2
+const size = computed(() => (mode.value === 'team' ? 4 : players.value))
+const modeOptions = computed(() => (['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`) })))
+const playerOptions = computed(() => ([2, 3, 4] as const).map((n) => ({ value: n, label: t(`pvp.modes.${n}`) })))
 const qty = ref<Record<string, number>>({})
 const search = ref('')
 const MAX_ROUNDS = 25
@@ -43,7 +48,7 @@ async function create() {
   try {
     const res = await $fetch<BattleResponse>('/api/battles', {
       method: 'POST',
-      body: { size: size.value, cases: Object.entries(qty.value).map(([slug, n]) => ({ slug, qty: n })) },
+      body: { mode: mode.value, size: size.value, cases: Object.entries(qty.value).map(([slug, n]) => ({ slug, qty: n })) },
     })
     if (res.balance != null) session.user.balance = res.balance
     await navigateTo(`/pvp/${res.battle.id}`)
@@ -62,14 +67,20 @@ async function create() {
 
     <div class="grid items-start gap-4 lg:grid-cols-[1fr_340px] lg:gap-6">
       <div class="flex min-w-0 flex-col gap-4">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div class="flex gap-1" role="radiogroup" :aria-label="$t('pvp.mode')">
-            <UiChip v-for="n in ([2, 3, 4] as const)" :key="n" size="m" role="radio" :aria-checked="size === n" :active="size === n" @click="size = n">
-              {{ $t(`pvp.modes.${n}`) }}
-            </UiChip>
-          </div>
-          <UiInput id="pvp-search" v-model="search" icon="search" clearable :placeholder="$t('pvp.search')" class="flex-1" />
+        <!-- The mode, in the case page's dock language: the kit's segmented controls, the rule spelled out -->
+        <div class="kd-pvp-dock flex flex-col gap-3 lg:flex-row lg:items-center">
+          <UiSegmented v-model="mode" :options="modeOptions" block class="lg:w-80" />
+          <Transition name="kd-fade" mode="out-in">
+            <UiSegmented v-if="mode !== 'team'" v-model="players" :options="playerOptions" block class="lg:w-80" />
+            <span v-else class="type-12-caps flex h-12 items-center justify-center gap-2 rounded-2xl bg-neutral-3 px-4 text-neutral-13 lg:w-80">
+              <UiIcon name="pvp" :size="16" />{{ $t('pvp.modes.4') }}
+            </span>
+          </Transition>
+          <Transition name="kd-fade" mode="out-in">
+            <span :key="mode" class="type-12-regular text-neutral-12 lg:flex-1 lg:text-right">{{ $t(`pvp.modeRule.${mode}`) }}</span>
+          </Transition>
         </div>
+        <UiInput id="pvp-search" v-model="search" icon="search" clearable size="l" :placeholder="$t('pvp.search')" />
 
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:gap-3">
           <div
@@ -104,7 +115,7 @@ async function create() {
           </div>
           <div class="flex flex-col lg:flex-row lg:justify-between">
             <dt class="type-12-caps text-neutral-11">{{ $t('pvp.players') }}</dt>
-            <dd>{{ $t(`pvp.modes.${size}`) }}</dd>
+            <dd>{{ $t(`pvp.modeName.${mode}`) }} · {{ $t(`pvp.modes.${size}`) }}</dd>
           </div>
           <div class="flex flex-col lg:flex-row lg:justify-between">
             <dt class="type-12-caps text-neutral-11">{{ $t('pvp.value') }}</dt>
@@ -121,6 +132,19 @@ async function create() {
 </template>
 
 <style scoped>
+.kd-pvp-dock {
+  border-radius: 24px;
+  background: var(--color-neutral-2);
+  padding: 12px;
+}
+.kd-fade-enter-active,
+.kd-fade-leave-active {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.kd-fade-enter-from,
+.kd-fade-leave-to {
+  opacity: 0;
+}
 .kd-ctile {
   background: var(--color-neutral-2);
   border-color: var(--color-neutral-4);

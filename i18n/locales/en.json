@@ -208,10 +208,15 @@
     "nextCase": "Next case: {name}",
     "opens": "{n} opens",
     "skins": "1 skin | {n} skins",
-    "promo": "Have a promo code?",
-    "earns": "+{n} XP",
     "ticketN": "Ticket {n}",
-    "ticketsN": "{n} tickets"
+    "ticketsN": "{n} tickets",
+    "riskInfo": "Risk is how spread out the drops are; the RTP is the same at every level.",
+    "riskText": {
+      "low": "Most drops land close to the case price. Small wins, small losses.",
+      "medium": "A mix: many drops near the price, some well above it.",
+      "high": "Most drops are below the price, a few pay several times over.",
+      "extreme": "Mostly cheap drops, with a rare one worth many times the case."
+    }
   },
   "upgrade": {
     "history": "History",
@@ -500,9 +505,9 @@
     "back": "All PvP",
     "mode": "Mode",
     "modes": {
-      "2": "1v1",
-      "3": "1v1v1",
-      "4": "1v1v1v1"
+      "2": "2 players",
+      "3": "3 players",
+      "4": "4 players"
     },
     "chooseCases": "Choose cases",
     "add": "Add",
@@ -533,7 +538,20 @@
     "replay": "Replay",
     "linkCopied": "Replay link copied",
     "anyMode": "Any mode",
-    "wonBy": "{name} won"
+    "wonBy": "{name} won",
+    "modeName": {
+      "classic": "Classic",
+      "crazy": "Crazy",
+      "team": "Team 2v2"
+    },
+    "modeRule": {
+      "classic": "Most value wins it all",
+      "crazy": "Least value wins it all",
+      "team": "2 vs 2 · the team with more value wins"
+    },
+    "lead": "Leads",
+    "vs": "VS",
+    "teamWon": "{a} & {b} won"
   },
   "quick": {
     "title": "Top up and keep playing",

@@ -66,7 +66,7 @@ const isMobile = useMediaQuery('(max-width: 767px)')
 const outcome = computed(() => {
   const youSlot = b.value.slots.find((s) => s.player?.you)?.slot
   if (!done.value || youSlot == null || b.value.winnerSlot == null) return null
-  if (b.value.winnerSlot === youSlot) return { won: true, text: t('pvp.youWon', { amount: formatCoins(pot.value) }) }
+  if (winners.value.includes(youSlot)) return { won: true, text: t('pvp.youWon', { amount: formatCoins(Math.round(pot.value / winners.value.length)) }) }
   return { won: false, text: t('pvp.youLost', { name: b.value.slots[b.value.winnerSlot]?.player?.nickname ?? '' }) }
 })
 
@@ -77,7 +77,7 @@ watch(done, (d) => {
   celebrated.value = true
   const youSlot = b.value.slots.find((s) => s.player?.you)?.slot
   if (youSlot == null) return
-  if (b.value.winnerSlot === youSlot) {
+  if (winners.value.includes(youSlot)) {
     sfx.win()
     toast.show(t('pvp.youWon', { amount: formatCoins(pot.value) }), 'success', 5000)
     session.fetchMe()
@@ -139,11 +139,22 @@ async function bot(slot: number) {
   }
 }
 
-/** Who took the pot: "You" for the player, else the nickname */
-const winnerName = computed(() => {
-  const w = b.value.winnerSlot != null ? b.value.slots[b.value.winnerSlot]?.player : null
-  return w ? (w.you ? t('pvp.you') : w.nickname) : ''
+const nameOf = (slot: number) => {
+  const p = b.value.slots[slot]?.player
+  return p ? (p.you ? t('pvp.you') : p.nickname) : ''
+}
+/** Who took the pot: one name, or "A & B" for a team */
+const winners = computed(() => b.value.winners ?? (b.value.winnerSlot != null ? [b.value.winnerSlot] : []))
+const winnerName = computed(() => (winners.value.length > 1 ? t('pvp.teamWon', { a: nameOf(winners.value[0]!), b: nameOf(winners.value[1]!) }) : t('pvp.wonBy', { name: nameOf(winners.value[0] ?? 0) })))
+/** The seats ahead right now by the mode's rule (most value · least value · the richer team) */
+const leaders = computed(() => {
+  if (done.value || revealed.value < 1) return [] as number[]
+  const tt = totals.value
+  if (b.value.mode === 'team') return tt[0]! + tt[1]! >= tt[2]! + tt[3]! ? [0, 1] : [2, 3]
+  const pick = b.value.mode === 'crazy' ? Math.min(...tt) : Math.max(...tt)
+  return [tt.indexOf(pick)]
 })
+const isTeam = computed(() => b.value.mode === 'team')
 const pad2 = (n: number) => String(n).padStart(2, '0')
 
 const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` : '—')
@@ -152,16 +163,13 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10">
     <UiPageBar
-      :title="$t(`pvp.modes.${b.size}`)"
-      :subtitle="`#${b.id}`"
+      :title="$t(`pvp.modeName.${b.mode}`)"
+      :subtitle="`${$t(`pvp.modeRule.${b.mode}`)} · #${b.id}`"
       fixed-sides
       :left="[
         { label: $t('pvp.back'), icon: 'arrow-left', to: '/pvp' },
         { label: $t('case.share'), icon: 'share', onClick: shareBattle },
-      ]"
-      :right="[
         ...(data!.battle.status === 'finished' ? [{ label: $t('pvp.replay'), icon: 'refresh', onClick: replay }] : []),
-        { label: $t('pvp.howItWorks'), icon: 'shield', to: '/fairness' },
       ]"
     />
 
@@ -192,7 +200,8 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
     <section class="kd-arena relative overflow-hidden rounded-5xl">
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
-        <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="done && b.winnerSlot === s.slot && 'is-winner'">
+        <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="[done && winners.includes(s.slot) && 'is-winner', leaders.includes(s.slot) && 'is-lead', isTeam && s.slot === 2 && 'is-team-split']">
+          <span :key="revealed" class="kd-seat-flash pointer-events-none absolute inset-0" aria-hidden="true" />
           <PvpReel
             bare
             :case-ref="b.rounds[roundIdx] ?? null"
@@ -204,6 +213,12 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
             :waiting="b.status === 'waiting' || (clock.round < 0 && !done)"
           />
         </div>
+      </div>
+      <!-- VS between the seats (between the two teams in Team 2v2); it beats on every new round -->
+      <div class="pointer-events-none absolute inset-0 z-[3] grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }" aria-hidden="true">
+        <span v-for="s in b.slots" :key="s.slot" class="relative">
+          <span v-if="s.slot > 0 && (!isTeam || s.slot === 2)" :key="`${clock.round}`" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="isTeam && 'is-team'">{{ $t('pvp.vs') }}</span>
+        </span>
       </div>
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 left-0 -rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 right-0 rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
@@ -219,8 +234,8 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
       <Transition name="kd-result">
         <div v-if="done && b.winnerSlot != null" class="kd-arena-result absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-4 text-center">
           <span class="type-12-caps text-neutral-11">{{ $t('pvp.statusFinished') }}</span>
-          <span class="type-20-caps">{{ $t('pvp.wonBy', { name: winnerName }) }}</span>
-          <UiPrice :amount="pot" size="l" tone="success" />
+          <span class="kd-result-title type-20-caps">{{ winnerName }}</span>
+          <UiPrice :amount="pot" size="l" tone="success" class="kd-result-pot" />
           <span v-if="outcome" class="type-12-caps" :class="outcome.won ? 'text-success' : 'text-danger'">{{ outcome.text }}</span>
           <div class="flex flex-wrap justify-center gap-2">
             <UiButton size="m" icon="refresh" :loading="recreating" @click="recreate">
@@ -240,7 +255,8 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
         :key="s.slot"
         :player="s.player"
         :total="totals[s.slot]"
-        :winner="done && b.winnerSlot === s.slot"
+        :winner="done && winners.includes(s.slot)"
+        :lead="leaders.includes(s.slot)"
         :compact="isMobile"
         :can-join="!s.player && b.status === 'waiting' && !youIn"
         :can-call-bot="!s.player && b.status === 'waiting' && isCreator"
@@ -322,6 +338,56 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
 }
 .kd-arena-seat + .kd-arena-seat {
   border-left: 1px solid var(--color-neutral-4);
+}
+/* Team 2v2: the line between the teams is the strong one */
+.kd-arena-seat.is-team-split {
+  border-left: 2px solid rgb(255 95 31 / 0.5);
+}
+/* the seat ahead gets a warm floor while it leads */
+.kd-arena-seat.is-lead {
+  background: radial-gradient(70% 45% at 50% 100%, rgb(255 95 31 / 0.14), transparent);
+}
+/* every landing flashes the seats once (keyed on the round) */
+.kd-seat-flash {
+  background: radial-gradient(50% 40% at 50% 50%, rgb(255 255 255 / 0.12), transparent);
+  opacity: 0;
+  animation: kd-seat-flash 700ms var(--ease-out);
+}
+@keyframes kd-seat-flash {
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.kd-vs {
+  translate: -50% -50%;
+  background: var(--color-neutral-2);
+  color: var(--color-neutral-13);
+  box-shadow: inset 0 0 0 1px var(--color-neutral-5);
+  animation: kd-vs 600ms var(--ease-spring);
+}
+.kd-vs.is-team {
+  color: var(--color-brand-light);
+  box-shadow: inset 0 0 0 1px rgb(255 95 31 / 0.6), 0 0 16px rgb(255 95 31 / 0.35);
+}
+@keyframes kd-vs {
+  40% {
+    scale: 1.3;
+  }
+}
+.kd-result-title {
+  animation: kd-result-in 700ms var(--ease-spring) 700ms both;
+}
+.kd-result-pot {
+  animation: kd-result-in 700ms var(--ease-spring) 820ms both;
+}
+@keyframes kd-result-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.85);
+  }
 }
 .kd-arena-seat {
   transition: background-color var(--dur-slow) var(--ease-out);

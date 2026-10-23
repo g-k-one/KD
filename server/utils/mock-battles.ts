@@ -1,7 +1,7 @@
 // Mock PvP battles. When the last seat fills, every round is rolled at once (PF ticket per player
 // per round, a future "EOS block" as the client seed) and the battle goes live; the client replays
 // the rounds from startedAt + roundMs.
-import type { Battle, BattleCaseRef, BattlePlayerRef, BattleRoundResult, CreateBattleRequest } from '#shared/types/api'
+import type { Battle, BattleCaseRef, BattleMode, BattlePlayerRef, BattleRoundResult, CreateBattleRequest } from '#shared/types/api'
 import { pickByTicket, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
 import { getCase, getCaseSections, getMockState, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory } from './mock-db'
 
@@ -27,11 +27,24 @@ const caseRef = (slug: string): BattleCaseRef => {
   return { slug: c.slug, name: c.name, image: c.image, price: c.price }
 }
 
-async function newBattle(size: number, rounds: BattleCaseRef[]): Promise<StoredBattle> {
+/** The winning seats by the mode's rule */
+function winnersOf(mode: BattleMode, totals: number[]) {
+  if (mode === 'team') {
+    const a = totals[0]! + totals[1]!
+    const b = totals[2]! + totals[3]!
+    return a >= b ? [0, 1] : [2, 3]
+  }
+  const pick = mode === 'crazy' ? Math.min(...totals) : Math.max(...totals)
+  return [totals.indexOf(pick)]
+}
+
+async function newBattle(size: number, rounds: BattleCaseRef[], mode: BattleMode = 'classic'): Promise<StoredBattle> {
   const serverSeed = randomSeed(32)
   idSeq += 1
+  if (mode === 'team') size = 4
   return {
     id: String(idSeq),
+    mode,
     size,
     rounds,
     cost: rounds.reduce((a, r) => a + r.price, 0),
@@ -41,6 +54,7 @@ async function newBattle(size: number, rounds: BattleCaseRef[]): Promise<StoredB
     startedAt: null,
     roundMs: ROUND_MS,
     winnerSlot: null,
+    winners: [],
     viewers: 0,
     seed: { serverSeedHash: await sha256Hex(serverSeed), eosBlock: null, serverSeed: null },
     serverSeed,
@@ -72,9 +86,10 @@ async function start(b: StoredBattle) {
   const forced = takeForcedBattle()
   const meSlot = b.slots.findIndex((s) => s.player?.you)
   if (forced && meSlot >= 0) {
-    const best = totals.indexOf(Math.max(...totals))
-    const other = totals.map((t, i) => ({ t, i })).filter((x) => x.i !== meSlot).sort((a, z) => z.t - a.t)[0]!.i
-    const swapWith = forced === 'you' ? (best !== meSlot ? best : -1) : best === meSlot ? other : -1
+    const win = winnersOf(b.mode, totals)
+    const iWin = win.includes(meSlot)
+    // swap with a winning seat to win, with a losing one to lose
+    const swapWith = forced === 'you' ? (iWin ? -1 : win[0]!) : iWin ? b.slots.findIndex((s) => !win.includes(s.slot)) : -1
     if (swapWith >= 0) {
       for (const r of results) {
         ;[r.drops[meSlot], r.drops[swapWith]] = [r.drops[swapWith]!, r.drops[meSlot]!]
@@ -84,20 +99,24 @@ async function start(b: StoredBattle) {
     }
   }
   b.results = results
-  b.winnerSlot = totals.indexOf(Math.max(...totals))
+  b.winners = winnersOf(b.mode, totals)
+  b.winnerSlot = b.winners[0]!
   b.status = 'live'
   b.startedAt = new Date(Date.now() + 3600).toISOString()
 
-  // Winner takes every drop. The mock pays the signed-in user at once; the UI reveals it at the end.
+  // The winner takes every drop; a winning team deals them out between its two players, priciest first, in turn.
+  // The mock pays the signed-in user at once; the UI reveals it at the end.
   const youSlot = b.slots.findIndex((s) => s.player?.you)
   if (youSlot >= 0) {
-    const won = b.winnerSlot === youSlot
-    if (won) {
+    const won = b.winners.includes(youSlot)
+    const all = results.flatMap((r) => r.drops).sort((x, y) => y.price - x.price)
+    const mine = won ? all.filter((_, i) => i % b.winners.length === b.winners.indexOf(youSlot)) : []
+    if (mine.length) {
       const st = getMockState()
-      for (const r of results) for (const d of r.drops) st.inventory.unshift(toInventory(d, 'case'))
+      for (const d of mine) st.inventory.unshift(toInventory(d, 'case'))
       syncSkinsValue()
     }
-    record({ game: 'case', title: `PvP #${b.id}`, bet: b.cost, payout: won ? totals.reduce((a, x) => a + x, 0) : 0, status: won ? 'won' : 'lost' })
+    record({ game: 'case', title: `PvP #${b.id}`, bet: b.cost, payout: mine.reduce((a, d) => a + d.price, 0), status: won ? 'won' : 'lost' })
   }
 }
 
@@ -135,15 +154,17 @@ function ensureSeeded() {
     // Cheaper cases make friendlier lobby battles; spread rounds across them
     const all = getCaseSections().find((s) => s.id === 'featured')!.cases.filter((c) => c.price <= 3000).map((c) => c.slug)
     const pick = (n: number, from: number) => Array.from({ length: n }, (_, i) => caseRef(all[(from + i * 3) % all.length]!))
-    const specs = [
-      { size: 3, rounds: pick(5, 0), filled: 2 },
-      { size: 2, rounds: pick(3, 2), filled: 1 },
-      { size: 4, rounds: pick(6, 1), filled: 3 },
-      { size: 2, rounds: pick(8, 4), filled: 2 },
-      { size: 3, rounds: pick(2, 3), filled: 3, past: true },
+    const specs: Array<{ mode: BattleMode; size: number; rounds: BattleCaseRef[]; filled: number; past?: boolean }> = [
+      { mode: 'classic', size: 3, rounds: pick(5, 0), filled: 2 },
+      { mode: 'crazy', size: 2, rounds: pick(3, 2), filled: 1 },
+      { mode: 'team', size: 4, rounds: pick(6, 1), filled: 3 },
+      { mode: 'classic', size: 2, rounds: pick(8, 4), filled: 2 },
+      { mode: 'crazy', size: 3, rounds: pick(4, 5), filled: 3 },
+      { mode: 'classic', size: 3, rounds: pick(2, 3), filled: 3, past: true },
+      { mode: 'team', size: 4, rounds: pick(3, 6), filled: 4, past: true },
     ]
     for (const [i, sp] of specs.entries()) {
-      const b = await newBattle(sp.size, sp.rounds)
+      const b = await newBattle(sp.size, sp.rounds, sp.mode)
       for (let s = 0; s < sp.filled; s++) b.slots[s]!.player = PLAYERS[(i + s) % PLAYERS.length]!
       if (sp.filled === sp.size) {
         await start(b)
@@ -183,11 +204,12 @@ const you = (): BattlePlayerRef => {
 
 export async function createBattle(req: CreateBattleRequest) {
   await ensureSeeded()
+  const mode: BattleMode = req.mode === 'crazy' || req.mode === 'team' ? req.mode : 'classic'
   const size = Math.min(4, Math.max(2, Math.floor(req.size)))
   const rounds = (req.cases ?? []).flatMap((c) => Array.from({ length: Math.min(10, Math.max(0, c.qty)) }, () => caseRef(c.slug)))
   if (!rounds.length) throw new MockError(400, 'Add at least one case')
   if (rounds.length > 25) throw new MockError(400, 'A battle can have up to 25 rounds')
-  const b = await newBattle(size, rounds)
+  const b = await newBattle(size, rounds, mode)
   spend(b.cost)
   b.slots[0]!.player = you()
   battles.unshift(b)

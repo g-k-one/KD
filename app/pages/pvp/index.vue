@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BattlesResponse, BattleStatus } from '#shared/types/api'
+import type { BattleMode, BattlesResponse, BattleStatus } from '#shared/types/api'
 
 useHead({ title: 'PvP · KurwaDROP' })
 const { t } = useI18n()
@@ -18,15 +18,15 @@ const tabs = computed(() =>
 // Filters in one line from the kit: mode, sort by price, and "fits my balance" (seats the player can pay for).
 const session = useSessionStore()
 const ORDER = { waiting: 0, live: 1, finished: 2 } as const
-const mode = ref<'all' | '2' | '3' | '4'>('all')
+const mode = ref<'all' | BattleMode>('all')
 const sort = ref<'default' | 'priceDesc' | 'priceAsc'>('default')
 const affordable = ref(false)
-const modeOptions = computed(() => [{ value: 'all' as const, label: t('pvp.anyMode') }, ...(['2', '3', '4'] as const).map((n) => ({ value: n, label: t(`pvp.modes.${n}`) }))])
+const modeOptions = computed(() => [{ value: 'all' as const, label: t('pvp.anyMode') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`) }))])
 const sortOptions = computed(() => (['default', 'priceDesc', 'priceAsc'] as const).map((s) => ({ value: s, label: t(`filters.sortOptions.${s}`) })))
 const list = computed(() =>
   (data.value?.battles ?? [])
     .filter((b) => filter.value === 'all' || b.status === filter.value)
-    .filter((b) => mode.value === 'all' || String(b.size) === mode.value)
+    .filter((b) => mode.value === 'all' || b.mode === mode.value)
     .filter((b) => !affordable.value || (b.status === 'waiting' && b.cost <= (session.user?.balance ?? 0)))
     .sort((a, b) => ORDER[a.status] - ORDER[b.status] || (sort.value === 'priceDesc' ? b.cost - a.cost : sort.value === 'priceAsc' ? a.cost - b.cost : 0)),
 )

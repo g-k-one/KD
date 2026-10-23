@@ -371,9 +371,16 @@ export interface BattleRoundResult {
   tickets: number[]
 }
 
+/**
+ * How a battle is won. classic: the most value takes it all · crazy: the least value takes it all · team: 2 vs 2
+ * (seats 0–1 against 2–3), the team with more value wins and its two players split the drops.
+ */
+export type BattleMode = 'classic' | 'crazy' | 'team'
+
 export interface Battle {
   id: string
-  /** Players in the battle: 2, 3 or 4 */
+  mode: BattleMode
+  /** Players in the battle: 2, 3 or 4 (team is always 4) */
   size: number
   /** One entry per round, already expanded (a case ×2 appears twice) */
   rounds: BattleCaseRef[]
@@ -386,7 +393,10 @@ export interface Battle {
   startedAt: string | null
   /** ms per round the client should use to replay */
   roundMs: number
+  /** The first winning seat (the only one outside team mode) */
   winnerSlot: number | null
+  /** Every winning seat: one, or the two of the winning team */
+  winners: number[]
   /** People watching the room right now (the Go backend counts WebSocket subscribers) */
   viewers: number
   seed: { serverSeedHash: string; eosBlock: number | null; serverSeed: string | null }
@@ -403,6 +413,8 @@ export interface BattleResponse {
 }
 
 export interface CreateBattleRequest {
+  mode?: BattleMode
+  /** Ignored for team (always 4) */
   size: 2 | 3 | 4
   cases: Array<{ slug: string; qty: number }>
 }

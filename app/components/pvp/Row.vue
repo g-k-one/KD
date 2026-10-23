@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Battle } from '#shared/types/api'
 
-// The one battle row (docs/ux-research-v3.md → PvP, Key-Drop / CSGOGem): read left to right — mode and players
+// The one battle row (docs/ux-research-v3.md → PvP, Key-Drop / CSGOGem): read left to right — the mode by name
+// (Classic / Crazy / Team 2v2) and its players
 // (× between seats, + on a free one) · the cases as progress (opened dimmed, the current one framed, 3/8) · the
 // pot · the action with the seat price on it. Desktop = one row, phones = the same three parts as a card.
 // Waiting → Join, Live → Watch, Finished → View. Used by the lobby and the home page.
@@ -23,7 +24,7 @@ const live = computed(() => props.battle.status === 'live' && clock.value.round 
 const leader = computed(() => {
   if (!live.value) return null
   const totals = slotTotals(props.battle, clock.value.round)
-  const best = totals.indexOf(Math.max(...totals))
+  const best = totals.indexOf(props.battle.mode === 'crazy' ? Math.min(...totals) : Math.max(...totals))
   return totals[best] ? { player: props.battle.slots[best]?.player, total: totals[best]! } : null
 })
 const groupState = (g: { from: number; qty: number }) => {
@@ -55,7 +56,7 @@ const action = computed(
   >
     <div class="flex items-start justify-between gap-3 lg:contents">
       <div class="flex w-30 shrink-0 flex-col gap-1">
-        <span class="type-16-caps">{{ $t(`pvp.modes.${battle.size}`) }}</span>
+        <span class="type-16-caps">{{ $t(`pvp.modeName.${battle.mode}`) }}</span>
         <span class="type-12-caps flex items-center gap-1.5" :class="status.cls">
           <span class="size-1.5 rounded-full" :class="status.dot" />
           {{ $t(status.key, status.params) }}
@@ -67,7 +68,7 @@ const action = computed(
       </div>
       <div class="flex shrink-0 items-center gap-1 lg:w-44">
         <template v-for="(s, i) in battle.slots" :key="s.slot">
-          <span v-if="i > 0" class="type-12 text-neutral-9" aria-hidden="true">×</span>
+          <span v-if="i > 0" class="type-12 text-neutral-9" aria-hidden="true">{{ battle.mode === 'team' ? (i === 2 ? $t('pvp.vs') : '+') : '×' }}</span>
           <span v-if="s.player" class="size-8 overflow-hidden rounded-full bg-neutral-7 ring-2 ring-neutral-2" :title="s.player.nickname">
             <img :src="s.player.avatar" alt="" class="size-full object-cover" :class="s.player.bot && 'scale-75 object-contain'" />
           </span>

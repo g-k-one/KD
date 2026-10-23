@@ -3,7 +3,7 @@ import type { BattlePlayerRef } from '#shared/types/api'
 
 // Figma "BattlePlayer": Desktop = column header, Compact = mobile column header.
 // Empty shows Call bot; Winner = success tint + 1px success stroke.
-const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean }>()
+const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean }>()
 defineEmits<{ bot: []; join: [] }>()
 
 // The running total rolls up to each new value like an odometer
@@ -16,13 +16,16 @@ const totalShown = useTransition(totalSrc, { duration: 700, transition: [0.22, 1
     class="kd-slot relative flex items-center"
     :class="[
       compact ? 'flex-col justify-center gap-1 rounded-2xl px-1 py-2 text-center' : 'h-16 gap-3 rounded-2xl p-3',
-      winner ? 'is-winner' : '',
+      winner ? 'is-winner' : lead ? 'is-lead' : '',
     ]"
   >
     <template v-if="player">
       <!-- Winner: burst of sparks and a WINNER tag (Skin.club) -->
       <FxBurst v-if="winner" :tier="3" color="var(--color-success)" :size="compact ? 90 : 160" />
       <span v-if="winner" class="kd-winner-tag type-10-caps absolute -top-2 left-1/2 rounded-sm bg-success px-1.5 py-0.5 text-neutral-1">{{ $t('pvp.winner') }}</span>
+      <Transition name="kd-lead">
+        <span v-if="lead && !winner" class="kd-lead-tag type-10-caps absolute -top-2 left-1/2 rounded-sm bg-brand-base px-1.5 py-0.5 text-neutral-15">{{ $t('pvp.lead') }}</span>
+      </Transition>
       <span class="relative shrink-0">
         <span class="block overflow-hidden rounded-full bg-neutral-7" :class="compact ? 'size-8' : 'size-10'">
           <img :src="player.avatar" alt="" class="size-full object-cover" :class="player.bot && 'scale-75 object-contain'" />
@@ -62,6 +65,23 @@ const totalShown = useTransition(totalSrc, { duration: 700, transition: [0.22, 1
   transition:
     background-color var(--dur-slow) var(--ease-out),
     border-color var(--dur-slow) var(--ease-out);
+}
+.kd-slot.is-lead {
+  border-color: rgb(255 95 31 / 0.45);
+}
+.kd-lead-tag {
+  transform: translateX(-50%);
+}
+.kd-lead-enter-active,
+.kd-lead-leave-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    translate var(--dur-slow) var(--ease-spring);
+}
+.kd-lead-enter-from,
+.kd-lead-leave-to {
+  opacity: 0;
+  translate: 0 6px;
 }
 .kd-slot.is-winner {
   background: var(--color-success-24);
