@@ -158,6 +158,8 @@ function pickTargetTile(it: Item) {
 const historyVersion = ref(0)
 /** The skin just won, offered on the CTA until the player builds a new stake */
 const won = ref<InventoryItem | null>(null)
+/** The result is in but the spent stake is still on screen (its exit plays): the controls already show what comes next */
+const settling = ref(false)
 watch(inputValue, (v) => v > 0 && (won.value = null))
 function upgradeWin() {
   const w = won.value
@@ -270,6 +272,7 @@ async function runUpgrade() {
     aura?.stop()
     aura = null
     state.value = res.win ? 'win' : 'lose'
+    settling.value = true
     // a win gets its beat around the dial; a loss stays one quiet fade of the dial and the target together
     if (res.win) fx.at('kdWin', fxDial.value, 1.2)
     // The target gets light only when it is won, graded by its rarity like a case drop: the rank reveal (more
@@ -299,7 +302,9 @@ async function runUpgrade() {
     // "Upgrade the win" — one tap puts the new skin into the stake (never automatically).
     selected.value = []
     won.value = res.win && res.item && inventory.value.some((i) => i.uid === res.item!.uid) ? res.item : null
+    settling.value = false
   } catch (e) {
+    settling.value = false
     aura?.kill()
     aura = null
     state.value = 'idle'
@@ -359,14 +364,15 @@ async function runUpgrade() {
           v-model:extra="extraModel"
           v-model:fast="fast"
           :chance="shownChance"
-          :input="inputValue"
+          :input="settling ? 0 : inputValue"
           :balance="balance"
           :target="target"
           :prices="marketPrices"
           :state="state"
           :signed-in="!!session.user"
           @aim="aim"
-          :again="won"
+          :again="won ?? (settling && state === 'win' ? target : null)"
+          :settling="settling"
       @upgrade="runUpgrade"
       @again="upgradeWin"
       @skip="gauge?.skip()"
@@ -386,14 +392,15 @@ async function runUpgrade() {
           v-model:extra="extraModel"
           v-model:fast="fast"
           :chance="shownChance"
-          :input="inputValue"
+          :input="settling ? 0 : inputValue"
           :balance="balance"
           :target="target"
           :prices="marketPrices"
           :state="state"
           :signed-in="!!session.user"
           @aim="aim"
-          :again="won"
+          :again="won ?? (settling && state === 'win' ? target : null)"
+          :settling="settling"
       @upgrade="runUpgrade"
       @again="upgradeWin"
       @skip="gauge?.skip()"
@@ -422,14 +429,15 @@ async function runUpgrade() {
           v-model:extra="extraModel"
           v-model:fast="fast"
           :chance="shownChance"
-          :input="inputValue"
+          :input="settling ? 0 : inputValue"
           :balance="balance"
           :target="target"
           :prices="marketPrices"
           :state="state"
           :signed-in="!!session.user"
           @aim="aim"
-          :again="won"
+          :again="won ?? (settling && state === 'win' ? target : null)"
+          :settling="settling"
       @upgrade="runUpgrade"
       @again="upgradeWin"
       @skip="gauge?.skip()"
@@ -444,14 +452,15 @@ async function runUpgrade() {
       v-model:extra="extraModel"
       v-model:fast="fast"
       :chance="shownChance"
-      :input="inputValue"
+      :input="settling ? 0 : inputValue"
       :balance="balance"
       :target="target"
       :prices="marketPrices"
       :state="state"
       :signed-in="!!session.user"
       @aim="aim"
-      :again="won"
+      :again="won ?? (settling && state === 'win' ? target : null)"
+      :settling="settling"
       @upgrade="runUpgrade"
       @again="upgradeWin"
       @skip="gauge?.skip()"

@@ -28,6 +28,8 @@ const props = defineProps<{
   part?: 'all' | 'cta' | 'chance' | 'balance'
   /** The skin just won: with an empty stake the CTA offers to upgrade it */
   again?: Item | null
+  /** The result is in, the spent stake still leaving: the CTA already reads as what comes next, taps wait */
+  settling?: boolean
 }>()
 const is = (p: 'cta' | 'chance' | 'balance') => !props.part || props.part === 'all' || props.part === p
 const extra = defineModel<number>('extra', { required: true })
@@ -35,7 +37,7 @@ const fast = defineModel<boolean>('fast', { required: true })
 const emit = defineEmits<{ aim: [chancePct: number]; upgrade: []; reset: []; again: []; skip: [] }>()
 const offerAgain = computed(() => !!props.again && !props.input && props.state !== 'spinning')
 // one spot, like the case page: Upgrade → Skip while the dial turns → Upgrade again
-const onCta = () => (busy.value ? emit('skip') : offerAgain.value ? emit('again') : emit('upgrade'))
+const onCta = () => (props.settling ? undefined : busy.value ? emit('skip') : offerAgain.value ? emit('again') : emit('upgrade'))
 
 const busy = computed(() => props.state === 'spinning')
 const real = computed(() => props.chance / 100)
