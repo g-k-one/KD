@@ -1,17 +1,11 @@
-// Sound: recorded samples (CS2-like case-opening sounds, generated for us; one sprite, public/sfx/sprite.mp3), with the synth below as the
-// fallback while they load, and for the few cues that have no sample (tense, heart, count). Everything runs into one
-// small mix bus — a compressor, with a send to a short room reverb. The synth is in one key (E major pentatonic), so
-// it never clashes with itself. Respects Settings → Sound and volume.
+// Sound, after csgogem (docs/motion.md → Sound): few, short, airy and bright, the same for every rarity at its core —
+// no notes, chords or long tails. A spin is a bed of air with thin bright clicks over it; a drop is one short "shing"
+// (a noise burst whose brightness falls fast, a metal ring under it). Synthesized, except the Golden Chicken, which is
+// a recording (public/sfx/sprite.mp3). Everything runs into one small bus — a compressor, with a send to a short room
+// reverb. Respects Settings → Sound and volume.
 
 type Bus = { a: AudioContext; master: GainNode; send: GainNode; noise: AudioBuffer }
 let bus: Bus | null = null
-
-// E major pentatonic, plus the low roots
-const N = {
-  E2: 82.41, E3: 164.81, B3: 246.94, E4: 329.63, Gs4: 415.3, B4: 493.88, Cs5: 554.37, E5: 659.25, Fs5: 739.99,
-  Gs5: 830.61, B5: 987.77, Cs6: 1108.73, E6: 1318.51, Gs6: 1661.22, B6: 1975.53, E7: 2637.02, Gs7: 3322.44,
-}
-const SPARKLE = [N.E6, N.Gs6, N.B6, N.Cs6, N.E7]
 
 /** Decaying stereo noise: the reverb's impulse */
 function impulse(a: AudioContext, seconds: number, decay: number) {
@@ -36,14 +30,14 @@ function makeBus(): Bus | null {
     comp.connect(a.destination)
     const master = a.createGain()
     master.connect(comp)
-    // The reverb is high-passed, so the lows (thumps, the sub of a hit) stay dry and tight
+    // The reverb is high-passed, so the lows (the thump of a drop) stay dry and tight
     const hp = a.createBiquadFilter()
     hp.type = 'highpass'
     hp.frequency.value = 350
     const verb = a.createConvolver()
-    verb.buffer = impulse(a, 1.4, 3.2)
+    verb.buffer = impulse(a, 1.1, 3.5)
     const ret = a.createGain()
-    ret.gain.value = 0.5
+    ret.gain.value = 0.45
     const send = a.createGain()
     send.connect(hp).connect(verb).connect(ret).connect(master)
     const noise = a.createBuffer(1, a.sampleRate, a.sampleRate)
@@ -62,20 +56,13 @@ function makeBus(): Bus | null {
 // ── samples ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
 /**
- * Where each clip sits in the sprite: [offset s, duration s], 0.25 s of silence between clips. One file, not fourteen:
- * the artifact holds at most 511 files. Rebuilt from the clips by scratchpad tooling (trim, -1 dBFS peak, pack).
+ * Where each clip sits in the sprite: [offset s, duration s], 0.25 s of silence between clips. One file for all
+ * recordings: the artifact holds at most 511 files. Packed by scratchpad tooling (trim, -1 dBFS peak, pack).
  */
-const SPRITE = {
-  'tick-1': [0.25, 0.05], 'tick-2': [0.55, 0.055], open: [0.855, 0.359], 'reveal-0': [1.464, 0.6565], 'reveal-1': [2.3705, 0.9379],
-  'reveal-2': [3.5585, 1.2976], 'reveal-3': [5.1061, 2.742], 'reveal-4': [8.0981, 2.3913], coin: [10.7395, 0.6198],
-  claim: [11.6093, 0.5595], lose: [12.4188, 0.6196], win: [13.2885, 0.9954], 'level-up': [14.5339, 1.5934], squawk: [16.3772, 0.92],
-} as const
+const SPRITE = { squawk: [0.25, 0.92] } as const
 type Sample = keyof typeof SPRITE
-/** Each file is peak-normalized to -1 dBFS; these even out how loud they feel (dense swells sit lower than clicks) */
-const SAMPLE_GAIN: Record<Sample, number> = {
-  'tick-1': 0.42, 'tick-2': 0.36, open: 0.7, 'reveal-0': 0.32, 'reveal-1': 0.5, 'reveal-2': 0.55, 'reveal-3': 0.45,
-  'reveal-4': 0.55, coin: 0.45, claim: 0.55, lose: 0.4, win: 0.4, 'level-up': 0.45, squawk: 0.5,
-}
+/** Each clip is peak-normalized to -1 dBFS; this sets how loud it sits against the synth */
+const SAMPLE_GAIN: Record<Sample, number> = { squawk: 0.5 }
 let file: Promise<ArrayBuffer | null> | null = null
 let decoding = false
 const buffers = new Map<Sample, AudioBuffer>()
@@ -109,18 +96,16 @@ function decode(b: Bus) {
   })
 }
 
-type SampleOpts = { rate?: number; gain?: number; wet?: number }
 /** Plays a sample if it has loaded; false sends the caller to its synth fallback */
-function sample(b: Bus, t: number, n: Sample, { rate = 1, gain = 1, wet = 0 }: SampleOpts = {}) {
+function sample(b: Bus, t: number, n: Sample, gain = 1) {
   const buf = buffers.get(n)
   if (!buf) return false
   const src = b.a.createBufferSource()
   src.buffer = buf
-  src.playbackRate.value = rate
   const g = b.a.createGain()
   g.gain.value = SAMPLE_GAIN[n] * gain
   src.connect(g)
-  out(b, g, { wet })
+  out(b, g, {})
   src.start(t)
   return true
 }
@@ -180,7 +165,7 @@ function tone(b: Bus, o: Tone) {
 }
 
 type Bell = Env & Place & { f: number; ratio?: number; index?: number }
-/** Two-operator FM: a bright attack that mellows as the modulator dies down (bells, coins, plucks) */
+/** Two-operator FM; an inharmonic ratio (1.41) makes it ring like thin metal */
 function bell(b: Bus, o: Bell) {
   const car = b.a.createOscillator()
   const mod = b.a.createOscillator()
@@ -201,7 +186,7 @@ function bell(b: Bus, o: Bell) {
 }
 
 type Noise = Env & Place & { f: number; to?: number; q?: number; type?: BiquadFilterType }
-/** Filtered noise: clicks, air, whooshes, the crack of a hit */
+/** Filtered noise: clicks, air, the "shing" */
 function noise(b: Bus, o: Noise) {
   const src = b.a.createBufferSource()
   src.buffer = b.noise
@@ -221,49 +206,30 @@ function noise(b: Bus, o: Noise) {
 
 // ── building blocks ─────────────────────────────────────────────────────────────────────────────────────────────────
 
-/** A note: an FM pluck over a soft triangle body */
-function pluck(b: Bus, t: number, f: number, d: number, g: number, pan = 0, wet = 0.3) {
-  bell(b, { t, f, d, g: g * 0.6, ratio: 2, index: 1.2, pan, wet })
-  tone(b, { t, f, d: d * 0.8, g: g * 0.5, type: 'triangle', lp: 4000, pan, wet })
+/**
+ * The drop: a short bright noise burst whose brightness falls fast (9.5 kHz → 1.2 kHz, audible ~0.7 s), a sharp "sh" on the
+ * front, a thin metal ring and a soft low thump. k scales it (0.8 for cheap drops, up to 1.2).
+ */
+function shing(b: Bus, t: number, k = 1, ring = 2637) {
+  noise(b, { t, a: 0.03, d: 0.85, g: 0.8 * k, f: 9500, to: 1200, q: 0.7, wet: 0.25 })
+  noise(b, { t, a: 0.004, d: 0.07, g: 0.22 * k, type: 'highpass', f: 8000 })
+  bell(b, { t, a: 0.01, d: 0.5, g: 0.045 * k, f: ring, ratio: 1.41, index: 2, wet: 0.3 })
+  tone(b, { t, f: 110, to: 55, d: 0.25, g: 0.22 * k })
 }
 
-/** Weight: a sub drop, a dull crack and a click on top */
+/** Air: high noise that thins out over d seconds (the bed under a spin) */
+function air(b: Bus, t: number, d: number, g: number) {
+  noise(b, { t, a: 0.03, d, g, type: 'highpass', f: 7000, to: 3500, q: 0.5, wet: 0.2 })
+  noise(b, { t, a: 0.03, d: d * 0.6, g: g * 0.5, f: 2500, to: 900, q: 0.6 })
+}
+
+/** Weight: a sub drop and a dull crack */
 function hit(b: Bus, t: number, k = 1) {
-  tone(b, { t, f: 120, to: 38, d: 0.55, g: 0.6 * k })
-  noise(b, { t, d: 0.35, g: 0.3 * k, type: 'lowpass', f: 1800, to: 150 })
-  noise(b, { t, d: 0.02, g: 0.2 * k, type: 'highpass', f: 4000 })
+  tone(b, { t, f: 120, to: 38, d: 0.5, g: 0.5 * k })
+  noise(b, { t, d: 0.3, g: 0.25 * k, type: 'lowpass', f: 1800, to: 150 })
 }
 
-/** A held chord: detuned saw pairs under a closing low-pass */
-function pad(b: Bus, t: number, notes: number[], d: number, g: number) {
-  for (const f of notes)
-    for (const detune of [-8, 8]) tone(b, { t, f, d, g, a: 0.012, type: 'sawtooth', detune, lp: 2800, lpTo: 500, wet: 0.4 })
-}
-
-/** High bells scattered across the stereo field */
-function sparkle(b: Bus, t: number, n: number, span: number) {
-  for (let i = 0; i < n; i++)
-    bell(b, {
-      t: t + Math.random() * span,
-      f: SPARKLE[Math.floor(Math.random() * SPARKLE.length)]!,
-      d: 0.4,
-      g: 0.025,
-      ratio: 3.01,
-      index: 1,
-      pan: Math.random() * 1.2 - 0.6,
-      wet: 0.7,
-    })
-}
-
-/** Two metal clinks */
-function clink(b: Bus, t: number, g = 1.5) {
-  const r = 1 + (Math.random() - 0.5) * 0.02
-  bell(b, { t, f: N.E7 * r, d: 0.14, g: 0.08 * g, ratio: 2.76, index: 2, wet: 0.2 })
-  bell(b, { t: t + 0.055, f: N.Gs7 * r, d: 0.22, g: 0.06 * g, ratio: 2.76, index: 2, wet: 0.25 })
-  noise(b, { t, d: 0.03, g: 0.05 * g, type: 'highpass', f: 6000 })
-}
-
-/** One chicken "bawk": a saw through the formants of "aw", a quick pitch flip up, vibrato and a raspy throat */
+/** One chicken "bawk" (fallback until the recording loads): a saw through the formants of "aw", vibrato, a rasp */
 function bawk(b: Bus, t: number, f: number, d: number, g: number) {
   const a = b.a
   const osc = a.createOscillator()
@@ -302,8 +268,9 @@ function bawk(b: Bus, t: number, f: number, d: number, g: number) {
 export function useSfx() {
   const settings = useSettingsStore()
   const base = useRuntimeConfig().app.baseURL || '/'
-  if (import.meta.client && settings.settings.sound) prefetch(base.endsWith('/') ? base : `${base}/`)
-  // the first tap anywhere opens the audio context and decodes the files, so the first spin already plays samples
+  const root = base.endsWith('/') ? base : `${base}/`
+  if (import.meta.client && settings.settings.sound) prefetch(root)
+  // the first tap anywhere opens the audio context and decodes the recording, so the first chicken is the real one
   if (import.meta.client && !bus) window.addEventListener('pointerdown', () => { if (!bus && (bus = makeBus())) decode(bus) }, { once: true, capture: true, passive: true })
 
   /** Runs a sound on the bus at the current volume; t is the start time on the audio clock */
@@ -313,7 +280,7 @@ export function useSfx() {
     bus ??= makeBus()
     if (!bus) return
     // both run once: fetch the sprite, then decode it on this context
-    prefetch(base.endsWith('/') ? base : `${base}/`)
+    prefetch(root)
     decode(bus)
     if (bus.a.state === 'suspended') void bus.a.resume()
     bus.master.gain.value = (s.volume / 100) ** 1.5 * 1.5
@@ -321,89 +288,70 @@ export function useSfx() {
   }
 
   let lastTick = -1
-  // several reels land within a second on a multi-open: the later reveals play softer, so five do not pile up
+  // several reels land within a second on a multi-open: the later drops play softer, so five do not pile up
   let lastReveal = -1
 
   return {
-    /** Reel passes a card, a gauge notch: a dry ratchet click, slightly different every time */
+    /** Reel passes a card, a gauge notch: a thin bright click (no body), slightly different every time */
     tick: () =>
       play((b, t) => {
         if (t - lastTick < 0.025) return
         lastTick = t
-        const r = 1 + (Math.random() - 0.5) * 0.08
-        if (sample(b, t, Math.random() < 0.5 ? 'tick-1' : 'tick-2', { rate: r })) return
-        noise(b, { t, d: 0.018, g: 0.35, f: 3800 * r, q: 1.2 })
-        tone(b, { t, f: 1900 * r, to: 1500 * r, d: 0.03, g: 0.1 })
-        tone(b, { t, f: 420 * r, d: 0.025, g: 0.08, type: 'triangle' })
+        const r = 1 + (Math.random() - 0.5) * 0.12
+        noise(b, { t, a: 0.001, d: 0.012, g: 0.45, type: 'highpass', f: 5500 * r, q: 0.7 })
+        bell(b, { t, a: 0.001, d: 0.02, g: 0.05, f: 4200 * r, ratio: 1.5, index: 0.6 })
       }),
-    /** The breath before the reel: the case unlatches (synth: air rising into a whoosh) */
-    riser: () =>
-      play((b, t) => {
-        if (sample(b, t, 'open')) return
-        noise(b, { t, a: 0.36, d: 0.1, g: 0.18, f: 500, to: 5000, q: 0.8, wet: 0.3 })
-        tone(b, { t, a: 0.34, d: 0.1, g: 0.05, f: N.E3, to: N.E5, wet: 0.3 })
-      }),
+    /** The breath before the reel: a short airy swell */
+    riser: () => play((b, t) => noise(b, { t, a: 0.3, d: 0.12, g: 0.12, type: 'highpass', f: 2500, to: 8000, q: 0.5, wet: 0.25 })),
+    /** A spin starts: the bed of air under the clicks, thinning out over the first ~55% of it (ms: its length) */
+    roll: (ms: number) => play((b, t) => air(b, t, Math.min(ms / 1000, 7) * 0.55, 0.09)),
     /** The reel hangs on a card edge: a low thump and a dark drone under it */
     tense: () =>
       play((b, t) => {
         tone(b, { t, f: 95, to: 48, d: 0.35, g: 0.5 })
-        for (const detune of [-10, 10]) tone(b, { t, a: 0.04, d: 0.45, g: 0.07, f: N.E2, type: 'sawtooth', detune, lp: 380, wet: 0.2 })
+        for (const detune of [-10, 10]) tone(b, { t, a: 0.04, d: 0.45, g: 0.07, f: 82.41, type: 'sawtooth', detune, lp: 380, wet: 0.2 })
       }),
     /**
-     * A drop lands (tier 0–4, or true for "rare"): a longer, higher arpeggio the rarer it is. From covert up it hits
-     * with weight, a chord and sparkles; gold doubles all of it.
+     * A drop lands (tier 0–4, or true for "rare"): the same shing for every drop, a touch louder the rarer;
+     * covert adds a sparkling tail, gold a low hit under it as well.
      */
     reveal: (tier: number | boolean) =>
       play((b, t) => {
         const k = tier === true ? 3 : tier === false ? 0 : Math.max(0, Math.min(4, tier))
         const crowd = t - lastReveal < 0.9
         lastReveal = t
-        if (sample(b, t, `reveal-${k}` as Sample, { gain: crowd ? 0.6 : 1 })) return
-        const arp = [[N.E5], [N.B4, N.E5], [N.E5, N.Gs5, N.B5], [N.E5, N.Gs5, N.B5, N.E6], [N.E5, N.Gs5, N.B5, N.E6, N.Gs6, N.B6]][k]!
-        const step = [0, 0.075, 0.07, 0.06, 0.05][k]!
-        if (k < 3) tone(b, { t, f: 190, to: 110, d: 0.09, g: 0.22 })
-        arp.forEach((f, i) => {
-          const last = i === arp.length - 1
-          const pan = arp.length > 1 ? (i / (arp.length - 1) - 0.5) * 0.4 : 0
-          pluck(b, t + i * step, f, last ? 0.5 + k * 0.15 : 0.22, 0.14, pan, 0.25 + k * 0.08)
-        })
-        if (k >= 3) {
-          hit(b, t, k === 4 ? 1.2 : 1)
-          pad(b, t, k === 4 ? [N.E3, N.B3, N.E4, N.Gs4, N.B4] : [N.E3, N.B3, N.E4, N.Gs4], k === 4 ? 1.8 : 1.1, 0.035)
-          sparkle(b, t + 0.1, k === 4 ? 14 : 6, k === 4 ? 1.4 : 0.8)
-        }
+        const g = (k <= 1 ? 0.8 : 1) * (crowd ? 0.6 : 1)
+        shing(b, t, g)
+        if (k >= 3) noise(b, { t: t + 0.05, a: 0.05, d: 0.9, g: 0.045 * g, type: 'highpass', f: 6500, q: 0.5, wet: 0.6 })
+        if (k >= 3) bell(b, { t: t + 0.04, a: 0.01, d: 0.8, g: 0.03 * g, f: 3951, ratio: 1.41, index: 1.5, wet: 0.5 })
+        if (k === 4) hit(b, t, 0.7 * g)
       }),
-    /** Coins land on the balance */
-    coin: () => play((b, t) => sample(b, t, 'coin', { rate: 0.97 + Math.random() * 0.06 }) || clink(b, t)),
-    /** A reward claimed: two bright notes and a few sparkles (the balance clinks on its own) */
+    /** Coins land on the balance: two thin metal tinks */
+    coin: () =>
+      play((b, t) => {
+        const r = 1 + (Math.random() - 0.5) * 0.04
+        bell(b, { t, a: 0.001, d: 0.09, g: 0.06, f: 5274 * r, ratio: 1.41, index: 1.5, wet: 0.15 })
+        bell(b, { t: t + 0.045, a: 0.001, d: 0.12, g: 0.05, f: 6272 * r, ratio: 1.41, index: 1.5, wet: 0.2 })
+        noise(b, { t, a: 0.001, d: 0.02, g: 0.1, type: 'highpass', f: 7000 })
+      }),
+    /** A reward claimed: a light shing */
     claim: () =>
       play((b, t) => {
-        if (sample(b, t, 'claim')) return
-        pluck(b, t, N.B5, 0.2, 0.18, -0.15)
-        pluck(b, t + 0.07, N.E6, 0.45, 0.18, 0.15, 0.35)
-        sparkle(b, t + 0.1, 4, 0.4)
+        noise(b, { t, a: 0.02, d: 0.35, g: 0.3, f: 10000, to: 3000, q: 0.7, wet: 0.25 })
+        bell(b, { t, a: 0.005, d: 0.4, g: 0.05, f: 3322, ratio: 1.41, index: 1.5, wet: 0.3 })
       }),
-    /** A battle won: a hit, a chord and an arpeggio up two octaves, with coins */
+    /** A battle won: a hit under a full shing with the sparkling tail */
     win: () =>
       play((b, t) => {
-        if (sample(b, t, 'win')) return
         hit(b, t, 0.8)
-        pad(b, t, [N.E3, N.B3, N.E4, N.Gs4, N.B4], 1.4, 0.03)
-        ;[N.E4, N.B4, N.E5, N.Gs5, N.B5, N.E6].forEach((f, i) => pluck(b, t + i * 0.06, f, i === 5 ? 0.8 : 0.22, 0.13, (i / 5 - 0.5) * 0.4, 0.35))
-        for (let i = 0; i < 3; i++) clink(b, t + 0.35 + i * 0.12, 1.2)
-        sparkle(b, t + 0.2, 10, 1.2)
+        shing(b, t, 1.1)
+        noise(b, { t: t + 0.05, a: 0.05, d: 1, g: 0.07, type: 'highpass', f: 6500, q: 0.5, wet: 0.6 })
       }),
-    /** Level up: a fast run up two octaves that lands on a held chord */
+    /** Level up: air rising into a shing */
     levelUp: () =>
       play((b, t) => {
-        if (sample(b, t, 'level-up')) return
-        const run = [N.E4, N.Gs4, N.B4, N.E5, N.Gs5, N.B5, N.E6]
-        run.forEach((f, i) => pluck(b, t + i * 0.045, f, 0.2, 0.11, (i / 6 - 0.5) * 0.5, 0.3))
-        const top = t + run.length * 0.045
-        hit(b, top, 0.7)
-        pad(b, top, [N.E3, N.B3, N.E4, N.Gs4, N.B4, N.E5], 1.6, 0.03)
-        pluck(b, top, N.E6, 1.2, 0.14, 0, 0.45)
-        sparkle(b, top, 12, 1.2)
+        noise(b, { t, a: 0.35, d: 0.05, g: 0.2, f: 800, to: 9000, q: 0.6, wet: 0.3 })
+        shing(b, t + 0.38, 1.1, 3322)
       }),
     /** The upgrade pointer crawls near the edge: a heartbeat, lub-dub */
     heart: () =>
@@ -412,32 +360,20 @@ export function useSfx() {
         noise(b, { t, d: 0.05, g: 0.2, type: 'lowpass', f: 200 })
         tone(b, { t: t + 0.16, f: 62, to: 40, d: 0.18, g: 0.4 })
       }),
-    /** PvP countdown: a clean beep; the last one lands with weight, an octave up */
+    /** PvP countdown: a bright click with a short ping; the last one is a shing */
     count: (last = false) =>
       play((b, t) => {
-        if (!last) {
-          bell(b, { t, f: N.B5, d: 0.16, g: 0.24, ratio: 1, index: 0.5, wet: 0.25 })
-          tone(b, { t, f: N.B4, d: 0.12, g: 0.1 })
-          noise(b, { t, d: 0.015, g: 0.15, f: 3800, q: 1.2 })
-          return
-        }
-        hit(b, t, 0.6)
-        pluck(b, t, N.B5, 0.5, 0.12, -0.1, 0.35)
-        pluck(b, t, N.E6, 0.7, 0.14, 0.1, 0.35)
+        if (last) return shing(b, t, 1)
+        noise(b, { t, a: 0.001, d: 0.015, g: 0.4, type: 'highpass', f: 5000 })
+        bell(b, { t, a: 0.002, d: 0.1, g: 0.1, f: 1975.5, ratio: 1, index: 0.4, wet: 0.2 })
       }),
-    /** A loss: soft and short, three muted notes falling into a minor third, the last one sagging */
+    /** A loss: soft and muffled, a dull whoosh falling away */
     lose: () =>
       play((b, t) => {
-        if (sample(b, t, 'lose')) return
-        tone(b, { t, f: 120, to: 60, d: 0.25, g: 0.25 })
-        const notes = [N.B4, 392, N.E4]
-        notes.forEach((f, i) => {
-          const last = i === notes.length - 1
-          for (const detune of [-6, 6])
-            tone(b, { t: t + i * 0.13, f, to: last ? f * 0.94 : undefined, d: last ? 0.5 : 0.16, g: 0.06, type: 'triangle', detune, lp: 1600, lpTo: last ? 400 : 900, wet: 0.3 })
-        })
+        noise(b, { t, a: 0.01, d: 0.45, g: 0.25, type: 'lowpass', f: 1800, to: 200 })
+        tone(b, { t, f: 140, to: 55, d: 0.3, g: 0.3 })
       }),
-    /** Golden Chicken: two squawks and a cluck */
+    /** Golden Chicken: the recording (synth squawks until it has loaded) */
     squawk: () =>
       play((b, t) => {
         if (sample(b, t, 'squawk')) return
