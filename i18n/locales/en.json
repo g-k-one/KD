@@ -551,8 +551,7 @@
     },
     "lead": "Leads",
     "vs": "VS",
-    "teamWon": "{a} & {b} won",
-    "drops": "Drops of this battle"
+    "teamWon": "{a} & {b} won"
   },
   "quick": {
     "title": "Top up and keep playing",
