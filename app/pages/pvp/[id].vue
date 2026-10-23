@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { BattleResponse } from '#shared/types/api'
 
-// Battle room (after csgogem): the mode as the title; cost · case strip · rounds and viewers in one line; one arena
-// holding every seat's reel, the markers on its edges and, at the end, the result; the player bars under it; a fixed
-// grid of round slots per player that fills as the rounds land (the page never jumps); the PF strip.
+// Battle room (skin.fans race): the mode as a 3D wordmark with its rule; the pot as one huge number; the players as a
+// podium of big cards, each over its own reel (the leader stands raised, places #1…#n by the mode's rule); one arena
+// for the reels with the result inside it; the rounds as identical rows — the round's case, each player's drop in
+// that player's column; the PF strip.
 const route = useRoute()
 const id = computed(() => String(route.params.id))
 const { t } = useI18n()
@@ -155,6 +156,15 @@ const leaders = computed(() => {
   return [tt.indexOf(pick)]
 })
 const isTeam = computed(() => b.value.mode === 'team')
+/** Place of every seat right now by the mode's rule (team: both players of a team share its place); null before round 1 */
+const ranks = computed<(number | null)[]>(() => {
+  if (revealed.value < 1) return b.value.slots.map(() => null)
+  const tt = totals.value
+  const score = b.value.mode === 'team' ? tt.map((_, i) => (i < 2 ? tt[0]! + tt[1]! : tt[2]! + tt[3]!)) : tt
+  const better = (x: number, y: number) => (b.value.mode === 'crazy' ? x < y : x > y)
+  return score.map((v) => 1 + new Set(score.filter((o) => better(o, v))).size)
+})
+const potShown = useTransition(computed(() => (b.value.status === 'waiting' ? b.value.cost * b.value.size : pot.value)), { duration: 800, transition: [0.22, 1, 0.36, 1] })
 const pad2 = (n: number) => String(n).padStart(2, '0')
 
 const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` : '—')
@@ -163,38 +173,48 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10">
     <UiPageBar
-      :title="$t(`pvp.modeName.${b.mode}`)"
-      :subtitle="`${$t(`pvp.modeRule.${b.mode}`)} · #${b.id}`"
       fixed-sides
       :left="[
         { label: $t('pvp.back'), icon: 'arrow-left', to: '/pvp' },
         { label: $t('case.share'), icon: 'share', onClick: shareBattle },
         ...(data!.battle.status === 'finished' ? [{ label: $t('pvp.replay'), icon: 'refresh', onClick: replay }] : []),
       ]"
-    />
+    >
+      <span class="type-12-caps text-neutral-11 tabular-nums">#{{ b.id }}</span>
+    </UiPageBar>
 
-    <!-- One line: what a seat costs · the cases, the current one marked · rounds and viewers -->
-    <section class="grid grid-cols-2 items-center gap-x-4 gap-y-3 md:grid-cols-[auto_1fr_auto] md:gap-6">
-      <div class="flex items-center gap-2">
-        <span class="type-12-caps text-neutral-11">{{ $t('pvp.cost') }}</span>
-        <UiPrice :amount="b.cost" size="m" />
-      </div>
-      <div class="scrollbar-none col-span-2 row-start-2 flex min-w-0 items-center gap-2 overflow-x-auto py-1 md:col-span-1 md:row-start-auto md:justify-center">
-        <PvpCaseThumb
-          v-for="(r, i) in b.rounds"
-          :key="i"
-          :image="r.image"
-          :name="r.name"
-          :size="isMobile ? 's' : 'm'"
-          :state="b.status === 'waiting' ? 'default' : i < revealed ? 'done' : i === roundIdx && !done ? 'current' : 'default'"
-        />
-      </div>
-      <div class="flex items-center justify-end gap-4">
-        <span class="type-12 flex items-center gap-1.5 text-neutral-11 tabular-nums"><UiIcon name="eye" :size="16" />{{ b.viewers }}</span>
-        <span class="type-12-caps text-neutral-11">
-          {{ $t('pvp.rounds') }} <span class="text-neutral-15 tabular-nums">{{ Math.min(b.rounds.length, Math.max(0, revealed)) }}/{{ b.rounds.length }}</span>
-        </span>
-      </div>
+    <!-- Hero: the mode as a 3D wordmark, its rule, then the pot as the one huge number -->
+    <section class="flex flex-col items-center gap-2 text-center">
+      <PvpModeMark :key="b.mode" :mode="b.mode" :text="$t(`pvp.modeName.${b.mode}`).toUpperCase()" :beat="clock.round" />
+      <span class="type-12-caps text-neutral-11">{{ $t(`pvp.modeRule.${b.mode}`) }}</span>
+      <span class="kd-pot mt-2 flex items-center gap-3">
+        <img src="/img/brand/coin.svg" alt="" class="size-8 lg:size-12" />
+        <span class="kd-pot-num tabular-nums">{{ formatCoins(Math.round(potShown)) }}</span>
+      </span>
+      <span class="type-12-caps flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-neutral-11">
+        <span>{{ $t('pvp.value') }}</span>
+        <span>{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="s" class="inline-flex align-middle" /></span>
+        <span class="tabular-nums">{{ $t('pvp.rounds') }} {{ Math.min(b.rounds.length, revealed) }}/{{ b.rounds.length }}</span>
+        <span class="flex items-center gap-1 tabular-nums"><UiIcon name="eye" :size="14" />{{ b.viewers }}</span>
+      </span>
+    </section>
+
+    <!-- Podium: one big card per seat, over that seat's reel; the leader stands raised -->
+    <section class="grid items-end gap-2 pt-3 md:gap-4" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
+      <PvpSeatCard
+        v-for="s in b.slots"
+        :key="s.slot"
+        :player="s.player"
+        :total="totals[s.slot]"
+        :rank="done ? null : ranks[s.slot]"
+        :winner="done && winners.includes(s.slot)"
+        :loser="done && !winners.includes(s.slot)"
+        :compact="isMobile"
+        :can-join="!s.player && b.status === 'waiting' && !youIn"
+        :can-call-bot="!s.player && b.status === 'waiting' && isCreator"
+        @join="join(s.slot)"
+        @bot="bot(s.slot)"
+      />
     </section>
 
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
@@ -248,33 +268,29 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
       </Transition>
     </section>
 
-    <!-- Player bars: who sits where and what they have so far; join or call a bot on a free seat -->
-    <section class="grid gap-2 md:gap-4" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
-      <PvpPlayerSlot
-        v-for="s in b.slots"
-        :key="s.slot"
-        :player="s.player"
-        :total="totals[s.slot]"
-        :winner="done && winners.includes(s.slot)"
-        :lead="leaders.includes(s.slot)"
-        :compact="isMobile"
-        :can-join="!s.player && b.status === 'waiting' && !youIn"
-        :can-call-bot="!s.player && b.status === 'waiting' && isCreator"
-        @join="join(s.slot)"
-        @bot="bot(s.slot)"
-      />
-    </section>
-
-    <!-- Round slots: one per round per player, in order, filled as the rounds land -->
-    <section class="grid gap-2 md:gap-4" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
-      <div v-for="s in b.slots" :key="s.slot" class="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(112px,1fr))] content-start gap-1.5">
-        <template v-for="(_, ri) in b.rounds" :key="ri">
-          <ItemTile v-if="ri < revealed && b.results?.[ri]" :item="b.results[ri]!.drops[s.slot]!" readonly class="kd-slot-in" />
-          <div v-else class="kd-round-slot flex aspect-[112/132] flex-col items-center justify-center rounded-2xl">
-            <span class="type-10-caps text-neutral-9">{{ $t('pvp.round') }}</span>
-            <span class="type-20-caps text-neutral-8 tabular-nums">{{ pad2(ri + 1) }}</span>
-          </div>
-        </template>
+    <!-- Rounds as identical rows: the round's case, then each player's drop in that player's column -->
+    <section class="flex flex-col gap-2">
+      <div
+        v-for="(r, ri) in b.rounds"
+        :key="ri"
+        class="kd-round grid items-center gap-2 rounded-3xl p-2 md:gap-4 md:p-3"
+        :class="[ri < revealed ? 'is-done' : ri === roundIdx && !done && b.status !== 'waiting' && clock.round >= 0 ? 'is-current' : 'is-next']"
+        :style="{ gridTemplateColumns: `${isMobile ? '56px' : '200px'} repeat(${b.size}, minmax(0, 1fr))` }"
+      >
+        <div class="flex min-w-0 items-center gap-3">
+          <span class="kd-round-n font-extrabold italic tabular-nums max-md:hidden">#{{ pad2(ri + 1) }}</span>
+          <img :src="r.image" :alt="r.name" class="size-12 shrink-0 object-contain md:size-14" />
+          <span class="flex min-w-0 flex-col max-md:hidden">
+            <span class="type-12-caps truncate">{{ r.name }}</span>
+            <UiPrice :amount="r.price" size="s" tone="muted" />
+          </span>
+        </div>
+        <div v-for="s in b.slots" :key="s.slot" class="flex justify-center">
+          <ItemTile v-if="ri < revealed && b.results?.[ri]" :item="b.results[ri]!.drops[s.slot]!" readonly class="kd-slot-in w-full max-w-[120px]" />
+          <span v-else class="kd-round-empty grid aspect-[112/132] w-full max-w-[120px] place-items-center rounded-2xl">
+            <UiIcon v-if="ri === roundIdx && !done && clock.round >= 0" name="refresh" :size="18" class="kd-spinning text-neutral-11" />
+          </span>
+        </div>
       </div>
     </section>
 
@@ -405,10 +421,6 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
 .kd-result-enter-from {
   opacity: 0;
 }
-.kd-round-slot {
-  background: var(--color-neutral-2);
-  box-shadow: inset 0 0 0 1px var(--color-neutral-3);
-}
 .kd-slot-in {
   animation: kd-slot-in var(--dur-slow) var(--ease-spring);
 }
@@ -416,6 +428,48 @@ const short = (s?: string | null) => (s ? `${s.slice(0, 10)}…${s.slice(-10)}` 
   from {
     opacity: 0;
     transform: scale(0.9);
+  }
+}
+.kd-pot-num {
+  font-size: clamp(40px, 9vw, 88px);
+  line-height: 1;
+  font-weight: 800;
+  background: linear-gradient(180deg, #fff3c4, #f5c649 55%, #c98a10);
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 6px 24px rgb(245 198 73 / 0.35));
+}
+.kd-round {
+  background: var(--color-neutral-2);
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    box-shadow var(--dur-slow) var(--ease-out);
+}
+.kd-round.is-next {
+  opacity: 0.45;
+}
+.kd-round.is-current {
+  box-shadow:
+    inset 0 0 0 1px rgb(255 95 31 / 0.6),
+    0 0 24px -8px rgb(255 95 31 / 0.6);
+}
+.kd-round-n {
+  width: 44px;
+  font-size: 22px;
+  color: var(--color-neutral-10);
+}
+.kd-round.is-current .kd-round-n {
+  color: var(--color-brand-light);
+}
+.kd-round-empty {
+  background: var(--color-neutral-3);
+}
+.kd-spinning {
+  animation: kd-spin 1s linear infinite;
+}
+@keyframes kd-spin {
+  to {
+    rotate: 360deg;
   }
 }
 </style>
