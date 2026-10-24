@@ -7,7 +7,9 @@ watch(() => route.fullPath, () => (ui.popover = null))
 </script>
 
 <template>
-  <div class="flex min-h-dvh flex-col">
+  <!-- overflow-x clip: effect layers reach past the screen's edge on purpose (sparks are never cut), the page never
+       scrolls sideways; clip, not hidden, so the sticky header keeps working -->
+  <div class="flex min-h-dvh flex-col overflow-x-clip">
     <div class="kd-sticky-top sticky top-0 z-30">
       <LayoutDesktopHeader class="hidden lg:flex" />
       <LayoutMobileHeader class="lg:hidden" />
