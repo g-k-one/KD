@@ -13,11 +13,8 @@ const session = useSessionStore()
 const ui = useUiStore()
 const toast = useToast()
 
-type Tab = 'inventory' | 'history' | 'settings'
-const tab = computed<Tab>({
-  get: () => (['inventory', 'history', 'settings'].includes(String(route.query.tab)) ? (route.query.tab as Tab) : 'inventory'),
-  set: (v) => router.replace({ query: { ...route.query, tab: v } }),
-})
+// Settings open in a modal from the page bar; an old ?tab=settings link still opens them
+const settingsOpen = ref(route.query.tab === 'settings')
 
 const inventory = ref<InventoryItem[]>([])
 const history = ref<HistoryEntry[]>([])
@@ -37,12 +34,10 @@ async function load() {
   }
 }
 watch(() => session.user?.id, load, { immediate: true })
-watch(tab, load)
 
-const NAV = computed(() => [
-  { value: 'inventory' as const, label: t('account.inventory'), icon: 'inventory', count: inventory.value.length },
-  { value: 'history' as const, label: t('account.history'), icon: 'history' },
-  { value: 'settings' as const, label: t('account.settings'), icon: 'sliders' },
+const gameOptions = computed(() => [
+  { value: 'all' as const, label: t('account.allGames') },
+  ...(['case', 'upgrade', 'deposit', 'sell', 'withdraw'] as const).map((g) => ({ value: g, label: t(`account.games.${g}`) })),
 ])
 
 // --- Inventory ---------------------------------------------------------------
@@ -128,7 +123,6 @@ const statCards = computed(() => [
 
 // the sell preview lives on the inventory tab, so selling everything goes there first
 function sellEverything() {
-  tab.value = 'inventory'
   selected.value = inventory.value.map((i) => i.uid)
   sellOpen.value = true
 }
@@ -155,177 +149,110 @@ async function saveTrade() {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
-    <UiPageBar :title="$t('account.title')" :left="[{ label: $t('case.allCases'), icon: 'arrow-left', to: '/' }]" />
+  <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10">
+    <UiPageBar
+      :title="$t('account.title')"
+      :left="[
+        { label: $t('case.allCases'), icon: 'arrow-left', to: '/' },
+        ...(session.user ? [{ label: $t('account.settings'), icon: 'sliders', onClick: () => (settingsOpen = true) }] : []),
+      ]"
+    />
     <div v-if="!session.user" class="flex flex-col items-center gap-4 rounded-5xl bg-neutral-2 px-6 py-16 text-center">
       <p class="type-14-regular text-neutral-12">{{ $t('account.signInHint') }}</p>
       <UiButton icon="sign-in" size="l" @click="ui.openSignIn()">{{ $t('auth.signInToPlay') }}</UiButton>
     </div>
 
     <template v-else>
-      <div class="flex flex-col gap-6 lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start lg:gap-8">
-        <!-- Side nav (desktop): the sections as a list, csgogem's way; phones keep the tabs -->
-        <nav class="flex flex-col gap-1 max-lg:hidden lg:sticky lg:top-24">
-          <button
-            v-for="n in NAV"
-            :key="n.value"
-            type="button"
-            class="type-14-caps flex h-11 items-center gap-3 rounded-xl px-3 text-left transition-colors"
-            :class="tab === n.value ? 'bg-neutral-3 text-neutral-15' : 'text-neutral-11 hover:text-neutral-13'"
-            @click="tab = n.value"
-          >
-            <UiIcon :name="n.icon" :size="18" />
-            <span class="flex-1">{{ n.label }}</span>
-            <span v-if="n.count" class="type-12 rounded-md bg-neutral-4 px-1.5 text-neutral-13">{{ n.count }}</span>
-          </button>
-        </nav>
-
-        <div class="flex min-w-0 flex-col gap-4 lg:gap-6">
-          <!-- Overview: who, the level's progress, the balance and Deposit -->
-          <section class="flex flex-wrap items-center gap-x-6 gap-y-4 rounded-3xl bg-neutral-2 p-4 lg:flex-nowrap lg:px-6">
-            <div class="flex min-w-0 flex-1 items-center gap-4">
-              <UiAvatar :src="session.user.avatar" :size="56" />
-              <div class="flex min-w-0 flex-1 flex-col gap-2">
-                <div class="flex items-center gap-2">
-                  <h1 class="type-20-caps truncate">{{ session.user.nickname }}</h1>
-                  <UiLevelBadge :level="session.user.level" />
-                </div>
-                <div class="flex items-center gap-3">
-                  <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-5">
-                    <div class="bg-brand-gradient h-full rounded-full transition-[width] duration-700" :style="{ width: `${session.user.levelProgress}%` }" />
-                  </div>
-                  <span class="type-12 shrink-0 text-neutral-11 tabular-nums">{{ $t('profile.level', { from: session.user.level, to: session.user.level + 1 }) }} · {{ session.user.levelProgress }}%</span>
-                </div>
-              </div>
+      <!-- The plate, as the case page's dock: who and the level · Deposit · the money -->
+      <section class="kd-dock flex flex-col gap-3 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+        <div class="flex min-w-0 items-center gap-3">
+          <UiAvatar :src="session.user.avatar" :size="48" />
+          <div class="flex min-w-0 flex-1 flex-col gap-1.5">
+            <div class="flex items-center gap-2">
+              <h1 class="type-16-caps truncate">{{ session.user.nickname }}</h1>
+              <UiLevelBadge :level="session.user.level" />
             </div>
-            <div class="flex items-center gap-4 max-lg:w-full max-lg:justify-between">
-              <div class="flex flex-col">
-                <span class="type-10-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
-                <UiPrice :amount="session.user.balance" size="l" />
+            <div class="flex max-w-56 items-center gap-2">
+              <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-5">
+                <div class="bg-brand-gradient h-full rounded-full transition-[width] duration-700" :style="{ width: `${session.user.levelProgress}%` }" />
               </div>
-              <UiButton icon="plus" size="m" to="/deposit" class="shrink-0">{{ $t('wallet.deposit') }}</UiButton>
+              <span class="type-12 shrink-0 text-neutral-11 tabular-nums">{{ session.user.levelProgress }}%</span>
             </div>
-          </section>
+          </div>
+        </div>
+        <UiButton icon="plus" size="l" to="/deposit" class="w-full lg:h-14 lg:w-80">{{ $t('wallet.deposit') }}</UiButton>
+        <div class="flex gap-2 lg:justify-end">
+          <span class="kd-dock-stat max-lg:flex-1">
+            <span class="type-12-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
+            <UiPrice :amount="session.user.balance" size="m" />
+          </span>
+          <span class="kd-dock-stat max-lg:flex-1">
+            <span class="type-12-caps text-neutral-11">{{ $t('account.skinsValue') }}</span>
+            <UiPrice :amount="session.user.skinsValue" size="m" tone="coin" />
+          </span>
+        </div>
+      </section>
 
-          <!-- Stats, csgogem's way: small cards, the label on the left, the number on the right -->
-          <dl class="grid grid-cols-2 gap-2 lg:grid-cols-3">
-            <div v-for="s in statCards" :key="s.key" class="flex min-w-0 flex-col items-start gap-1 rounded-2xl bg-neutral-2 px-3 py-2.5 sm:h-12 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-4 sm:py-0" :title="s.title">
-              <dt class="type-12-caps flex min-w-0 items-center gap-2 text-neutral-11"><UiIcon :name="s.icon" :size="16" class="shrink-0" /><span class="truncate">{{ s.label }}</span></dt>
-              <dd class="type-14 shrink-0 tabular-nums" :class="s.coin && 'text-coin'">
+      <!-- Two panels, the upgrade page's: my skins | game history -->
+      <section class="grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-5">
+        <!-- My skins: the upgrade page's panel, tiles to pick; picked ones get the bar below -->
+        <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2 lg:pb-4">
+          <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
+            <UiIcon name="inventory" :size="24" class="text-neutral-13" />
+            <span class="type-14 lg:type-16-medium">{{ $t('upgrade.mySkins') }} ({{ inventory.length }})</span>
+            <UiPrice :amount="session.user.skinsValue" size="m" tone="coin" class="opacity-64 max-sm:hidden" />
+            <UiButton v-if="inventory.length" variant="ghost" size="s" class="ml-auto" @click="selected.length ? (selected = []) : selectAll()">
+              <UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" />
+            </UiButton>
+            <UiButton variant="ghost" size="m" icon-only :class="!inventory.length && 'ml-auto'" :aria-label="$t(invSort === 'priceDesc' ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="invSort = invSort === 'priceDesc' ? 'priceAsc' : 'priceDesc'">
+              <UiSortArrows :desc="invSort === 'priceDesc'" />
+            </UiButton>
+          </div>
+          <div v-if="loading" class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
+            <span v-for="n in 15" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl lg:aspect-auto lg:h-[105px]" />
+          </div>
+          <template v-else-if="inventory.length">
+            <div class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
+              <ItemTile v-for="it in sortedInventory" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
+            </div>
+            <div class="flex items-center justify-between gap-3 px-4 pb-3 lg:px-6 lg:pb-0">
+              <span class="type-12-regular text-neutral-11">{{ $t('account.pickHint') }}</span>
+              <UiButton variant="secondary" size="s" class="shrink-0" @click="sellEverything">
+                {{ $t('account.sellAll') }}
+                <span class="btn-value"><UiPrice :amount="session.user.skinsValue" size="s" /></span>
+              </UiButton>
+            </div>
+          </template>
+          <UiEmptyState v-else :text="$t('account.emptyInventory')" class="m-3 lg:m-4">
+            <UiButton to="/" icon="cases">{{ $t('account.openCases') }}</UiButton>
+          </UiEmptyState>
+        </div>
+
+        <!-- Game history: the same panel; what the player did, newest first -->
+        <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2 lg:pb-4">
+          <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
+            <UiIcon name="history" :size="24" class="text-neutral-13" />
+            <span class="type-14 lg:type-16-medium">{{ $t('account.history') }}</span>
+            <UiSelect v-model="gameFilter" :options="gameOptions" menu-width="fixed" class="ml-auto w-36 lg:w-40" :active="gameFilter !== 'all'" />
+          </div>
+          <!-- the player's numbers, one quiet line -->
+          <dl class="grid grid-cols-3 gap-2 p-3 lg:px-4">
+            <div v-for="s in statCards.slice(1, 4)" :key="s.key" class="flex min-w-0 flex-col gap-1 rounded-2xl bg-neutral-3 px-3 py-2.5">
+              <dt class="type-10-caps truncate text-neutral-11">{{ s.label }}</dt>
+              <dd class="type-14 tabular-nums" :class="s.coin && 'text-coin'">
                 <UiPrice v-if="s.price != null" :amount="s.price" size="s" tone="coin" />
                 <template v-else>{{ s.value }}</template>
               </dd>
             </div>
           </dl>
-
-          <UiTabs v-model="tab" :tabs="NAV" class="lg:hidden" />
-
-        <!-- Inventory -->
-        <section v-if="tab === 'inventory'" class="flex min-w-0 flex-col gap-4">
-          <div v-if="inventory.length" class="flex items-center gap-2">
-            <UiInput id="inv-search" v-model="invQuery" icon="search" clearable :placeholder="$t('upgrade.search')" class="min-w-0 flex-1" />
-            <UiSelect v-model="invSort" :options="invSortOptions" menu-width="fixed" class="w-44 shrink-0 max-sm:hidden">
-              <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
-            </UiSelect>
-            <!-- phones: one tap cycles the sort, the title says which -->
-            <UiChip size="m" variant="field" icon="sort" class="w-10 shrink-0 justify-center px-0 sm:hidden" :title="invSortOptions.find((o) => o.value === invSort)?.label" @click="invSort = invSortOptions[(invSortOptions.findIndex((o) => o.value === invSort) + 1) % invSortOptions.length]!.value" />
-            <UiChip size="m" variant="field" :active="!!selected.length" class="shrink-0" @click="selected.length ? (selected = []) : selectAll()">
-              <UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" />
-            </UiChip>
-            <UiButton variant="light" size="m" class="shrink-0 max-sm:hidden" @click="sellEverything">
-              {{ $t('account.sellAll') }}
-              <UiPrice :amount="session.user.skinsValue" size="s" tone="inverse" />
-            </UiButton>
-          </div>
-          <p v-if="inventory.length && !selected.length" class="type-12-regular -mt-1 text-neutral-11">{{ $t('account.pickHint') }}</p>
-          <div v-if="loading" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
-            <span v-for="n in 12" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl" />
-          </div>
-          <div v-else-if="inventory.length" class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
-            <ItemTile v-for="it in sortedInventory" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
-          </div>
-          <UiEmptyState v-else :text="$t('account.emptyInventory')">
-            <UiButton to="/" icon="cases">{{ $t('account.openCases') }}</UiButton>
-          </UiEmptyState>
-
-          <!-- Selection bar floats above the bottom nav on mobile -->
-          <Transition name="kd-bar">
-            <div
-              v-if="selected.length"
-              class="sticky bottom-[calc(76px+env(safe-area-inset-bottom))] z-20 flex flex-wrap items-center gap-2 rounded-3xl border border-neutral-5 bg-neutral-3 p-3 shadow-elevation-2 lg:bottom-6"
-            >
-              <span class="type-14 flex-1">{{ $t('account.selected', { count: selected.length }) }}</span>
-              <UiButton variant="ghost" size="m" @click="selected = []">{{ $t('account.clear') }}</UiButton>
-              <UiButton variant="secondary" size="m" icon="upgrade" :to="`/upgrade?item=${selected.slice(0, 6).join(',')}`">{{ $t('account.upgradeThem') }}</UiButton>
-              <!-- skins leave one at a time -->
-              <UiButton variant="secondary" size="m" icon="steam" :disabled="!canWithdraw" :title="canWithdraw ? undefined : $t('account.withdrawOne')" @click="withdrawOpen = true">{{ $t('withdraw.short') }}</UiButton>
-              <UiButton variant="light" size="m" @click="sellOpen = true">
-                {{ $t('account.sellSelected') }}
-                <UiPrice :amount="selectedValue" size="s" tone="inverse" />
-              </UiButton>
-            </div>
-          </Transition>
-          <WalletWithdrawModal v-model="withdrawOpen" :items="selectedItems.slice(0, 1)" @done="onWithdrawn" />
-          <WalletSellPreview v-model="sellOpen" :items="selectedItems" :loading="selling" @confirm="sellSelected" />
-        </section>
-
-        <!-- History -->
-        <section v-else-if="tab === 'history'" class="flex min-w-0 flex-col gap-4">
-          <div class="scrollbar-none flex gap-1 overflow-x-auto">
-            <UiChip :active="gameFilter === 'all'" @click="gameFilter = 'all'">{{ $t('account.allGames') }}</UiChip>
-            <UiChip v-for="g in (['case', 'upgrade', 'deposit', 'sell', 'withdraw'] as const)" :key="g" :active="gameFilter === g" @click="gameFilter = g">
-              {{ $t(`account.games.${g}`) }}
-            </UiChip>
-          </div>
-
-          <UiEmptyState v-if="!filteredHistory.length" :text="$t('account.emptyHistory')" />
-
-          <!-- Desktop table -->
-          <div v-else class="hidden overflow-hidden rounded-3xl bg-neutral-2 md:block">
-            <table class="w-full text-left">
-              <thead class="type-12-caps text-neutral-11">
-                <tr class="border-b border-neutral-4">
-                  <th class="px-4 py-3 font-semibold">{{ $t('account.date') }}</th>
-                  <th class="px-4 py-3 font-semibold">{{ $t('account.game') }}</th>
-                  <th class="px-4 py-3 font-semibold">{{ $t('account.bet') }}</th>
-                  <th class="px-4 py-3 font-semibold">{{ $t('account.multiplier') }}</th>
-                  <th class="px-4 py-3 font-semibold">{{ $t('account.payout') }}</th>
-                  <th class="px-4 py-3 font-semibold">{{ $t('account.status') }}</th>
-                </tr>
-              </thead>
-              <tbody class="type-14">
-                <tr v-for="h in filteredHistory" :key="h.id" class="border-b border-neutral-4 last:border-0 hover:bg-neutral-3">
-                  <td class="px-4 py-3 whitespace-nowrap text-neutral-13">{{ when(h.at) }}</td>
-                  <td class="px-4 py-3">
-                    <span class="flex items-center gap-2">
-                      <UiIcon :name="GAME_ICON[h.game]" :size="16" class="text-neutral-11" />
-                      <span class="truncate">{{ $t(`account.games.${h.game}`) }} · <span class="text-neutral-12">{{ h.title }}</span></span>
-                    </span>
-                  </td>
-                  <td class="px-4 py-3"><UiPrice v-if="h.bet" :amount="h.bet" /><span v-else class="text-neutral-8">—</span></td>
-                  <td class="px-4 py-3 text-neutral-13 tabular-nums">{{ mult(h) }}</td>
-                  <td class="px-4 py-3"><UiPrice :amount="h.payout" :tone="h.status === 'lost' ? 'muted' : 'success'" /></td>
-                  <td class="px-4 py-3">
-                    <span
-                      class="type-10-caps rounded-md border px-2 py-1"
-                      :class="{ 'border-success bg-success-24 text-success': h.status === 'won', 'border-danger/60 bg-danger-24 text-danger': h.status === 'lost', 'border-neutral-7 text-neutral-12': h.status === 'done' }"
-                    >
-                      {{ $t(`account.${h.status}`) }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Mobile rows -->
-          <ul v-if="filteredHistory.length" class="flex flex-col gap-2 md:hidden">
-            <li v-for="h in filteredHistory" :key="h.id" class="flex items-center gap-3 rounded-2xl bg-neutral-2 p-3">
+          <UiEmptyState v-if="!filteredHistory.length" :text="$t('account.emptyHistory')" class="m-3 mt-0 lg:m-4 lg:mt-0" />
+          <ul v-else class="kd-history flex flex-col gap-1 overflow-y-auto px-3 pb-3 lg:px-4 lg:pb-0">
+            <li v-for="h in filteredHistory" :key="h.id" class="flex items-center gap-3 rounded-2xl px-2 py-2 hover:bg-neutral-3">
               <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-neutral-4 text-neutral-13">
                 <UiIcon :name="GAME_ICON[h.game]" :size="18" />
               </span>
               <span class="flex min-w-0 flex-1 flex-col">
-                <span class="type-14 truncate">{{ $t(`account.games.${h.game}`) }} · {{ h.title }}</span>
+                <span class="type-14 truncate">{{ $t(`account.games.${h.game}`) }} · <span class="text-neutral-12">{{ h.title }}</span></span>
                 <span class="type-12-regular text-neutral-11">{{ when(h.at) }} · {{ mult(h) }}</span>
               </span>
               <span class="flex flex-col items-end">
@@ -334,30 +261,87 @@ async function saveTrade() {
               </span>
             </li>
           </ul>
-        </section>
+        </div>
+      </section>
 
-        <!-- Settings -->
-        <section v-else class="flex max-w-lg flex-col gap-4">
-          <form class="flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4 lg:p-6" @submit.prevent="saveTrade">
+      <!-- Selection bar floats above the bottom nav on mobile -->
+      <Transition name="kd-bar">
+        <div
+          v-if="selected.length"
+          class="sticky bottom-[calc(76px+env(safe-area-inset-bottom))] z-20 flex flex-wrap items-center gap-2 rounded-3xl border border-neutral-5 bg-neutral-3 p-3 shadow-elevation-2 lg:bottom-6"
+        >
+          <span class="type-14 flex-1">{{ $t('account.selected', { count: selected.length }) }}</span>
+          <UiButton variant="ghost" size="m" @click="selected = []">{{ $t('account.clear') }}</UiButton>
+          <UiButton variant="secondary" size="m" icon="upgrade" :to="`/upgrade?item=${selected.slice(0, 6).join(',')}`">{{ $t('account.upgradeThem') }}</UiButton>
+          <!-- skins leave one at a time -->
+          <UiButton variant="secondary" size="m" icon="steam" :disabled="!canWithdraw" :title="canWithdraw ? undefined : $t('account.withdrawOne')" @click="withdrawOpen = true">{{ $t('withdraw.short') }}</UiButton>
+          <UiButton variant="light" size="m" @click="sellOpen = true">
+            {{ $t('account.sellSelected') }}
+            <UiPrice :amount="selectedValue" size="s" tone="inverse" />
+          </UiButton>
+        </div>
+      </Transition>
+      <WalletWithdrawModal v-model="withdrawOpen" :items="selectedItems.slice(0, 1)" @done="onWithdrawn" />
+      <WalletSellPreview v-model="sellOpen" :items="selectedItems" :loading="selling" @confirm="sellSelected" />
+
+      <!-- Settings: the trade link and the app's settings, in a modal from the page bar -->
+      <UiModal v-model="settingsOpen" :title="$t('account.settings')" :width="560">
+        <div class="flex flex-col gap-4">
+          <form class="flex flex-col gap-3" @submit.prevent="saveTrade">
             <span class="type-14-caps">{{ $t('withdraw.tradeLink') }}</span>
             <UiInput id="settings-trade" v-model="tradeLink" size="l" icon="steam" inputmode="url" clearable :error="!!tradeLink && !tradeValid" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…" />
             <span class="type-12-regular text-neutral-11">
               {{ $t('withdraw.whereLink') }}
               <a href="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" target="_blank" rel="noopener" class="text-brand-light hover:underline">{{ $t('withdraw.openSteam') }}</a>
             </span>
-            <UiButton type="submit" size="m" class="self-start" :loading="tradeSaving" :disabled="!tradeValid || tradeLink.trim() === session.user.tradeUrl">{{ $t('common.save') }}</UiButton>
+            <UiButton type="submit" size="m" class="self-start" :loading="tradeSaving" :disabled="!tradeValid || tradeLink.trim() === session.user?.tradeUrl">{{ $t('common.save') }}</UiButton>
           </form>
-          <div class="rounded-5xl bg-neutral-2 p-4 lg:p-6">
+          <div class="border-t border-neutral-4 pt-4">
             <LayoutSettingsPanel />
           </div>
-        </section>
         </div>
-      </div>
+      </UiModal>
     </template>
   </div>
 </template>
 
 <style scoped>
+/* the plate is the case page's dock: 24px radius, 12px padding; its chips are 48px high with a 12px radius */
+.kd-dock {
+  border-radius: 24px;
+  background: var(--color-neutral-2);
+  padding: 12px;
+}
+@media (min-width: 64rem) {
+  .kd-dock {
+    padding-inline: 16px;
+  }
+}
+.kd-dock-stat {
+  display: inline-flex;
+  height: 48px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 12px;
+  background: var(--color-neutral-3);
+  padding: 0 16px;
+  white-space: nowrap;
+}
+/* phones: two chips share the width, so the label sits over the amount */
+@media (max-width: 63.98rem) {
+  .kd-dock-stat {
+    height: auto;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 8px 12px;
+  }
+}
+/* the history scrolls inside its panel, so the two panels stay about the same height */
+.kd-history {
+  max-height: 520px;
+}
 .kd-bar-enter-active {
   transition:
     opacity var(--dur-base) var(--ease-out),
