@@ -3,7 +3,8 @@
  * Balance coins as a piece of the stake, drawn as a skin is: ItemArt with the gold rarity, one picture of our coin
  * per step of the amount, about ×2.5 apart so it changes often — a coin, a stack, a heap, a mound, a sack, a CS2-style case,
  * crates, a pallet, a van, a sea container. Same morph as the skins (the new picture flows in over the old one, no
- * gap), the same float on big cards. All ten are preloaded so a step never waits for the network. Size is the old
+ * gap), the same float on big cards. The tiers next to the current one are preloaded, so a step never waits for the
+ * network and a page does not pull all ten. Size is the old
  * coin diameter: the art is 1.56× it, so 96 lands on the 150 a big skin uses.
  */
 const props = withDefaults(defineProps<{ size?: number; amount?: number }>(), { size: 40 })
@@ -28,9 +29,20 @@ const tier = computed(() => {
 })
 const art = computed(() => Math.round(props.size * 1.56))
 
-onMounted(() => {
-  for (const t of TIERS) new Image().src = src(t.name)
-})
+const warmed = new Set<string>()
+watch(
+  tier,
+  (name) => {
+    if (import.meta.server) return
+    const i = TIERS.findIndex((t) => t.name === name)
+    for (const t of TIERS.slice(Math.max(0, i - 1), i + 2)) {
+      if (warmed.has(t.name)) continue
+      warmed.add(t.name)
+      new Image().src = src(t.name)
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>

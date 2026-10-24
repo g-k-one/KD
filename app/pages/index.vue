@@ -49,7 +49,8 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
       </div>
 
       <template v-for="(s, i) in sections" :key="s.id">
-      <section class="flex flex-col gap-4">
+      <!-- sections after the first are skipped by the renderer until they come near the screen -->
+      <section class="flex flex-col gap-4" :class="i > 0 && 'kd-offscreen'">
         <UiSectionHeader
           :title="s.title"
           collapsible

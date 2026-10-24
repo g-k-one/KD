@@ -37,6 +37,7 @@ function start() {
     <img
       src="/img/brand/hero-mascot.webp"
       alt=""
+      fetchpriority="high"
       class="kd-hero-art pointer-events-none absolute top-[calc(50%-3.5px)] right-0 hidden h-[115%] w-auto max-w-none -translate-y-1/2 sm:block lg:right-[31px] lg:h-[379px] lg:w-[568px] lg:object-cover"
       draggable="false"
     />

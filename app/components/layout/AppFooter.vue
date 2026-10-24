@@ -31,7 +31,7 @@ const columns = computed(() => [
 </script>
 
 <template>
-  <footer class="border-t border-neutral-4 bg-neutral-2">
+  <footer class="kd-footer border-t border-neutral-4 bg-neutral-2">
     <div class="mx-auto flex max-w-content flex-col gap-8 px-4 pt-10 pb-8 lg:gap-10 lg:px-0 lg:pt-14 lg:pb-10">
       <div class="flex flex-col gap-10 lg:flex-row lg:gap-24">
         <div class="flex max-w-105 flex-col gap-5">
@@ -94,3 +94,11 @@ const columns = computed(() => [
     </div>
   </footer>
 </template>
+
+<style scoped>
+/* below the fold on every page: skipped until it is near the screen */
+.kd-footer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
+}
+</style>

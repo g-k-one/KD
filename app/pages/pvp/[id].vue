@@ -42,7 +42,7 @@ function replay() {
 useHead({ title: () => `PvP #${id.value} · KurwaDROP` })
 
 // Poll while waiting so other players and bots show up
-const { pause, resume } = useIntervalFn(() => refresh(), 2500, { immediate: false })
+const { pause, resume } = useIntervalFn(() => document.visibilityState === 'visible' && refresh(), 2500, { immediate: false })
 watch(
   () => b.value.status,
   (s) => (s === 'finished' ? pause() : resume()),

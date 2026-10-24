@@ -593,6 +593,12 @@ html body {
   }
 }
 
+/* long blocks below the fold: layout and paint are skipped until they come near the screen */
+.kd-offscreen {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 640px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

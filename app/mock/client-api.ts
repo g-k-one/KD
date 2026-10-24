@@ -24,8 +24,6 @@ function writeSession(on: boolean) {
 
 let loggedIn = readSession()
 
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
-
 export async function handleMockRequest(
   url: string,
   opts: { method?: string; body?: unknown; query?: Record<string, unknown>; params?: Record<string, unknown> } = {},
@@ -34,7 +32,8 @@ export async function handleMockRequest(
   const method = (opts.method ?? 'GET').toUpperCase()
   const query: Record<string, string> = Object.fromEntries(new URLSearchParams(qs ?? ''))
   for (const [k, v] of Object.entries({ ...opts.params, ...opts.query })) if (v != null) query[k] = String(v)
-  await delay(80)
+  // no fake latency: the artifact should feel instant (still async, like the network)
+  await Promise.resolve()
 
   if (method === 'POST' && path === '/api/auth/login') {
     loggedIn = true

@@ -4,7 +4,7 @@ import type { BattlesResponse } from '#shared/types/api'
 // Battles on the home page (#12, Skin.Club): the same battle row as the lobby — open seats first, then live rooms,
 // one tap to join or watch. The lobby's list, fetched and refreshed here on its own; quiet when nothing is going on.
 const { data, refresh } = useFetch<BattlesResponse>('/api/battles', { key: 'home-battles', server: false, lazy: true })
-useIntervalFn(() => refresh(), 5000)
+useIntervalFn(() => document.visibilityState === 'visible' && refresh(), 5000)
 
 const ORDER = { waiting: 0, live: 1, finished: 2 } as const
 const list = computed(() =>

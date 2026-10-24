@@ -4,7 +4,7 @@ import type { BattleMode, BattlesResponse, BattleStatus } from '#shared/types/ap
 useHead({ title: 'PvP · KurwaDROP' })
 const { t } = useI18n()
 const { data, refresh } = await useFetch<BattlesResponse>('/api/battles', { key: 'battles' })
-useIntervalFn(() => refresh(), 3000)
+useIntervalFn(() => document.visibilityState === 'visible' && refresh(), 3000)
 
 const filter = ref<BattleStatus | 'all'>('all')
 const counts = computed(() => {
