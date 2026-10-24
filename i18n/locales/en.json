@@ -557,7 +557,8 @@
     "toWin": "to win",
     "pot": "Pot",
     "openSeats": "Open seats",
-    "liveAndFinished": "Live & finished"
+    "showAll": "Show all {n}",
+    "showLess": "Show less"
   },
   "quick": {
     "title": "Top up and keep playing",

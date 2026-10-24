@@ -3,7 +3,7 @@ import type { Battle } from '#shared/types/api'
 
 // A battle as a card, in the case card's language: the mode and its status on top, the battle's cases fanned big in
 // the middle, the players (a + on a free seat), then the pot and the one action — Join with the seat's price, Watch,
-// or View. Compact: the same card for a panel's narrow grid (smaller art, the pot beside the action).
+// or View. Compact: the same card for a phone's two columns (smaller art and type, tighter padding).
 const props = defineProps<{ battle: Battle; compact?: boolean }>()
 const now = useClock(1000)
 const { onPointerMove } = useSpotlight()
@@ -27,16 +27,16 @@ const action = computed(() => ({ waiting: 'pvp.join', live: 'pvp.watch', finishe
 <template>
   <NuxtLink
     :to="`/pvp/${battle.id}`"
-    class="kd-bcard kd-spotlight group relative flex flex-col gap-3 rounded-5xl border"
+    class="kd-bcard kd-spotlight group relative flex min-w-0 flex-col gap-3 overflow-hidden rounded-5xl border"
     :class="[compact ? 'p-3' : 'p-4', battle.status === 'finished' && 'is-finished']"
     @pointermove="onPointerMove"
   >
     <!-- the mode and where the battle is -->
     <div class="flex items-center justify-between gap-2">
       <span :class="compact ? 'type-14-caps' : 'type-16-caps'">{{ $t(`pvp.modeName.${battle.mode}`) }}</span>
-      <span class="type-12-caps flex items-center gap-1.5 tabular-nums" :class="status.cls">
+      <span class="flex items-center gap-1.5 tabular-nums" :class="[status.cls, compact ? 'type-10-caps' : 'type-12-caps']">
         <span class="size-1.5 rounded-full" :class="status.dot" />
-        {{ $t(`pvp.${battle.status}`) }}<template v-if="status.text"> · {{ status.text }}</template>
+        <span :class="compact && 'max-sm:hidden'">{{ $t(`pvp.${battle.status}`) }}</span><template v-if="status.text"><span :class="compact && 'max-sm:hidden'"> · </span>{{ status.text }}</template>
       </span>
     </div>
 
@@ -61,22 +61,22 @@ const action = computed(() => ({ waiting: 'pvp.join', live: 'pvp.watch', finishe
     <div class="flex items-center justify-center gap-1">
       <template v-for="(s, i) in battle.slots" :key="s.slot">
         <span v-if="i > 0" class="type-12 text-neutral-9" aria-hidden="true">{{ battle.mode === 'team' ? (i === 2 ? $t('pvp.vs') : '+') : '×' }}</span>
-        <span v-if="s.player" class="size-8 overflow-hidden rounded-full bg-neutral-7 ring-2 ring-neutral-2" :title="s.player.nickname">
+        <span v-if="s.player" class="overflow-hidden rounded-full bg-neutral-7 ring-2 ring-neutral-2" :class="compact ? 'size-6' : 'size-8'" :title="s.player.nickname">
           <img :src="s.player.avatar" alt="" class="size-full object-cover" :class="s.player.bot && 'scale-75 object-contain'" />
         </span>
-        <span v-else class="grid size-8 place-items-center rounded-full border border-dashed border-neutral-8 text-neutral-11">
-          <UiIcon name="plus" :size="14" />
+        <span v-else class="grid place-items-center rounded-full border border-dashed border-neutral-8 text-neutral-11" :class="compact ? 'size-6' : 'size-8'">
+          <UiIcon name="plus" :size="compact ? 12 : 14" />
         </span>
       </template>
     </div>
 
     <!-- the pot and the action -->
-    <div class="flex items-center gap-2" :class="!compact && 'flex-col items-stretch'">
-      <div class="flex items-center justify-between gap-2" :class="compact && 'min-w-0 flex-1 flex-col items-start gap-0'">
-        <span class="type-12-caps text-neutral-11">{{ $t('pvp.pot') }}</span>
-        <UiPrice :amount="pot" :size="compact ? 'm' : 'l'" tone="coin" />
+    <div class="flex flex-col items-stretch gap-2">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-neutral-11" :class="compact ? 'type-10-caps' : 'type-12-caps'">{{ $t('pvp.pot') }}</span>
+        <UiPrice :amount="pot" :size="compact ? 's' : 'l'" tone="coin" class="min-w-0" />
       </div>
-      <span class="kd-btn type-12-caps inline-flex h-10 items-center justify-center gap-1 rounded-lg" :class="[battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary', compact ? 'px-4' : 'w-full']">
+      <span class="kd-btn type-12-caps inline-flex h-10 w-full items-center justify-center gap-1 rounded-lg" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
         {{ $t(action) }}
         <span v-if="battle.status === 'waiting'" class="btn-value"><UiPrice :amount="battle.cost" size="s" tone="inverse" /></span>
       </span>
