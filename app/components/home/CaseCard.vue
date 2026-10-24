@@ -22,8 +22,9 @@ const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-
 // first frame is drawn (and after it stops, or if it never loads) the static WebP stays in place.
 const artBox = useTemplateRef<HTMLElement>('artBox')
 const rigCanvas = useTemplateRef<HTMLCanvasElement>('rigCanvas')
-const playing = useArtPlayback(artBox, () => !!props.item.rig)
+const playing = useArtPlayback(artBox, () => !!(props.item.rig || props.item.animation))
 const animReady = ref(false)
+watch(playing, (v) => !v && !props.item.rig && (animReady.value = false))
 // The rig is square: fit it into the art box like object-contain, drawn at device resolution
 const { width: boxW, height: boxH } = useElementSize(artBox)
 const side = computed(() => Math.floor(Math.min(boxW.value, boxH.value)))
@@ -63,6 +64,16 @@ watch(
         class="kd-case-art absolute top-1/2 left-1/2 -translate-1/2"
         :class="{ invisible: !animReady }"
         :style="{ width: `${side}px`, height: `${side}px` }"
+      />
+      <img
+        v-else-if="playing && item.animation"
+        :src="item.animation"
+        alt=""
+        aria-hidden="true"
+        draggable="false"
+        class="kd-case-art absolute inset-0 size-full object-contain"
+        :class="{ invisible: !animReady }"
+        @load="animReady = true"
       />
     </div>
 

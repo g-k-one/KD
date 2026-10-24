@@ -18,6 +18,8 @@ export interface CaseSummary {
   image: string
   /** Skeletal (Spine) art. Cards play it only while on screen, a few at a time; `image` stays the fallback. */
   rig?: CaseRig
+  /** Video art: a transparent looping AVIF, played under the same rules as `rig`; `image` is its first frame */
+  animation?: string
   price: number
   risk: RiskLevel
   tag?: CaseTag
