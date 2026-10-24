@@ -128,13 +128,12 @@ watch(y, (v) => {
           @mouseenter="show(d, $event)"
           @mouseleave="hover = null"
         >
-          <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 56 : 40" class="w-full" />
-          <span v-if="mode === 'top'" class="type-10-caps absolute top-1 right-1 rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
-          <!-- not a case drop: a small mark for upgrade / PvP wins -->
-          <!-- not a case drop: a quiet dark plate with the source's icon; no colour, so it never outshouts the skin -->
+          <!-- not a case drop: the source's icon on a quiet dark plate, under the skin and its rarity light -->
           <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute top-1 left-1 grid size-6 place-items-center rounded-md" :class="`is-${sourceOf(d.caseSlug)}`" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
             <UiIcon :name="SOURCE_ICON[sourceOf(d.caseSlug) as 'upgrade' | 'pvp']" :size="16" />
           </span>
+          <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 56 : 40" class="w-full" />
+          <span v-if="mode === 'top'" class="type-10-caps absolute top-1 right-1 rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
         </NuxtLink>
       </TransitionGroup>
     </div>
