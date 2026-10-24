@@ -131,7 +131,7 @@ watch(y, (v) => {
           <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 56 : 40" class="w-full" />
           <span v-if="mode === 'top'" class="type-10-caps absolute top-1 right-1 rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
           <!-- not a case drop: a small mark for upgrade / PvP wins -->
-          <!-- not a case drop: a quiet tinted plate with the source's icon in its colour (upgrade orange, PvP red) -->
+          <!-- not a case drop: a quiet dark plate with the source's icon; no colour, so it never outshouts the skin -->
           <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute top-1 left-1 grid size-6 place-items-center rounded-md" :class="`is-${sourceOf(d.caseSlug)}`" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
             <UiIcon :name="SOURCE_ICON[sourceOf(d.caseSlug) as 'upgrade' | 'pvp']" :size="16" />
           </span>
@@ -242,13 +242,8 @@ watch(y, (v) => {
   transform: translateY(-3px);
 }
 .kd-feed-src {
-  --src: var(--color-brand-light);
-  background: color-mix(in srgb, var(--src) 18%, rgb(12 13 16 / 0.85));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--src) 45%, transparent);
-  color: var(--src);
-}
-.kd-feed-src.is-pvp {
-  --src: var(--color-danger);
+  background: rgb(12 13 16 / 0.72);
+  color: var(--color-neutral-13);
 }
 .kd-hovercard {
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.6);
