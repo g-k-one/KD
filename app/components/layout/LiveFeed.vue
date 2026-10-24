@@ -77,7 +77,7 @@ watch(y, (v) => {
         type="button"
         role="radio"
         :aria-checked="mode === m"
-        class="kd-press type-12-caps relative z-[1] flex items-center justify-center gap-1.5 px-2 transition-colors lg:px-3"
+        class="kd-press type-12-caps relative z-[1] flex min-w-9 items-center justify-center gap-1.5 px-2.5 transition-colors lg:px-3"
         :class="mode === m ? 'text-neutral-15' : 'text-neutral-11 hover:text-neutral-13'"
         :title="m === 'top' ? $t('feed.topHint') : undefined"
         @click="mode = m"

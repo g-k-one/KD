@@ -117,8 +117,9 @@
 }
 
 /* Text styles from Figma (size/weight[ caps]). Figma letter-spacing is in %, so 3 → 0.03em. */
+/* the smallest step: 11px (10px was hard to read on phones), still on a 12px line so tight rows keep their height */
 @utility type-10-caps {
-  font-size: 10px;
+  font-size: 11px;
   line-height: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -591,6 +592,14 @@ html body {
       center / contain no-repeat;
     opacity: 0.42;
   }
+}
+
+/* a small control keeps its look while a finger gets ~40px to hit: an invisible ring around it (the element must be
+   positioned — relative / absolute) */
+.kd-hit::after {
+  content: '';
+  position: absolute;
+  inset: var(--hit, -8px);
 }
 
 /* long blocks below the fold: layout and paint are skipped until they come near the screen */

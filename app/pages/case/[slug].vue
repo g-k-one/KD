@@ -183,7 +183,7 @@ if (import.meta.client) {
             :to="`/case/${prevCase.slug}`"
             :aria-label="$t('case.prevCase', { name: prevCase.name })"
             :title="prevCase.name"
-            class="kd-press kd-nb grid size-6 shrink-0 place-items-center rounded-md text-neutral-12 hover:text-neutral-15 md:size-8 md:rounded-lg"
+            class="kd-press kd-nb kd-hit relative grid size-6 shrink-0 place-items-center rounded-md text-neutral-12 hover:text-neutral-15 md:size-8 md:rounded-lg"
           >
             <UiIcon name="chevron-left" :size="18" />
           </NuxtLink>
@@ -193,7 +193,7 @@ if (import.meta.client) {
             :to="`/case/${nextCase.slug}`"
             :aria-label="$t('case.nextCase', { name: nextCase.name })"
             :title="nextCase.name"
-            class="kd-press kd-nb grid size-6 shrink-0 place-items-center rounded-md text-neutral-12 hover:text-neutral-15 md:size-8 md:rounded-lg"
+            class="kd-press kd-nb kd-hit relative grid size-6 shrink-0 place-items-center rounded-md text-neutral-12 hover:text-neutral-15 md:size-8 md:rounded-lg"
           >
             <UiIcon name="chevron-right" :size="18" />
           </NuxtLink>

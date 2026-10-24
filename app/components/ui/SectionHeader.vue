@@ -10,7 +10,7 @@ defineEmits<{ toggle: [] }>()
     <button
       v-if="collapsible"
       type="button"
-      class="type-12-caps flex items-center gap-1 text-neutral-12 hover:text-neutral-15 active:opacity-80"
+      class="kd-hit type-12-caps relative flex items-center gap-1 text-neutral-12 hover:text-neutral-15 active:opacity-80"
       :aria-expanded="!collapsed"
       @click="$emit('toggle')"
     >

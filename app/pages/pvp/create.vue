@@ -80,24 +80,30 @@ async function create() {
             <span :key="mode" class="type-12-regular text-neutral-12 lg:flex-1 lg:text-right">{{ $t(`pvp.modeRule.${mode}`) }}</span>
           </Transition>
         </div>
+        <!-- the cases, in the lobby's and the home page's card language: a section header, 24px cards -->
+        <UiSectionHeader :title="$t('pvp.chooseCases')">
+          <template #actions>
+            <span class="type-12-caps text-neutral-11 tabular-nums">{{ rounds }} / {{ MAX_ROUNDS }}</span>
+          </template>
+        </UiSectionHeader>
         <UiInput id="pvp-search" v-model="search" icon="search" clearable size="l" :placeholder="$t('pvp.search')" />
 
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:gap-3">
           <div
             v-for="c in visible"
             :key="c.slug"
-            class="kd-ctile group flex flex-col items-center gap-2 rounded-3xl border p-3"
+            class="kd-ctile group flex flex-col items-center gap-2 rounded-5xl border p-3 lg:p-4"
             :class="{ 'is-added': !!qty[c.slug] }"
           >
-            <img :src="c.image" :alt="c.name" class="kd-ctile-art h-28 w-full object-contain" />
-            <span class="type-12-caps w-full truncate text-center">{{ c.name }}</span>
-            <UiPrice :amount="c.price" tone="coin" />
+            <img :src="c.image" :alt="c.name" class="kd-ctile-art h-28 w-full object-contain lg:h-36" />
+            <span class="type-12-caps lg:type-14-caps w-full truncate text-center">{{ c.name }}</span>
+            <UiPrice :amount="c.price" size="l" tone="coin" />
             <div v-if="qty[c.slug]" class="flex w-full items-center justify-between gap-1">
-              <UiButton variant="secondary" size="s" icon-only icon="minus" aria-label="−1" @click="add(c.slug, -1)" />
+              <UiButton variant="secondary" size="m" icon-only icon="minus" aria-label="−1" @click="add(c.slug, -1)" />
               <span :key="qty[c.slug]" class="kd-count type-16-caps tabular-nums">{{ qty[c.slug] }}</span>
-              <UiButton size="s" icon-only icon="plus" :aria-label="$t('pvp.add')" @click="add(c.slug, 1)" />
+              <UiButton size="m" icon-only icon="plus" :aria-label="$t('pvp.add')" @click="add(c.slug, 1)" />
             </div>
-            <UiButton v-else variant="secondary" size="s" icon="plus" block @click="add(c.slug, 1)">{{ $t('pvp.add') }}</UiButton>
+            <UiButton v-else variant="secondary" size="m" icon="plus" block @click="add(c.slug, 1)">{{ $t('pvp.add') }}</UiButton>
           </div>
         </div>
       </div>

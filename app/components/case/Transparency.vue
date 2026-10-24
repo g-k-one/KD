@@ -42,7 +42,7 @@ const isLg = useMediaQuery('(min-width: 1024px)')
     <div class="relative order-1 flex items-center gap-2 lg:gap-3">
       <span class="text-xl leading-7 font-bold text-neutral-11 lg:type-28">{{ $t('case.rtp') }}</span>
       <span class="bg-brand-gradient bg-clip-text text-xl leading-7 font-bold text-transparent tabular-nums lg:type-28">{{ pct(data.rtp) }}</span>
-      <UiButton variant="ghost" :size="isLg ? 'l' : 's'" icon="info" icon-only :aria-label="$t('case.rtpInfo')" :aria-expanded="infoOpen" @click="infoOpen = !infoOpen" />
+      <UiButton variant="ghost" :size="isLg ? 'l' : 'm'" icon="info" icon-only :aria-label="$t('case.rtpInfo')" :aria-expanded="infoOpen" @click="infoOpen = !infoOpen" />
       <Transition name="kd-tip">
         <p
           v-if="infoOpen"
@@ -74,7 +74,7 @@ const isLg = useMediaQuery('(min-width: 1024px)')
          Phones: the same pieces in one line on the RTP row, right-aligned. -->
     <button
       type="button"
-      class="relative order-2 flex min-w-0 items-center justify-end gap-2 text-left lg:order-3 lg:w-44 lg:flex-col lg:items-start lg:justify-center lg:gap-1 lg:border-l lg:border-neutral-4 lg:pl-6"
+      class="kd-hit relative order-2 flex min-w-0 items-center justify-end gap-2 text-left lg:order-3 lg:w-44 lg:flex-col lg:items-start lg:justify-center lg:gap-1 lg:border-l lg:border-neutral-4 lg:pl-6"
       :style="{ '--oc': RISK_COLOR[data.risk] }"
       :aria-expanded="riskOpen"
       :aria-label="$t('case.riskInfo')"

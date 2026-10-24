@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BattlesResponse } from '#shared/types/api'
 
-// Battles on the home page (#12, Skin.Club): the same battle row as the lobby — open seats first, then live rooms,
+// Battles on the home page (#12, Skin.Club): the same battle cards as the lobby — open seats first, then live rooms,
 // one tap to join or watch. The lobby's list, fetched and refreshed here on its own; quiet when nothing is going on.
 const { data, refresh } = useFetch<BattlesResponse>('/api/battles', { key: 'home-battles', server: false, lazy: true })
 useIntervalFn(() => document.visibilityState === 'visible' && refresh(), 5000)
@@ -11,8 +11,12 @@ const list = computed(() =>
   (data.value?.battles ?? [])
     .filter((b) => b.status !== 'finished')
     .sort((a, b) => ORDER[a.status] - ORDER[b.status] || b.cost - a.cost)
-    .slice(0, 3),
+    .slice(0, 4),
 )
+// false through hydration (the server renders desktop), then the real width
+const mounted = useMounted()
+const phoneQuery = useMediaQuery('(max-width: 639.98px)')
+const isPhone = computed(() => mounted.value && phoneQuery.value)
 const liveCount = computed(() => (data.value?.battles ?? []).filter((b) => b.status === 'live').length)
 </script>
 
@@ -24,8 +28,8 @@ const liveCount = computed(() => (data.value?.battles ?? []).filter((b) => b.sta
         <NuxtLink to="/pvp" class="type-12-caps flex h-8 items-center gap-0.5 text-neutral-12 hover:text-neutral-15">{{ $t('home.allBattles') }}<UiIcon name="chevron-right" :size="14" /></NuxtLink>
       </template>
     </UiSectionHeader>
-    <div class="flex flex-col gap-2">
-      <PvpRow v-for="b in list" :key="b.id" :battle="b" />
+    <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
+      <PvpCard v-for="b in list" :key="b.id" :battle="b" :compact="isPhone" />
     </div>
   </section>
 </template>

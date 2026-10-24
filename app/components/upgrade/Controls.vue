@@ -231,7 +231,7 @@ const canReset = computed(() => !!(props.input || props.target))
           v-for="p in PRESETS"
           :key="p.m"
           type="button"
-          class="kd-press kd-preset type-14 lg:type-12 absolute top-0 -translate-x-1/2 rounded-md px-1.5 py-0.5 tabular-nums"
+          class="kd-press kd-preset kd-hit type-14 lg:type-12 absolute top-0 -translate-x-1/2 rounded-md px-1.5 py-0.5 tabular-nums"
           :class="{ 'is-on': !!multiplier && Math.abs(multiplier - p.m) < p.m * 0.08 }"
           :style="{ left: `${pos(p.c)}%` }"
           :disabled="busy || !reachable"

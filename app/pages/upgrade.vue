@@ -316,7 +316,7 @@ async function runUpgrade() {
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
     <UiPageBar
-      logo
+      :title="$t('nav.upgrade')"
       :left="barLeft"
     />
 
