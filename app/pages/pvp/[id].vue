@@ -235,17 +235,17 @@ const roundLine = computed(() => {
 
     <!-- Meta line: what a seat costs and what is in the pot · the battle's cases (the current one lit, spent ones dim)
          · who is watching and the round -->
-    <section class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 lg:grid lg:grid-cols-[1fr_auto_1fr]">
-      <div class="type-12-caps flex items-center gap-4 text-neutral-11">
-        <span class="flex items-center gap-2">{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="m" /></span>
-        <span class="flex items-center gap-2">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" class="kd-pot tabular-nums" /></span>
+    <section class="kd-dock flex flex-wrap items-center justify-between gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
+      <div class="type-12-caps flex gap-2 max-lg:w-full">
+        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="m" /></span>
+        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" class="kd-pot tabular-nums" /></span>
       </div>
       <div class="scrollbar-none flex max-w-full items-center gap-2 overflow-x-auto py-1 max-lg:order-last max-lg:w-full">
         <PvpCaseThumb v-for="(r, i) in b.rounds" :key="i" :image="r.image" :name="`${r.name} · ${formatCoins(r.price)}`" size="m" :state="roundState(i)" />
       </div>
-      <div class="type-12-caps flex items-center justify-end gap-4 text-neutral-11 tabular-nums">
-        <span class="flex items-center gap-1.5"><UiIcon name="eye" :size="16" />{{ b.viewers }}</span>
-        <span>{{ $t('pvp.rounds') }} <span class="text-neutral-15">{{ Math.min(b.rounds.length, revealed) }}/{{ b.rounds.length }}</span></span>
+      <div class="type-12-caps flex justify-end gap-2 tabular-nums max-lg:w-full">
+        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center"><UiIcon name="eye" :size="16" /><span class="text-neutral-15">{{ b.viewers }}</span></span>
+        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.rounds') }} <span class="text-neutral-15">{{ Math.min(b.rounds.length, revealed) }}/{{ b.rounds.length }}</span></span>
       </div>
     </section>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
@@ -332,6 +332,28 @@ const roundLine = computed(() => {
 </template>
 
 <style scoped>
+/* the plate is the case page's dock: 24px radius, 12px padding; its chips are 48px high with a 12px radius (24 − 12) */
+.kd-dock {
+  border-radius: 24px;
+  background: var(--color-neutral-2);
+  padding: 12px;
+}
+@media (min-width: 64rem) {
+  .kd-dock {
+    padding-inline: 16px;
+  }
+}
+.kd-dock-stat {
+  display: inline-flex;
+  height: 48px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 12px;
+  background: var(--color-neutral-3);
+  padding: 0 16px;
+  color: var(--color-neutral-11);
+  white-space: nowrap;
+}
 .kd-count {
   clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%);
   background: radial-gradient(circle, rgb(18 183 106 / 0.35), var(--color-neutral-2) 70%);

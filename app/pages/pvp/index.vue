@@ -37,11 +37,17 @@ const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a +
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10">
     <UiPageBar :title="$t('pvp.title')" :left="[{ label: $t('case.allCases'), icon: 'arrow-left', to: '/' }]" />
-    <div class="flex flex-wrap items-center gap-3">
-      <span class="kd-stat type-12-caps"><span class="kd-stat-dot" />{{ counts.live }} {{ $t('pvp.live') }}</span>
-      <span class="kd-stat type-12-caps"><UiIcon name="eye" :size="14" />{{ watching }}</span>
-      <span class="kd-stat type-12-caps max-sm:hidden">{{ $t('pvp.inPlay') }} <UiPrice :amount="inPlay" size="s" tone="coin" /></span>
-      <UiButton icon="plus" size="l" class="ml-auto" to="/pvp/create">{{ $t('pvp.create') }}</UiButton>
+    <!-- The plate, as the case page's dock: live and watching · Create PvP · in play -->
+    <div class="kd-dock flex flex-col gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-3">
+      <div class="flex gap-2 max-lg:order-last">
+        <span class="kd-dock-stat type-12-caps max-lg:flex-1 max-lg:justify-center"><span class="kd-stat-dot" /><span class="text-neutral-15 tabular-nums">{{ counts.live }}</span> {{ $t('pvp.live') }}</span>
+        <span class="kd-dock-stat type-12-caps max-lg:flex-1 max-lg:justify-center"><UiIcon name="eye" :size="16" /><span class="text-neutral-15 tabular-nums">{{ watching }}</span></span>
+        <span class="flex flex-1 lg:hidden"><span class="kd-dock-stat type-12-caps w-full justify-center"><UiPrice :amount="inPlay" size="s" tone="coin" /></span></span>
+      </div>
+      <UiButton icon="plus" size="l" class="w-full lg:h-14 lg:w-80" to="/pvp/create">{{ $t('pvp.create') }}</UiButton>
+      <div class="flex justify-end max-lg:hidden">
+        <span class="kd-dock-stat type-12-caps">{{ $t('pvp.inPlay') }} <UiPrice :amount="inPlay" size="m" tone="coin" /></span>
+      </div>
     </div>
     <!-- Status tabs on the left, the filters on the right; one line on desktop, two on phones -->
     <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -75,15 +81,27 @@ const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a +
     display: none;
   }
 }
-.kd-stat {
-  display: inline-flex;
-  height: 32px;
-  align-items: center;
-  gap: 6px;
-  border-radius: 10px;
+/* the plate is the case page's dock: 24px radius, 12px padding; its chips are 48px high with a 12px radius (24 − 12) */
+.kd-dock {
+  border-radius: 24px;
   background: var(--color-neutral-2);
-  padding: 0 10px;
-  color: var(--color-neutral-12);
+  padding: 12px;
+}
+@media (min-width: 64rem) {
+  .kd-dock {
+    padding-inline: 16px;
+  }
+}
+.kd-dock-stat {
+  display: inline-flex;
+  height: 48px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 12px;
+  background: var(--color-neutral-3);
+  padding: 0 16px;
+  color: var(--color-neutral-11);
+  white-space: nowrap;
 }
 .kd-stat-dot {
   width: 6px;
