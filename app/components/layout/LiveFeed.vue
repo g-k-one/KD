@@ -131,8 +131,10 @@ watch(y, (v) => {
           <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 56 : 40" class="w-full" />
           <span v-if="mode === 'top'" class="type-10-caps absolute top-1 right-1 rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
           <!-- not a case drop: a small mark for upgrade / PvP wins -->
-          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="absolute top-1 left-1 grid size-4 place-items-center rounded-xs bg-neutral-1/80 text-brand-light">
-            <UiIcon :name="SOURCE_ICON[sourceOf(d.caseSlug) as 'upgrade' | 'pvp']" :size="10" />
+          <!-- not a case drop: where it came from, said in words on desktop (an icon alone read as noise) -->
+          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src type-10-caps absolute top-1 left-1 flex items-center gap-1 rounded-xs px-1 py-0.5">
+            <UiIcon :name="SOURCE_ICON[sourceOf(d.caseSlug) as 'upgrade' | 'pvp']" :size="12" />
+            <span class="max-lg:hidden">{{ $t(`nav.${sourceOf(d.caseSlug)}`) }}</span>
           </span>
         </NuxtLink>
       </TransitionGroup>
@@ -239,6 +241,11 @@ watch(y, (v) => {
 .kd-paused-leave-to {
   opacity: 0;
   transform: translateY(-3px);
+}
+.kd-feed-src {
+  background: rgb(12 13 16 / 0.85);
+  color: var(--color-brand-light);
+  line-height: 12px;
 }
 .kd-hovercard {
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.6);
