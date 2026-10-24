@@ -128,8 +128,8 @@ watch(y, (v) => {
           @mouseenter="show(d, $event)"
           @mouseleave="hover = null"
         >
-          <!-- not a case drop: the source's icon on a quiet dark plate, under the skin and its rarity light -->
-          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute top-1 left-1 grid size-6 place-items-center rounded-md" :class="`is-${sourceOf(d.caseSlug)}`" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
+          <!-- not a case drop: the source's icon in orange, no plate, under the skin and its rarity light -->
+          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute top-1.5 left-1.5" :class="`is-${sourceOf(d.caseSlug)}`" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
             <UiIcon :name="SOURCE_ICON[sourceOf(d.caseSlug) as 'upgrade' | 'pvp']" :size="16" />
           </span>
           <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 56 : 40" class="w-full" />
@@ -241,8 +241,7 @@ watch(y, (v) => {
   transform: translateY(-3px);
 }
 .kd-feed-src {
-  background: rgb(12 13 16 / 0.72);
-  color: var(--color-neutral-13);
+  color: var(--color-brand-light);
 }
 .kd-hovercard {
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.6);
