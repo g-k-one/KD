@@ -131,10 +131,9 @@ watch(y, (v) => {
           <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 56 : 40" class="w-full" />
           <span v-if="mode === 'top'" class="type-10-caps absolute top-1 right-1 rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
           <!-- not a case drop: a small mark for upgrade / PvP wins -->
-          <!-- not a case drop: where it came from, said in words on desktop (an icon alone read as noise) -->
-          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src type-10-caps absolute top-1 left-1 flex items-center gap-1 rounded-xs px-1 py-0.5">
+          <!-- not a case drop: a coloured plate with the source's icon (upgrade orange, PvP red) -->
+          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute top-1 left-1 grid size-5 place-items-center rounded-sm" :class="`is-${sourceOf(d.caseSlug)}`" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
             <UiIcon :name="SOURCE_ICON[sourceOf(d.caseSlug) as 'upgrade' | 'pvp']" :size="12" />
-            <span class="max-lg:hidden">{{ $t(`nav.${sourceOf(d.caseSlug)}`) }}</span>
           </span>
         </NuxtLink>
       </TransitionGroup>
@@ -243,9 +242,14 @@ watch(y, (v) => {
   transform: translateY(-3px);
 }
 .kd-feed-src {
-  background: rgb(12 13 16 / 0.85);
-  color: var(--color-brand-light);
-  line-height: 12px;
+  color: var(--color-neutral-15);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.4);
+}
+.kd-feed-src.is-upgrade {
+  background: var(--color-brand-base);
+}
+.kd-feed-src.is-pvp {
+  background: var(--color-danger);
 }
 .kd-hovercard {
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.6);
