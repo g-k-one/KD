@@ -555,7 +555,9 @@
     "vs": "VS",
     "teamWon": "{a} & {b} won",
     "toWin": "to win",
-    "pot": "Pot"
+    "pot": "Pot",
+    "openSeats": "Open seats",
+    "liveAndFinished": "Live & finished"
   },
   "quick": {
     "title": "Top up and keep playing",

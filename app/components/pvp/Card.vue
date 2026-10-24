@@ -1,228 +1,136 @@
 <script setup lang="ts">
 import type { Battle } from '#shared/types/api'
 
-/*
- * Lobby card for one battle (replaces the thin row). Big enough to read from across the room:
- *   top     — mode, status (waiting pulses, live has a red dot and a progress line on the card's edge), viewers
- *   cases   — the case art fanned out with ×qty, spreads on hover
- *   seats   — big avatars; waiting: empty seats pulse "join me"; live: a race bar under every player with
- *             the leader crowned; finished: the winner glows gold, the rest step back
- *   bottom  — the pot, the seat price and the action (Join / Watch / View)
- */
-const props = defineProps<{ battle: Battle }>()
-const now = useClock(500)
+// A battle as a card, in the case card's language: the mode and its status on top, the battle's cases fanned big in
+// the middle, the players (a + on a free seat), then the pot and the one action — Join with the seat's price, Watch,
+// or View. Compact: the same card for a panel's narrow grid (smaller art, the pot beside the action).
+const props = defineProps<{ battle: Battle; compact?: boolean }>()
+const now = useClock(1000)
+const { onPointerMove } = useSpotlight()
 
 const groups = computed(() => groupRounds(props.battle.rounds))
-const fan = computed(() => groups.value.slice(0, 4))
+// up to three cases fan out; the rest are a +N
+const fan = computed(() => groups.value.slice(0, 3))
+const more = computed(() => groups.value.length - fan.value.length)
 const pot = computed(() => props.battle.cost * props.battle.size)
 const clock = computed(() => battleClock(props.battle, now.value))
-const isLive = computed(() => props.battle.status === 'live' && clock.value.round >= 0 && clock.value.round < props.battle.rounds.length)
-const progress = computed(() => (isLive.value ? Math.min(1, (clock.value.round + clock.value.inRound / props.battle.roundMs) / props.battle.rounds.length) : 0))
-const shownRound = computed(() => (props.battle.status === 'finished' ? props.battle.rounds.length : Math.max(0, clock.value.round)))
-const totals = computed(() => slotTotals(props.battle, shownRound.value))
-const maxTotal = computed(() => Math.max(1, ...totals.value))
-const leader = computed(() => {
-  if (props.battle.status === 'finished') return props.battle.winnerSlot
-  if (!isLive.value || !Math.max(...totals.value)) return null
-  return totals.value.indexOf(Math.max(...totals.value))
+const round = computed(() => Math.min(props.battle.rounds.length, Math.max(1, clock.value.round + 1)))
+const status = computed(() => {
+  const b = props.battle
+  if (b.status === 'waiting') return { cls: 'text-warning', dot: 'bg-warning', text: `${b.slots.filter((s) => s.player).length}/${b.size}` }
+  if (b.status === 'live') return { cls: 'text-danger', dot: 'bg-danger kd-live-dot', text: `${round.value}/${b.rounds.length}` }
+  return { cls: 'text-neutral-11', dot: 'bg-neutral-8', text: '' }
 })
-const joined = computed(() => props.battle.slots.filter((s) => s.player).length)
 const action = computed(() => ({ waiting: 'pvp.join', live: 'pvp.watch', finished: 'pvp.view' })[props.battle.status])
 </script>
 
 <template>
-  <NuxtLink :to="`/pvp/${battle.id}`" class="kd-bcard kd-press group relative flex flex-col gap-4 overflow-hidden rounded-4xl p-4" :class="`is-${battle.status}`">
-    <!-- live: the battle's progress runs along the top edge -->
-    <span v-if="isLive" class="kd-bcard-progress absolute inset-x-0 top-0 h-0.5 origin-left" :style="{ transform: `scaleX(${progress})` }" />
-
-    <div class="flex items-center gap-2">
-      <span class="type-14-caps rounded-lg bg-neutral-4 px-2 py-1">{{ $t(`pvp.modes.${battle.size}`) }}</span>
-      <span v-if="battle.status === 'waiting'" class="kd-bstatus is-waiting type-12-caps">{{ $t('pvp.statusWaiting', { joined, size: battle.size }) }}</span>
-      <span v-else-if="battle.status === 'live'" class="kd-bstatus is-live type-12-caps"><span class="kd-live-dot" />{{ $t('pvp.statusLive', { round: Math.min(battle.rounds.length, shownRound + 1), rounds: battle.rounds.length }) }}</span>
-      <span v-else class="kd-bstatus type-12-caps text-neutral-11">{{ $t('pvp.statusFinished') }}</span>
-      <span v-if="battle.viewers" class="type-12 ml-auto flex items-center gap-1 text-neutral-11 tabular-nums"><UiIcon name="eye" :size="14" />{{ battle.viewers }}</span>
+  <NuxtLink
+    :to="`/pvp/${battle.id}`"
+    class="kd-bcard kd-spotlight group relative flex flex-col gap-3 rounded-5xl border"
+    :class="[compact ? 'p-3' : 'p-4', battle.status === 'finished' && 'is-finished']"
+    @pointermove="onPointerMove"
+  >
+    <!-- the mode and where the battle is -->
+    <div class="flex items-center justify-between gap-2">
+      <span :class="compact ? 'type-14-caps' : 'type-16-caps'">{{ $t(`pvp.modeName.${battle.mode}`) }}</span>
+      <span class="type-12-caps flex items-center gap-1.5 tabular-nums" :class="status.cls">
+        <span class="size-1.5 rounded-full" :class="status.dot" />
+        {{ $t(`pvp.${battle.status}`) }}<template v-if="status.text"> · {{ status.text }}</template>
+      </span>
     </div>
 
     <!-- the cases, fanned -->
-    <div class="relative flex h-24 items-center justify-center">
-      <span
+    <div class="relative flex items-center justify-center" :class="compact ? 'h-24' : 'h-32 lg:h-36'">
+      <img
         v-for="(g, i) in fan"
         :key="`${g.slug}-${g.from}`"
-        class="kd-fan absolute"
-        :class="isLive && clock.round >= g.from && clock.round < g.from + g.qty && 'is-current'"
-        :style="{ '--i': i - (fan.length - 1) / 2, zIndex: 10 - Math.abs(i - (fan.length - 1) / 2) * 2 }"
-      >
-        <img :src="g.image" :alt="g.name" class="size-24 object-contain" :class="battle.status === 'finished' && 'opacity-60'" draggable="false" />
-        <span v-if="g.qty > 1" class="type-10-caps absolute right-1 bottom-2 rounded-sm bg-neutral-1/80 px-1 py-0.5">×{{ g.qty }}</span>
+        :src="g.image"
+        :alt="g.name"
+        draggable="false"
+        class="kd-bcard-case object-contain"
+        :class="compact ? 'size-20' : 'size-28 lg:size-32'"
+        :style="{ '--i': i - (fan.length - 1) / 2, zIndex: 3 - Math.abs(i - (fan.length - 1) / 2) * 2 }"
+      />
+      <span class="type-12 absolute right-0 bottom-0 flex items-center gap-1 rounded-md bg-neutral-3 px-2 py-1 text-neutral-12 tabular-nums">
+        <UiIcon name="cases" :size="12" class="text-neutral-10" />{{ battle.rounds.length }}<template v-if="more > 0"> · +{{ more }}</template>
       </span>
-      <span v-if="groups.length > fan.length" class="type-12 absolute right-0 bottom-0 rounded-md bg-neutral-5 px-2 py-0.5">+{{ groups.length - fan.length }}</span>
     </div>
-    <span class="type-12-regular -mt-3 text-center text-neutral-11">{{ $t('pvp.roundsN', { n: battle.rounds.length }) }}</span>
 
-    <!-- seats -->
-    <div class="grid gap-2" :style="{ gridTemplateColumns: `repeat(${battle.size}, minmax(0, 1fr))` }">
-      <div v-for="s in battle.slots" :key="s.slot" class="kd-seat flex min-w-0 flex-col items-center gap-1.5" :class="[leader === s.slot && 'is-lead', battle.status === 'finished' && leader !== s.slot && 'is-out']">
-        <span v-if="s.player" class="kd-seat-ava relative size-12 rounded-full">
-          <img :src="s.player.avatar" alt="" class="size-full rounded-full object-cover" :class="s.player.bot && 'scale-75 object-contain'" />
-          <UiIcon v-if="leader === s.slot" name="crown" :size="16" class="kd-crown absolute -top-3 left-1/2 -translate-x-1/2 text-coin" />
+    <!-- the players: × between seats, VS between the teams, + on a free seat -->
+    <div class="flex items-center justify-center gap-1">
+      <template v-for="(s, i) in battle.slots" :key="s.slot">
+        <span v-if="i > 0" class="type-12 text-neutral-9" aria-hidden="true">{{ battle.mode === 'team' ? (i === 2 ? $t('pvp.vs') : '+') : '×' }}</span>
+        <span v-if="s.player" class="size-8 overflow-hidden rounded-full bg-neutral-7 ring-2 ring-neutral-2" :title="s.player.nickname">
+          <img :src="s.player.avatar" alt="" class="size-full object-cover" :class="s.player.bot && 'scale-75 object-contain'" />
         </span>
-        <span v-else class="kd-seat-empty grid size-12 place-items-center rounded-full text-neutral-11"><UiIcon name="plus" :size="18" /></span>
-        <span class="type-12 max-w-full truncate" :class="s.player ? 'text-neutral-14' : 'text-neutral-10'">{{ s.player?.nickname ?? $t('pvp.freeSeat') }}</span>
-        <template v-if="battle.status !== 'waiting'">
-          <span class="h-1 w-full overflow-hidden rounded-full bg-neutral-4">
-            <span class="kd-race block h-full rounded-full" :style="{ width: `${(totals[s.slot]! / maxTotal) * 100}%` }" />
-          </span>
-          <UiPrice :amount="totals[s.slot] ?? 0" size="s" :tone="leader === s.slot ? 'coin' : 'default'" />
-        </template>
-      </div>
+        <span v-else class="grid size-8 place-items-center rounded-full border border-dashed border-neutral-8 text-neutral-11">
+          <UiIcon name="plus" :size="14" />
+        </span>
+      </template>
     </div>
 
-    <div class="mt-auto flex items-end justify-between gap-3">
-      <div class="flex flex-col gap-0.5">
-        <span class="type-10-caps text-neutral-11">{{ $t('pvp.value') }}</span>
-        <UiPrice :amount="pot" size="xl" />
+    <!-- the pot and the action -->
+    <div class="flex items-center gap-2" :class="!compact && 'flex-col items-stretch'">
+      <div class="flex items-center justify-between gap-2" :class="compact && 'min-w-0 flex-1 flex-col items-start gap-0'">
+        <span class="type-12-caps text-neutral-11">{{ $t('pvp.pot') }}</span>
+        <UiPrice :amount="pot" :size="compact ? 'm' : 'l'" tone="coin" />
       </div>
-      <span class="kd-btn type-12-caps inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
+      <span class="kd-btn type-12-caps inline-flex h-10 items-center justify-center gap-1 rounded-lg" :class="[battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary', compact ? 'px-4' : 'w-full']">
         {{ $t(action) }}
-        <UiPrice v-if="battle.status === 'waiting'" :amount="battle.cost" size="s" tone="inverse" />
+        <span v-if="battle.status === 'waiting'" class="btn-value"><UiPrice :amount="battle.cost" size="s" tone="inverse" /></span>
       </span>
     </div>
+
   </NuxtLink>
 </template>
 
 <style scoped>
 .kd-bcard {
   background: var(--color-neutral-2);
+  border-color: var(--color-neutral-2);
   transition:
-    background-color var(--dur-base) var(--ease-out),
-    translate var(--dur-base) var(--ease-spring),
-    box-shadow var(--dur-base) var(--ease-out);
+    border-color var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-spring);
 }
-.kd-bcard.is-live {
-  background: linear-gradient(180deg, rgb(240 68 56 / 0.08), var(--color-neutral-2) 45%);
+.kd-bcard.is-finished .kd-bcard-case {
+  opacity: 0.55;
 }
-.kd-bcard.is-waiting {
-  background: linear-gradient(180deg, rgb(255 95 31 / 0.08), var(--color-neutral-2) 45%);
+/* the fan: the middle case in front, the others turned out to the sides */
+.kd-bcard-case {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: calc(-50% + var(--i) * 38%) -50%;
+  rotate: calc(var(--i) * 10deg);
+  scale: calc(1 - max(var(--i), -1 * var(--i)) * 0.12);
+  filter: drop-shadow(0 8px 14px rgb(0 0 0 / 0.45));
+  transition: translate var(--dur-slow) var(--ease-spring), rotate var(--dur-slow) var(--ease-spring);
 }
 @media (hover: hover) {
   .kd-bcard:hover {
-    translate: 0 -3px;
-    background-color: var(--color-neutral-3);
-    box-shadow: 0 16px 32px -16px rgb(0 0 0 / 0.6);
+    border-color: var(--color-neutral-6);
   }
-  .kd-bcard:hover .kd-fan {
-    translate: calc(var(--i) * 56px) -4px;
-    rotate: calc(var(--i) * 9deg);
+  .kd-bcard:hover .kd-bcard-case {
+    translate: calc(-50% + var(--i) * 46%) -52%;
+    rotate: calc(var(--i) * 14deg);
   }
   .kd-bcard:hover .kd-btn-primary {
     background-position: 100% 0;
   }
-}
-.kd-bcard-progress {
-  background: linear-gradient(90deg, var(--color-danger), var(--color-brand-light));
-  transition: transform 500ms linear;
-}
-.kd-bstatus {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.kd-bstatus.is-waiting {
-  color: var(--color-warning);
-  animation: kd-wait 1.8s var(--ease-in-out) infinite;
-}
-@keyframes kd-wait {
-  50% {
-    opacity: 0.55;
+  .kd-bcard:hover .kd-btn-secondary {
+    background: var(--color-neutral-7);
   }
 }
-.kd-bstatus.is-live {
-  color: var(--color-danger);
+.kd-bcard:active {
+  transform: scale(0.99);
 }
 .kd-live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background: var(--color-danger);
   animation: kd-live 1.4s ease-in-out infinite;
 }
 @keyframes kd-live {
   50% {
     opacity: 0.3;
-    scale: 1.6;
   }
-}
-/* Case fan */
-.kd-fan {
-  translate: calc(var(--i) * 44px) 0;
-  rotate: calc(var(--i) * 6deg);
-  filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.5));
-  transition:
-    translate var(--dur-slow) var(--ease-spring),
-    rotate var(--dur-slow) var(--ease-spring),
-    scale var(--dur-slow) var(--ease-spring);
-}
-/* The case being opened right now bobs a little in front */
-.kd-fan.is-current {
-  z-index: 20 !important;
-  animation: kd-fan-bob 1.2s var(--ease-in-out) infinite;
-}
-@keyframes kd-fan-bob {
-  50% {
-    scale: 1.1;
-  }
-}
-/* Seats */
-.kd-seat-ava {
-  background: var(--color-neutral-6);
-  box-shadow: 0 0 0 2px var(--color-neutral-2);
-  transition:
-    box-shadow var(--dur-base) var(--ease-out),
-    scale var(--dur-base) var(--ease-spring);
-}
-.kd-seat.is-lead .kd-seat-ava {
-  scale: 1.08;
-  box-shadow:
-    0 0 0 2px var(--color-coin),
-    0 0 18px -2px rgb(253 176 34 / 0.6);
-}
-.kd-seat.is-out {
-  opacity: 0.45;
-  filter: grayscale(0.7);
-}
-.kd-crown {
-  animation: kd-crown 2s var(--ease-in-out) infinite;
-}
-@keyframes kd-crown {
-  50% {
-    translate: -50% -2px;
-  }
-}
-.kd-seat-empty {
-  position: relative;
-  background: rgb(255 95 31 / 0.1);
-  color: var(--color-brand-light);
-  animation: kd-seat-call 1.8s var(--ease-in-out) infinite;
-}
-.kd-seat-empty::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: rgb(255 95 31 / 0.14);
-  opacity: 0;
-  animation: kd-glow-pulse 1.8s var(--ease-in-out) infinite;
-}
-@keyframes kd-seat-call {
-  50% {
-    scale: 1.06;
-  }
-}
-.kd-race {
-  background: linear-gradient(90deg, var(--color-neutral-9), var(--color-neutral-13));
-  transition: width 600ms var(--ease-out);
-}
-.kd-seat.is-lead .kd-race {
-  background: linear-gradient(90deg, var(--color-coin), #ffe58a);
 }
 </style>
