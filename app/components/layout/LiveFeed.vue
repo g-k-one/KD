@@ -131,9 +131,9 @@ watch(y, (v) => {
           <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 56 : 40" class="w-full" />
           <span v-if="mode === 'top'" class="type-10-caps absolute top-1 right-1 rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
           <!-- not a case drop: a small mark for upgrade / PvP wins -->
-          <!-- not a case drop: a coloured plate with the source's icon (upgrade orange, PvP red) -->
-          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute top-1 left-1 grid size-5 place-items-center rounded-sm" :class="`is-${sourceOf(d.caseSlug)}`" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
-            <UiIcon :name="SOURCE_ICON[sourceOf(d.caseSlug) as 'upgrade' | 'pvp']" :size="12" />
+          <!-- not a case drop: a quiet tinted plate with the source's icon in its colour (upgrade orange, PvP red) -->
+          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute top-1 left-1 grid size-6 place-items-center rounded-md" :class="`is-${sourceOf(d.caseSlug)}`" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
+            <UiIcon :name="SOURCE_ICON[sourceOf(d.caseSlug) as 'upgrade' | 'pvp']" :size="16" />
           </span>
         </NuxtLink>
       </TransitionGroup>
@@ -242,14 +242,13 @@ watch(y, (v) => {
   transform: translateY(-3px);
 }
 .kd-feed-src {
-  color: var(--color-neutral-15);
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.4);
-}
-.kd-feed-src.is-upgrade {
-  background: var(--color-brand-base);
+  --src: var(--color-brand-light);
+  background: color-mix(in srgb, var(--src) 18%, rgb(12 13 16 / 0.85));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--src) 45%, transparent);
+  color: var(--src);
 }
 .kd-feed-src.is-pvp {
-  background: var(--color-danger);
+  --src: var(--color-danger);
 }
 .kd-hovercard {
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.6);
