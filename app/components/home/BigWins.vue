@@ -128,17 +128,17 @@ provideForge(fxHost)
 }
 /* a soft contact shadow under the skin: it stands in the card instead of floating in the air */
 .kd-win-shadow {
-  bottom: 0;
+  bottom: -6px;
   left: 50%;
   width: 72%;
   height: 18px;
   translate: -50% 0;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(0 0 0 / 0.55), transparent);
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.35), transparent);
 }
 @media (min-width: 64rem) {
   .kd-win-shadow {
-    bottom: 2px;
+    bottom: -6px;
     height: 24px;
   }
 }
