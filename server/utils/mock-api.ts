@@ -11,6 +11,9 @@ import {
   getCaseSections,
   getFeed,
   getHistory,
+  getHomeLayout,
+  resetHomeLayout,
+  setHomeLayout,
   getBigWins,
   getBonuses,
   openDaily,
@@ -52,6 +55,10 @@ export async function mockRoute(method: string, path: string, body: Body, query:
   if (m === 'POST' && path === '/api/auth/logout') return { ok: true }
 
   if (m === 'GET' && path === '/api/cases') return { sections: getCaseSections() }
+  // the admin's home layout (the prototype edits it in place on home)
+  if (m === 'GET' && path === '/api/admin/home-layout') return getHomeLayout()
+  if (m === 'PUT' && path === '/api/admin/home-layout') return setHomeLayout(body.layout ?? {})
+  if (m === 'POST' && path === '/api/admin/home-layout/reset') return resetHomeLayout()
   if (m === 'GET' && (match = path.match(/^\/api\/cases\/([\w-]+)$/))) return { case: getCase(match[1]!) }
   if (m === 'POST' && (match = path.match(/^\/api\/cases\/([\w-]+)\/open$/))) {
     if (!body.demo) authed()

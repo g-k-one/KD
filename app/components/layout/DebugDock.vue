@@ -86,6 +86,13 @@ async function newBattle(live: boolean) {
   open.value = false
   await navigateTo(`/pvp/${res.battle.id}`)
 }
+// Home: edit the admin's home layout in place (rows, scenes, card kinds)
+const homeLayout = useHomeLayout()
+async function editHome() {
+  homeLayout.editing.value = true
+  open.value = false
+  await navigateTo('/')
+}
 const testFeel = () => {
   sfx.reveal(4)
   haptics.jackpot()
@@ -132,6 +139,12 @@ const resetDaily = async () => {
           <span class="type-16-caps">Debug</span>
           <button type="button" class="type-12-caps text-neutral-12 hover:text-neutral-15" @click="post({ clear: true })">Clear all</button>
         </div>
+
+        <section class="flex flex-col gap-2">
+          <span class="type-12-caps text-neutral-12">Home</span>
+          <UiButton size="s" variant="secondary" icon="sliders" block @click="editHome">Edit home layout</UiButton>
+          <p class="type-12-regular text-neutral-11">Rows: order, scene, hide. Cases: plain, full scene, 2×1, 1×2.</p>
+        </section>
 
         <section class="flex flex-col gap-2">
           <div class="flex items-center justify-between">

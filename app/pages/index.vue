@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CaseSummary, CasesResponse } from '#shared/types/api'
+import type { CaseSection, CaseSummary, CasesResponse } from '#shared/types/api'
 
 const { data } = await useFetch<CasesResponse>('/api/cases', { key: 'cases' })
 const filters = useCaseFilters()
@@ -24,14 +24,16 @@ useIntersectionObserver(filtersSentinel, ([e]) => (filtersStuck.value = !!e && !
 const clock = useClock(1000)
 const allCases = computed(() => (data.value?.sections ?? []).flatMap((s) => s.cases))
 
-// --- Under review: a bento grid (?grid=bento). Desktop only: a case with a wide picture takes a 2×1 cell, one with a
-// tall picture a 1×2 cell, each showing that picture; shaped cases go first so the rows fill. Phones keep the even grid.
-const route = useRoute()
-const bento = computed(() => route.query.grid === 'bento')
-// a tall cell needs a second row to stretch into: a one-row section (5 cases or fewer) keeps it square
-const shapeOf = (c: CaseSummary, cases: CaseSummary[]) =>
-  !bento.value ? undefined : c.art?.wide ? ('wide' as const) : c.art?.tall && cases.length > 5 ? ('tall' as const) : undefined
+// Bento cells from the home layout (desktop): a case set to wide takes a 2×1 cell, tall a 1×2 cell, each showing its
+// shaped picture; they go first so the rows fill. Phones keep the even grid; a themed row keeps its scene's look.
+// A tall cell needs a second row to stretch into: a one-row section (5 cases or fewer) keeps it square.
+const shapeOf = (c: CaseSummary, s: CaseSection) =>
+  s.theme ? undefined : c.card === 'wide' && c.art?.wide ? ('wide' as const) : c.card === 'tall' && c.art?.tall && s.cases.length > 5 ? ('tall' as const) : undefined
 const SHAPE_CELL = { wide: 'lg:order-first lg:col-span-2', tall: 'lg:order-first lg:row-span-2' } as const
+
+// The home layout editor (prototype, opened from the debug dock): rows and cards are edited where they stand
+const homeLayout = useHomeLayout()
+onMounted(() => watch(homeLayout.editing, (on) => on && homeLayout.load(), { immediate: true }))
 
 const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 </script>
@@ -69,31 +71,39 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
           :collapsed="collapsed[s.id]"
           @toggle="collapsed[s.id] = !collapsed[s.id]"
         >
+          <template v-if="homeLayout.editing.value" #actions>
+            <HomeRowControls :id="s.id" class="max-lg:hidden" />
+          </template>
           <!-- the weekly picks say when they change -->
-          <template v-if="s.endsAt" #actions>
+          <template v-else-if="s.endsAt" #actions>
             <span class="type-12-caps flex shrink-0 items-center gap-1.5 text-neutral-11">
               <UiIcon name="refresh" :size="14" /><span class="max-sm:hidden">{{ $t('home.newPicks') }}</span><span class="tabular-nums text-neutral-13">{{ countdownLong(s.endsAt, clock) }}</span>
             </span>
           </template>
         </UiSectionHeader>
+        <!-- phones: the row's tools get their own line, the title keeps the header -->
+        <HomeRowControls v-if="homeLayout.editing.value" :id="s.id" class="lg:hidden" />
         <div
           v-show="!collapsed[s.id]"
-          class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5"
-          :class="bento && 'lg:grid-flow-dense'"
+          class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-flow-dense xl:grid-cols-5"
         >
           <HomeCaseCard
             v-for="c in s.cases"
             :key="c.id"
             :item="c"
-            :shape="shapeOf(c, s.cases)"
+            :shape="shapeOf(c, s)"
             :look="s.theme"
-            :class="shapeOf(c, s.cases) && SHAPE_CELL[shapeOf(c, s.cases)!]"
-          />
+            :class="shapeOf(c, s) && SHAPE_CELL[shapeOf(c, s)!]"
+          >
+            <HomeCardKindPicker v-if="homeLayout.editing.value" :item="c" :themed="!!s.theme" />
+          </HomeCaseCard>
         </div>
       </section>
       <HomeContinue v-if="i === 0" :cases="allCases" />
       <HomeLiveBattles v-if="i === Math.min(2, sections.length - 1)" />
       </template>
+
+      <ClientOnly><HomeLayoutBar v-if="homeLayout.editing.value" /></ClientOnly>
 
       <UiEmptyState v-if="!sections.length" :text="$t('cases.empty')">
         <UiButton variant="secondary" @click="filters.reset()">{{ $t('filters.reset') }}</UiButton>

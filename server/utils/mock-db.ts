@@ -8,6 +8,7 @@ import type {
   CaseItem,
   CaseOdds,
   CaseSection,
+  HomeLayout,
   CaseSummary,
   FeedDrop,
   FeedResponse,
@@ -280,15 +281,58 @@ export function getBigWins() {
 
 const toSummary = ({ items: _i, odds: _o, oddsVersion: _v, kurwadrop: _k, ...s }: CaseDetails): CaseSummary => ({ ...s })
 
+// --- Home layout (an admin setting): rows in order, their scenes, each case's card ----------------------------
+
+const DEFAULT_HOME_LAYOUT: HomeLayout = {
+  sections: [
+    { id: 'hot', title: 'Hot right now' },
+    { id: 'weekly', title: 'Weekly picks', theme: 'coop' },
+    { id: 'featured', title: 'Featured cases' },
+    { id: 'polish-classics', title: 'Polish classics' },
+  ],
+  cards: { mafia: 'full', 'babcias-box': 'full', 'vodka-drop': 'full' },
+}
+let homeLayout: HomeLayout = structuredClone(DEFAULT_HOME_LAYOUT)
+
+export const getHomeLayout = () => ({ layout: homeLayout })
+export function resetHomeLayout() {
+  homeLayout = structuredClone(DEFAULT_HOME_LAYOUT)
+  return getHomeLayout()
+}
+/** Takes the admin's layout as far as it makes sense: known rows only (any left out go to the end), known kinds only */
+export function setHomeLayout(next: Partial<HomeLayout>) {
+  const known = DEFAULT_HOME_LAYOUT.sections
+  const rows = (next.sections ?? []).filter((r, i, all) => known.some((k) => k.id === r.id) && all.findIndex((o) => o.id === r.id) === i)
+  const sections = [...rows, ...known.filter((k) => !rows.some((r) => r.id === k.id))].map((r) => {
+    const base = known.find((k) => k.id === r.id)!
+    return { id: r.id, title: base.title, hidden: !!r.hidden || undefined, theme: r.theme === 'coop' ? ('coop' as const) : null }
+  })
+  const KINDS: string[] = ['full', 'wide', 'tall']
+  const cards = Object.fromEntries(
+    Object.entries(next.cards ?? {}).filter(([slug, kind]) => CASES.some((c) => c.slug === slug) && KINDS.includes(kind)),
+  ) as HomeLayout['cards']
+  homeLayout = { sections, cards }
+  return getHomeLayout()
+}
+
 export function getCaseSections(): CaseSection[] {
-  const all = CASES.map(toSummary)
+  const all = CASES.map(toSummary).map((c) => {
+    const card = homeLayout.cards[c.slug]
+    return card && card !== 'standard' ? { ...c, card } : c
+  })
   const pick = (slugs: string[]) => slugs.map((s) => all.find((c) => c.slug === s)!)
-  return [
-    { id: 'hot', title: 'Hot right now', cases: pick(['pieklo', 'mafia', 'wiosna']) },
-    weeklyPicks(all),
-    { id: 'featured', title: 'Featured cases', cases: all.filter((c) => !['pieklo', 'mafia', 'wiosna'].includes(c.slug)) },
-    { id: 'polish-classics', title: 'Polish classics', cases: pick(['babcias-box', 'vodka-drop', 'golden-kielbasa', 'kurwa-classic', 'pierogi-pack']) },
-  ]
+  const rows: Record<string, () => CaseSection> = {
+    hot: () => ({ id: 'hot', title: 'Hot right now', cases: pick(['pieklo', 'mafia', 'wiosna']) }),
+    weekly: () => weeklyPicks(all),
+    featured: () => ({ id: 'featured', title: 'Featured cases', cases: all.filter((c) => !['pieklo', 'mafia', 'wiosna'].includes(c.slug)) }),
+    'polish-classics': () => ({ id: 'polish-classics', title: 'Polish classics', cases: pick(['babcias-box', 'vodka-drop', 'golden-kielbasa', 'kurwa-classic', 'pierogi-pack']) }),
+  }
+  return homeLayout.sections
+    .filter((r) => !r.hidden)
+    .map((r) => {
+      const row = rows[r.id]!()
+      return r.theme ? { ...row, theme: r.theme } : row
+    })
 }
 
 // Weekly picks (#36, Casehug's "new bestsellers in 6d"): five cases that change every Monday 00:00 UTC,
@@ -298,7 +342,7 @@ function weeklyPicks(all: CaseSummary[]): CaseSection {
   const ORIGIN = Date.UTC(1970, 0, 5)
   const week = Math.floor((Date.now() - ORIGIN) / WEEK_MS)
   const cases = [...all].sort((a, b) => hashStr(`${a.slug}:${week}`) - hashStr(`${b.slug}:${week}`)).slice(0, 5)
-  return { id: 'weekly', title: 'Weekly picks', theme: 'coop', cases, endsAt: new Date(ORIGIN + (week + 1) * WEEK_MS).toISOString() }
+  return { id: 'weekly', title: 'Weekly picks', cases, endsAt: new Date(ORIGIN + (week + 1) * WEEK_MS).toISOString() }
 }
 
 export function getCase(slug: string): CaseDetails {

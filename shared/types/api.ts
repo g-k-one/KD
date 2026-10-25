@@ -29,6 +29,8 @@ export interface CaseSummary {
   payback: number
   /** Biggest multiplier (drop price / case price) this case paid in the last 24 h; null if nothing notable */
   bestToday: number | null
+  /** How home shows this case's card (the admin's home layout); the plain card when absent */
+  card?: HomeCardKind
   /** Extra art: a wide picture (a 2×1 bento cell), a tall one (a 1×2 cell), and/or a full scene that fills the card */
   art?: { wide?: string; tall?: string; full?: string }
   /** A limited case: how many there were and how many are left. Every open spends one; at 0 it is sold out. */
@@ -55,7 +57,20 @@ export interface CaseSection {
   /** A section with a clock: when the weekly picks rotate */
   endsAt?: string
   /** A themed row: its cards drop their plates and sit in a scene drawn behind the row (coop: straw nests) */
-  theme?: 'coop'
+  theme?: SectionTheme
+}
+
+/** A case card on home: plain, its full scene, or a bigger bento cell — wide 2×1 or tall 1×2 (desktop). Each needs its art. */
+export type HomeCardKind = 'standard' | 'full' | 'wide' | 'tall'
+/** A row's scene behind its cards */
+export type SectionTheme = 'coop'
+
+/** The home layout an admin sets. GET / PUT /api/admin/home-layout; POST /api/admin/home-layout/reset. */
+export interface HomeLayout {
+  /** Every row in its order; a hidden row stays listed so it can come back */
+  sections: Array<{ id: string; title: string; hidden?: boolean; theme?: SectionTheme | null }>
+  /** Card kind per case slug, the same in every row; a case left out is plain */
+  cards: Record<string, HomeCardKind>
 }
 
 export interface CasesResponse {

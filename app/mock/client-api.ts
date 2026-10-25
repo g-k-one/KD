@@ -24,6 +24,28 @@ function writeSession(on: boolean) {
 
 let loggedIn = readSession()
 
+// The admin's home layout outlives a reload here (there is no server to keep it): saved on every change,
+// handed back to the mock before the first request
+const LAYOUT_KEY = 'kd_home_layout'
+let layoutRestored = false
+async function restoreLayout() {
+  layoutRestored = true
+  try {
+    const saved = localStorage.getItem(LAYOUT_KEY)
+    if (saved) await mockRoute('PUT', '/api/admin/home-layout', { layout: JSON.parse(saved) }, {}, { loggedIn })
+  } catch {
+    // storage blocked or a stale shape: the default layout stays
+  }
+}
+function saveLayout(data: unknown, path: string) {
+  try {
+    if (path.endsWith('/reset')) localStorage.removeItem(LAYOUT_KEY)
+    else localStorage.setItem(LAYOUT_KEY, JSON.stringify((data as { layout: unknown }).layout))
+  } catch {
+    // storage blocked: the layout lives until the reload
+  }
+}
+
 export async function handleMockRequest(
   url: string,
   opts: { method?: string; body?: unknown; query?: Record<string, unknown>; params?: Record<string, unknown> } = {},
@@ -34,6 +56,7 @@ export async function handleMockRequest(
   for (const [k, v] of Object.entries({ ...opts.params, ...opts.query })) if (v != null) query[k] = String(v)
   // no fake latency: the artifact should feel instant (still async, like the network)
   await Promise.resolve()
+  if (!layoutRestored) await restoreLayout()
 
   if (method === 'POST' && path === '/api/auth/login') {
     loggedIn = true
@@ -47,6 +70,7 @@ export async function handleMockRequest(
   try {
     // JSON copy, not structuredClone: bodies can hold reactive arrays (Proxy), which structuredClone rejects
     const data = await mockRoute(method, path, JSON.parse(JSON.stringify(opts.body ?? {})) as Record<string, unknown>, query, { loggedIn })
+    if (method !== 'GET' && path.startsWith('/api/admin/home-layout')) saveLayout(data, path)
     // Behave like the network: hand the UI a copy, never the mock's live state objects
     return JSON.parse(JSON.stringify(data))
   } catch (e) {

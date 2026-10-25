@@ -8,8 +8,8 @@ import type { RigPlayback } from '~/utils/spineStage'
 /** look: a themed row's look — coop drops the plate and sits the case in a nest */
 const props = defineProps<{ item: CaseSummary; shape?: 'wide' | 'tall'; look?: 'coop' }>()
 const shaped = computed(() => (props.shape ? props.item.art?.[props.shape] : undefined))
-/** A full-art card: the case's scene fills the card (a themed row and a bento cell keep their own art) */
-const full = computed(() => (!props.look && !shaped.value ? props.item.art?.full : undefined))
+/** A full-art card (the layout says so and the art is there): the scene fills the card; a themed row and a bento cell keep their own art */
+const full = computed(() => (!props.look && !shaped.value && props.item.card === 'full' ? props.item.art?.full : undefined))
 const { onPointerMove } = useSpotlight()
 const { t } = useI18n()
 const session = useSessionStore()
@@ -168,6 +168,8 @@ function onArtLeave() {
     <UiIcon name="demo" :size="12" />
     {{ $t('case.tryFree') }}
   </NuxtLink>
+  <!-- tools laid over the card (the home layout editor) -->
+  <slot />
   </div>
 </template>
 

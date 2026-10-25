@@ -7,7 +7,8 @@
 const model = defineModel<T>({ required: true })
 const props = withDefaults(
   defineProps<{
-    options: Array<{ value: T; label?: string; icon?: string; title?: string }>
+    /** an option can be off on its own (disabled), the rest stay live */
+    options: Array<{ value: T; label?: string; icon?: string; title?: string; disabled?: boolean }>
     size?: 's' | 'm'
     disabled?: boolean
     /** stretch the options across the full width */
@@ -33,9 +34,9 @@ const index = computed(() => Math.max(0, props.options.findIndex((o) => o.value 
       role="radio"
       :aria-checked="model === o.value"
       :title="o.title"
-      :disabled="disabled"
+      :disabled="disabled || o.disabled"
       class="kd-press relative z-[1] flex items-center justify-center gap-1.5 tabular-nums transition-colors"
-      :class="[size === 'm' ? 'type-14 h-10 min-w-10 rounded-lg px-3' : 'type-12 h-8 min-w-8 rounded-md px-2', model === o.value ? 'text-neutral-15' : 'text-neutral-11 hover:text-neutral-15']"
+      :class="[size === 'm' ? 'type-14 h-10 min-w-10 rounded-lg px-3' : 'type-12 h-8 min-w-8 rounded-md px-2', model === o.value ? 'text-neutral-15' : o.disabled ? 'text-neutral-8' : 'text-neutral-11 hover:text-neutral-15']"
       @click="model = o.value"
     >
       <UiIcon v-if="o.icon" :name="o.icon" :size="size === 'm' ? 18 : 16" />
