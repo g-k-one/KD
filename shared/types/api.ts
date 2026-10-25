@@ -29,8 +29,6 @@ export interface CaseSummary {
   payback: number
   /** Biggest multiplier (drop price / case price) this case paid in the last 24 h; null if nothing notable */
   bestToday: number | null
-  /** The case's own colour, picked from its art's theme (hex): the home grid can paint the card with it */
-  tint?: string
   /** Extra art: a wide picture (a 2×1 bento cell), a tall one (a 1×2 cell), and/or a full scene that fills the card */
   art?: { wide?: string; tall?: string; full?: string }
   /** A limited case: how many there were and how many are left. Every open spends one; at 0 it is sold out. */

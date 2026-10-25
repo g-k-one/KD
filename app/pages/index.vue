@@ -60,8 +60,9 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
       <template v-for="(s, i) in sections" :key="s.id">
       <!-- sections after the first are skipped by the renderer until they come near the screen -->
       <!-- a themed row draws its scene edge to edge, so it is never skipped by the renderer (that would clip the scene) -->
-      <section class="relative flex flex-col gap-4" :class="[s.theme && `kd-themed is-${s.theme}`, i > 0 && !s.theme && 'kd-offscreen']">
-        <div v-if="s.theme" class="kd-row-scene" aria-hidden="true"><img :src="`/img/coop/${s.theme}.webp`" alt="" draggable="false" loading="lazy" /></div>
+      <!-- collapsed, a themed row drops its scene and its air: just the header, like any other -->
+      <section class="relative flex flex-col gap-4" :class="[s.theme && !collapsed[s.id] && `kd-themed is-${s.theme}`, i > 0 && !s.theme && 'kd-offscreen']">
+        <div v-if="s.theme && !collapsed[s.id]" class="kd-row-scene" aria-hidden="true"><img :src="`/img/coop/${s.theme}.webp`" alt="" draggable="false" loading="lazy" /></div>
         <UiSectionHeader
           :title="s.title"
           collapsible
