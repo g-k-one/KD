@@ -619,14 +619,14 @@ export interface AdminBonuses {
     cooldownHours: number
     /** Every this many levels the player moves to the next tier */
     levelsPerTier: number
-    /** Tier 1, 2, …: what the case is worth and the skins in it (RTP 100%, the odds are solved) */
-    tiers: Array<{ price: number; itemIds: string[] }>
+    /** Tier 1, 2, …: what the case is worth and the skins in it (RTP 100%, the odds are solved). PUT reads item ids only */
+    tiers: Array<{ price: number; items: Item[] }>
   }
   welcome: {
     /** Free cases a new player gets */
     total: number
     price: number
-    itemIds: string[]
+    items: Item[]
   }
   promos: AdminPromo[]
 }

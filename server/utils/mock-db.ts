@@ -2,8 +2,8 @@
 // Replaced by the Go backend later — the UI only talks to it through mock-api.ts routes.
 import { DEFAULT_UPGRADE_RULES, upgradeChanceBp } from '#shared/upgrade'
 import type {
-  AdminBonuses,
   AdminFeed,
+  AdminPromo,
   AdminPlayer,
   GameRules,
   BigWin,
@@ -47,7 +47,11 @@ export class MockError extends Error {
 export const adminSettings: {
   /** Fake players of the feed, big wins, top drops and PvP lobbies */
   players: AdminPlayer[]
-  bonuses: AdminBonuses
+  bonuses: {
+    daily: { cooldownHours: number; levelsPerTier: number; tiers: Array<{ price: number; itemIds: string[] }> }
+    welcome: { total: number; price: number; itemIds: string[] }
+    promos: AdminPromo[]
+  }
   games: GameRules
   feed: AdminFeed
 } = {

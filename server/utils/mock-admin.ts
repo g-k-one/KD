@@ -159,19 +159,30 @@ export function deleteCase(slug: string) {
 
 // --- Bonuses --------------------------------------------------------------------------------
 
-export const getAdminBonuses = () => ({ bonuses: clone(adminSettings.bonuses) })
+const itemsOf = (ids: string[]) => ids.map(findItem).filter((i): i is Item => !!i)
+export function getAdminBonuses(): { bonuses: AdminBonuses } {
+  const { daily, welcome, promos } = adminSettings.bonuses
+  return {
+    bonuses: clone({
+      daily: { ...daily, tiers: daily.tiers.map((t) => ({ price: t.price, items: itemsOf(t.itemIds) })) },
+      welcome: { total: welcome.total, price: welcome.price, items: itemsOf(welcome.itemIds) },
+      promos,
+    }),
+  }
+}
+const idsOf = (items: unknown) => skinIds((Array.isArray(items) ? items : []).map((i) => (i as { id?: string })?.id))
 
 export function setAdminBonuses(b: Partial<AdminBonuses>) {
-  const cur = adminSettings.bonuses
+  const cur = getAdminBonuses().bonuses
   const d = b.daily ?? cur.daily
   const tiers = (Array.isArray(d.tiers) ? d.tiers : []).map((t, k) => {
-    const itemIds = skinIds(t?.itemIds)
+    const itemIds = idsOf(t?.items)
     if (itemIds.length < 2) throw new MockError(400, `Daily tier ${k + 1} needs at least 2 skins`)
     return { price: clamp(t?.price, 1, 100_000_000), itemIds }
   })
   if (!tiers.length) throw new MockError(400, 'The daily case needs a tier')
   const w = b.welcome ?? cur.welcome
-  const welcomeIds = skinIds(w.itemIds)
+  const welcomeIds = idsOf(w.items)
   if (welcomeIds.length < 2) throw new MockError(400, 'The welcome case needs at least 2 skins')
 
   const promos: AdminPromo[] = []
@@ -291,7 +302,7 @@ export function exportSnapshot(): AdminSnapshot {
   return clone({
     cases: listAdminCases().cases,
     layout: getHomeLayout().layout,
-    bonuses: adminSettings.bonuses,
+    bonuses: getAdminBonuses().bonuses,
     games: adminSettings.games,
     feed: adminSettings.feed,
     bigWins,

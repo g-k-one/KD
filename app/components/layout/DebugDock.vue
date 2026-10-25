@@ -141,9 +141,12 @@ const resetDaily = async () => {
         </div>
 
         <section class="flex flex-col gap-2">
-          <span class="type-12-caps text-neutral-12">Home</span>
-          <UiButton size="s" variant="secondary" icon="sliders" block @click="editHome">Edit home layout</UiButton>
-          <p class="type-12-regular text-neutral-11">Rows: order, scene, hide. Cases: plain, full scene, 2×1, 1×2.</p>
+          <span class="type-12-caps text-neutral-12">Admin</span>
+          <div class="grid grid-cols-2 gap-1">
+            <UiButton size="s" variant="secondary" icon="sliders" @click="editHome">Edit home layout</UiButton>
+            <UiButton size="s" variant="secondary" icon="settings" to="/admin" @click="open = false">Admin panel</UiButton>
+          </div>
+          <p class="type-12-regular text-neutral-11">Home in place: rows, scenes, card kinds. The panel: every setting of the site.</p>
         </section>
 
         <section class="flex flex-col gap-2">
