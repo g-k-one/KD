@@ -7,8 +7,7 @@ import type { BigWinsResponse } from '#shared/types/api'
 // multiplier as the headline, the price, the skin and who won it, each on its own line with air between.
 // Desktop: #1, #2, #3 in one row, the cards one height, the winner's golden, its multiplier burning.
 // Phones: a short leaderboard — #1, #2, #3 one under another, the same card at full width.
-// Behind each skin a fire in its rarity's colour (the stock plate's kdBlaze, recoloured): licks and embers rise from
-// under the skin. Its own Forge layer between the cards' ground and their skin and text; it burns only on screen.
+// Behind each skin a calm fire in its rarity's colour (kdFlame): licks and embers rise slowly from under the skin. Its own Forge layer between the cards' ground and their skin and text; it burns only on screen.
 // The room above the cards is only what the skins break out by. Each card links to where the drop came from.
 const { data } = useFetch<BigWinsResponse>('/api/wins/today', { key: 'wins-today', lazy: true, server: false })
 const wins = computed(() => (data.value?.wins ?? []).slice(0, 3).map((win, k) => ({ win, rank: k + 1 })))
@@ -33,7 +32,7 @@ provideForge(fxHost)
     <!-- the room above is what the skins break out by, no more -->
     <div class="relative flex flex-col gap-3 pt-2 lg:grid lg:grid-cols-3 lg:gap-4 lg:pt-4">
       <!-- the fire's canvas: over the cards' ground (z 1), under their skin and text (z 2) -->
-      <div ref="fxHost" class="pointer-events-none absolute inset-0 z-[1]" aria-hidden="true" />
+      <div ref="fxHost" class="pointer-events-none absolute -inset-x-4 -inset-y-10 z-[1]" aria-hidden="true" />
       <NuxtLink
         v-for="(p, i) in wins"
         :key="p.win.id"
@@ -47,7 +46,7 @@ provideForge(fxHost)
         <div class="kd-win-stage relative z-[2] self-stretch">
           <span class="kd-win-shadow absolute" aria-hidden="true" />
           <!-- the fire: its base line on the skin's lower edge, licks rising behind it -->
-          <span class="kd-win-fire absolute"><FxFire effect="kdBlaze" :color="RARITY_HEX[p.win.item.rarity]" :spread="1.25" class="w-full"><span class="block h-2 w-full" /></FxFire></span>
+          <span class="kd-win-fire absolute"><FxFire effect="kdFlame" :color="RARITY_HEX[p.win.item.rarity]" :spread="1.7" class="w-full"><span class="block h-2 w-full" /></FxFire></span>
           <ItemArt :image="p.win.item.image" :rarity="p.win.item.rarity" :size="artSize()" float class="kd-win-art relative w-full" />
         </div>
         <div class="relative z-[2] flex min-w-0 flex-col items-start gap-1 lg:gap-1.5">
@@ -58,9 +57,7 @@ provideForge(fxHost)
             <!-- the price as on the case cards: the same coin and figures -->
             <UiPrice :amount="p.win.item.price" size="l" />
           </div>
-          <FxFire :on="p.rank === 1">
-            <span class="kd-win-x relative z-[2]" :class="p.rank === 1 && 'is-first'">x{{ p.win.multiplier }}</span>
-          </FxFire>
+          <span class="kd-win-x relative z-[2]" :class="p.rank === 1 && 'is-first'">x{{ p.win.multiplier }}</span>
           <!-- phones: the weapon and the skin on one line; desktop: the weapon over the skin -->
           <span class="flex w-full min-w-0 max-lg:items-baseline max-lg:gap-1.5 lg:flex-col">
             <span class="kd-win-weapon type-12-caps shrink-0 truncate">{{ p.win.item.weapon }}</span>
