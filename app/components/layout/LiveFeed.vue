@@ -48,7 +48,7 @@ const hover = ref<{ d: FeedDrop; x: number; y: number } | null>(null)
 function show(d: FeedDrop, e: MouseEvent) {
   if (!isLg.value) return
   const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
-  hover.value = { d, x: Math.min(window.innerWidth - 136, Math.max(136, r.left + r.width / 2)), y: r.bottom + 8 }
+  hover.value = { d, x: Math.min(window.innerWidth - 160, Math.max(160, r.left + r.width / 2)), y: r.bottom + 8 }
 }
 
 // Phones: hide while scrolling down
@@ -130,11 +130,12 @@ watch(y, (v) => {
           @mouseenter="show(d, $event)"
           @mouseleave="hover = null"
         >
-          <!-- not a case drop: the source's icon in orange, no plate, under the skin and its rarity light -->
-          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute top-1.5 left-1.5" :class="`is-${sourceOf(d.caseSlug)}`" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
-            <UiIcon :name="SOURCE_ICON[sourceOf(d.caseSlug) as 'upgrade' | 'pvp']" :size="16" />
-          </span>
           <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 56 : 40" class="w-full" />
+          <!-- not a case drop: the source's icon, small and grey on a dark corner plate over the skin, so a skin
+               never covers it and it never outshouts the skin; orange on hover -->
+          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute top-0.5 left-0.5 z-[2] grid size-4.5 place-items-center rounded-[5px] lg:size-5" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
+            <UiIcon :name="SOURCE_ICON[sourceOf(d.caseSlug) as 'upgrade' | 'pvp']" :size="12" />
+          </span>
           <span v-if="mode === 'top'" class="type-10-caps absolute top-1 right-1 rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
         </NuxtLink>
       </TransitionGroup>
@@ -150,23 +151,35 @@ watch(y, (v) => {
       <Transition name="kd-hovercard">
         <div
           v-if="hover"
-          class="kd-hovercard pointer-events-none fixed z-[70] flex w-68 -translate-x-1/2 flex-col gap-2 rounded-2xl border border-neutral-5 bg-neutral-3 p-3"
+          class="kd-hovercard pointer-events-none fixed z-[70] flex w-76 -translate-x-1/2 flex-col gap-3 rounded-2xl bg-neutral-3 p-3"
           :style="{ left: `${hover.x}px`, top: `${hover.y}px` }"
         >
-          <div class="flex items-center gap-2">
-            <img :src="hover.d.userAvatar" alt="" class="size-6 rounded-full object-cover" />
-            <span class="type-12 min-w-0 flex-1 truncate">{{ hover.d.userNickname }}</span>
-            <span class="type-12 text-neutral-11">{{ timeAgo(hover.d.createdAt) }}</span>
-          </div>
-          <span class="type-14 truncate" :style="{ color: RARITY_COLOR[hover.d.rarity] }">{{ hover.d.itemName }} | {{ hover.d.skinName }}</span>
-          <div class="flex items-center justify-between gap-2">
-            <span class="type-12-regular flex min-w-0 items-center gap-1 truncate text-neutral-12">
-              <UiIcon v-if="sourceOf(hover.d.caseSlug) !== 'case'" :name="SOURCE_ICON[sourceOf(hover.d.caseSlug) as 'upgrade' | 'pvp']" :size="12" class="shrink-0 text-brand-light" />
-              {{ hover.d.caseName }} · <UiPrice :amount="hover.d.casePrice" size="s" tone="muted" />
+          <!-- the drop, read like an item card: the skin on its rarity light, weapon over skin, then what it's worth
+               and how many times what was paid -->
+          <div class="flex items-center gap-3">
+            <span class="grid h-16 w-20 shrink-0 place-items-center rounded-lg bg-neutral-4">
+              <ItemArt :image="hover.d.image" :rarity="hover.d.rarity" :size="56" class="w-full" />
             </span>
-            <span class="type-12-caps shrink-0 text-coin">{{ xLabel(hover.d) }}</span>
+            <span class="flex min-w-0 flex-1 flex-col gap-1">
+              <span class="kd-hover-weapon type-12-caps truncate">{{ hover.d.itemName }}</span>
+              <span class="type-14 truncate" :style="{ color: RARITY_COLOR[hover.d.rarity] }">{{ hover.d.skinName }}</span>
+              <span class="flex items-center justify-between gap-2">
+                <UiPrice :amount="hover.d.price" tone="coin" />
+                <span class="type-12-caps shrink-0 rounded-sm bg-neutral-5 px-1.5 py-0.5 text-coin">{{ xLabel(hover.d) }}</span>
+              </span>
+            </span>
           </div>
-          <UiPrice :amount="hover.d.price" size="l" tone="coin" />
+          <!-- who and where from, quiet, under a hairline -->
+          <div class="flex items-center gap-2 border-t border-neutral-4 pt-3">
+            <img :src="hover.d.userAvatar" alt="" class="size-5 shrink-0 rounded-full object-cover" />
+            <span class="type-12 min-w-0 truncate">{{ hover.d.userNickname }}</span>
+            <span class="type-12-regular shrink-0 text-neutral-11">{{ timeAgo(hover.d.createdAt) }}</span>
+            <span class="type-12-regular ml-auto flex min-w-0 items-center gap-1 text-neutral-12">
+              <UiIcon v-if="sourceOf(hover.d.caseSlug) !== 'case'" :name="SOURCE_ICON[sourceOf(hover.d.caseSlug) as 'upgrade' | 'pvp']" :size="12" class="shrink-0 text-neutral-11" />
+              <span class="truncate">{{ hover.d.caseName }}</span>
+              <UiPrice :amount="hover.d.casePrice" size="s" tone="muted" class="shrink-0" />
+            </span>
+          </div>
         </div>
       </Transition>
     </Teleport>
@@ -251,13 +264,22 @@ watch(y, (v) => {
   opacity: 0;
   transform: translateY(-3px);
 }
+/* the tile's corner (radius 8) wraps the plate's (5) at 3px: the 1px border and a 2px inset */
 .kd-feed-src {
-  color: var(--color-brand-light);
-  /* a dark edge lifts the icon off the skin under it */
-  filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.85));
+  color: var(--color-neutral-12);
+  background: rgb(from var(--color-neutral-1) r g b / 0.82);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+@media (hover: hover) {
+  .kd-feed-tile:hover .kd-feed-src {
+    color: var(--color-brand-light);
+  }
 }
 .kd-hovercard {
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.6);
+}
+.kd-hover-weapon {
+  color: var(--color-weapon);
 }
 .kd-hovercard-enter-active {
   transition:
