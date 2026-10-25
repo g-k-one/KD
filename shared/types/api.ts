@@ -31,8 +31,8 @@ export interface CaseSummary {
   bestToday: number | null
   /** The case's own colour, picked from its art's theme (hex): the home grid can paint the card with it */
   tint?: string
-  /** Shaped art for the bento grid: a wide picture (a 2×1 cell) and/or a tall one (a 1×2 cell) */
-  art?: { wide?: string; tall?: string }
+  /** Extra art: a wide picture (a 2×1 bento cell), a tall one (a 1×2 cell), and/or a full scene that fills the card */
+  art?: { wide?: string; tall?: string; full?: string }
   /** A limited case: how many there were and how many are left. Every open spends one; at 0 it is sold out. */
   limited?: { total: number; left: number }
   createdAt: string

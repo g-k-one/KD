@@ -5,9 +5,11 @@ import type { RigPlayback } from '~/utils/spineStage'
 // Figma "CaseCard" states: Default → Hover (surface lifts to neutral-4, art settles 232→220,
 // price becomes the brand-gradient button, risk reveals its label) → Active (80% opacity).
 /** shape: the bento cell this card fills — wide 2×1 or tall 1×2 shows the matching picture (desktop) */
-/** look (under review): tint paints the card with the case's colour; coop drops the plate and sits the case in a nest */
-const props = defineProps<{ item: CaseSummary; shape?: 'wide' | 'tall'; look?: 'tint' | 'coop' }>()
+/** look: a themed row's look — coop drops the plate and sits the case in a nest */
+const props = defineProps<{ item: CaseSummary; shape?: 'wide' | 'tall'; look?: 'coop' }>()
 const shaped = computed(() => (props.shape ? props.item.art?.[props.shape] : undefined))
+/** A full-art card: the case's scene fills the card (a themed row and a bento cell keep their own art) */
+const full = computed(() => (!props.look && !shaped.value ? props.item.art?.full : undefined))
 const { onPointerMove } = useSpotlight()
 const { t } = useI18n()
 const session = useSessionStore()
@@ -34,7 +36,7 @@ const stock = computed(() => {
 // first frame is drawn (and after it stops, or if it never loads) the static WebP stays in place.
 const artBox = useTemplateRef<HTMLElement>('artBox')
 const rigCanvas = useTemplateRef<HTMLCanvasElement>('rigCanvas')
-const playing = useArtPlayback(artBox, () => !!(props.item.rig || props.item.animation))
+const playing = useArtPlayback(artBox, () => !full.value && !!(props.item.rig || props.item.animation))
 const animReady = ref(false)
 watch(playing, (v) => !v && !props.item.rig && (animReady.value = false))
 // The rig is square: fit it into the art box like object-contain, drawn at device resolution
@@ -76,11 +78,14 @@ function onArtLeave() {
   <NuxtLink
     :to="`/case/${item.slug}`"
     class="kd-case-card kd-spotlight group relative flex h-full flex-col items-center gap-2 rounded-5xl border"
-    :class="[stock?.out && 'is-sold-out', shape && `is-${shape}`, look && `look-${look}`]"
+    :class="[stock?.out && 'is-sold-out', shape && `is-${shape}`, look && `look-${look}`, full && 'is-full']"
     :style="look && item.tint ? { '--tint': item.tint } : undefined"
     @pointermove="onArtPointer"
     @pointerleave="onArtLeave"
   >
+    <!-- full art: the scene behind everything, darkened at the foot where the text sits -->
+    <img v-if="full" :src="full" :alt="item.name" loading="lazy" draggable="false" class="kd-case-full" />
+    <span v-if="full" class="kd-case-scrim" aria-hidden="true" />
     <div ref="artBox" class="kd-case-art-box relative aspect-square w-full lg:aspect-auto" :class="shape === 'tall' ? 'lg:min-h-55 lg:flex-1' : 'lg:h-55'">
       <!-- coop: the nest's back half sits behind the case, its front rim over it, so the case sits inside -->
       <img v-if="look === 'coop'" src="/img/coop/nest-back.webp" alt="" aria-hidden="true" draggable="false" class="kd-nest is-back" />
@@ -90,7 +95,7 @@ function onArtLeave() {
         loading="lazy"
         draggable="false"
         class="kd-case-art size-full object-contain"
-        :class="[{ invisible: animReady }, shaped && 'lg:hidden']"
+        :class="[{ invisible: animReady || full }, shaped && 'lg:hidden']"
       />
       <!-- the shaped picture for a wide / tall bento cell (desktop) -->
       <img v-if="shaped" :src="shaped" :alt="item.name" loading="lazy" draggable="false" class="kd-case-art absolute inset-0 hidden size-full object-contain max-lg:hidden lg:block" />
@@ -329,23 +334,35 @@ function onArtLeave() {
     transform: none;
   }
 }
-/* --- tint: the case's colour runs down from the top, a glow of it sits behind the art and brightens on hover --- */
-.kd-case-card.look-tint {
-  --card-fill: linear-gradient(180deg, color-mix(in oklab, var(--tint) 30%, var(--color-neutral-2)), var(--color-neutral-2) 72%);
+/* --- full art: the scene fills the card and drifts closer on hover --- */
+.kd-case-card.is-full {
   isolation: isolate;
-  background: var(--card-fill);
-  border-color: color-mix(in oklab, var(--tint) 32%, var(--color-neutral-4));
+  overflow: hidden;
 }
-.kd-case-card.look-tint::before {
-  content: '';
+.kd-case-full,
+.kd-case-scrim {
   position: absolute;
   inset: 0;
   z-index: -1;
-  border-radius: inherit;
-  background: radial-gradient(60% 42% at 50% 36%, color-mix(in oklab, var(--tint) 60%, transparent), transparent);
-  opacity: 0.55;
-  transition: opacity var(--dur-base) var(--ease-out);
+  width: 100%;
+  height: 100%;
   pointer-events: none;
+}
+.kd-case-full {
+  object-fit: cover;
+  object-position: 50% 30%;
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.kd-case-scrim {
+  background: linear-gradient(180deg, transparent 42%, rgb(10 11 14 / 0.72) 68%, rgb(10 11 14 / 0.94));
+}
+.is-full h3 {
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+}
+@media (hover: hover) {
+  .kd-case-card.is-full:hover .kd-case-full {
+    transform: scale(1.05);
+  }
 }
 /* --- coop: no plate; the case sits low in a straw nest and hops up out of it on hover --- */
 .kd-case-card.look-coop {
@@ -377,13 +394,6 @@ function onArtLeave() {
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
 }
 @media (hover: hover) {
-  .kd-case-card.look-tint:hover {
-    background: var(--card-fill);
-    border-color: color-mix(in oklab, var(--tint) 60%, var(--color-neutral-6));
-  }
-  .kd-case-card.look-tint:hover::before {
-    opacity: 1;
-  }
   /* no plate, so hover draws the outline, in the case's colour */
   .kd-case-card.look-coop:hover {
     background: none;
