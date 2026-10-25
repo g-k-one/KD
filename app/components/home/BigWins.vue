@@ -5,40 +5,69 @@ import type { BigWinsResponse } from '#shared/types/api'
 // Each win is a wide card: the skin on the left breaks out over the card's top edge, big and tilted, its rarity's
 // light spreading from behind it across the card; on the right the place (a gold, silver or bronze medal), the
 // multiplier as the headline, the price, the skin and who won it, each on its own line with air between.
-// Desktop: a podium — #2, #1, #3 in one row, the winner's card taller and golden, its multiplier burning.
+// Desktop: #1, #2, #3 in one row, the cards one height, the winner's golden, its multiplier burning.
 // Phones: a short leaderboard — #1, #2, #3 one under another, the same card at full width.
+// A Forge loop of their own (kdTrophy) over the cards while the block is on screen: glints that pop and fade
+// around each skin and motes rising in its rarity's colour — more of them, in gold, on the winner's.
 // The room above the cards is only what the skins break out by. Each card links to where the drop came from.
 const { data } = useFetch<BigWinsResponse>('/api/wins/today', { key: 'wins-today', lazy: true, server: false })
 const wins = computed(() => (data.value?.wins ?? []).slice(0, 3).map((win, k) => ({ win, rank: k + 1 })))
-// desktop: second, first, third (fewer than three: as they come); phones keep the rank order
-const PODIUM = [2, 1, 3]
 const isLg = useMediaQuery('(min-width: 1024px)')
 // big enough to fill the left half (the picture is 1⅔ × the size): it stands in the card on its shadow and breaks
 // out over the top edge by about a quarter
-const artSize = (rank: number) => (isLg.value ? (rank === 1 ? 128 : 114) : 66)
+const artSize = () => (isLg.value ? 118 : 66)
+
+// --- the cards' own sparkle (Forge): one canvas over the cards, running only while the block is on screen ---------
+const section = useTemplateRef<HTMLElement>('section')
+const fxHost = useTemplateRef<HTMLElement>('fxHost')
+const fx = useForge(fxHost)
+let loops: Array<{ stop(): void } | null> = []
+const stopFx = () => {
+  loops.forEach((h) => h?.stop())
+  loops = []
+}
+async function startFx() {
+  stopFx()
+  await nextTick()
+  const cards = section.value?.querySelectorAll<HTMLElement>('.kd-win') ?? []
+  loops = await Promise.all(
+    [...cards].map((card, i) => {
+      const w = wins.value[i]
+      const img = card.querySelector<HTMLElement>('.kd-art img')
+      return w ? fx.at('kdTrophy', img, 1.5, true, { color: RARITY_HEX[w.win.item.rarity], level: w.rank === 1 ? 3 : 2 }) : null
+    }),
+  )
+}
+const onScreen = ref(false)
+useIntersectionObserver(section, ([e]) => (onScreen.value = !!e?.isIntersecting))
+watch([onScreen, () => wins.value.length, isLg], ([on, n]) => (on && n ? startFx() : stopFx()))
+onBeforeUnmount(stopFx)
 </script>
 
 <template>
-  <section v-if="wins.length" class="flex flex-col gap-2 lg:gap-3">
+  <section v-if="wins.length" ref="section" class="flex flex-col gap-2 lg:gap-3">
     <div class="flex items-center gap-2">
       <UiIcon name="fire" :size="20" class="text-brand-light" />
       <h2 class="type-16-caps lg:type-20-caps">{{ $t('wins.title') }}</h2>
       <span class="type-12 ml-auto text-neutral-11">{{ $t('wins.window') }}</span>
     </div>
     <!-- the room above is what the skins break out by, no more -->
-    <div class="flex flex-col gap-3 pt-3 lg:grid lg:grid-cols-3 lg:items-end lg:gap-4 lg:pt-7">
+    <div class="relative flex flex-col gap-3 pt-2 lg:grid lg:grid-cols-3 lg:gap-4 lg:pt-4">
+      <!-- the sparkle's canvas, over the cards (pointer-free) -->
+      <div ref="fxHost" class="pointer-events-none absolute -inset-4 z-[3]" aria-hidden="true" />
       <NuxtLink
         v-for="(p, i) in wins"
         :key="p.win.id"
         :to="sourceLink(p.win.caseSlug)"
         class="kd-win kd-press group relative isolate grid min-w-0 grid-cols-[112px_minmax(0,1fr)] items-center gap-2 rounded-3xl py-2.5 pr-4 pl-1 lg:grid-cols-[50%_minmax(0,1fr)] lg:gap-2 lg:py-4 lg:pr-5 lg:pl-2"
         :class="p.rank === 1 ? 'is-first' : ''"
-        :style="{ '--rc': RARITY_COLOR[p.win.item.rarity], '--i': i, '--o': PODIUM.indexOf(p.rank) }"
+        :style="{ '--rc': RARITY_COLOR[p.win.item.rarity], '--i': i }"
+        :data-rank="p.rank"
       >
         <!-- the skin stands on its shadow in the left half and breaks out over the card's top edge -->
         <div class="kd-win-stage relative self-stretch">
           <span class="kd-win-shadow absolute" aria-hidden="true" />
-          <ItemArt :image="p.win.item.image" :rarity="p.win.item.rarity" :size="artSize(p.rank)" float class="kd-win-art relative w-full" />
+          <ItemArt :image="p.win.item.image" :rarity="p.win.item.rarity" :size="artSize()" float class="kd-win-art relative w-full" />
         </div>
         <div class="relative z-[2] flex min-w-0 flex-col items-start gap-1 lg:gap-1.5">
           <div class="flex items-center gap-2">
@@ -70,14 +99,14 @@ const artSize = (rank: number) => (isLg.value ? (rank === 1 ? 128 : 114) : 66)
 /* the card: lit from the skin — the rarity's light spreads from behind it to the left, over a lifted ground */
 .kd-win {
   background:
-    radial-gradient(40% 90% at 25% 42%, color-mix(in srgb, var(--rc) 30%, transparent), transparent 75%),
-    linear-gradient(100deg, color-mix(in srgb, var(--rc) 12%, var(--color-neutral-3)), var(--color-neutral-3) 55%, var(--color-neutral-2));
+    radial-gradient(40% 90% at 25% 42%, color-mix(in srgb, var(--rc) 18%, transparent), transparent 75%),
+    linear-gradient(100deg, color-mix(in srgb, var(--rc) 10%, var(--color-neutral-3)), var(--color-neutral-3) 55%, var(--color-neutral-2));
   animation: kd-win-in var(--dur-slow) var(--ease-out) backwards;
   animation-delay: calc(var(--i) * 70ms);
 }
-/* the flat rarity shape steps back: the card's light carries the colour */
+/* the rarity shape stands out from the card's light (same hue, so it needs the contrast) */
 .kd-win :deep(.kd-art-star) {
-  opacity: 0.25;
+  opacity: 0.75;
 }
 /* the light brightens on hover and keeps breathing on the winner's card (an ::after, opacity only) */
 .kd-win::after {
@@ -93,20 +122,16 @@ const artSize = (rank: number) => (isLg.value ? (rank === 1 ? 128 : 114) : 66)
 }
 .kd-win.is-first {
   background:
-    radial-gradient(40% 90% at 25% 42%, color-mix(in srgb, var(--color-gold) 30%, transparent), transparent 75%),
-    linear-gradient(100deg, color-mix(in srgb, var(--color-gold) 16%, var(--color-neutral-3)), var(--color-neutral-3) 55%, var(--color-neutral-2));
+    radial-gradient(40% 90% at 25% 42%, color-mix(in srgb, var(--color-gold) 20%, transparent), transparent 75%),
+    linear-gradient(100deg, color-mix(in srgb, var(--color-gold) 13%, var(--color-neutral-3)), var(--color-neutral-3) 55%, var(--color-neutral-2));
 }
 .kd-win.is-first::after {
   animation: kd-glow-pulse 2.6s ease-in-out infinite;
 }
 @media (min-width: 64rem) {
-  /* the podium: #2 · #1 · #3, the winner's card taller */
+  /* one row, one height */
   .kd-win {
-    order: var(--o);
-    min-height: 168px;
-  }
-  .kd-win.is-first {
-    min-height: 196px;
+    min-height: 176px;
   }
 }
 /* the stage: the art is centred in the left half and lifted, so a quarter of it rises over the card's top edge */
@@ -115,13 +140,13 @@ const artSize = (rank: number) => (isLg.value ? (rank === 1 ? 128 : 114) : 66)
   place-items: center;
 }
 .kd-win-art {
-  translate: 0 -14px;
+  translate: 0 -6px;
   transform: rotate(-12deg);
   transition: transform var(--dur-slow) var(--ease-spring);
 }
 @media (min-width: 64rem) {
   .kd-win-art {
-    translate: 0 -30px;
+    translate: 0 -16px;
   }
 }
 /* a soft contact shadow under the skin: it stands in the card instead of floating in the air */

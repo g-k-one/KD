@@ -15,6 +15,9 @@ import { RARITY_HEX } from './rarity'
  *   kdAura    — loop behind the upgrade target while the dial turns: a glow that pulses and sparks drifting up
  *               over the whole card.
  *               Colour per rarity: handle.set('tint', [r, g, b])
+ *   kdTrophy  — loop over a big win's skin (home, top 3): glints that pop, turn and fade around the skin, and motes
+ *               drifting up from under it, in the rarity's colour with white among them; opts { color, level 1…3 }
+ *               (the winner's: 3 — more of both). No glow: the card has its own light. Cheap: ~20 sprites alive.
  *   kdWin     — won upgrade: one beat — a burst of green and gold sparks and a single thin ring that stays
  *               close to the dial (no glow wash, no second wave)
  *   kdBurn    — loop around a label: a flat warm glow hugging it, licks and embers rising along its width
@@ -320,6 +323,61 @@ export function defineKdEffects(engine: Engine) {
       const beat = Math.sin(t * 2.6)
       h.sprite(c, 180, 180, 330 * (1 + 0.1 * beat), 0, (0.42 + 0.14 * beat) * appear * soft, 1, m.glow!, 1, tint)
       h.draw(c, s.sp as Particle[])
+    },
+  }))
+
+  engine.define('kdTrophy', (h) => ({
+    atlas: 'kd',
+    init(s) {
+      const o = (s as State & { o: { color?: string; level?: number } }).o
+      Object.assign(s, { glints: [] as Particle[], motes: [] as Particle[], tint: o.color ? hexToRgb(o.color) : GOLD, L: o.level ?? 2 })
+    },
+    update(s, dt, at) {
+      const { R } = h
+      const L = s.L as number
+      const tint = s.tint as Rgb
+      // glints: a four-point star pops up somewhere on the skin, turns a little and goes out
+      h.emit(s.acc, 1, 1.6 + L * 1.1, dt, () =>
+        h.spawn(s.glints as Particle[], {
+          x: 180 + R(-120, 120),
+          y: 180 + R(-62, 62),
+          size: R(16, 28),
+          sc: [[0, 0], [0.35, 1], [1, 0]],
+          life: R(0.55, 0.85),
+          rot: R(0, 6),
+          vr: R(-1.5, 1.5),
+          cells: [at.map.spark],
+          add: 1,
+          tint: Math.random() < 0.45 ? [1, 1, 1] : tint,
+          fadeIn: 0.05,
+          fadeOut: 0.4,
+        }),
+      )
+      // motes: small sparks drifting up from under the skin, swaying a little
+      h.emit(s.acc, 2, 3 + L * 2.2, dt, () =>
+        h.spawn(s.motes as Particle[], {
+          x: 180 + R(-110, 110),
+          y: R(215, 250),
+          vx: R(-8, 8),
+          vy: R(-70, -30),
+          sway: 10,
+          size: R(5, 10),
+          life: R(1.2, 2),
+          rot: R(0, 6),
+          vr: R(-1, 1),
+          cells: [at.map.spark],
+          add: 1,
+          tint: Math.random() < 0.3 ? [1, 1, 1] : tint,
+          fadeIn: 0.25,
+          fadeOut: 0.45,
+        }),
+      )
+      h.step(s.glints as Particle[], dt)
+      h.step(s.motes as Particle[], dt)
+    },
+    render(s, c) {
+      h.draw(c, s.motes as Particle[])
+      h.draw(c, s.glints as Particle[])
     },
   }))
 
