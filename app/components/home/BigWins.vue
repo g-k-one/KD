@@ -7,8 +7,7 @@ import type { BigWinsResponse } from '#shared/types/api'
 // multiplier as the headline, the price, the skin and who won it, each on its own line with air between.
 // Desktop: #1, #2, #3 in one row, the cards one height, the winner's golden, its multiplier burning.
 // Phones: a short leaderboard — #1, #2, #3 one under another, the same card at full width.
-// Behind each skin a small universe of particles (Forge, kdCosmos): stars on four spiral arms in its rarity's colour,
-// turning slowly; one canvas for the three cards, running only while the block is on screen.
+// Behind each skin its rarity shape breathes: a slow, light pulse (transform and opacity only).
 // The room above the cards is only what the skins break out by. Each card links to where the drop came from.
 const { data } = useFetch<BigWinsResponse>('/api/wins/today', { key: 'wins-today', lazy: true, server: false })
 const wins = computed(() => (data.value?.wins ?? []).slice(0, 3).map((win, k) => ({ win, rank: k + 1 })))
@@ -17,35 +16,12 @@ const isLg = useMediaQuery('(min-width: 1024px)')
 // out over the top edge by about a quarter
 const artSize = () => (isLg.value ? 106 : 62)
 
-const section = useTemplateRef<HTMLElement>('section')
-const fxHost = useTemplateRef<HTMLElement>('fxHost')
-const fx = useForge(fxHost)
-let loops: Array<{ stop(): void } | null> = []
-const stopFx = () => {
-  loops.forEach((h) => h?.stop())
-  loops = []
-}
-async function startFx() {
-  stopFx()
-  await nextTick()
-  const stages = section.value?.querySelectorAll<HTMLElement>('.kd-win-stage') ?? []
-  loops = await Promise.all(
-    [...stages].map((el, i) => {
-      const w = wins.value[i]
-      return w ? fx.at('kdCosmos', el, 1.15, true, { color: RARITY_HEX[w.win.item.rarity], level: w.rank === 1 ? 3 : 2 }) : null
-    }),
-  )
-}
-const onScreen = ref(false)
-useIntersectionObserver(section, ([e]) => (onScreen.value = !!e?.isIntersecting))
-watch([onScreen, () => wins.value.length, isLg], ([on, n]) => (on && n ? startFx() : stopFx()))
-onBeforeUnmount(stopFx)
 
 
 </script>
 
 <template>
-  <section v-if="wins.length" ref="section" class="flex flex-col gap-2 lg:gap-3">
+  <section v-if="wins.length" class="flex flex-col gap-2 lg:gap-3">
     <div class="flex items-center gap-2">
       <UiIcon name="fire" :size="20" class="text-brand-light" />
       <h2 class="type-16-caps lg:type-20-caps">{{ $t('wins.title') }}</h2>
@@ -53,8 +29,6 @@ onBeforeUnmount(stopFx)
     </div>
     <!-- the room above is what the skins break out by, no more -->
     <div class="relative flex flex-col gap-3 pt-2 lg:grid lg:grid-cols-3 lg:gap-4 lg:pt-4">
-      <!-- the universe's canvas: under the skins (z 0), over the cards' ground -->
-      <div ref="fxHost" class="pointer-events-none absolute inset-0 z-[1]" aria-hidden="true" />
       <NuxtLink
         v-for="(p, i) in wins"
         :key="p.win.id"
@@ -65,7 +39,6 @@ onBeforeUnmount(stopFx)
         :data-rank="p.rank"
       >
         <!-- the skin stands on its shadow in the left half and breaks out over the card's top edge -->
-        <!-- no isolate on the card: the stars' canvas (z 1) slips between the card's ground and its skin and text (z 2) -->
         <div class="kd-win-stage relative z-[2] self-stretch">
           <span class="kd-win-shadow absolute" aria-hidden="true" />
           <ItemArt :image="p.win.item.image" :rarity="p.win.item.rarity" :size="artSize()" float class="kd-win-art relative w-full" />
@@ -104,6 +77,27 @@ onBeforeUnmount(stopFx)
 }
 .kd-win :deep(.kd-art-glow) {
   display: none;
+}
+/* the rarity shape behind the skin breathes: a slow swell and a touch brighter, offset per card */
+.kd-win :deep(.kd-art-star) {
+  animation: kd-win-breathe 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation-delay: calc(var(--i) * -1.2s);
+}
+@keyframes kd-win-breathe {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.9;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kd-win :deep(.kd-art-star) {
+    animation: none;
+  }
 }
 /* the rarity shape stands out from the card's light (same hue, so it needs the contrast) */
 .kd-win :deep(.kd-art-star) {

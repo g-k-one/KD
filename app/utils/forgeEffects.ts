@@ -15,9 +15,6 @@ import { RARITY_HEX } from './rarity'
  *   kdAura    — loop behind the upgrade target while the dial turns: a glow that pulses and sparks drifting up
  *               over the whole card.
  *               Colour per rarity: handle.set('tint', [r, g, b])
- *   kdCosmos  — loop behind a big win's skin (home, top 3): a small universe of ~34 stars on four spiral arms (the
- *               rarity shape's four lobes), turning slowly round a soft core, in the rarity's colour with white among
- *               them; a few twinkle. opts { color, level 2 | 3 } (the winner's: 3 — a few more stars, brighter)
  *   kdWin     — won upgrade: one beat — a burst of green and gold sparks and a single thin ring that stays
  *               close to the dial (no glow wash, no second wave)
  *   kdBurn    — loop around a label: a flat warm glow hugging it, licks and embers rising along its width
@@ -327,43 +324,6 @@ export function defineKdEffects(engine: Engine) {
       const beat = Math.sin(t * 2.6)
       h.sprite(c, 180, 180, 330 * (1 + 0.1 * beat), 0, (0.42 + 0.14 * beat) * appear * soft, 1, m.glow!, 1, tint)
       h.draw(c, s.sp as Particle[])
-    },
-  }))
-
-  engine.define('kdCosmos', (h) => ({
-    atlas: 'aura',
-    init(s) {
-      const o = (s as State & { o: { color?: string; level?: number } }).o
-      const { R } = h
-      const L = o.level ?? 2
-      const tint = o.color ? hexToRgb(o.color) : GOLD
-      // each star sits on one of four log-spiral arms: a distance from the core and a small spread off the arm
-      const stars = Array.from({ length: 26 + L * 4 }, (_, i) => {
-        const d = Math.pow(Math.random(), 0.7)
-        return { arm: i % 4, d, off: R(-0.22, 0.22) * (0.4 + d), size: R(12, 24) * (1.25 - d * 0.5), tw: R(0, 6.28), white: Math.random() < 0.3 }
-      })
-      Object.assign(s, { stars, tint, hot: tint.map((v) => v * 0.4 + 0.6), L })
-    },
-    update() {},
-    render(s, c) {
-      const m = c.at.map
-      const t = s.t
-      const L = s.L as number
-      const tint = s.tint as Rgb
-      const hot = s.hot as Rgb
-      const appear = Math.min(1, t / 1.2)
-      const spin = t * 0.16
-      // the core: one soft light
-      h.sprite(c, 180, 180, 150 + L * 16, 0, (0.45 + 0.06 * Math.sin(t * 1.3)) * appear, 1, m['glow:W0']!, 1, hot)
-      for (const st of s.stars as Array<{ arm: number; d: number; off: number; size: number; tw: number; white: boolean }>) {
-        const r = 18 + st.d * 120
-        const a = spin + st.arm * (Math.PI / 2) + Math.log(r / 18) * 1.25 + st.off
-        const x = 180 + Math.cos(a) * r
-        const y = 180 + Math.sin(a) * r * 0.82
-        const twinkle = 0.65 + 0.35 * Math.sin(t * 2.2 + st.tw)
-        const alpha = Math.min(1, (1.15 - st.d * 0.5) * twinkle) * appear
-        h.sprite(c, x, y, st.size, 0, alpha, 1, m['glow:W0']!, 1, st.white ? [1, 0.98, 0.92] : tint)
-      }
     },
   }))
 
