@@ -46,6 +46,8 @@ for (const file of walk(out)) {
   // The artifact host rejects a literal U+FFFD (vue-i18n uses one in a string); the escape is equivalent.
   if (ext === '.js') s = s.replaceAll('�', '\\uFFFD')
   if (ext === '.css') s = s.replace(/url\((["']?)\/_nuxt\//g, 'url($1./')
+  // a CSS url() resolves against the stylesheet (assets/), not the page: public images are one level up
+  if (ext === '.css') s = s.replace(/url\((["']?)img\//g, 'url($1../img/')
   if (s !== before) writeFileSync(file, s)
 }
 
