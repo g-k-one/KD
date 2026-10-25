@@ -444,7 +444,7 @@
     "pairN": "Pair #{n}",
     "changed": "changed",
     "myRolls": "Your rolls",
-    "myRollsHint": "Your latest case and upgrade rolls. Tap Check: we recompute the roll from the seeds and show that it matches.",
+    "myRollsHint": "Your latest case and upgrade rolls. Tap one: we recompute the roll from the seeds and show that it matches.",
     "allHistory": "All history",
     "sealedHint": "{n} roll uses your current seed. It is kept secret until you reveal it, so nobody can predict your next roll. Reveal it to check — your next rolls get a new seed. | {n} rolls use your current seed. It is kept secret until you reveal it, so nobody can predict your next roll. Reveal it to check — your next rolls get a new seed.",
     "rotateReveal": "Reveal and check",

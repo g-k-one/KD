@@ -102,28 +102,39 @@ watch(
         <p class="type-14-regular flex-1 text-neutral-14">{{ $t('fair.sealedHint', { n: sealed }, sealed) }}</p>
         <UiButton variant="fair" size="l" icon="refresh" :loading="rotating" class="shrink-0" @click="emit('rotate')">{{ $t('fair.rotateReveal') }}</UiButton>
       </div>
-      <ul ref="list" class="flex flex-col gap-1.5">
-        <li v-for="r in rows" :key="r.e.id" class="kd-roll" :class="{ 'is-focus': r.focus }">
-          <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-neutral-3 text-neutral-12 max-sm:hidden">
-            <UiIcon :name="r.e.game === 'upgrade' ? 'upgrade' : 'cases'" :size="20" />
-          </span>
-          <span class="flex min-w-0 flex-1 flex-col">
-            <span class="type-14 truncate">{{ r.e.drop ?? r.e.title }}</span>
-            <!-- the case name gives way first: the nonce is what the verifier needs -->
-            <span class="type-12-regular flex gap-1 whitespace-nowrap text-neutral-11">
-              <span class="truncate">{{ r.e.game === 'upgrade' ? $t('fair.upgrade') : r.e.title }}</span>
-              <span class="shrink-0">· {{ $t('fair.nonce') }} {{ r.e.nonce }}</span>
-              <span class="shrink-0 max-sm:hidden">· {{ timeAgo(r.e.at) }}</span>
+      <!-- the same rows as the profile's game history: what it was, what went in and out, the roll's number, and a
+           quiet check at the end; the whole row checks it -->
+      <ul ref="list" class="flex flex-col gap-1 rounded-5xl bg-neutral-2 p-3 lg:p-4">
+        <li v-for="r in rows" :key="r.e.id">
+          <component
+            :is="r.pair ? 'button' : 'div'"
+            :type="r.pair ? 'button' : undefined"
+            class="kd-roll grid w-full grid-cols-[40px_minmax(0,1fr)_28px] items-center gap-2.5 rounded-2xl px-1.5 py-2 text-left lg:grid-cols-[44px_minmax(0,1fr)_auto_120px_32px] lg:gap-4 lg:px-2"
+            :class="{ 'is-focus': r.focus, 'kd-press is-roll': r.pair }"
+            :aria-label="r.pair ? `${$t('fair.check')}: ${r.e.drop ?? r.e.title}` : undefined"
+            @click="verify(r)"
+          >
+            <span class="grid size-10 place-items-center rounded-xl bg-neutral-3 text-neutral-13 lg:size-11">
+              <img v-if="r.e.caseImage" :src="r.e.caseImage" alt="" class="size-9 object-contain" loading="lazy" />
+              <UiIcon v-else :name="r.e.game === 'upgrade' ? 'upgrade' : 'cases'" :size="18" />
             </span>
-          </span>
-          <span class="flex shrink-0 flex-col items-end">
-            <span class="type-14 font-mono tabular-nums">{{ value(r.e) }}</span>
-            <span class="type-10-caps text-neutral-10">{{ r.e.ticket != null ? $t('fair.ticket') : $t('fair.roll') }}</span>
-          </span>
-          <UiButton v-if="r.pair" variant="fair" size="s" icon="check-circle" class="kd-roll-act" @click="verify(r)">{{ $t('fair.check') }}</UiButton>
-          <span v-else class="kd-roll-act type-12-caps flex h-8 items-center justify-center gap-1.5 text-neutral-10">
-            <UiIcon name="shield" :size="14" />{{ $t('fair.sealed') }}
-          </span>
+            <span class="flex min-w-0 flex-col gap-0.5">
+              <span class="type-14 truncate"><span class="max-lg:hidden">{{ $t(`account.games.${r.e.game}`) }} · </span><span class="lg:text-neutral-12">{{ r.e.title }}</span></span>
+              <!-- the nonce stays: it is what the verifier needs -->
+              <span class="type-12-regular truncate text-neutral-11">
+                <span class="lg:hidden">{{ $t(`account.games.${r.e.game}`) }} · </span>{{ $t('fair.nonce') }} {{ r.e.nonce }} · {{ timeAgo(r.e.at) }}<span class="lg:hidden"> · {{ value(r.e) }}</span>
+              </span>
+            </span>
+            <HistoryItems :entry="r.e" class="max-lg:hidden" />
+            <!-- the roll's number in one line, where the profile shows the amount -->
+            <span class="type-14 flex items-baseline justify-end gap-1.5 whitespace-nowrap max-lg:hidden">
+              <span class="type-12-regular text-neutral-11">{{ r.e.ticket != null ? $t('fair.ticket') : $t('fair.roll') }}</span>
+              <span class="font-mono tabular-nums">{{ value(r.e) }}</span>
+            </span>
+            <span class="kd-roll-check grid size-7 place-items-center justify-self-end rounded-lg lg:size-8" :class="!r.pair && 'is-sealed'" :title="r.pair ? $t('fair.check') : $t('fair.sealed')">
+              <UiIcon :name="r.pair ? 'shield-check' : 'shield'" :size="18" />
+            </span>
+          </component>
         </li>
       </ul>
     </template>
@@ -131,23 +142,26 @@ watch(
 </template>
 
 <style scoped>
-.kd-roll {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-radius: 16px;
-  background: var(--color-neutral-2);
-  padding: 8px 8px 8px 16px;
-  transition: box-shadow var(--dur-slow) var(--ease-out);
+/* as the profile's history rows: a revealed roll is a button, lit on hover, its check turning green */
+.kd-roll.is-roll {
+  transition: background-color var(--dur-base) var(--ease-out);
 }
-@media (min-width: 40rem) {
-  .kd-roll {
-    padding-left: 8px;
+.kd-roll-check {
+  color: var(--color-success);
+  background: rgb(18 183 106 / 0.12);
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+.kd-roll-check.is-sealed {
+  color: var(--color-neutral-10);
+  background: none;
+}
+@media (hover: hover) {
+  .kd-roll.is-roll:hover {
+    background: var(--color-neutral-3);
   }
-}
-.kd-roll-act {
-  width: 96px;
-  flex-shrink: 0;
+  .kd-roll.is-roll:hover .kd-roll-check {
+    background: rgb(18 183 106 / 0.24);
+  }
 }
 .kd-roll.is-focus {
   box-shadow:

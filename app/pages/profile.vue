@@ -296,21 +296,8 @@ async function saveTrade() {
                     <span class="lg:hidden">{{ $t(`account.games.${h.game}`) }} · </span>{{ when(h.at) }}<span v-if="h.bet" class="max-lg:hidden"> · {{ $t('account.stakeOf', { amount: formatCoins(h.bet) }) }} · {{ mult(h) }}</span>
                   </span>
                 </span>
-                <!-- what went in and what came out: the upgrade's skins → its target, the case → its drop; phones: the result -->
-                <span class="flex items-center gap-1.5">
-                  <template v-if="h.stake?.length || h.stakeCoins">
-                    <span class="flex items-center -space-x-3 max-lg:hidden">
-                      <span v-for="(s, k) in (h.stake ?? []).slice(0, 3)" :key="k" class="kd-hthumb" :style="{ '--rc': RARITY_COLOR[s.rarity] }" :title="s.name">
-                        <ItemArt :image="s.image" :rarity="s.rarity" :size="24" class="w-10" />
-                      </span>
-                      <span v-if="h.stakeCoins" class="kd-hthumb grid place-items-center"><UiCoin :size="18" /></span>
-                    </span>
-                    <UiIcon name="chevron-right" :size="16" class="text-neutral-9 max-lg:hidden" />
-                  </template>
-                  <span v-if="h.result" class="kd-hthumb" :class="h.status === 'lost' && h.game === 'upgrade' && 'is-lost'" :style="{ '--rc': RARITY_COLOR[h.result.rarity] }" :title="h.result.name">
-                    <ItemArt :image="h.result.image" :rarity="h.result.rarity" :size="24" class="w-10" />
-                  </span>
-                </span>
+                <!-- what went in and what came out (shared with the Provably Fair page's rolls) -->
+                <HistoryItems :entry="h" />
                 <!-- one amount: what came out (green when it beat the stake) -->
                 <UiPrice :amount="h.payout" :tone="h.status === 'lost' ? 'muted' : 'success'" class="justify-self-end" />
                 <!-- the check, its own quiet column so every row lines up -->
@@ -360,20 +347,6 @@ async function saveTrade() {
   transition:
     color var(--dur-base) var(--ease-out),
     background-color var(--dur-base) var(--ease-out);
-}
-/* a skin in a row: a small tile tinted by its rarity; an upgrade's target that was missed is dimmed */
-.kd-hthumb {
-  display: grid;
-  width: 44px;
-  height: 36px;
-  place-items: center;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--rc, var(--color-neutral-6)) 18%, var(--color-neutral-3));
-  box-shadow: 0 0 0 2px var(--color-neutral-2);
-}
-.kd-hthumb.is-lost {
-  opacity: 0.45;
-  filter: grayscale(0.7);
 }
 @media (hover: hover) {
   .kd-hrow.is-roll:hover {
