@@ -34,7 +34,7 @@ async function startFx() {
     [...cards].map((card, i) => {
       const w = wins.value[i]
       const img = card.querySelector<HTMLElement>('.kd-art img')
-      return w ? fx.at('kdTrophy', img, 1.5, true, { color: RARITY_HEX[w.win.item.rarity], level: w.rank === 1 ? 3 : 2 }) : null
+      return w ? fx.at('kdTrophy', img, 2.1, true, { color: RARITY_HEX[w.win.item.rarity], level: w.rank === 1 ? 3 : 2 }) : null
     }),
   )
 }
@@ -74,21 +74,19 @@ onBeforeUnmount(stopFx)
             <span class="kd-win-rank type-12-caps flex h-6 items-center gap-1 rounded-lg px-2" :class="`is-${p.rank}`">
               <UiIcon v-if="p.rank === 1" name="crown" :size="14" />#{{ p.rank }}
             </span>
-            <UiPrice :amount="p.win.item.price" :size="isLg ? 'm' : 's'" />
+            <!-- the price as on the case cards: the same coin and figures -->
+            <UiPrice :amount="p.win.item.price" size="l" />
           </div>
           <FxFire :on="p.rank === 1">
             <span class="kd-win-x relative z-[2]" :class="p.rank === 1 && 'is-first'">x{{ p.win.multiplier }}</span>
           </FxFire>
           <!-- phones: the weapon and the skin on one line; desktop: the weapon over the skin -->
           <span class="flex w-full min-w-0 max-lg:items-baseline max-lg:gap-1.5 lg:flex-col">
-            <span class="type-12-caps shrink-0 truncate text-neutral-12">{{ p.win.item.weapon }}</span>
+            <span class="kd-win-weapon type-12-caps shrink-0 truncate">{{ p.win.item.weapon }}</span>
             <span class="type-14 truncate" :style="{ color: 'var(--rc)' }">{{ p.win.item.skin }}</span>
           </span>
-          <span class="type-12-regular flex w-full min-w-0 items-center gap-1.5 text-neutral-11">
-            <img v-if="sourceOf(p.win.caseSlug) === 'case'" :src="p.win.caseImage" alt="" class="size-5 shrink-0 object-contain" />
-            <UiIcon v-else :name="SOURCE_ICON[sourceOf(p.win.caseSlug) as 'upgrade' | 'pvp']" :size="14" class="shrink-0 text-brand-light" />
-            <span class="truncate">{{ p.win.nickname }} · {{ timeAgo(p.win.at) }}</span>
-          </span>
+          <!-- who, where from, when: words only (the tiny case / upgrade icons read as noise at this size) -->
+          <span class="type-12-regular w-full truncate text-neutral-11">{{ p.win.nickname }} · {{ p.win.caseName }} · {{ timeAgo(p.win.at) }}</span>
         </div>
       </NuxtLink>
     </div>
@@ -166,6 +164,10 @@ onBeforeUnmount(stopFx)
   .kd-win:hover .kd-win-art {
     transform: rotate(-4deg) translateY(-6px) scale(1.06);
   }
+}
+/* the item card's name style (DropCard): the weapon in the weapon grey, the skin in its rarity's colour */
+.kd-win-weapon {
+  color: var(--color-weapon);
 }
 /* medals: gold, silver, bronze */
 .kd-win-rank {

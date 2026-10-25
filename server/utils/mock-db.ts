@@ -822,6 +822,15 @@ export function clearBonusCases() {
   welcomeCache = null
 }
 /** Free once a day; worth ~0.5 coin per level band and pays it all back on average (RTP 100%). */
+/** The daily case's tiers as the player reads them: tier I from level 1, then one every levelsPerTier from 2 × it */
+function dailyLadder() {
+  const { tiers, levelsPerTier } = adminSettings.bonuses.daily
+  return tiers.map((t, tier) => {
+    const best = t.itemIds.map((id) => byId(id)).filter((i): i is Item => !!i).reduce((b, i) => (i.price > b.price ? i : b))
+    return { tier, fromLevel: tier === 0 ? 1 : (tier + 1) * levelsPerTier, value: t.price, best: histItem(best) }
+  })
+}
+
 function dailyCase(): CaseDetails {
   const tier = dailyTier()
   let cs = dailyCache.get(tier)
@@ -871,7 +880,7 @@ export async function openWelcome() {
 
 export function getBonuses() {
   return {
-    daily: { case: dailyCase(), tier: dailyTier(), nextAt: state.dailyAt > Date.now() ? new Date(state.dailyAt).toISOString() : null },
+    daily: { case: dailyCase(), tier: dailyTier(), nextAt: state.dailyAt > Date.now() ? new Date(state.dailyAt).toISOString() : null, ladder: dailyLadder() },
     welcome: { case: welcomeCase(), left: state.welcomeLeft, total: adminSettings.bonuses.welcome.total },
   }
 }

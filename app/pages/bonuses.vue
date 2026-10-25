@@ -68,11 +68,7 @@ async function sell(uid: string) {
 }
 const tierNames = ['I', 'II', 'III', 'IV']
 
-// --- Level -----------------------------------------------------------------------------------------------------
-// The daily case moves up a tier every LEVELS_PER_TIER levels (admin: bonuses.daily.levelsPerTier), from level 5
-const LEVELS_PER_TIER = 5
-/** The level that brings the daily case's next tier; null at the top tier */
-const nextTierAt = computed(() => (daily.value && daily.value.tier < tierNames.length - 1 ? (daily.value.tier + 2) * LEVELS_PER_TIER : null))
+// the drop chances on the case's contents
 const chance = (tickets: number) => {
   const p = tickets / 10_000
   return `${p >= 1 ? +p.toFixed(1) : +p.toPrecision(2)}%`
@@ -180,23 +176,29 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
             </div>
           </div>
         </div>
-        <!-- what the level is, in two plain facts -->
-        <div class="grid grid-cols-2 gap-2">
-          <div class="flex min-w-0 flex-col gap-1 rounded-2xl bg-neutral-3 px-3 py-2.5">
-            <span class="type-10-caps text-neutral-11">{{ $t('bonus.toNext', { n: session.user.level + 1 }) }}</span>
-            <span class="type-14 flex items-center gap-1 tabular-nums">
-              <UiPrice v-if="session.user.levelLeft != null" :amount="session.user.levelLeft" size="s" />
-              <span class="type-12-regular text-neutral-11">{{ $t('bonus.ofPlay') }}</span>
-            </span>
-          </div>
-          <div class="flex min-w-0 flex-col gap-1 rounded-2xl bg-neutral-3 px-3 py-2.5">
-            <span class="type-10-caps text-neutral-11">{{ $t('bonus.dailyShort') }}</span>
-            <span class="type-14 text-coin">
-              {{ $t('bonus.tier', { tier: tierNames[daily.tier] }) }}<span v-if="nextTierAt" class="type-12-regular text-neutral-11"> · {{ $t('bonus.nextTierAt', { tier: tierNames[daily.tier + 1], n: nextTierAt }) }}</span>
-            </span>
-          </div>
+        <!-- what levels give, said once and plainly: a better free case every day, step by step -->
+        <div class="flex flex-col gap-2">
+          <span class="type-14">{{ $t('bonus.levelsGive') }}</span>
+          <ol class="grid grid-cols-4 gap-2">
+            <li
+              v-for="st in daily.ladder ?? []"
+              :key="st.tier"
+              class="kd-step relative flex min-w-0 flex-col items-center gap-1 rounded-2xl px-1.5 pt-1.5 pb-2 text-center"
+              :class="st.tier === daily.tier ? 'is-now' : st.tier < daily.tier ? 'is-done' : 'is-locked'"
+              :style="{ '--rc': RARITY_COLOR[st.best.rarity] }"
+            >
+              <ItemArt :image="st.best.image" :rarity="st.best.rarity" :size="40" class="w-full" :dim="st.tier > daily.tier" />
+              <span class="type-12-caps">{{ $t('bonus.tier', { tier: tierNames[st.tier] }) }}</span>
+              <span class="type-10-caps text-neutral-11">{{ $t('bonus.fromLvl', { n: st.fromLevel }) }}</span>
+              <!-- the tier's worth: it grows step by step (the best skins don't, tier to tier) -->
+              <UiPrice :amount="st.value" size="xs" />
+              <UiIcon v-if="st.tier < daily.tier" name="check-circle" :size="14" class="absolute top-1.5 right-1.5 text-success" />
+            </li>
+          </ol>
+          <p class="type-12-regular text-neutral-11">
+            {{ $t('bonus.levelHow') }}{{ session.user.levelLeft != null ? ` ${$t('bonus.toNextLeft', { amount: formatCoins(session.user.levelLeft), n: session.user.level + 1 })}` : '' }}
+          </p>
         </div>
-        <p class="type-12-regular text-neutral-11">{{ $t('bonus.levelHow') }}</p>
       </div>
       <div ref="promoEl" class="scroll-mt-24 flex flex-col gap-3 rounded-5xl bg-neutral-2 p-5">
         <span class="type-16-caps">{{ $t('bonus.promo') }}</span>
@@ -242,6 +244,17 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
 </template>
 
 <style scoped>
+/* the ladder: done steps quiet with a check, the player's step lit in the brand colour, the next ones dimmed */
+.kd-step {
+  background: var(--color-neutral-3);
+}
+.kd-step.is-now {
+  background: color-mix(in srgb, var(--color-brand-base) 14%, var(--color-neutral-3));
+  box-shadow: inset 0 0 0 1.5px var(--color-brand-base);
+}
+.kd-step.is-locked {
+  opacity: 0.6;
+}
 .kd-bonus-ground {
   background:
     radial-gradient(55% 90% at 74% 55%, rgb(255 170 40 / 0.34), transparent 70%),

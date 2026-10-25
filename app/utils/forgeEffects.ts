@@ -15,9 +15,10 @@ import { RARITY_HEX } from './rarity'
  *   kdAura    — loop behind the upgrade target while the dial turns: a glow that pulses and sparks drifting up
  *               over the whole card.
  *               Colour per rarity: handle.set('tint', [r, g, b])
- *   kdTrophy  — loop over a big win's skin (home, top 3): glints that pop, turn and fade around the skin, and motes
- *               drifting up from under it, in the rarity's colour with white among them; opts { color, level 1…3 }
- *               (the winner's: 3 — more of both). No glow: the card has its own light. Cheap: ~20 sprites alive.
+ *   kdTrophy  — loop over a big win's skin (home, top 3): glints that pop, turn and fade around the skin (the
+ *               matter pack's shader glint: crisp at any size), and soft motes drifting up from under it, in the
+ *               rarity's colour with white among them; opts { color, level 1…3 } (the winner's: 3 — more of both).
+ *               No glow: the card has its own light. Cheap: ~20 sprites alive.
  *   kdWin     — won upgrade: one beat — a burst of green and gold sparks and a single thin ring that stays
  *               close to the dial (no glow wash, no second wave)
  *   kdBurn    — loop around a label: a flat warm glow hugging it, licks and embers rising along its width
@@ -44,6 +45,8 @@ interface Helpers {
   sprite: (c: unknown, x: number, y: number, size: number, rot: number, alpha: number, add: number, cell: Cell, sy?: number, tint?: Rgb | null) => void
   emit: (acc: Record<string, number>, k: number, rate: number, dt: number, f: () => void) => void
   pick: <T>(a: T[]) => T
+  /** matter pack: a crisp four-point glint drawn by the shader (no sprite, so no pixels at any size) */
+  glint?: (L: Particle[], x: number, y: number, scale?: number, tint?: Rgb) => void
 }
 interface Atlas {
   map: Record<string, Cell>
@@ -327,7 +330,8 @@ export function defineKdEffects(engine: Engine) {
   }))
 
   engine.define('kdTrophy', (h) => ({
-    atlas: 'kd',
+    // Forge's own atlas: the shader glint is drawn against it (on ours it came out grey), its glow makes the motes
+    atlas: 'aura',
     init(s) {
       const o = (s as State & { o: { color?: string; level?: number } }).o
       Object.assign(s, { glints: [] as Particle[], motes: [] as Particle[], tint: o.color ? hexToRgb(o.color) : GOLD, L: o.level ?? 2 })
@@ -336,36 +340,26 @@ export function defineKdEffects(engine: Engine) {
       const { R } = h
       const L = s.L as number
       const tint = s.tint as Rgb
-      // glints: a four-point star pops up somewhere on the skin, turns a little and goes out
-      h.emit(s.acc, 1, 1.6 + L * 1.1, dt, () =>
-        h.spawn(s.glints as Particle[], {
-          x: 180 + R(-120, 120),
-          y: 180 + R(-62, 62),
-          size: R(16, 28),
-          sc: [[0, 0], [0.35, 1], [1, 0]],
-          life: R(0.55, 0.85),
-          rot: R(0, 6),
-          vr: R(-1.5, 1.5),
-          cells: [at.map.spark],
-          add: 1,
-          tint: Math.random() < 0.45 ? [1, 1, 1] : tint,
-          fadeIn: 0.05,
-          fadeOut: 0.4,
-        }),
-      )
-      // motes: small sparks drifting up from under the skin, swaying a little
+      const hot = tint.map((v) => v * 0.4 + 0.6)
+      // glints: a four-point star pops up somewhere on the skin and goes out — the shader's glint when the matter pack
+      // is there (crisp), the atlas spark otherwise
+      h.emit(s.acc, 1, 1.8 + L * 1.2, dt, () => {
+        const x = 180 + R(-135, 135)
+        const y = 180 + R(-80, 80)
+        if (h.glint) h.glint(s.glints as Particle[], x, y, R(0.55, 1), Math.random() < 0.45 ? [1, 0.98, 0.9] : hot)
+        else h.spawn(s.glints as Particle[], { x, y, size: R(16, 28), sc: [[0, 0], [0.35, 1], [1, 0]], life: R(0.55, 0.85), rot: R(0, 6), cells: [at.map['twinkle:W0']!], add: 1, tint: hot, fadeIn: 0.05, fadeOut: 0.4 })
+      })
+      // motes: soft dots of light drifting up from under the skin, swaying a little
       h.emit(s.acc, 2, 3 + L * 2.2, dt, () =>
         h.spawn(s.motes as Particle[], {
-          x: 180 + R(-110, 110),
-          y: R(215, 250),
+          x: 180 + R(-125, 125),
+          y: R(215, 260),
           vx: R(-8, 8),
           vy: R(-70, -30),
           sway: 10,
-          size: R(5, 10),
+          size: R(8, 15),
           life: R(1.2, 2),
-          rot: R(0, 6),
-          vr: R(-1, 1),
-          cells: [at.map.spark],
+          cells: [at.map['glow:W0']!],
           add: 1,
           tint: Math.random() < 0.3 ? [1, 1, 1] : tint,
           fadeIn: 0.25,

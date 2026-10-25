@@ -502,6 +502,18 @@ export interface DailyInfo {
   tier: number
   /** null = can be opened now; otherwise when it unlocks */
   nextAt: string | null
+  /** What the levels give, step by step: the daily case's tiers, from which level, and the best skin in each */
+  ladder?: DailyStep[]
+}
+
+export interface DailyStep {
+  tier: number
+  /** The level this tier starts at */
+  fromLevel: number
+  /** What this tier's case is worth (coin cents): it grows tier by tier */
+  value: number
+  /** The best skin this tier's case can drop (its picture on the ladder) */
+  best: HistoryItem
 }
 
 /** Free cases for signing up (opened from Bonuses, real drops). Configured in the admin panel. */
