@@ -391,13 +391,13 @@ export function defineKdEffects(engine: Engine) {
         h.spawn(s.em as Particle[], { x: R(70, 290), y: R(250, 285), vx: R(-12, 12), vy: R(-190, -100), sway: R(8, 18), size: R(12, 22), life: R(0.7, 1.2), cells: [at.map.ember], add: 1, tint: c, fadeIn: 0.1, fadeOut: 0.7 }),
       )
       h.emit(s.acc, 2, 16, dt, () =>
-        h.spawn(s.lick as Particle[], { x: R(90, 270), y: R(250, 276), vy: R(-130, -80), size: R(80, 130), stretch: 1.8, sc: [[0, 0.4], [0.3, 1], [1, 0.2]], life: R(0.5, 0.8), cells: [at.map.glow], add: 1, alpha: 0.6, tint: Math.random() < 0.5 ? c : deep, fadeIn: 0.25, fadeOut: 0.6 }),
+        h.spawn(s.lick as Particle[], { x: R(90, 270), y: R(250, 276), vy: R(-130, -80), size: R(55, 95), stretch: 1.8, sc: [[0, 0.4], [0.3, 1], [1, 0.2]], life: R(0.5, 0.8), cells: [at.map.glow], add: 1, alpha: 0.6, tint: Math.random() < 0.5 ? c : deep, fadeIn: 0.25, fadeOut: 0.6 }),
       )
       h.step(s.em as Particle[], dt)
       h.step(s.lick as Particle[], dt)
     },
     render(s, c) {
-      h.sprite(c, 180, 270, 320, 0, 0.42 + 0.06 * Math.sin(s.t * 5), 1, c.at.map.glow!, 0.35, s.deep as Rgb)
+      h.sprite(c, 180, 270, 250, 0, 0.42 + 0.06 * Math.sin(s.t * 5), 1, c.at.map.glow!, 0.35, s.deep as Rgb)
       h.draw(c, s.lick as Particle[])
       h.draw(c, s.em as Particle[])
     },
