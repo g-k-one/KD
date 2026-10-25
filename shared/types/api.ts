@@ -29,6 +29,8 @@ export interface CaseSummary {
   payback: number
   /** Biggest multiplier (drop price / case price) this case paid in the last 24 h; null if nothing notable */
   bestToday: number | null
+  /** Shaped art for the bento grid: a wide picture (a 2×1 cell) and/or a tall one (a 1×2 cell) */
+  art?: { wide?: string; tall?: string }
   /** A limited case: how many there were and how many are left. Every open spends one; at 0 it is sold out. */
   limited?: { total: number; left: number }
   createdAt: string

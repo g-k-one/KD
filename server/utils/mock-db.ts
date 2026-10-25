@@ -111,12 +111,12 @@ const CASE_DEFS: CaseDef[] = [
   { id: 'c2', slug: 'kurwa-classic', name: 'Kurwa Classic', image: '/img/cases/kurwa-chicken.webp', rig: { skeleton: '/img/cases/rig/kurwa-chicken.json', atlas: '/img/cases/rig/kurwa-chicken.atlas', hover: 'hover', look: { bone: 'look', range: 60 } }, price: 1250, risk: 'medium', targetRtp: 9240, createdAt: '2026-08-01' },
   { id: 'c3', slug: 'zloty-rush', name: 'Zloty Rush', image: '/img/cases/zloty-rush.webp', rig: { skeleton: '/img/cases/rig/zloty-rush.json', atlas: '/img/cases/rig/zloty-rush.atlas' }, price: 490, risk: 'high', tag: 'new', targetRtp: 9100, createdAt: '2026-10-12', limited: { total: 1000, left: 214 } },
   { id: 'c4', slug: 'babcias-box', name: 'Babcia’s Box', image: '/img/cases/babcias-box.webp', price: 750, risk: 'medium', targetRtp: 9300, createdAt: '2026-07-15' },
-  { id: 'c5', slug: 'warsaw-nights', name: 'Warsaw Nights', image: '/img/cases/warsaw-nights.webp', price: 1250, risk: 'extreme', tag: 'new', targetRtp: 9240, createdAt: '2026-10-14', limited: { total: 500, left: 37 } },
+  { id: 'c5', slug: 'warsaw-nights', name: 'Warsaw Nights', image: '/img/cases/warsaw-nights.webp', art: { wide: '/img/cases/wide/warsaw-nights.webp' }, price: 1250, risk: 'extreme', tag: 'new', targetRtp: 9240, createdAt: '2026-10-14', limited: { total: 500, left: 37 } },
   { id: 'c6', slug: 'vodka-drop', name: 'Vodka Drop', image: '/img/cases/vodka-drop.webp', price: 2900, risk: 'medium', targetRtp: 9200, createdAt: '2026-06-02' },
   { id: 'c7', slug: 'krakow-knife', name: 'Krakow Knife', image: '/img/cases/krakow-agent.webp', animation: '/img/cases/krakow-knife.avif', price: 4900, risk: 'high', targetRtp: 9050, createdAt: '2026-05-20' },
-  { id: 'c8', slug: 'golden-kielbasa', name: 'Golden Kielbasa', image: '/img/cases/golden-kielbasa.webp', price: 9900, risk: 'extreme', targetRtp: 9000, createdAt: '2026-04-11' },
+  { id: 'c8', slug: 'golden-kielbasa', name: 'Golden Kielbasa', image: '/img/cases/golden-kielbasa.webp', art: { tall: '/img/cases/tall/golden-kielbasa.webp' }, price: 9900, risk: 'extreme', targetRtp: 9000, createdAt: '2026-04-11' },
   { id: 'c9', slug: 'budget-boom', name: 'Budget Boom', image: '/img/cases/budget-boom.webp', price: 14900, risk: 'low', targetRtp: 9400, createdAt: '2026-03-08' },
-  { id: 'c10', slug: 'high-roller', name: 'High Roller', image: '/img/cases/high-roller.webp', price: 29900, risk: 'high', tag: 'hot', targetRtp: 9150, createdAt: '2026-02-01', limited: { total: 100, left: 12 } },
+  { id: 'c10', slug: 'high-roller', name: 'High Roller', image: '/img/cases/high-roller.webp', art: { tall: '/img/cases/tall/high-roller.webp' }, price: 29900, risk: 'high', tag: 'hot', targetRtp: 9150, createdAt: '2026-02-01', limited: { total: 100, left: 12 } },
 ]
 
 /**
@@ -221,7 +221,7 @@ function finishCase(def: CaseDef, withTickets: Array<Item & { tickets: number }>
 // Three cases with contents and odds modelled on CSGOGem (scripts/import-gem-cases.py), under our own names
 type GemCase = { slug: string; price: number; items: Array<Item & { tickets: number }> }
 const GEM_LOOK: Record<string, Omit<CaseDef, 'price' | 'targetRtp' | 'preset'>> = {
-  hades: { id: 'g1', slug: 'pieklo', name: 'Piekło', image: '/img/cases/pieklo.webp', risk: 'extreme', tag: 'hot', createdAt: '2026-10-18' },
+  hades: { id: 'g1', slug: 'pieklo', name: 'Piekło', image: '/img/cases/pieklo.webp', art: { wide: '/img/cases/wide/pieklo.webp' }, risk: 'extreme', tag: 'hot', createdAt: '2026-10-18' },
   spring: { id: 'g2', slug: 'wiosna', name: 'Wiosna', image: '/img/cases/wiosna.webp', risk: 'high', createdAt: '2026-10-19' },
   mobster: { id: 'g3', slug: 'mafia', name: 'Mafia', image: '/img/cases/mafia.webp', risk: 'extreme', tag: 'new', createdAt: '2026-10-20' },
 }

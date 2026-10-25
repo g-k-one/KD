@@ -24,12 +24,14 @@ useIntersectionObserver(filtersSentinel, ([e]) => (filtersStuck.value = !!e && !
 const clock = useClock(1000)
 const allCases = computed(() => (data.value?.sections ?? []).flatMap((s) => s.cases))
 
-// --- Under review: a bento grid (?grid=bento). Desktop only: the section's star case — limited, else hot, else the
-// biggest win today — takes a wide 2×1 cell first in its section (art on the left, the rest on the right); phones keep the even grid.
+// --- Under review: a bento grid (?grid=bento). Desktop only: a case with a wide picture takes a 2×1 cell, one with a
+// tall picture a 1×2 cell, each showing that picture; shaped cases go first so the rows fill. Phones keep the even grid.
 const route = useRoute()
 const bento = computed(() => route.query.grid === 'bento')
-const starOf = (cases: CaseSummary[]) =>
-  (cases.find((c) => c.limited && c.limited.left > 0) ?? cases.find((c) => c.tag === 'hot') ?? [...cases].sort((a, b) => (b.bestToday ?? 0) - (a.bestToday ?? 0))[0])?.id
+// a tall cell needs a second row to stretch into: a one-row section (5 cases or fewer) keeps it square
+const shapeOf = (c: CaseSummary, cases: CaseSummary[]) =>
+  !bento.value ? undefined : c.art?.wide ? ('wide' as const) : c.art?.tall && cases.length > 5 ? ('tall' as const) : undefined
+const SHAPE_CELL = { wide: 'lg:order-first lg:col-span-2', tall: 'lg:order-first lg:row-span-2' } as const
 
 const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 </script>
@@ -80,8 +82,8 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
             v-for="c in s.cases"
             :key="c.id"
             :item="c"
-            :big="bento && c.id === starOf(s.cases)"
-            :class="bento && c.id === starOf(s.cases) && 'lg:order-first lg:col-span-2'"
+            :shape="shapeOf(c, s.cases)"
+            :class="shapeOf(c, s.cases) && SHAPE_CELL[shapeOf(c, s.cases)!]"
           />
         </div>
       </section>

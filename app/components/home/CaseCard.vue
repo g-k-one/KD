@@ -4,7 +4,9 @@ import type { RigPlayback } from '~/utils/spineStage'
 
 // Figma "CaseCard" states: Default → Hover (surface lifts to neutral-4, art settles 232→220,
 // price becomes the brand-gradient button, risk reveals its label) → Active (80% opacity).
-const props = defineProps<{ item: CaseSummary; big?: boolean }>()
+/** shape: the bento cell this card fills — wide 2×1 or tall 1×2 shows the matching picture (desktop) */
+const props = defineProps<{ item: CaseSummary; shape?: 'wide' | 'tall' }>()
+const shaped = computed(() => (props.shape ? props.item.art?.[props.shape] : undefined))
 const { onPointerMove } = useSpotlight()
 const { t } = useI18n()
 const session = useSessionStore()
@@ -73,19 +75,21 @@ function onArtLeave() {
   <NuxtLink
     :to="`/case/${item.slug}`"
     class="kd-case-card kd-spotlight group relative flex h-full flex-col items-center gap-2 rounded-5xl border"
-    :class="[stock?.out && 'is-sold-out', big && 'is-big lg:flex-row lg:gap-0']"
+    :class="[stock?.out && 'is-sold-out', shape && `is-${shape}`]"
     @pointermove="onArtPointer"
     @pointerleave="onArtLeave"
   >
-    <div ref="artBox" class="kd-case-art-box relative aspect-square w-full lg:aspect-auto" :class="big ? 'lg:h-full lg:min-h-55 lg:w-1/2 lg:shrink-0' : 'lg:h-55'">
+    <div ref="artBox" class="kd-case-art-box relative aspect-square w-full lg:aspect-auto" :class="shape === 'tall' ? 'lg:min-h-55 lg:flex-1' : 'lg:h-55'">
       <img
         :src="item.image"
         :alt="item.name"
         loading="lazy"
         draggable="false"
         class="kd-case-art size-full object-contain"
-        :class="{ invisible: animReady }"
+        :class="[{ invisible: animReady }, shaped && 'lg:hidden']"
       />
+      <!-- the shaped picture for a wide / tall bento cell (desktop) -->
+      <img v-if="shaped" :src="shaped" :alt="item.name" loading="lazy" draggable="false" class="kd-case-art absolute inset-0 hidden size-full object-contain max-lg:hidden lg:block" />
       <canvas
         v-if="playing && item.rig"
         ref="rigCanvas"
@@ -114,8 +118,8 @@ function onArtLeave() {
       </span>
     </div>
 
-    <div class="flex w-full flex-col items-center gap-2 px-3 pb-3 lg:gap-3 lg:px-4 lg:pb-[14px]" :class="big && 'lg:justify-center lg:py-6 lg:pr-6 lg:pl-2'">
-      <h3 class="w-full truncate text-center" :class="big ? 'type-14-caps lg:type-20-caps' : 'type-12-caps lg:type-14-caps'">{{ item.name }}</h3>
+    <div class="flex w-full flex-col items-center gap-2 px-3 pb-3 lg:gap-3 lg:px-4 lg:pb-[14px]">
+      <h3 class="type-12-caps lg:type-14-caps w-full truncate text-center">{{ item.name }}</h3>
 
       <div class="kd-case-price relative flex w-full items-center justify-center rounded-lg py-1.5 lg:py-2">
         <span class="kd-case-price-fill bg-brand-gradient absolute inset-0 rounded-lg shadow-inner-primary" />
