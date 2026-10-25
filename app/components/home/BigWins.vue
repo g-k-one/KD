@@ -99,6 +99,8 @@ const artSize = () => (isLg.value ? 106 : 62)
   }
 }
 .kd-win-echo {
+  /* the copies leave the shape as it stands: the same centre and the same tilt as the art (kd-win-art) */
+  --tilt: -12deg;
   top: 50%;
   left: 50%;
   width: var(--size);
@@ -110,11 +112,11 @@ const artSize = () => (isLg.value ? 106 : 62)
 @keyframes kd-win-echo {
   0% {
     opacity: 0.55;
-    transform: translate(-50%, -50%) scale(1.08) rotate(0deg);
+    transform: translate(-50%, -50%) rotate(var(--tilt)) scale(1.08);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(2.1) rotate(12deg);
+    transform: translate(-50%, -50%) rotate(var(--tilt)) scale(2.1);
   }
 }
 @media (prefers-reduced-motion: reduce) {
