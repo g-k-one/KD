@@ -29,7 +29,19 @@ export default defineNuxtConfig({
     // The artifact host caps a version at 511 files: one stylesheet instead of one per component
     ...(artifact && { build: { cssCodeSplit: false } }),
     // and small client JS chunks merged into their neighbours (the skin pictures alone take ~360 of the files)
-    ...(artifact && { $client: { build: { rollupOptions: { output: { experimentalMinChunkSize: 120_000 } } } } }),
+    // (the admin panel's pages and parts go into one chunk: it is only ever opened on its own)
+    ...(artifact && {
+      $client: {
+        build: {
+          rollupOptions: {
+            output: {
+              experimentalMinChunkSize: 60_000,
+              manualChunks: (id: string) => (/[\\/](pages[\\/]admin|components[\\/]admin)|useAdminDraft/.test(id) ? 'admin' : undefined),
+            },
+          },
+        },
+      },
+    }),
   },
 
   app: {
