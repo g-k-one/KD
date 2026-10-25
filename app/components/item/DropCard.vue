@@ -3,7 +3,8 @@ import type { Item } from '#shared/types/api'
 
 // Figma "DropItemCard" (Case): wear + drop chance on top, art, weapon, skin (rarity colour), price.
 // drops: how often it dropped in the last 24 h — shown only for a moment when the page "flashes" this card
-// (one random card every few seconds, like a flashlight passing over the grid); never on hover.
+// (one random card every few seconds, like a flashlight passing over the grid): it takes the chance's place in the
+// top row with the same swap as the hover's ticket range, so nothing covers the art.
 const props = defineProps<{ item: Item; chance?: string; compact?: boolean; range?: [number, number]; drops?: number; flash?: boolean }>()
 const showDrops = computed(() => props.drops != null && props.drops > 0)
 const fmt = (n: number) => n.toLocaleString('en-US').replace(/,/g, ' ')
@@ -22,17 +23,15 @@ const rc = computed(() => RARITY_COLOR[props.item.rarity])
         <span class="kd-drop-meta">{{ item.wear }}</span>
       </span>
       <!-- Chance by default; on hover the ticket range this item owns (Figma DropItemCard hover) -->
-      <span v-if="chance" class="relative grid justify-items-end" :class="range && 'has-range'">
+      <span v-if="chance" class="relative grid justify-items-end" :class="[range && 'has-range', showDrops && flash && 'is-flash']">
         <span class="kd-drop-meta kd-drop-chance col-start-1 row-start-1 normal-case tabular-nums">{{ chance }}</span>
         <span v-if="range" class="kd-drop-meta kd-drop-range col-start-1 row-start-1 normal-case whitespace-nowrap tabular-nums">{{ fmt(range[0]) }}–{{ fmt(range[1]) }}</span>
+        <span v-if="showDrops" class="kd-drop-today col-start-1 row-start-1 flex items-center gap-1 normal-case whitespace-nowrap tabular-nums">
+          <UiIcon name="history" :size="12" />{{ $t('case.drops24h', { n: drops }) }}
+        </span>
       </span>
     </div>
-    <span class="relative w-full">
-      <ItemArt :image="item.image" :rarity="item.rarity" :size="compact ? 72 : 96" :alt="`${item.weapon} | ${item.skin}`" class="w-full" />
-      <span v-if="showDrops" class="kd-drops type-10-caps absolute bottom-0 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-md px-1.5 py-0.5 tabular-nums" :class="flash && 'is-always'">
-        <UiIcon name="history" :size="12" />{{ $t('case.drops24h', { n: drops }) }}
-      </span>
-    </span>
+    <ItemArt :image="item.image" :rarity="item.rarity" :size="compact ? 72 : 96" :alt="`${item.weapon} | ${item.skin}`" class="w-full" />
     <div class="flex w-full min-w-0 flex-col items-center gap-1 lg:gap-2">
       <span class="kd-drop-weapon type-12-caps max-w-full truncate">{{ item.weapon }}</span>
       <span class="type-14 max-w-full truncate text-center" :style="{ color: rc }">{{ item.skin }}</span>
@@ -46,19 +45,22 @@ const rc = computed(() => RARITY_COLOR[props.item.rarity])
   background: var(--color-neutral-2);
   transition: background-color var(--dur-base) var(--ease-out);
 }
-.kd-drops {
-  background: rgb(12 13 16 / 0.72);
-  color: var(--color-neutral-13);
+/* "N× today" swaps in for the chance while the flashlight passes over this card */
+.kd-drop-today {
+  color: var(--color-coin);
   opacity: 0;
-  translate: -50% 4px;
+  transform: translateY(3px);
   transition:
     opacity var(--dur-base) var(--ease-out),
-    translate var(--dur-base) var(--ease-out);
+    transform var(--dur-base) var(--ease-out);
 }
-.kd-drops.is-always {
+.is-flash .kd-drop-today {
   opacity: 1;
-  translate: -50% 0;
-  color: var(--color-coin);
+  transform: none;
+}
+.is-flash .kd-drop-chance {
+  opacity: 0;
+  transform: translateY(-3px);
 }
 .kd-drop-meta {
   color: var(--color-neutral-8);
@@ -86,6 +88,10 @@ const rc = computed(() => RARITY_COLOR[props.item.rarity])
   .kd-drop:hover .kd-drop-range {
     opacity: 1;
     transform: none;
+  }
+  /* the pointer's ticket range wins over a passing "N× today" */
+  .kd-drop:hover .has-range .kd-drop-today {
+    opacity: 0;
   }
 }
 /* Hover: surface to neutral-3, border neutral-6 (softer than Figma's neutral-7, docs/ux-audit-v2.md), meta brightens to neutral-13/14. */

@@ -19,6 +19,8 @@ import { RARITY_HEX } from './rarity'
  *               close to the dial (no glow wash, no second wave)
  *   kdBurn    — loop around a label: a flat warm glow hugging it, licks and embers rising along its width
  *               (the label's middle sits at y ≈ 300)
+ *   kdBlaze   — kdBurn turned up for a small plate that must read as on fire (a limited case's stock): tall licks
+ *               that clear the plate's top edge, a denser shower of embers, a hotter glow; same base line
  *   kdRank    — Forge's rank reveal (motion pack, `tier`: base → luck → mega → ultra → jackpot) in the rarity's own
  *               colour, one burst on the drop's rarity shape; opts { color: '#hex', level: 0…4 }
  */
@@ -362,6 +364,28 @@ export function defineKdEffects(engine: Engine) {
     },
     render(s, c) {
       h.sprite(c, 180, 298, 400, 0, 0.5 + 0.08 * Math.sin(s.t * 7), 1, c.at.map.glow!, 0.26, ORANGE)
+      h.draw(c, s.lick as Particle[])
+      h.draw(c, s.em as Particle[])
+    },
+  }))
+
+  engine.define('kdBlaze', (h) => ({
+    atlas: 'kd',
+    init: (s) => Object.assign(s, { em: [] as Particle[], lick: [] as Particle[] }),
+    update(s, dt, at) {
+      const { R } = h
+      h.emit(s.acc, 1, 44, dt, () =>
+        h.spawn(s.em as Particle[], { x: R(50, 310), y: R(270, 300), vx: R(-16, 16), vy: R(-240, -130), sway: R(10, 26), size: R(18, 32), life: R(0.6, 1.1), cells: [at.map.ember], add: 1, tint: Math.random() < 0.5 ? ORANGE : AMBER, fadeIn: 0.08, fadeOut: 0.7 }),
+      )
+      // the licks start on the plate's top edge and climb well over it, so the fire shows above the plate, not behind it
+      h.emit(s.acc, 2, 22, dt, () =>
+        h.spawn(s.lick as Particle[], { x: R(80, 280), y: R(262, 282), vy: R(-150, -90), size: R(90, 150), stretch: 1.9, sc: [[0, 0.45], [0.3, 1], [1, 0.25]], life: R(0.4, 0.7), cells: [at.map.glow], add: 1, alpha: 0.75, tint: Math.random() < 0.5 ? [1, 0.42, 0.08] : [1, 0.62, 0.18], fadeIn: 0.2, fadeOut: 0.6 }),
+      )
+      h.step(s.em as Particle[], dt)
+      h.step(s.lick as Particle[], dt)
+    },
+    render(s, c) {
+      h.sprite(c, 180, 292, 440, 0, 0.62 + 0.1 * Math.sin(s.t * 8), 1, c.at.map.glow!, 0.3, ORANGE)
       h.draw(c, s.lick as Particle[])
       h.draw(c, s.em as Particle[])
     },

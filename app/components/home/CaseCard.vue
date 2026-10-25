@@ -117,13 +117,18 @@ function onArtLeave() {
         @load="animReady = true"
       />
       <img v-if="look === 'coop'" src="/img/coop/nest-front.webp" alt="" aria-hidden="true" draggable="false" class="kd-nest is-front" />
-      <!-- a limited case: how many are left, as a plate with a bar over the art's foot -->
-      <span v-if="stock" class="kd-stock type-10-caps absolute bottom-1 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 rounded-md px-2 pt-1 pb-1.5" :class="[stock.low && 'is-low', stock.out && 'is-out']">
-        <span class="flex items-center gap-1 whitespace-nowrap tabular-nums">
-          <UiIcon :name="stock.out ? 'x-circle' : 'fire'" :size="12" />
-          {{ stock.out ? $t('cases.soldOut') : $t('cases.left', { n: stock.left }) }}
-        </span>
-        <span v-if="!stock.out" class="kd-stock-track h-0.5 w-full overflow-hidden rounded-full"><span class="kd-stock-fill block h-full rounded-full" :style="{ width: `${Math.max(4, stock.share * 100)}%` }" /></span>
+      <!-- a limited case: a burning plate on the art's foot. The plate is its own gauge: the fire-coloured part is
+           what is left of the stock, the rest is burnt-out ember. Sold out, it goes cold and grey. -->
+      <span v-if="stock" class="absolute bottom-1 left-1/2 z-[2] -translate-x-1/2">
+        <FxFire :on="!stock.out" effect="kdBlaze" :spread="stock.low ? 2 : 1.6">
+          <span class="kd-stock type-12-caps relative z-[2] inline-flex h-6 items-center overflow-hidden rounded-md px-2 whitespace-nowrap tabular-nums" :class="[stock.low && 'is-low', stock.out && 'is-out']">
+            <span v-if="!stock.out" class="kd-stock-fill absolute inset-0" :style="{ transform: `scaleX(${Math.max(0.06, stock.share)})` }" />
+            <span class="relative flex items-center gap-1">
+              <UiIcon :name="stock.out ? 'x-circle' : 'fire'" :size="12" />
+              {{ stock.out ? $t('cases.soldOut') : $t('cases.left', { n: stock.left }) }}
+            </span>
+          </span>
+        </FxFire>
       </span>
     </div>
 
@@ -232,30 +237,34 @@ function onArtLeave() {
     transform: translateX(100%);
   }
 }
-/* the stock plate sits on the art's foot */
+/* the stock plate: burnt-out ember under a fire-coloured fill for what is left (the HOT badge's fire, so the two
+   read as one family) */
 .kd-stock {
-  z-index: 2;
-  background: rgb(12 13 16 / 0.82);
-  color: var(--color-neutral-14);
-  box-shadow: inset 0 0 0 1px var(--color-neutral-6);
-  backdrop-filter: blur(6px);
   min-width: 84px;
-}
-.kd-stock-track {
-  background: var(--color-neutral-5);
+  justify-content: center;
+  color: var(--color-neutral-15);
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.45);
+  background: #3b1309;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 95 31 / 0.6),
+    0 0 12px rgb(255 95 31 / 0.4);
 }
 .kd-stock-fill {
-  background: var(--color-coin);
+  transform-origin: left center;
+  background: linear-gradient(180deg, #ffb13b, var(--color-brand-base) 60%, #d93a12);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
 }
+/* the last tenth: the ember glows hotter */
 .kd-stock.is-low {
-  color: var(--color-brand-light);
-  box-shadow: inset 0 0 0 1px rgb(255 95 31 / 0.55);
-}
-.kd-stock.is-low .kd-stock-fill {
-  background: var(--color-brand-base);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 177 59 / 0.85),
+    0 0 18px rgb(255 95 31 / 0.65);
 }
 .kd-stock.is-out {
   color: var(--color-neutral-11);
+  text-shadow: none;
+  background: rgb(12 13 16 / 0.82);
+  box-shadow: inset 0 0 0 1px var(--color-neutral-6);
 }
 .kd-case-card.is-sold-out .kd-case-art {
   opacity: 0.4;
