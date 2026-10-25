@@ -755,9 +755,10 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 }
 /* The drop floats and its glow breathes while it is yours; once sold it stops and dims */
 .kd-reel-card[data-win]:not(.is-sold) > .kd-art {
-  /* translate only (compositor), the glow is static: animating a drop-shadow filter stuttered */
-  will-change: translate;
-  animation: kd-drop-float 3.2s cubic-bezier(0.45, 0, 0.55, 1) 800ms infinite;
+  /* translate only (compositor), the glow is static: animating a drop-shadow filter stuttered. No will-change and
+     no float until the reveal is over (the last wave and the bloom end by ~1.4 s): a layer made for the drop at the
+     landing was sized to it and cut the rarity waves and the bloom off flat as they grew past it */
+  animation: kd-drop-float 3.2s cubic-bezier(0.45, 0, 0.55, 1) 1500ms infinite;
 }
 @keyframes kd-drop-float {
   50% {

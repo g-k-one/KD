@@ -2,16 +2,17 @@
 import type { CaseSummary } from '#shared/types/api'
 
 // "Continue" (#4): the cases the player opened last, one tap back into them. Small tiles on a rail, so the row
-// costs little height above the full grid; hidden until there is something to continue.
+// costs little height above the full grid; on desktop the title stands on the rail's line, so one or two tiles don't
+// leave a whole row of air. Hidden until there is something to continue.
 const props = defineProps<{ cases: CaseSummary[] }>()
 const { slugs } = useRecentCases()
 const recent = computed(() => slugs.value.map((s) => props.cases.find((c) => c.slug === s)).filter((c): c is CaseSummary => !!c))
 </script>
 
 <template>
-  <section v-if="recent.length" class="flex flex-col gap-3">
-    <h2 class="type-16-caps lg:type-20-caps">{{ $t('home.continue') }}</h2>
-    <div class="scrollbar-none -mx-4 flex snap-x gap-2 overflow-x-auto px-4 lg:mx-0 lg:px-0">
+  <section v-if="recent.length" class="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
+    <h2 class="type-16-caps lg:type-20-caps shrink-0">{{ $t('home.continue') }}</h2>
+    <div class="scrollbar-none -mx-4 flex min-w-0 snap-x scroll-px-4 gap-2 overflow-x-auto px-4 lg:mx-0 lg:scroll-px-0 lg:px-0">
       <NuxtLink
         v-for="c in recent"
         :key="c.slug"

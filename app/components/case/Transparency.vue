@@ -4,6 +4,8 @@ import type { CaseDetails } from '#shared/types/api'
 // Figma "TransparencyBlock": RTP + chances to hit <x1, x2+, x3+, x5+, x10+ of the price, plus risk.
 const props = defineProps<{ data: CaseDetails }>()
 const infoOpen = ref(false)
+// phones: the odds fold under the RTP row so the reel and the Open button fit the first screen; a chevron unfolds them
+const oddsOpen = ref(false)
 // the risk explains itself too: hover on desktop, a tap anywhere
 const riskOpen = ref(false)
 const hoverRisk = (e: PointerEvent, v: boolean) => e.pointerType === 'mouse' && (riskOpen.value = v)
@@ -37,7 +39,7 @@ const isLg = useMediaQuery('(min-width: 1024px)')
 <template>
   <div
     ref="root"
-    class="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3 rounded-3xl bg-neutral-2 px-4 py-3 lg:flex lg:gap-12 lg:py-[5px]"
+    class="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-3 rounded-3xl bg-neutral-2 px-4 py-3 lg:flex lg:gap-12 lg:py-[5px]"
   >
     <div class="relative order-1 flex items-center gap-2 lg:gap-3">
       <span class="text-xl leading-7 font-bold text-neutral-11 lg:type-28">{{ $t('case.rtp') }}</span>
@@ -53,18 +55,19 @@ const isLg = useMediaQuery('(min-width: 1024px)')
       </Transition>
     </div>
 
-    <div class="order-3 col-span-2 grid flex-1 grid-cols-5 gap-3 lg:order-2 lg:gap-6">
+    <div id="kd-odds" class="order-3 col-span-3 grid flex-1 grid-cols-5 gap-3 lg:order-2 lg:gap-6" :class="!oddsOpen && 'max-lg:hidden'">
       <div v-for="(r, i) in rows" :key="r.key" class="flex min-w-0 flex-col gap-1" :style="{ '--oc': r.color }">
         <div class="flex flex-col justify-between gap-0 lg:flex-row lg:items-baseline lg:gap-2">
           <span class="type-12-caps text-neutral-12">{{ r.label }}</span>
           <span class="type-14 lg:type-16-medium tabular-nums" :class="r.muted ? 'text-neutral-13' : 'kd-odds-value'">{{ pct(r.value) }}</span>
         </div>
         <!-- The track is tinted in the multiplier's colour and the fill follows a square-root scale,
-             so 2% still reads as a real bar next to 90% while the order stays honest. -->
+             so 2% still reads as a real bar next to 90% while the order stays honest. The fill is full width
+             and slides in (transform only); the track clips it. -->
         <div class="kd-odds-track h-2 overflow-hidden rounded-full">
           <div
-            class="kd-odds-bar h-full rounded-full"
-            :style="{ width: shown ? `${fill(r.value)}%` : '0%', transitionDelay: `${i * 70}ms` }"
+            class="kd-odds-bar h-full w-full rounded-full"
+            :style="{ transform: `translateX(${shown ? fill(r.value) - 100 : -100}%)`, transitionDelay: `${i * 70}ms` }"
           />
         </div>
       </div>
@@ -100,6 +103,18 @@ const isLg = useMediaQuery('(min-width: 1024px)')
         </p>
       </Transition>
     </button>
+    <UiButton
+      variant="ghost"
+      size="m"
+      icon="chevron-down-sm"
+      icon-only
+      class="order-2 lg:hidden [&_svg]:transition-transform"
+      :class="oddsOpen && '[&_svg]:rotate-180'"
+      :aria-label="$t('case.odds')"
+      :aria-expanded="oddsOpen"
+      aria-controls="kd-odds"
+      @click="oddsOpen = !oddsOpen"
+    />
   </div>
 </template>
 
@@ -110,7 +125,7 @@ const isLg = useMediaQuery('(min-width: 1024px)')
 .kd-odds-bar {
   background: linear-gradient(90deg, color-mix(in srgb, var(--oc) 70%, transparent), var(--oc));
   box-shadow: 0 0 10px color-mix(in srgb, var(--oc) 70%, transparent);
-  transition: width 900ms var(--ease-out);
+  transition: transform 900ms var(--ease-out);
 }
 .kd-odds-value {
   color: var(--oc);

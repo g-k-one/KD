@@ -26,6 +26,8 @@ export interface StageLoot {
   /** which way a poke kicks it, px */
   bx: number
   by: number
+  /** left out on phones (a label there is drawn twice as big and needs the room) */
+  wideOnly?: boolean
 }
 const props = withDefaults(
   defineProps<{
@@ -82,10 +84,14 @@ const at = (l: { x: number; y: number; d: number; w?: number }) => ({ left: `${l
     </button>
     <img v-for="(l, i) in front" :key="`f${i}`" :src="l.src" alt="" draggable="false" class="kd-depth pointer-events-none absolute" :style="at(l)" />
     <!-- the loot: floats on its own, the pointer moves it by depth, a poke kicks it outward -->
-    <span v-for="(it, i) in loot" :key="`l${i}`" class="kd-depth pointer-events-none absolute" :style="at(it)">
+    <span v-for="(it, i) in loot" :key="`l${i}`" class="kd-depth pointer-events-none absolute" :class="it.wideOnly && 'max-sm:hidden'" :style="at(it)">
       <span :key="jolt" class="kd-stage-kick block" :class="jolt > 0 && 'is-on'" :style="{ '--bx': `${it.bx}px`, '--by': `${it.by}px` }">
         <img v-if="it.src" :src="it.src" alt="" draggable="false" class="kd-stage-float block w-full" :style="{ '--r': `${it.r}deg`, animationDelay: `${i * -0.7}s` }" />
-        <span v-else class="kd-stage-float kd-stage-chip type-14 block rounded-lg px-3 py-2 whitespace-nowrap tabular-nums" :style="{ '--r': `${it.r}deg`, animationDelay: `${i * -0.7}s` }">{{ it.label }}</span>
+        <span
+          v-else
+          class="kd-stage-float kd-stage-chip type-14 block rounded-lg px-3 py-2 whitespace-nowrap tabular-nums"
+          :style="{ '--r': `${it.r}deg`, animationDelay: `${i * -0.7}s`, transformOrigin: it.x > 300 ? '100% 50%' : '0 50%' }"
+        >{{ it.label }}</span>
       </span>
     </span>
     <span v-if="bubble" class="kd-stage-bubble type-12-caps absolute rounded-lg px-2.5 py-1.5" :style="{ left: `${bubbleAt.x}px`, top: `${bubbleAt.y}px` }">{{ bubble }}</span>
@@ -179,7 +185,13 @@ img.kd-stage-float {
     transform: translateY(-10px) rotate(4deg);
   }
 }
-/* a label floating like loot: a glassy code chip */
+/* a label floating like loot: a glassy code chip. Phones draw the board at 0.44, so a chip doubles (`scale`, apart
+   from the float's transform) to stay readable, growing away from the board's nearer edge */
+@media (max-width: 39.999rem) {
+  .kd-stage-chip {
+    scale: 2;
+  }
+}
 .kd-stage-chip {
   color: var(--color-neutral-14);
   background: rgb(12 13 16 / 0.72);

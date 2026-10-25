@@ -86,7 +86,11 @@ function removePiece(p: Piece) {
       <Transition name="kd-stake-swap" mode="out-in">
         <div v-if="layout === 'empty'" key="empty" class="flex min-h-56 flex-1 flex-col items-center justify-center gap-4 text-center">
           <UiIcon name="deck-plus" :size="72" class="kd-stake-icon kd-ico-deck text-neutral-10" />
-          <p class="type-16-caps max-w-40 font-bold text-neutral-12">{{ $t('upgrade.chooseSkins') }}</p>
+          <!-- the same words as the phone's card: the step, then where it comes from -->
+          <p class="flex flex-col gap-1">
+            <span class="type-16-caps font-bold text-neutral-12">{{ $t('upgrade.addSkins') }}</span>
+            <span class="type-14-regular text-neutral-11">{{ $t('upgrade.addSkinsHint') }}</span>
+          </p>
         </div>
 
         <!-- One piece: shown big, same layout as the target card -->

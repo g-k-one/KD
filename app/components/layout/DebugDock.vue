@@ -122,15 +122,16 @@ const resetDaily = async () => {
 </script>
 
 <template>
-  <div class="fixed top-[45%] right-2 z-[65] lg:top-auto lg:right-auto lg:bottom-4 lg:left-4">
+  <!-- phones: a narrow tab on the screen's edge, so it sits in the side margin instead of over cards and buttons -->
+  <div class="fixed top-[45%] right-0 z-[65] lg:top-auto lg:right-auto lg:bottom-4 lg:left-4">
     <button
       type="button"
-      class="kd-press grid size-10 place-items-center rounded-full border border-neutral-6 bg-neutral-3 text-lg shadow-elevation-2"
+      class="kd-press grid h-10 w-6 place-items-center rounded-l-xl border border-r-0 border-neutral-6 bg-neutral-3 text-lg opacity-80 shadow-elevation-2 lg:size-10 lg:rounded-full lg:border-r lg:opacity-100"
       :aria-expanded="open"
       aria-label="Debug"
       @click="open = !open"
     >
-      <UiIcon name="settings" :size="18" />
+      <UiIcon name="settings" :size="16" />
     </button>
 
     <Transition name="kd-dock">

@@ -422,7 +422,7 @@ export function getCaseSections(): CaseSection[] {
   })
   const pick = (slugs: string[]) => slugs.map((s) => all.find((c) => c.slug === s)!)
   const rows: Record<string, () => CaseSection> = {
-    hot: () => ({ id: 'hot', title: 'Hot right now', cases: pick(['pieklo', 'mafia', 'wiosna']) }),
+    hot: () => ({ id: 'hot', title: 'Hot right now', cases: pick(['pieklo', 'mafia', 'wiosna', 'high-roller', 'krakow-knife']) }),
     weekly: () => weeklyPicks(all),
     featured: () => ({ id: 'featured', title: 'Featured cases', cases: all.filter((c) => !['pieklo', 'mafia', 'wiosna'].includes(c.slug)) }),
     'polish-classics': () => ({ id: 'polish-classics', title: 'Polish classics', cases: pick(['babcias-box', 'vodka-drop', 'golden-kielbasa', 'kurwa-classic', 'pierogi-pack']) }),

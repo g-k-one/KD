@@ -34,12 +34,16 @@ const props = defineProps<{
 const is = (p: 'cta' | 'chance' | 'balance') => !props.part || props.part === 'all' || props.part === p
 const extra = defineModel<number>('extra', { required: true })
 const fast = defineModel<boolean>('fast', { required: true })
-const emit = defineEmits<{ aim: [chancePct: number]; upgrade: []; reset: []; again: []; skip: [] }>()
+const emit = defineEmits<{ aim: [chancePct: number]; upgrade: []; reset: []; again: []; skip: []; pick: [what: 'stake' | 'target'] }>()
 const offerAgain = computed(() => !!props.again && !props.input && props.state !== 'spinning')
-// one spot, like the case page: Upgrade → Skip while the dial turns → Upgrade again
-const onCta = () => (props.settling ? undefined : busy.value ? emit('skip') : offerAgain.value ? emit('again') : emit('upgrade'))
-
 const busy = computed(() => props.state === 'spinning')
+// Nothing to play yet: the button stays quiet and names the next step (Add skins → Pick a skin), and a tap takes the
+// player there instead of saying no
+const idle = computed(() => props.signedIn && !busy.value && !offerAgain.value && !(props.target && props.input))
+// one spot, like the case page: Upgrade → Skip while the dial turns → Upgrade again
+const onCta = () =>
+  props.settling ? undefined : busy.value ? emit('skip') : offerAgain.value ? emit('again') : idle.value ? emit('pick', props.input ? 'target' : 'stake') : emit('upgrade')
+
 const real = computed(() => props.chance / 100)
 const MIN = 1
 // the cap and the house edge are admin settings (GET /api/rules)
@@ -164,7 +168,7 @@ const canReset = computed(() => !!(props.input || props.target))
   <section class="kd-controls grid grid-cols-[minmax(0,1fr)] gap-2" :class="busy && 'is-busy'">
     <!-- CTA, then Reset · Fast as two equal chips under it (the case page's dock has the same block) -->
     <div v-if="is('cta')" class="flex flex-wrap gap-2" :class="part !== 'cta' && 'kd-cta-dock max-lg:order-last'">
-      <UiButton size="l" class="kd-cta h-12 min-w-0 basis-full lg:h-14" :variant="busy ? 'secondary' : 'primary'" @click="onCta">
+      <UiButton size="l" class="kd-cta h-12 min-w-0 basis-full lg:h-14" :variant="busy || idle ? 'secondary' : 'primary'" @click="onCta">
         <template v-if="offerAgain && again">
           <UiIcon name="upgrade" :size="20" />
           <span>{{ $t('upgrade.upgradeWin') }}</span>
@@ -180,7 +184,11 @@ const canReset = computed(() => !!(props.input || props.target))
           <span>{{ $t('case.skip') }}</span>
           <UiIcon name="chevron-right" :size="18" class="kd-skip-icon" />
         </template>
-        <span v-else>{{ !signedIn ? $t('auth.signInToPlay') : !input ? $t('upgrade.addToUpgrade') : $t('upgrade.chooseTarget') }}</span>
+        <template v-else-if="idle">
+          <UiIcon :name="input ? 'target-up' : 'plus'" :size="20" />
+          <span>{{ input ? $t('upgrade.pickTarget') : $t('upgrade.addSkins') }}</span>
+        </template>
+        <span v-else>{{ $t('auth.signInToPlay') }}</span>
       </UiButton>
       <UiChip size="m" icon="refresh" class="kd-tool" :disabled="busy || !canReset" @click="emit('reset')">
         <span class="truncate">{{ $t('upgrade.reset') }}</span>

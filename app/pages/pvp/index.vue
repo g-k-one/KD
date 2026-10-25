@@ -49,10 +49,11 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
     <UiPageBar :title="$t('pvp.title')" :left="[{ label: $t('case.allCases'), icon: 'arrow-left', to: '/' }]" />
     <!-- The plate, as the case page's dock: live and watching · Create PvP · in play -->
     <div class="kd-dock flex flex-col gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-3">
+      <!-- phones: three even cells, the number over its word, so all three fit one line; desktop: one line each -->
       <div class="flex gap-2 max-lg:order-last">
-        <span class="kd-dock-stat type-12-caps max-lg:flex-1 max-lg:justify-center"><span class="kd-stat-dot" /><span class="text-neutral-15 tabular-nums">{{ counts.live }}</span> {{ $t('pvp.live') }}</span>
-        <span class="kd-dock-stat type-12-caps max-lg:flex-1 max-lg:justify-center"><UiIcon name="eye" :size="16" /><span class="text-neutral-15 tabular-nums">{{ watching }}</span></span>
-        <span class="flex flex-1 lg:hidden"><span class="kd-dock-stat type-12-caps w-full justify-center"><UiPrice :amount="inPlay" size="s" tone="coin" /></span></span>
+        <span class="kd-dock-stat kd-dock-cell type-12-caps"><span class="flex items-center gap-2"><span class="kd-stat-dot" /><span class="text-neutral-15 tabular-nums">{{ counts.live }}</span></span>{{ $t('pvp.live') }}</span>
+        <span class="kd-dock-stat kd-dock-cell type-12-caps"><span class="flex items-center gap-2"><UiIcon name="eye" :size="16" /><span class="text-neutral-15 tabular-nums">{{ watching }}</span></span>{{ $t('pvp.watching') }}</span>
+        <span class="flex min-w-0 flex-1 lg:hidden"><span class="kd-dock-stat kd-dock-cell type-12-caps"><UiPrice :amount="inPlay" size="s" tone="coin" />{{ $t('pvp.inPlay') }}</span></span>
       </div>
       <UiButton icon="plus" size="l" class="w-full lg:h-14 lg:w-80" to="/pvp/create">{{ $t('pvp.create') }}</UiButton>
       <div class="flex justify-end max-lg:hidden">
@@ -109,6 +110,17 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
 @media (min-width: 64rem) {
   .kd-dock {
     padding-inline: 16px;
+  }
+}
+/* phones: a dock cell is a column — the number, then its word */
+@media (max-width: 63.999rem) {
+  .kd-dock-cell {
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding-inline: 8px;
   }
 }
 .kd-dock-stat {

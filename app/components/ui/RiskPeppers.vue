@@ -1,3 +1,19 @@
+<script lang="ts">
+// One observer for every set of peppers on the page (a home page holds dozens): the hot ones flicker only while on
+// screen, so cards scrolled away hold no running animations and no extra layers
+const seen = new WeakMap<Element, (on: boolean) => void>()
+let io: IntersectionObserver | null = null
+const watchSeen = (el: Element, cb: (on: boolean) => void) => {
+  io ??= new IntersectionObserver((entries) => entries.forEach((e) => seen.get(e.target)?.(e.isIntersecting)))
+  seen.set(el, cb)
+  io.observe(el)
+  return () => {
+    io?.unobserve(el)
+    seen.delete(el)
+  }
+}
+</script>
+
 <script setup lang="ts">
 import type { RiskLevel } from '#shared/types/api'
 
@@ -6,10 +22,15 @@ import type { RiskLevel } from '#shared/types/api'
 const props = withDefaults(defineProps<{ level: RiskLevel; size?: number }>(), { size: 18 })
 const LIT: Record<RiskLevel, number> = { low: 1, medium: 2, high: 3, extreme: 4 }
 const lit = computed(() => LIT[props.level])
+const root = useTemplateRef<HTMLElement>('root')
+const onScreen = ref(false)
+let stop: (() => void) | undefined
+onMounted(() => root.value && (stop = watchSeen(root.value, (on) => (onScreen.value = on))))
+onBeforeUnmount(() => stop?.())
 </script>
 
 <template>
-  <span class="kd-peppers inline-flex items-end gap-0.5" :class="`is-${level}`" role="img" :aria-label="$t(`risk.${level}`)">
+  <span ref="root" class="kd-peppers inline-flex items-end gap-0.5" :class="[`is-${level}`, onScreen && 'is-on']" role="img" :aria-label="$t(`risk.${level}`)">
     <svg
       v-for="n in 4"
       :key="n"
@@ -60,11 +81,14 @@ const lit = computed(() => LIT[props.level])
 .kd-pepper.is-lit .kd-shine-line {
   display: inline;
 }
-/* the hotter the case, the more the peppers flicker */
+/* the hotter the case, the more the peppers flicker (while on screen) */
 .is-high .kd-pepper.is-lit,
 .is-extreme .kd-pepper.is-lit {
   /* a fixed glow; only the wiggle animates (transform), so nothing repaints per frame */
   filter: drop-shadow(0 0 5px color-mix(in srgb, var(--pepper) 70%, transparent));
+}
+.is-high.is-on .kd-pepper.is-lit,
+.is-extreme.is-on .kd-pepper.is-lit {
   animation: kd-pepper-heat 1.6s ease-in-out infinite;
   animation-delay: calc(var(--i) * 120ms);
 }

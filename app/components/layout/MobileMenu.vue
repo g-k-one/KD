@@ -15,9 +15,9 @@ watch(() => ui.mobileMenuOpen, (v) => (lock.value = v))
 const settingsEl = useTemplateRef<HTMLElement>('settingsEl')
 const scrollToSettings = () => settingsEl.value?.scrollIntoView({ behavior: 'smooth' })
 
+// The profile holds the skins too, so there is no separate Inventory: two places, two tiles
 const ACCOUNT = [
   { key: 'profile', label: 'profile.profile', icon: 'user', to: '/profile' },
-  { key: 'inventory', label: 'profile.inventory', icon: 'inventory', to: '/profile?tab=inventory' },
   { key: 'history', label: 'profile.gameHistory', icon: 'history', to: '/profile?tab=history' },
 ]
 
@@ -55,7 +55,7 @@ async function logout() {
             <UiButton size="m" icon="plus" to="/deposit">{{ $t('wallet.deposit') }}</UiButton>
             <UiButton variant="secondary" size="m" icon="arrow-up" to="/profile?tab=inventory">{{ $t('wallet.withdraw') }}</UiButton>
           </div>
-          <nav class="grid grid-cols-3 gap-2">
+          <nav class="grid grid-cols-2 gap-2">
             <NuxtLink
               v-for="a in ACCOUNT"
               :key="a.key"

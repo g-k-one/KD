@@ -10,11 +10,11 @@ onClickOutside(profileRoot, () => ui.popover === 'profile' && (ui.popover = null
 onKeyStroke('Escape', () => (ui.popover = null))
 
 const desktopNav = MAIN_NAV
-const { dailyReady, dailyIn, welcomeLeft } = useBonuses()
+const { data, dailyReady, dailyIn, welcomeLeft } = useBonuses()
+const freeReady = computed(() => welcomeLeft.value > 0 || dailyReady.value)
 
 const PROFILE_MENU = [
   { key: 'profile', label: 'profile.profile', icon: 'user', to: '/profile' },
-  { key: 'inventory', label: 'profile.inventory', icon: 'inventory', to: '/profile?tab=inventory' },
   { key: 'history', label: 'profile.gameHistory', icon: 'history', to: '/profile?tab=history' },
   { key: 'fair', label: 'nav.provablyFair', icon: 'shield', to: '/fairness' },
   { key: 'settings', label: 'profile.settings', icon: 'sliders', to: '/profile?tab=settings' },
@@ -53,17 +53,20 @@ async function logout() {
     <div class="flex-1" />
 
 
-    <!-- Daily case: ready = glowing gift, otherwise the countdown -->
-    <NuxtLink
-      v-if="session.user"
-      to="/bonuses"
-      class="kd-press kd-daily type-12-caps relative mr-1 flex h-10 items-center gap-2 rounded-xl px-3"
-      :class="dailyReady ? 'is-ready text-neutral-15' : 'text-neutral-12 hover:text-neutral-15'"
-    >
-      <UiIcon name="bonuses" :size="20" :class="dailyReady ? 'text-coin' : ''" />
-      <UiTextSwap :text="dailyReady ? $t('bonus.dailyReady') : dailyIn" class="tabular-nums" />
-      <span v-if="welcomeLeft" class="type-10-caps grid h-4 min-w-4 place-items-center rounded-full bg-brand-base px-1 text-neutral-1">{{ welcomeLeft }}</span>
-    </NuxtLink>
+    <!-- Free cases: the welcome ones first (that is what Bonuses opens), then the daily case — ready = a glowing
+         gift, otherwise its countdown. Shown once the bonuses have loaded, so the pill never grows from empty. -->
+    <Transition name="kd-fade">
+      <NuxtLink
+        v-if="session.user && data"
+        to="/bonuses"
+        class="kd-press kd-daily type-12-caps relative mr-1 flex h-10 items-center gap-2 rounded-xl px-3"
+        :class="freeReady ? 'is-ready text-neutral-15' : 'text-neutral-12 hover:text-neutral-15'"
+      >
+        <UiIcon name="bonuses" :size="20" :class="freeReady ? 'text-coin' : ''" />
+        <UiTextSwap :text="welcomeLeft ? $t('bonus.freeReady') : dailyReady ? $t('bonus.dailyReady') : dailyIn" class="tabular-nums" />
+        <span v-if="welcomeLeft" class="type-10-caps grid h-4 min-w-4 place-items-center rounded-full bg-brand-base px-1 text-neutral-1">{{ welcomeLeft }}</span>
+      </NuxtLink>
+    </Transition>
 
     <div ref="settingsRoot" class="relative">
       <UiButton
@@ -148,6 +151,14 @@ async function logout() {
 <style scoped>
 .kd-daily {
   position: relative;
+}
+.kd-fade-enter-active,
+.kd-fade-leave-active {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.kd-fade-enter-from,
+.kd-fade-leave-to {
+  opacity: 0;
 }
 .kd-daily.is-ready {
   background: rgb(253 176 34 / 0.12);

@@ -4,8 +4,9 @@ import { upgradeChanceBp } from '#shared/upgrade'
 import type { CaseDetails, InventoryItem, MarketResponse, PfRoll } from '#shared/types/api'
 
 /*
- * The row under the open controls. One fixed height in both states, so nothing below jumps; the contents
- * cross-fade.
+ * The row under the open controls. One fixed height and the full width in both states, so nothing below jumps and
+ * the row keeps its shape; the states cross over in place (the old one sinks and fades while the new one rises in),
+ * and the new one's pieces come in one after another — the cards left to right, the drops along the strip.
  *   Before a drop — this case's best drops of the last 7 days, with their ×, best first (Hellcase-style
  *                   social proof: what this exact case has really paid)
  *   After a drop  — what to do with it, three equal cards across: Upgrade it (the unsold drops aimed at ~2.5×
@@ -42,11 +43,12 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
 </script>
 
 <template>
-  <div class="kd-hook w-full" :class="phase === 'spinning' && 'is-resting'">
-    <Transition name="kd-hc" mode="out-in">
+  <div class="kd-hook relative w-full" :class="phase === 'spinning' && 'is-resting'">
+    <!-- the duration covers the last piece's staggered rise, so the enter class stays until it lands -->
+    <Transition name="kd-hc" :duration="{ enter: 720, leave: 220 }">
       <!-- After a drop: what to do with it -->
       <div v-if="live" key="act" class="flex gap-2 lg:grid lg:grid-cols-3">
-        <component :is="upgrade ? NuxtLink : 'div'" :to="upgrade?.to" class="kd-hook-card kd-act" :class="upgrade ? 'kd-press is-live' : 'is-muted'">
+        <component :is="upgrade ? NuxtLink : 'div'" :to="upgrade?.to" class="kd-hook-card kd-act" :class="upgrade ? 'kd-press is-live' : 'is-muted'" style="--i: 0">
           <template v-if="upgrade">
             <ItemArt :image="upgrade.target.image" :rarity="upgrade.target.rarity" :size="40" class="w-14 shrink-0" />
             <span class="flex min-w-0 flex-col">
@@ -60,7 +62,7 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
             <span class="type-14 truncate text-neutral-12">{{ $t('case.hookUpgradeIdle') }}</span>
           </template>
         </component>
-        <button v-if="isLg" type="button" class="kd-hook-card kd-act" :class="unsold.length ? 'kd-press is-live is-sell' : 'is-muted'" :disabled="!unsold.length" @click="sellAll">
+        <button v-if="isLg" type="button" class="kd-hook-card kd-act" :class="unsold.length ? 'kd-press is-live is-sell' : 'is-muted'" :disabled="!unsold.length" style="--i: 1" @click="sellAll">
           <span class="kd-hc-ic kd-sell-ic"><UiIcon name="wallet" :size="22" /></span>
           <span class="flex min-w-0 flex-col text-left">
             <span class="type-12-caps text-neutral-11">{{ $t('wallet.sellAll') }}</span>
@@ -69,7 +71,7 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
           <UiPrice v-if="unsold.length" :amount="unsoldTotal" size="m" tone="coin" class="ml-auto" />
         </button>
         <!-- this very roll: the ticket, a tap to the rolls and the verifier -->
-        <button v-if="rolls?.length" type="button" class="kd-hook-card kd-act kd-check kd-press is-live" :aria-label="$t('case.checkRoll')" @click="emit('check')">
+        <button v-if="rolls?.length" type="button" class="kd-hook-card kd-act kd-check kd-press is-live" :aria-label="$t('case.checkRoll')" style="--i: 2" @click="emit('check')">
           <span class="kd-hc-ic kd-check-ic"><UiIcon name="shield-check" :size="22" /></span>
           <span class="flex min-w-0 flex-col text-left max-lg:hidden">
             <span class="type-12-caps text-neutral-11">{{ $t('case.checkRoll') }}</span>
@@ -80,13 +82,13 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
       </div>
 
       <!-- Before a drop: what this case has paid lately -->
-      <div v-else-if="top.length" key="top" class="kd-hook-card kd-top mx-auto w-fit max-w-full">
+      <div v-else-if="top.length" key="top" class="kd-hook-card kd-top w-full justify-center">
         <span class="flex shrink-0 flex-col pr-1 max-sm:hidden">
           <span class="type-12-caps flex items-center gap-1.5 text-neutral-11"><UiIcon name="trophy" :size="14" class="text-coin" />{{ $t('case.topDrops') }}</span>
           <span class="type-12-regular text-neutral-11">{{ $t('case.topDropsWindow') }}</span>
         </span>
         <div class="scrollbar-none flex min-w-0 flex-1 gap-1.5 overflow-x-auto max-sm:-mr-2 max-sm:pr-2 mask-r-from-85% sm:mask-none">
-          <div v-for="(d, i) in top" :key="i" class="kd-top-drop" :style="{ '--rc': RARITY_COLOR[d.item.rarity] }" :title="`${d.item.weapon} | ${d.item.skin} · ${d.nickname} · ${timeAgo(d.at)}`">
+          <div v-for="(d, i) in top" :key="i" class="kd-top-drop" :style="{ '--rc': RARITY_COLOR[d.item.rarity], '--i': i }" :title="`${d.item.weapon} | ${d.item.skin} · ${d.nickname} · ${timeAgo(d.at)}`">
             <ItemArt :image="d.item.image" :rarity="d.item.rarity" :size="34" class="w-12 shrink-0" />
             <span class="flex min-w-0 flex-col">
               <span class="kd-top-x tabular-nums">{{ xLabel(d.multiplier) }}</span>
@@ -180,18 +182,45 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
     background: var(--color-neutral-3);
   }
 }
-.kd-hc-enter-active,
+.kd-hc-enter-active {
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+/* the old state leaves in place, over the new one, and quicker than the new one arrives */
 .kd-hc-leave-active {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
   transition:
-    opacity var(--dur-base) var(--ease-out),
-    translate var(--dur-base) var(--ease-out);
+    opacity var(--dur-base) var(--ease-in),
+    transform var(--dur-base) var(--ease-in);
 }
 .kd-hc-enter-from {
   opacity: 0;
-  translate: 0 6px;
 }
 .kd-hc-leave-to {
   opacity: 0;
-  translate: 0 -6px;
+  transform: translateY(6px) scale(0.98);
+}
+/* the new state's pieces rise in one after another: the cards 70 ms apart, the drops 40 ms apart along the strip */
+.kd-hc-enter-active .kd-act,
+.kd-hc-enter-active .kd-top-drop {
+  animation: kd-hc-rise var(--dur-slow) var(--ease-spring) both;
+  animation-delay: calc(80ms + var(--i, 0) * 70ms);
+}
+.kd-hc-enter-active .kd-top-drop {
+  animation-delay: calc(60ms + var(--i, 0) * 40ms);
+}
+@keyframes kd-hc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kd-hc-enter-active .kd-act,
+  .kd-hc-enter-active .kd-top-drop {
+    animation: none;
+  }
 }
 </style>

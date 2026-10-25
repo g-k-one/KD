@@ -29,7 +29,7 @@ const pfLoot = computed<StageLoot[]>(() => {
   const hash = a ? `${a.serverSeedHash.slice(0, 6)}…${a.serverSeedHash.slice(-4)}` : '…'
   return [
     { label: t('fair.chipHash', { h: hash }), x: 10, y: 52, r: -6, d: 1.4, bx: -24, by: -16 },
-    { label: t('fair.chipClient', { s: a?.clientSeed ?? '…' }), x: 350, y: 44, r: 5, d: 1.2, bx: 22, by: -18 },
+    { label: t('fair.chipClient', { s: a?.clientSeed ?? '…' }), x: 350, y: 44, r: 5, d: 1.2, bx: 22, by: -18, wideOnly: true },
     { label: t('fair.chipNonce', { n: a?.nonce ?? 0 }), x: 400, y: 340, r: -3, d: 1.7, bx: 26, by: 10 },
     { src: '/img/coins/coin.webp', x: 300, y: 300, w: 44, r: -20, d: 1.9, bx: -10, by: 16 },
     { src: '/img/coins/coin.webp', x: 560, y: 150, w: 36, r: 25, d: 2.1, bx: 22, by: -8 },

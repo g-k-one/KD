@@ -74,7 +74,10 @@ watch(
         </div>
         <div v-else key="empty" class="flex h-full flex-col items-center justify-center gap-4 text-center">
           <UiIcon name="target-up" :size="72" class="kd-target-icon kd-ico-target text-neutral-10" />
-          <p class="type-16-caps max-w-48 font-bold text-neutral-12">{{ $t('upgrade.chooseTarget') }}</p>
+          <p class="flex flex-col gap-1">
+            <span class="type-16-caps font-bold text-neutral-12">{{ $t('upgrade.pickTarget') }}</span>
+            <span class="type-14-regular text-neutral-11">{{ $t('upgrade.pickTargetHint') }}</span>
+          </p>
         </div>
       </Transition>
     </div>

@@ -30,6 +30,10 @@ const allCases = computed(() => (data.value?.sections ?? []).flatMap((s) => s.ca
 const shapeOf = (c: CaseSummary, s: CaseSection) =>
   s.theme ? undefined : c.card === 'wide' && c.art?.wide ? ('wide' as const) : c.card === 'tall' && c.art?.tall && s.cases.length > 5 ? ('tall' as const) : undefined
 const SHAPE_CELL = { wide: 'lg:order-first lg:col-span-2', tall: 'lg:order-first lg:row-span-2' } as const
+// A short row (one desktop row or less) is a rail on phones: two cards and the edge of the next, swiped sideways —
+// no lone card on a line of its own, and the row costs one card's height. The big catalog keeps the grid.
+const RAIL = 'max-sm:-mx-4 max-sm:flex max-sm:snap-x max-sm:overflow-x-auto max-sm:px-4 max-sm:scroll-px-4 max-sm:scrollbar-none max-sm:[&>*]:w-[44%] max-sm:[&>*]:shrink-0 max-sm:[&>*]:snap-start'
+const isRail = (s: CaseSection) => !s.theme && s.cases.length <= 5
 
 // The home layout editor (prototype, opened from the debug dock): rows and cards are edited where they stand
 const homeLayout = useHomeLayout()
@@ -102,6 +106,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
         <div
           v-show="!collapsed[s.id]"
           class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-flow-dense xl:grid-cols-5"
+          :class="isRail(s) && RAIL"
         >
           <HomeCaseCard
             v-for="c in s.cases"

@@ -148,6 +148,12 @@ function openSheet(tab: 'mine' | 'desired') {
   panelTab.value = tab
   sheetOpen.value = true
 }
+/** The quiet CTA's next step: phones open the picker in its sheet, desktop brings the pickers into view */
+const panels = useTemplateRef<HTMLElement>('panels')
+function pick(what: 'stake' | 'target') {
+  if (!isLg.value) return openSheet(what === 'stake' ? 'mine' : 'desired')
+  panels.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 function pickTargetTile(it: Item) {
   // An upgrade only goes up: skins worth no more than the stake are not targets
   if (inputValue.value && it.price <= inputValue.value) return toast.show(t('upgrade.targetTooCheap'))
@@ -378,6 +384,7 @@ async function runUpgrade() {
       @again="upgradeWin"
       @skip="gauge?.skip()"
           @reset="resetAll"
+          @pick="pick"
         />
       </div>
 
@@ -406,6 +413,7 @@ async function runUpgrade() {
       @again="upgradeWin"
       @skip="gauge?.skip()"
           @reset="resetAll"
+          @pick="pick"
         />
       </div>
 
@@ -443,6 +451,7 @@ async function runUpgrade() {
       @again="upgradeWin"
       @skip="gauge?.skip()"
           @reset="resetAll"
+          @pick="pick"
         />
       </div>
 
@@ -466,13 +475,14 @@ async function runUpgrade() {
       @again="upgradeWin"
       @skip="gauge?.skip()"
       @reset="resetAll"
+      @pick="pick"
     />
 
     <!-- Panels: side by side on desktop, switchable tabs on mobile -->
     <Transition name="kd-scrim">
       <div v-if="sheetOpen && !isLg" class="fixed inset-0 z-[59] bg-black-60" @click="sheetOpen = false" />
     </Transition>
-    <div class="kd-panels flex flex-col gap-4" :class="sheetOpen && 'is-open'">
+    <div ref="panels" class="kd-panels flex scroll-mt-24 flex-col gap-4" :class="sheetOpen && 'is-open'">
     <div class="flex items-center gap-2 lg:hidden">
     <UiTabs
       v-model="panelTab"

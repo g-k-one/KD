@@ -63,8 +63,12 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
     <div class="grid grid-cols-2 gap-2 lg:flex lg:justify-end">
       <UiChip size="m" tone="coin" icon="fast" class="!h-12 w-full lg:w-auto lg:px-4" :active="fast" @click="fast = !fast">{{ $t('upgrade.fast') }}</UiChip>
       <UiTooltip :text="$t('case.kurwaHint')" class="min-w-0">
-        <UiChip size="m" tone="gold" icon="chicken" class="!h-12 w-full lg:px-4" :active="kurwadrop" @click="kurwadrop = !kurwadrop">
-          <span :class="kurwadrop && 'kd-kurwa-word'">{{ $t('case.kurwadrop') }}</span>
+        <UiChip size="m" tone="gold" icon="chicken" class="!h-12 w-full min-w-0 overflow-hidden lg:px-4" :active="kurwadrop" @click="kurwadrop = !kurwadrop">
+          <!-- the brand's name for the mode, and under it what it is: the name alone says nothing to a new player -->
+          <span class="flex min-w-0 flex-col items-start gap-0.5 text-left">
+            <span class="leading-none" :class="kurwadrop && 'kd-kurwa-word'">{{ $t('case.kurwadrop') }}</span>
+            <span class="type-10-caps truncate leading-none opacity-70">{{ $t('case.kurwaSub') }}</span>
+          </span>
         </UiChip>
       </UiTooltip>
     </div>

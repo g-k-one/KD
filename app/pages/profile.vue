@@ -34,6 +34,15 @@ async function load() {
   }
 }
 watch(() => session.user?.id, load, { immediate: true })
+// ?tab=history (the menu's Game history, "All history" links): the history panel, brought into view once it has
+// loaded and the router has done its own scroll to the top (it runs right after page:finish)
+const historyEl = useTemplateRef<HTMLElement>('historyEl')
+const pageReady = ref(false)
+useNuxtApp().hooks.hookOnce('page:finish', () => void setTimeout(() => (pageReady.value = true), 50))
+watch(
+  () => [loading.value, pageReady.value, route.query.tab] as const,
+  ([busy, ready, tab]) => !busy && ready && tab === 'history' && nextTick(() => historyEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })),
+)
 
 const gameOptions = computed(() => [
   { value: 'all' as const, label: t('account.allGames') },
@@ -180,7 +189,8 @@ async function saveTrade() {
             </div>
           </div>
         </div>
-        <UiButton icon="plus" size="l" to="/deposit" class="w-full lg:h-14 lg:w-80">{{ $t('wallet.deposit') }}</UiButton>
+        <!-- quiet here: the header and the tab bar already carry Deposit; the profile is about the skins -->
+        <UiButton variant="secondary" icon="plus" size="l" to="/deposit" class="w-full lg:h-14 lg:w-80">{{ $t('wallet.deposit') }}</UiButton>
         <div class="flex gap-2 lg:justify-end">
           <span class="kd-dock-stat max-lg:flex-1">
             <span class="type-12-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
@@ -229,7 +239,7 @@ async function saveTrade() {
         </div>
 
         <!-- Game history: the same panel; what the player did, newest first -->
-        <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2 lg:pb-4">
+        <div ref="historyEl" class="flex min-w-0 scroll-mt-36 flex-col rounded-5xl bg-neutral-2 lg:pb-4">
           <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
             <UiIcon name="history" :size="24" class="text-neutral-13" />
             <span class="type-14 lg:type-16-medium">{{ $t('account.history') }}</span>
