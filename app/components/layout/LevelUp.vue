@@ -76,7 +76,22 @@ const nextTier = computed(() => ladder.value.find((s) => shown.value != null && 
     >
       <!-- the badge stands half over the top edge -->
       <span ref="badge" class="kd-lvl-badge absolute -top-9 left-1/2 grid size-[72px] -translate-x-1/2 place-items-center">
-        <img src="/img/brand/level-badge.svg" alt="" class="absolute inset-0 size-full" />
+        <!-- the badge drawn here as one clean vector (no mask, no blurred shadow: they made its edges noisy), with a
+             shine sweeping across it now and then -->
+        <svg viewBox="0 0 24 24" class="absolute inset-0 size-full overflow-visible" aria-hidden="true">
+          <defs>
+            <linearGradient id="kd-lvl-fill" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#FFB547" />
+              <stop offset="1" stop-color="#FF5F1F" />
+            </linearGradient>
+            <clipPath id="kd-lvl-clip"><path d="M5.24156 2.96325C6.87757 0.129591 10.501 -0.841287 13.3346 0.794728L21.0367 5.24156C23.8704 6.87757 24.8413 10.501 23.2053 13.3346L18.7584 21.0367C17.1224 23.8704 13.499 24.8413 10.6654 23.2053L2.96325 18.7584C0.129591 17.1224 -0.841287 13.499 0.794728 10.6654L5.24156 2.96325Z" /></clipPath>
+          </defs>
+          <path d="M5.24156 2.96325C6.87757 0.129591 10.501 -0.841287 13.3346 0.794728L21.0367 5.24156C23.8704 6.87757 24.8413 10.501 23.2053 13.3346L18.7584 21.0367C17.1224 23.8704 13.499 24.8413 10.6654 23.2053L2.96325 18.7584C0.129591 17.1224 -0.841287 13.499 0.794728 10.6654L5.24156 2.96325Z" fill="url(#kd-lvl-fill)" />
+          <g clip-path="url(#kd-lvl-clip)">
+            <g transform="rotate(22 12 12)"><rect class="kd-lvl-shine" x="-10" y="-6" width="5" height="36" fill="#fff" opacity="0.5" /></g>
+          </g>
+          <path d="M5.24156 2.96325C6.87757 0.129591 10.501 -0.841287 13.3346 0.794728L21.0367 5.24156C23.8704 6.87757 24.8413 10.501 23.2053 13.3346L18.7584 21.0367C17.1224 23.8704 13.499 24.8413 10.6654 23.2053L2.96325 18.7584C0.129591 17.1224 -0.841287 13.499 0.794728 10.6654L5.24156 2.96325Z" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="0.6" />
+        </svg>
         <UiTextSwap :text="String(shown)" class="relative text-[28px] leading-none font-extrabold text-neutral-1 tabular-nums" />
       </span>
       <span class="type-12-caps kd-lvl-kicker">{{ $t('bonus.levelUp') }}</span>
@@ -97,22 +112,46 @@ const nextTier = computed(() => ladder.value.find((s) => shown.value != null && 
 </template>
 
 <style scoped>
-/* warm and lit: gold light pouring down from the badge over a lifted ground */
+/* warm grey: the orange of the badge at the top, settling into the site's grey at the foot; no outer glow (its haze
+   read as noise around the edges), just a plain shadow under it */
 .kd-lvl {
-  background:
-    radial-gradient(80% 70% at 50% 0%, rgb(255 190 70 / 0.42), transparent 75%),
-    linear-gradient(180deg, #3a2a12, #24201b);
+  background: linear-gradient(180deg, #6a3a17 0%, #3b2d24 42%, #2a2a2e 100%);
   box-shadow:
-    inset 0 1px 0 rgb(255 220 150 / 0.25),
-    0 16px 40px rgb(0 0 0 / 0.55),
-    0 0 48px -10px rgb(255 177 59 / 0.55);
+    inset 0 1px 0 rgb(255 210 150 / 0.22),
+    0 16px 40px rgb(0 0 0 / 0.55);
 }
 .kd-lvl-kicker {
   color: var(--color-gold-light);
 }
 .kd-lvl-badge {
-  filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.45));
-  animation: kd-lvl-pop 700ms var(--ease-spring) 380ms both;
+  animation:
+    kd-lvl-pop 700ms var(--ease-spring) 380ms both,
+    kd-lvl-bob 2.6s var(--ease-in-out) 1.1s infinite;
+}
+/* alive while it is up: the badge rides up and down a little… */
+@keyframes kd-lvl-bob {
+  50% {
+    transform: translateY(-4px) rotate(-3deg);
+  }
+}
+/* …and a shine sweeps across it every few seconds */
+.kd-lvl-shine {
+  animation: kd-lvl-shine 2.8s var(--ease-in-out) 0.9s infinite;
+}
+@keyframes kd-lvl-shine {
+  0% {
+    transform: translateX(0);
+  }
+  45%,
+  100% {
+    transform: translateX(40px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kd-lvl-badge,
+  .kd-lvl-shine {
+    animation: none;
+  }
 }
 @keyframes kd-lvl-pop {
   0% {
