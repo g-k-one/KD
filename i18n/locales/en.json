@@ -95,7 +95,14 @@
     "eggTitle": "Golden egg!",
     "eggText": "A free demo spin of Kurwa Classic, on the chicken",
     "eggCta": "Spin free",
-    "eggClose": "Close"
+    "eggClose": "Close",
+    "back": "Welcome back, {name}",
+    "freeTitle": "1 free case is waiting | {n} free cases are waiting",
+    "freeCta": "Open free",
+    "dailyTitle": "Your daily case is ready",
+    "dailyCta": "Open daily",
+    "picksTitle": "Fresh picks are in, go get them",
+    "picksCta": "Open cases"
   },
   "filters": {
     "price": "Price",
@@ -441,7 +448,17 @@
     "mismatch": "Does not match your result",
     "yourResult": "You got: {v}",
     "hood": "Under the hood",
-    "hoodHint": "The formula, how each mode rolls, your seed log, a manual check and your seeds"
+    "hoodHint": "The formula, how each mode rolls, your seed log, a manual check and your seeds",
+    "pokeLabel": "Poke the inspector",
+    "poke0": "Poke me",
+    "poke1": "Checking…",
+    "poke2": "Hash OK",
+    "poke3": "Seeds OK",
+    "poke4": "Nonce OK",
+    "pokeDone": "100% fair!",
+    "chipHash": "SHA-256 {h}",
+    "chipClient": "client {s}",
+    "chipNonce": "nonce #{n}"
   },
   "account": {
     "title": "Profile",

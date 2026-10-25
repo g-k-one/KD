@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { SeedsResponse } from '#shared/types/api'
+import type { StageLoot } from '~/components/banner/Stage.vue'
 
 // Figma "Fairness", around one path: the player's own rolls, each with one action (Check, or Reveal and check).
 // Order: hero, Your rolls, how it works in three steps, then "Under the hood" folded (the formula, per mode, the seed
@@ -9,6 +10,31 @@ useHead({ title: 'Provably Fair · KurwaDROP' })
 const { data: seedsData } = await useFetch<SeedsResponse>('/api/seeds', { key: 'seeds' })
 const seeds = ref<SeedsResponse | null>(seedsData.value ?? null)
 watch(seedsData, (v) => (seeds.value = v ?? null))
+
+// Hero art: a BannerStage like home's — the inspector chicken peers through a magnifier at a glass case you can see
+// into; around them float chips of the player's own seeds (the real hash, client seed and nonce), not decoration.
+// Five pokes run the check out loud, the last one bursts gold.
+const { onMove, onLeave, vars } = usePointerTilt()
+const pfStage = useTemplateRef<{ burst: () => void }>('pfStage')
+const pfPokes = ref(0)
+function onPfPoke(n: number) {
+  pfPokes.value = n
+  if (n === 5) pfStage.value?.burst()
+}
+const pfBubble = computed(() => (pfPokes.value >= 5 ? 'fair.pokeDone' : `fair.poke${pfPokes.value}`))
+const PF_CASE = [{ src: '/img/hero/pf-case.webp', x: 20, y: 96, w: 340, d: 0.3 }]
+const PF_CHICKEN = { src: '/img/hero/pf-chicken.webp', x: 322, y: 104, w: 260, d: 0.6 }
+const pfLoot = computed<StageLoot[]>(() => {
+  const a = seeds.value?.active
+  const hash = a ? `${a.serverSeedHash.slice(0, 6)}…${a.serverSeedHash.slice(-4)}` : '…'
+  return [
+    { label: t('fair.chipHash', { h: hash }), x: 10, y: 52, r: -6, d: 1.4, bx: -24, by: -16 },
+    { label: t('fair.chipClient', { s: a?.clientSeed ?? '…' }), x: 350, y: 44, r: 5, d: 1.2, bx: 22, by: -18 },
+    { label: t('fair.chipNonce', { n: a?.nonce ?? 0 }), x: 400, y: 340, r: -3, d: 1.7, bx: 26, by: 10 },
+    { src: '/img/coins/coin.webp', x: 300, y: 300, w: 44, r: -20, d: 1.9, bx: -10, by: 16 },
+    { src: '/img/coins/coin.webp', x: 560, y: 150, w: 36, r: 25, d: 2.1, bx: 22, by: -8 },
+  ]
+})
 
 const seedsOpen = ref(false)
 // the theory is there for whoever wants it, folded by default; a link from elsewhere (#seeds) opens it
@@ -72,10 +98,28 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
 
     <!-- Hero -->
     <section
-      class="relative isolate flex min-h-80 flex-col overflow-hidden rounded-5xl px-5 pt-6 pb-[min(66vw,260px)] sm:pb-6 lg:h-81 lg:overflow-visible lg:px-10 lg:pt-8 lg:pb-10"
-      style="background-image: linear-gradient(144deg, var(--color-neutral-3) 11%, #095024 75%, #007e43 97%)"
+      class="relative isolate flex min-h-80 flex-col overflow-hidden rounded-5xl px-5 pt-6 pb-6 lg:h-81 lg:overflow-visible lg:px-10 lg:pt-8 lg:pb-10"
+      :style="vars"
+      @pointermove="onMove"
+      @pointerleave="onLeave"
     >
-      <div class="relative z-10 flex flex-col gap-6 sm:max-w-[52%] lg:h-full lg:w-[709px] lg:max-w-none lg:justify-between">
+      <!-- the ground: near-black, a green pool of light where the glass case stands -->
+      <span class="kd-fair-ground pointer-events-none absolute inset-0 -z-10 rounded-[inherit]" aria-hidden="true" />
+      <!-- the stage: a band above the text on phones, the right side wider -->
+      <div class="relative -mx-5 -mt-6 mb-2 h-44 sm:absolute sm:inset-y-0 sm:right-0 sm:m-0 sm:h-auto sm:w-[48%] lg:w-[620px]">
+        <BannerStage
+          ref="pfStage"
+          :back="PF_CASE"
+          :mascot="PF_CHICKEN"
+          :loot="pfLoot"
+          :rays="{ x: 190, y: 230, color: 'rgb(80 230 140 / 0.14)' }"
+          :bubble="$t(pfBubble)"
+          :bubble-at="{ x: 470, y: 80 }"
+          :poke-label="$t('fair.pokeLabel')"
+          @poke="onPfPoke"
+        />
+      </div>
+      <div class="relative z-10 flex flex-col gap-6 sm:max-w-[52%] lg:h-full lg:w-[600px] lg:max-w-none lg:justify-between">
         <div class="flex flex-col gap-2">
           <p class="type-12-caps lg:type-16-caps text-success lg:font-bold">{{ $t('fair.eyebrow') }}</p>
           <h2 class="text-[28px] leading-8 font-extrabold uppercase lg:type-48-caps">{{ $t('fair.heroTitle') }}</h2>
@@ -85,11 +129,6 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
           <p>{{ $t('fair.heroText2') }}</p>
         </div>
       </div>
-      <img
-        src="/img/illustrations/fairness-hero.webp"
-        alt=""
-        class="kd-fair-hero pointer-events-none absolute -right-3 -bottom-3 w-[105%] max-w-none sm:top-1/2 sm:right-0 sm:bottom-auto sm:w-[52%] sm:-translate-y-1/2 lg:top-[-60px] lg:-right-[39px] lg:w-[676px] lg:translate-y-0 lg:rotate-[1.85deg]"
-      />
     </section>
 
     <FairMyRolls :seeds="seeds" :focus="focusNonce" :rotating="rotating" @verify="openVerifier" @rotate="rotate" />
@@ -250,9 +289,13 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
     opacity: 0.3;
   }
 }
-.kd-fair-hero {
-  filter: drop-shadow(0 20px 40px rgb(0 0 0 / 0.45));
-  animation: kd-hero-in 800ms var(--ease-out) both;
+/* the ground: near-black, a green pool of light where the glass case stands, a vignette */
+.kd-fair-ground {
+  background:
+    radial-gradient(55% 90% at 72% 70%, rgb(40 200 110 / 0.32), transparent 70%),
+    radial-gradient(40% 60% at 66% 100%, rgb(120 255 170 / 0.18), transparent 70%),
+    linear-gradient(110deg, var(--color-neutral-2) 30%, #0a2a17 100%);
+  box-shadow: inset 0 0 0 1px rgb(80 230 140 / 0.14);
 }
 @keyframes kd-hero-in {
   from {
