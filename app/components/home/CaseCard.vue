@@ -77,7 +77,7 @@ function onArtLeave() {
     :to="`/case/${item.slug}`"
     class="kd-case-card kd-spotlight group relative flex h-full flex-col items-center gap-2 rounded-5xl border"
     :class="[stock?.out && 'is-sold-out', shape && `is-${shape}`, look && `look-${look}`]"
-    :style="look === 'tint' && item.tint ? { '--tint': item.tint } : undefined"
+    :style="look && item.tint ? { '--tint': item.tint } : undefined"
     @pointermove="onArtPointer"
     @pointerleave="onArtLeave"
   >
@@ -384,9 +384,10 @@ function onArtLeave() {
   .kd-case-card.look-tint:hover::before {
     opacity: 1;
   }
+  /* no plate, so hover draws the outline, in the case's colour */
   .kd-case-card.look-coop:hover {
     background: none;
-    border-color: transparent;
+    border-color: color-mix(in oklab, var(--tint, var(--color-brand-base)) 70%, var(--color-neutral-6));
   }
   .look-coop:hover .kd-case-art {
     transform: translateY(-22%) scale(0.8);

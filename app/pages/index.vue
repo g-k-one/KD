@@ -33,8 +33,8 @@ const shapeOf = (c: CaseSummary, cases: CaseSummary[]) =>
   !bento.value ? undefined : c.art?.wide ? ('wide' as const) : c.art?.tall && cases.length > 5 ? ('tall' as const) : undefined
 const SHAPE_CELL = { wide: 'lg:order-first lg:col-span-2', tall: 'lg:order-first lg:row-span-2' } as const
 
-// --- Under review: cards painted with their case's colour (?cards=tint). A themed row (the coop) keeps its own look.
-const tint = computed(() => (route.query.cards === 'tint' ? ('tint' as const) : undefined))
+// --- Under review: cards painted with their case's colour (the old plain cards: ?cards=plain). A themed row (the coop) keeps its own look.
+const tint = computed(() => (route.query.cards === 'plain' ? undefined : ('tint' as const)))
 const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 </script>
 
