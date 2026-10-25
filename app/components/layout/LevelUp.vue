@@ -102,7 +102,7 @@ const nextTier = computed(() => ladder.value.find((s) => shown.value != null && 
         <template v-else-if="nextTier">{{ $t('bonus.levelToTier', { n: nextTier.fromLevel - shown, tier: tierNames[nextTier.tier] }) }}</template>
         <template v-else-if="ladder.length">{{ $t('bonus.levelTopTier') }}</template>
       </span>
-      <UiButton v-if="newTier" variant="gold" size="m" block to="/bonuses" class="mt-4" @click.capture="shown = null">{{ $t('bonus.openBonuses') }}</UiButton>
+      <UiButton v-if="newTier" size="m" block to="/bonuses" class="mt-4" @click.capture="shown = null">{{ $t('bonus.openBonuses') }}</UiButton>
       <!-- time left before it goes away by itself: a thin bar along the bottom edge -->
       <span class="absolute inset-x-5 bottom-0 h-0.5 overflow-hidden rounded-full bg-white/10">
         <span :key="String(from) + String(shown)" class="kd-lvl-time block h-full" :class="paused && 'is-paused'" :style="{ animationDuration: `${DURATION}ms` }" />
