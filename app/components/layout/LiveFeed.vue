@@ -83,8 +83,8 @@ watch(y, (v) => {
         @click="mode = m"
       >
         <span v-if="m === 'live'" class="kd-live-dot size-2 rounded-full bg-success" />
-        <!-- the best multipliers: the trophy, as on the case page's top drops -->
-        <UiIcon v-else name="trophy-fill" :size="12" class="text-coin" />
+        <!-- the best multipliers: a crown, pulsing like the live dot -->
+        <span v-else class="kd-best-crown relative grid size-3 place-items-center text-coin"><UiIcon name="crown-fill" :size="12" /></span>
         <!-- the words stay on phones too: a dot and a cross alone don't say what they switch -->
         <span>{{ m === 'live' ? $t('feed.live') : $t('feed.best') }}</span>
       </button>
@@ -217,6 +217,15 @@ watch(y, (v) => {
   inset: 0;
   border-radius: inherit;
   background: rgb(18 183 106 / 0.6);
+  animation: kd-live-ping 1.6s ease-out infinite;
+}
+.kd-best-crown::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  z-index: -1;
+  border-radius: 50%;
+  background: rgb(253 176 34 / 0.6);
   animation: kd-live-ping 1.6s ease-out infinite;
 }
 @keyframes kd-live-ping {

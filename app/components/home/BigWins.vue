@@ -13,8 +13,9 @@ const wins = computed(() => (data.value?.wins ?? []).slice(0, 3).map((win, k) =>
 // desktop: second, first, third (fewer than three: as they come); phones keep the rank order
 const PODIUM = [2, 1, 3]
 const isLg = useMediaQuery('(min-width: 1024px)')
-// sized to their column (the picture is 1⅔ × the size, tilted): it breaks out upward, never past the card's sides
-const artSize = (rank: number) => (isLg.value ? (rank === 1 ? 104 : 92) : 54)
+// big enough to fill the left half (the picture is 1⅔ × the size): it stands in the card on its shadow and breaks
+// out over the top edge by about a quarter
+const artSize = (rank: number) => (isLg.value ? (rank === 1 ? 128 : 114) : 66)
 </script>
 
 <template>
@@ -30,12 +31,15 @@ const artSize = (rank: number) => (isLg.value ? (rank === 1 ? 104 : 92) : 54)
         v-for="(p, i) in wins"
         :key="p.win.id"
         :to="sourceLink(p.win.caseSlug)"
-        class="kd-win kd-press group relative isolate grid min-w-0 grid-cols-[104px_minmax(0,1fr)] items-center gap-3 rounded-3xl py-2.5 pr-4 pl-3 lg:grid-cols-[46%_minmax(0,1fr)] lg:gap-3 lg:py-5 lg:pr-5 lg:pl-4"
+        class="kd-win kd-press group relative isolate grid min-w-0 grid-cols-[112px_minmax(0,1fr)] items-center gap-2 rounded-3xl py-2.5 pr-4 pl-1 lg:grid-cols-[50%_minmax(0,1fr)] lg:gap-2 lg:py-4 lg:pr-5 lg:pl-2"
         :class="p.rank === 1 ? 'is-first' : ''"
         :style="{ '--rc': RARITY_COLOR[p.win.item.rarity], '--i': i, '--o': PODIUM.indexOf(p.rank) }"
       >
-        <!-- the skin, breaking out over the card's top edge -->
-        <ItemArt :image="p.win.item.image" :rarity="p.win.item.rarity" :size="artSize(p.rank)" float class="kd-win-art relative w-full self-start" />
+        <!-- the skin stands on its shadow in the left half and breaks out over the card's top edge -->
+        <div class="kd-win-stage relative self-stretch">
+          <span class="kd-win-shadow absolute" aria-hidden="true" />
+          <ItemArt :image="p.win.item.image" :rarity="p.win.item.rarity" :size="artSize(p.rank)" float class="kd-win-art relative w-full" />
+        </div>
         <div class="relative z-[2] flex min-w-0 flex-col items-start gap-1 lg:gap-1.5">
           <div class="flex items-center gap-2">
             <span class="kd-win-rank type-12-caps flex h-6 items-center gap-1 rounded-lg px-2" :class="`is-${p.rank}`">
@@ -66,8 +70,8 @@ const artSize = (rank: number) => (isLg.value ? (rank === 1 ? 104 : 92) : 54)
 /* the card: lit from the skin — the rarity's light spreads from behind it to the left, over a lifted ground */
 .kd-win {
   background:
-    radial-gradient(55% 110% at 20% 45%, color-mix(in srgb, var(--rc) 34%, transparent), transparent 72%),
-    linear-gradient(100deg, color-mix(in srgb, var(--rc) 14%, var(--color-neutral-3)), var(--color-neutral-3) 55%, var(--color-neutral-2));
+    radial-gradient(40% 90% at 25% 42%, color-mix(in srgb, var(--rc) 30%, transparent), transparent 75%),
+    linear-gradient(100deg, color-mix(in srgb, var(--rc) 12%, var(--color-neutral-3)), var(--color-neutral-3) 55%, var(--color-neutral-2));
   animation: kd-win-in var(--dur-slow) var(--ease-out) backwards;
   animation-delay: calc(var(--i) * 70ms);
 }
@@ -82,15 +86,15 @@ const artSize = (rank: number) => (isLg.value ? (rank === 1 ? 104 : 92) : 54)
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  background: radial-gradient(45% 90% at 20% 45%, color-mix(in srgb, var(--rc) 40%, transparent), transparent 70%);
+  background: radial-gradient(35% 80% at 25% 42%, color-mix(in srgb, var(--rc) 40%, transparent), transparent 70%);
   opacity: 0;
   transition: opacity var(--dur-base) var(--ease-out);
   pointer-events: none;
 }
 .kd-win.is-first {
   background:
-    radial-gradient(55% 110% at 20% 45%, color-mix(in srgb, var(--color-gold) 32%, transparent), transparent 72%),
-    linear-gradient(100deg, color-mix(in srgb, var(--color-gold) 18%, var(--color-neutral-3)), var(--color-neutral-3) 55%, var(--color-neutral-2));
+    radial-gradient(40% 90% at 25% 42%, color-mix(in srgb, var(--color-gold) 30%, transparent), transparent 75%),
+    linear-gradient(100deg, color-mix(in srgb, var(--color-gold) 16%, var(--color-neutral-3)), var(--color-neutral-3) 55%, var(--color-neutral-2));
 }
 .kd-win.is-first::after {
   animation: kd-glow-pulse 2.6s ease-in-out infinite;
@@ -105,15 +109,35 @@ const artSize = (rank: number) => (isLg.value ? (rank === 1 ? 104 : 92) : 54)
     min-height: 196px;
   }
 }
-/* the skin rises over the top edge by a third of itself */
+/* the stage: the art is centred in the left half and lifted, so a quarter of it rises over the card's top edge */
+.kd-win-stage {
+  display: grid;
+  place-items: center;
+}
 .kd-win-art {
-  margin-top: -22px;
-  transform: rotate(-10deg);
+  translate: 0 -14px;
+  transform: rotate(-12deg);
   transition: transform var(--dur-slow) var(--ease-spring);
 }
 @media (min-width: 64rem) {
   .kd-win-art {
-    margin-top: -44px;
+    translate: 0 -30px;
+  }
+}
+/* a soft contact shadow under the skin: it stands in the card instead of floating in the air */
+.kd-win-shadow {
+  bottom: 6px;
+  left: 50%;
+  width: 72%;
+  height: 18px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.55), transparent);
+}
+@media (min-width: 64rem) {
+  .kd-win-shadow {
+    bottom: 10px;
+    height: 24px;
   }
 }
 @media (hover: hover) {
