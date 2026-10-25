@@ -17,7 +17,12 @@ const backCase = computed(() => {
 const barLeft = computed(() => [
   ...(backCase.value ? [{ label: backCase.value.name ?? t('upgrade.backToCase'), icon: 'arrow-left', to: `/case/${backCase.value.slug}` }] : []),
   { label: t('upgrade.history'), icon: 'history', to: '/history' },
-  { label: t('upgrade.howItWorks'), icon: 'info', to: '/fairness' },
+])
+// the right side: what an upgrade is (a modal, in four steps), then the fairness page
+const howOpen = ref(false)
+const barRight = computed(() => [
+  { label: t('upgrade.howItWorks'), icon: 'info', onClick: () => (howOpen.value = true) },
+  { label: t('case.fairness'), icon: 'shield', to: '/fairness' },
 ])
 const session = useSessionStore()
 const ui = useUiStore()
@@ -65,6 +70,15 @@ const selectedItems = computed(() => inventory.value.filter((i) => selected.valu
 const inputValue = computed(() => selectedItems.value.reduce((a, i) => a + i.price, 0) + extra.value)
 // Same formula and numbers as the backend (shared/upgrade.ts, the admin's rules): 5% house edge, capped at 80%
 const rules = useGameRules()
+const howSteps = computed(() => {
+  const r = rules.value.upgrade
+  return [
+    { icon: 'plus', title: t('upgrade.how1t'), text: t('upgrade.how1') },
+    { icon: 'target-up', title: t('upgrade.how2t'), text: t('upgrade.how2') },
+    { icon: 'upgrade', title: t('upgrade.how3t'), text: t('upgrade.how3', { keep: 100 - r.edgeBp / 100, max: r.maxChanceBp / 100 }) },
+    { icon: 'shield-check', title: t('upgrade.how4t'), text: t('upgrade.how4') },
+  ]
+})
 const chance = computed(() => (target.value ? upgradeChanceBp(inputValue.value, target.value.price, rules.value.upgrade) : 0))
 
 /** An upgrade takes at most 6 pieces (an admin setting); balance coins count as one */
@@ -322,10 +336,25 @@ async function runUpgrade() {
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
-    <UiPageBar
-      :title="$t('nav.upgrade')"
-      :left="barLeft"
-    />
+    <!-- the logo in the middle, as on the case page: players record short videos of this screen -->
+    <UiPageBar logo :left="barLeft" :right="barRight" />
+
+    <!-- How it works: an upgrade in four plain steps, with the real numbers it plays by -->
+    <UiModal v-model="howOpen" :title="$t('upgrade.howTitle')" :width="520">
+      <ol class="flex flex-col gap-3">
+        <li v-for="(st, i) in howSteps" :key="i" class="flex gap-3 rounded-2xl bg-neutral-3 p-3">
+          <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-neutral-4 text-brand-light"><UiIcon :name="st.icon" :size="20" /></span>
+          <span class="flex min-w-0 flex-col gap-1">
+            <span class="type-14-caps">{{ i + 1 }}. {{ st.title }}</span>
+            <span class="type-14-regular text-neutral-12">{{ st.text }}</span>
+          </span>
+        </li>
+      </ol>
+      <div class="mt-4 flex items-center justify-between gap-3">
+        <span class="type-12-regular text-neutral-11">{{ $t('upgrade.howFair') }}</span>
+        <UiButton variant="fair" size="s" icon="shield-check" to="/fairness" class="shrink-0" @click="howOpen = false">{{ $t('case.fairness') }}</UiButton>
+      </div>
+    </UiModal>
 
 
     <!-- The scene dims around the dial while it turns -->

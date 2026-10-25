@@ -406,7 +406,9 @@ type Layer = { at: (name: string, el: HTMLElement | null | undefined, scale?: nu
  * of the shape, a flash, a bloom); Forge adds only sparks and stars on covert (rank 1) and the full rank on gold
  * (rank 3: rays up, a wide flash, a freeze frame). Below covert, Forge stays out: its round rings fought the shape.
  */
-export const RANK_LEVEL: Record<Rarity, number> = { industrial: -1, milspec: -1, restricted: -1, classified: -1, covert: 1, gold: 3 }
+// gold at rank 2, not 3: rank 3's wide nebula is a square too big for the reel, and its sides cut off flat; the depth
+// gold lost there comes from ItemArt's galaxy and the shape's 3D turn
+export const RANK_LEVEL: Record<Rarity, number> = { industrial: -1, milspec: -1, restricted: -1, classified: -1, covert: 1, gold: 2 }
 /**
  * One burst on a landed drop in the rarity's colour, centred on the drop's picture (el, the skin image) and sized by
  * it — the same rule everywhere (reel, PvP, upgrade): the middle of the skin, not the rarity shape or a lift off it.

@@ -125,13 +125,13 @@ const nextTier = computed(() => ladder.value.find((s) => shown.value != null && 
 }
 .kd-lvl-badge {
   animation:
-    kd-lvl-pop 700ms var(--ease-spring) 380ms both,
+    kd-lvl-pop 520ms var(--ease-out) 380ms both,
     kd-lvl-bob 2.6s var(--ease-in-out) 1.1s infinite;
 }
 /* alive while it is up: the badge rides up and down a little… */
 @keyframes kd-lvl-bob {
   50% {
-    transform: translateY(-4px) rotate(-3deg);
+    transform: translateY(-4px);
   }
 }
 /* …and a shine sweeps across it every few seconds */
@@ -153,13 +153,11 @@ const nextTier = computed(() => ladder.value.find((s) => shown.value != null && 
     animation: none;
   }
 }
+/* the pop grows the badge up to its own size, never past it, and the bob only moves it: a raster scaled up or
+   turned shows its pixels at the edges */
 @keyframes kd-lvl-pop {
   0% {
-    scale: 1;
-  }
-  40% {
-    scale: 1.25;
-    rotate: -6deg;
+    scale: 0.6;
   }
   100% {
     scale: 1;
