@@ -2,7 +2,7 @@
 import type { CaseSummary, HomeCardKind } from '#shared/types/api'
 
 // Editing the home layout (prototype): laid over a case card, it picks the card's kind. A kind needs its art,
-// so the ones this case has no art for are off; in a themed row the scene sets the look, so the whole picker is.
+// so the ones this case has no art for are off; in a themed row the scene sets the look, and a note says so.
 const props = defineProps<{ item: CaseSummary; themed?: boolean }>()
 const { setCard } = useHomeLayout()
 
@@ -21,8 +21,12 @@ const options = computed(() => [
 
 <template>
   <!-- covers the card so a tap edits instead of opening the case -->
-  <div class="kd-kind absolute inset-0 z-[4] flex justify-center rounded-5xl pt-2" :title="themed ? 'The row scene sets the look here' : undefined" @click.prevent.stop>
-    <UiSegmented v-model="kind" size="s" :options="options" :disabled="themed" class="h-max" />
+  <div class="kd-kind absolute inset-0 z-[4] flex justify-center rounded-5xl pt-2" @click.prevent.stop>
+    <!-- a themed row: say why there is nothing to pick here, instead of greying the picker out -->
+    <span v-if="themed" class="kd-kind-note type-10-caps flex h-8 items-center gap-1 rounded-md px-2 text-neutral-13">
+      <UiIcon name="info" :size="14" />The row scene sets the look
+    </span>
+    <UiSegmented v-else v-model="kind" size="s" :options="options" class="h-max" />
   </div>
 </template>
 
@@ -31,5 +35,9 @@ const options = computed(() => [
   background: rgb(12 13 16 / 0.32);
   outline: 1px dashed var(--color-white-12);
   outline-offset: -1px;
+}
+.kd-kind-note {
+  background: rgb(12 13 16 / 0.82);
+  box-shadow: inset 0 0 0 1px var(--color-neutral-6);
 }
 </style>

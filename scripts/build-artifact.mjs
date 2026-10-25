@@ -26,6 +26,10 @@ const FORGE_KEEP = new Set(['forge.js', 'forge-image.js', 'forge-hits.js', 'forg
 const forgeDir = join(out, 'vendor', 'forge')
 if (existsSync(forgeDir)) for (const n of readdirSync(forgeDir)) if (!FORGE_KEEP.has(n)) rmSync(join(forgeDir, n), { force: true })
 
+// Pictures that live in the artifact's asset store (app/mock/artifact-assets.json) stay out of the files
+const stored = Object.keys(JSON.parse(readFileSync(join(root, 'app', 'mock', 'artifact-assets.json'), 'utf8')))
+for (const p of stored) rmSync(join(out, p), { force: true })
+
 const walk = (dir) =>
   readdirSync(dir).flatMap((n) => {
     const p = join(dir, n)

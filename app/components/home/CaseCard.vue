@@ -103,7 +103,7 @@ function onArtLeave() {
         ref="rigCanvas"
         aria-hidden="true"
         class="kd-case-art absolute top-1/2 left-1/2 -translate-1/2"
-        :class="{ invisible: !animReady }"
+        :class="[{ invisible: !animReady }, shaped && 'lg:hidden']"
         :style="{ width: `${side}px`, height: `${side}px` }"
       />
       <img
@@ -113,7 +113,7 @@ function onArtLeave() {
         aria-hidden="true"
         draggable="false"
         class="kd-case-art absolute inset-0 size-full object-contain"
-        :class="{ invisible: !animReady }"
+        :class="[{ invisible: !animReady }, shaped && 'lg:hidden']"
         @load="animReady = true"
       />
       <img v-if="look === 'coop'" src="/img/coop/nest-front.webp" alt="" aria-hidden="true" draggable="false" class="kd-nest is-front" />

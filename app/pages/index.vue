@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CaseSection, CaseSummary, CasesResponse } from '#shared/types/api'
+import type { CaseSection, CaseSummary, CasesResponse, HomeLayout } from '#shared/types/api'
 
 const { data } = await useFetch<CasesResponse>('/api/cases', { key: 'cases' })
 const filters = useCaseFilters()
@@ -34,6 +34,21 @@ const SHAPE_CELL = { wide: 'lg:order-first lg:col-span-2', tall: 'lg:order-first
 // The home layout editor (prototype, opened from the debug dock): rows and cards are edited where they stand
 const homeLayout = useHomeLayout()
 onMounted(() => watch(homeLayout.editing, (on) => on && homeLayout.load(), { immediate: true }))
+// While editing, each hidden row stands just before the next shown row (or at the end), where it will come back
+const hiddenBefore = computed(() => {
+  const at: Record<string, HomeLayout['sections']> = { end: [] }
+  if (!homeLayout.editing.value || !homeLayout.layout.value) return at
+  let waiting: HomeLayout['sections'] = []
+  for (const r of homeLayout.layout.value.sections) {
+    if (r.hidden) waiting.push(r)
+    else {
+      at[r.id] = waiting
+      waiting = []
+    }
+  }
+  at.end = waiting
+  return at
+})
 
 const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 </script>
@@ -60,6 +75,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
       </div>
 
       <template v-for="(s, i) in sections" :key="s.id">
+      <HomeHiddenRow v-for="r in hiddenBefore[s.id]" :key="r.id" :row="r" />
       <!-- sections after the first are skipped by the renderer until they come near the screen -->
       <!-- a themed row draws its scene edge to edge, so it is never skipped by the renderer (that would clip the scene) -->
       <!-- collapsed, a themed row drops its scene and its air: just the header, like any other -->
@@ -103,6 +119,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
       <HomeLiveBattles v-if="i === Math.min(2, sections.length - 1)" />
       </template>
 
+      <HomeHiddenRow v-for="r in hiddenBefore.end" :key="r.id" :row="r" />
       <ClientOnly><HomeLayoutBar v-if="homeLayout.editing.value" /></ClientOnly>
 
       <UiEmptyState v-if="!sections.length" :text="$t('cases.empty')">

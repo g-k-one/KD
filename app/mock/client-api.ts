@@ -2,6 +2,18 @@
 // Uses the same router as server/api, so both modes behave the same.
 import { MockError } from '../../server/utils/mock-db'
 import { mockRoute } from '../../server/utils/mock-api'
+import ARTIFACT_ASSETS from './artifact-assets.json'
+
+// Pictures kept in the artifact's asset store (the host caps a version at 511 files, the store doesn't count):
+// path without the leading slash -> store URL. Every response hands the UI the store URL instead of the path.
+const STORE = ARTIFACT_ASSETS as Record<string, string>
+const hasStore = Object.keys(STORE).length > 0
+function toStore(v: unknown): unknown {
+  if (typeof v === 'string') return STORE[v.replace(/^\//, '')] ?? v
+  if (Array.isArray(v)) return v.map(toStore)
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, toStore(x)]))
+  return v
+}
 
 const SESSION_KEY = 'kd_session'
 
@@ -72,7 +84,8 @@ export async function handleMockRequest(
     const data = await mockRoute(method, path, JSON.parse(JSON.stringify(opts.body ?? {})) as Record<string, unknown>, query, { loggedIn })
     if (method !== 'GET' && path.startsWith('/api/admin/home-layout')) saveLayout(data, path)
     // Behave like the network: hand the UI a copy, never the mock's live state objects
-    return JSON.parse(JSON.stringify(data))
+    const copy = JSON.parse(JSON.stringify(data))
+    return hasStore ? toStore(copy) : copy
   } catch (e) {
     if (e instanceof MockError) {
       // Same shape as an ofetch FetchError so UI error handling works in both modes
