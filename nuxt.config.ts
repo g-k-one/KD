@@ -29,7 +29,7 @@ export default defineNuxtConfig({
     // The artifact host caps a version at 511 files: one stylesheet instead of one per component
     ...(artifact && { build: { cssCodeSplit: false } }),
     // and small client JS chunks merged into their neighbours (the skin pictures alone take ~360 of the files)
-    ...(artifact && { $client: { build: { rollupOptions: { output: { experimentalMinChunkSize: 60_000 } } } } }),
+    ...(artifact && { $client: { build: { rollupOptions: { output: { experimentalMinChunkSize: 120_000 } } } } }),
   },
 
   app: {
