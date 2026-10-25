@@ -570,7 +570,7 @@ async function runUpgrade() {
 
       <div class="flex flex-col rounded-5xl bg-neutral-2 lg:pb-4" :class="panelTab !== 'desired' && 'max-lg:hidden'">
         <div class="flex h-14 items-center gap-2 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
-          <UiIcon name="diamond" :size="isLg ? 24 : 20" class="text-neutral-13 lg:mr-1" />
+          <UiIcon name="gem" :size="isLg ? 24 : 20" class="text-neutral-13 lg:mr-1" />
           <span class="type-14 lg:type-16-medium mr-1 whitespace-nowrap">{{ $t('upgrade.desiredSkin') }}</span>
           <UiButton variant="ghost" :size="isLg ? 'm' : 's'" icon-only :aria-label="$t(sortDesc ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="sortDesc = !sortDesc">
             <UiSortArrows :desc="sortDesc" />
