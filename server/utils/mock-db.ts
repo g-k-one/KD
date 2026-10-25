@@ -416,6 +416,10 @@ export function setHomeLayout(next: Partial<HomeLayout>) {
   return getHomeLayout()
 }
 
+/** The cases the lobby's own battles are made of: the cheaper ones (up to 30 coins) of the catalogue, not the hot
+ * three. From the catalogue, not the home rows: a row hidden in the admin panel must not break the lobby. */
+export const lobbyCaseSlugs = () => CASES.filter((c) => c.price <= 3000 && !['pieklo', 'mafia', 'wiosna'].includes(c.slug)).map((c) => c.slug)
+
 export function getCaseSections(): CaseSection[] {
   const all = CASES.map(toSummary).map((c) => {
     const card = homeLayout.cards[c.slug]
@@ -548,7 +552,7 @@ export function setForce(body: Partial<DebugForce> & { clear?: boolean }) {
   return force
 }
 /** Next forced case result resolved against this case's items. */
-function takeForcedCase(cs: CaseDetails, _k: number): { item?: CaseItem; kurwa?: boolean } | null {
+function takeForcedCase(cs: CaseDetails, _k: number): { item?: CaseItem; kurwa?: boolean; byRarity?: boolean } | null {
   const f = force.cases.shift()
   if (!f) return null
   let item: CaseItem | undefined
@@ -559,7 +563,7 @@ function takeForcedCase(cs: CaseDetails, _k: number): { item?: CaseItem; kurwa?:
     // No item of that rarity in this case: take the closest more common one
     if (!item) item = cs.items[cs.items.length - 1]
   }
-  return { item, kurwa: f.kurwa }
+  return { item, kurwa: f.kurwa, byRarity: !f.itemId && !!f.rarity && item?.rarity === f.rarity }
 }
 export function takeForcedBattle(): ForcedBattle {
   const b = force.battle
@@ -734,13 +738,22 @@ async function roll(cs: CaseDetails, n: number, demo: boolean, kurwadrop: boolea
   const rolls: PfRoll[] = []
   for (let k = 0; k < n; k++) {
     // Demo spins use a throwaway seed so they never move the real nonce
-    const nonce = demo ? k : ++state.seed.nonce
+    let nonce = demo ? k : ++state.seed.nonce
     const serverSeed = demo ? randomSeed(16) : state.seed.serverSeed
     const forced = takeForcedCase(cs, k)
-    const { ticket } = await pfTicket(serverSeed, state.seed.clientSeed, nonce)
-    // Debug "chicken" forces a top item; otherwise the one normal roll decides
-    let picked: CaseItem = forced?.kurwa && !forced.item ? pool[Math.floor(Math.random() * pool.length)]! : (forced?.item ?? pickByTicket(cs.items, ticket))
-    if (forced?.kurwa && forced.item && !pool.some((p) => p.id === forced.item!.id)) picked = pool[0]!
+    let { ticket } = await pfTicket(serverSeed, state.seed.clientSeed, nonce)
+    // Debug forces (a skin, a rarity, the "chicken" top items) don't make the drop up: the nonce steps on until the
+    // seeds themselves pick a fitting skin, so a forced drop still verifies. One too rare to reach in 20 000 tries
+    // (under ~0.01%) is handed out anyway — that one roll won't match its ticket.
+    let want: CaseItem | undefined = forced?.item
+    if (forced?.kurwa && want && !pool.some((p) => p.id === want!.id)) want = pool[0]
+    const fits = !forced ? null : want ? (i: CaseItem) => (forced.byRarity ? i.rarity === want!.rarity : i.id === want!.id) : forced.kurwa ? (i: CaseItem) => pool.some((p) => p.id === i.id) : null
+    for (let t = 0; fits && !fits(pickByTicket(cs.items, ticket)) && t < 20_000; t++) {
+      nonce = demo ? nonce + 1 : ++state.seed.nonce
+      ;({ ticket } = await pfTicket(serverSeed, state.seed.clientSeed, nonce))
+    }
+    const rolled = pickByTicket(cs.items, ticket)
+    const picked: CaseItem = !fits || fits(rolled) ? rolled : (want ?? pool[Math.floor(Math.random() * pool.length)]!)
     // KURWADROP is presentation only: a top drop arrives through the Golden Chicken and a second spin
     const hit = kurwadrop && pool.some((p) => p.id === picked.id)
     const { tickets: _t, ticketFrom: _f, ticketTo: _to, ...item } = picked
@@ -933,19 +946,26 @@ export async function upgrade(itemUids: string[], balanceAmount: number, targetI
   addXp(items.reduce((a, i) => a + i.price, 0))
   for (const i of items) i.status = 'used'
 
-  const nonce = ++state.seed.nonce
-  let { roll } = await pfRoll(state.seed.serverSeed, state.seed.clientSeed, nonce)
-  // Debug: steer the roll (edge = within half a point of the chance line)
+  // Debug: steer the outcome without making the roll up — the nonce steps on until the seeds themselves roll into
+  // the wanted band, so a forced roll still verifies (edge = within half a point of the chance line, near = within 3)
   const f = force.upgrade
   force.upgrade = null
   const c = chance / 100
-  if (f === 'win') roll = +(Math.random() * c * 0.9).toFixed(2)
-  if (f === 'lose') roll = +(c + Math.random() * (100 - c)).toFixed(2)
-  if (f === 'edge-win') roll = +Math.max(0, c - 0.1 - Math.random() * 0.4).toFixed(2)
-  if (f === 'edge-lose') roll = +Math.min(99.99, c + 0.1 + Math.random() * 0.4).toFixed(2)
-  // near: within 3 points of the edge
-  if (f === 'near-win') roll = +Math.max(0, c - 0.6 - Math.random() * 2).toFixed(2)
-  if (f === 'near-lose') roll = +Math.min(99.99, c + 0.6 + Math.random() * 2).toFixed(2)
+  const bands: Record<NonNullable<ForcedUpgrade>, (r: number) => boolean> = {
+    win: (r) => r < c * 0.9,
+    lose: (r) => r >= c,
+    'edge-win': (r) => r >= c - 0.5 && r < c - 0.1,
+    'edge-lose': (r) => r >= c + 0.1 && r <= c + 0.5,
+    'near-win': (r) => r >= c - 2.6 && r < c - 0.6,
+    'near-lose': (r) => r >= c + 0.6 && r <= c + 2.6,
+  }
+  const fits = f ? bands[f] : null
+  let nonce = ++state.seed.nonce
+  let { roll } = await pfRoll(state.seed.serverSeed, state.seed.clientSeed, nonce)
+  for (let k = 0; fits && !fits(roll) && k < 20_000; k++) {
+    nonce = ++state.seed.nonce
+    ;({ roll } = await pfRoll(state.seed.serverSeed, state.seed.clientSeed, nonce))
+  }
   const win = roll * 100 < chance
   const won = win ? toInventory(target, 'upgrade') : null
   if (won) {

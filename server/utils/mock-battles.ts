@@ -3,7 +3,7 @@
 // the rounds from startedAt + roundMs.
 import type { Battle, BattleCaseRef, BattleMode, BattlePlayerRef, BattleRoundResult, CreateBattleRequest } from '#shared/types/api'
 import { pickByTicket, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
-import { adminSettings, getCase, getCaseSections, getMockState, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory } from './mock-db'
+import { adminSettings, getCase, getMockState, lobbyCaseSlugs, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory } from './mock-db'
 
 // Round time, round cap and bot names are admin settings (adminSettings.games.pvp); lobby players are the fake players
 const pvp = () => adminSettings.games.pvp
@@ -147,7 +147,7 @@ let seeded: Promise<void> | null = null
 function ensureSeeded() {
   seeded ??= (async () => {
     // Cheaper cases make friendlier lobby battles; spread rounds across them
-    const all = getCaseSections().find((s) => s.id === 'featured')!.cases.filter((c) => c.price <= 3000).map((c) => c.slug)
+    const all = lobbyCaseSlugs()
     const pick = (n: number, from: number) => Array.from({ length: n }, (_, i) => caseRef(all[(from + i * 3) % all.length]!))
     const specs: Array<{ mode: BattleMode; size: number; rounds: BattleCaseRef[]; filled: number; past?: boolean }> = [
       { mode: 'classic', size: 3, rounds: pick(5, 0), filled: 2 },
