@@ -376,11 +376,8 @@ async function rareFx(winners: Item[]) {
     const w = horizontal.value ? winners[0] : winners[i]
     const tier = w ? RARITY_TIER[w.rarity] : 0
     if (!w) return
-    // centred on the item picture (the rarity shape), on the layer behind the cards: it bursts from behind the skin;
-    // covert and gold keep a loot beam rising behind it after the hit
-    const img = el.querySelector<HTMLElement>('.kd-art img') ?? el
-    rarityRank(fxBg, img, w.rarity, 1.3)
-    rarityBeam(fxBg, img, w.rarity, 1.7)
+    // centred on the item picture (the rarity shape), on the layer behind the cards: it bursts from behind the skin
+    rarityRank(fxBg, el.querySelector<HTMLElement>('.kd-art img') ?? el, w.rarity, 1.3)
   })
 }
 

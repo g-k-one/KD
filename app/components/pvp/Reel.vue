@@ -61,8 +61,6 @@ async function dropFx(it: Item) {
   if (!card) return
   const scale = props.compact ? 1 : 1.5
   rarityRank(fxBack, card.querySelector<HTMLElement>('.kd-art img') ?? card, it.rarity, scale).then((h) => (landed.value ? (beam = h) : h?.kill()))
-  // covert and gold: the loot beam after the hit, as on the case reel
-  rarityBeam(fxBack, card.querySelector<HTMLElement>('.kd-art img') ?? card, it.rarity, scale * 1.3)
 }
 
 async function spin() {
