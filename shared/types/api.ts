@@ -56,6 +56,8 @@ export interface CaseSection {
   cases: CaseSummary[]
   /** A section with a clock: when the weekly picks rotate */
   endsAt?: string
+  /** A themed row: its cards drop their plates and sit in a scene drawn behind the row (coop: straw nests) */
+  theme?: 'coop'
 }
 
 export interface CasesResponse {

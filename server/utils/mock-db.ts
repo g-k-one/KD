@@ -316,7 +316,7 @@ function weeklyPicks(all: CaseSummary[]): CaseSection {
   const ORIGIN = Date.UTC(1970, 0, 5)
   const week = Math.floor((Date.now() - ORIGIN) / WEEK_MS)
   const cases = [...all].sort((a, b) => hashStr(`${a.slug}:${week}`) - hashStr(`${b.slug}:${week}`)).slice(0, 5)
-  return { id: 'weekly', title: 'Weekly picks', cases, endsAt: new Date(ORIGIN + (week + 1) * WEEK_MS).toISOString() }
+  return { id: 'weekly', title: 'Weekly picks', theme: 'coop', cases, endsAt: new Date(ORIGIN + (week + 1) * WEEK_MS).toISOString() }
 }
 
 export function getCase(slug: string): CaseDetails {

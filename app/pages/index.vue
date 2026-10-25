@@ -33,16 +33,13 @@ const shapeOf = (c: CaseSummary, cases: CaseSummary[]) =>
   !bento.value ? undefined : c.art?.wide ? ('wide' as const) : c.art?.tall && cases.length > 5 ? ('tall' as const) : undefined
 const SHAPE_CELL = { wide: 'lg:order-first lg:col-span-2', tall: 'lg:order-first lg:row-span-2' } as const
 
-// --- Under review: card looks (?cards=tint | ?cards=coop). Coop also puts the page on the coop wall.
-const look = computed(() => (route.query.cards === 'tint' || route.query.cards === 'coop' ? route.query.cards : undefined))
-useHead(() => ({ bodyAttrs: { class: look.value === 'coop' ? 'kd-coop' : '' } }))
+// --- Under review: cards painted with their case's colour (?cards=tint). A themed row (the coop) keeps its own look.
+const tint = computed(() => (route.query.cards === 'tint' ? ('tint' as const) : undefined))
 const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 </script>
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
-    <!-- coop: the wall stays put while the page scrolls over it (one fixed layer, nothing repaints) -->
-    <div v-if="look === 'coop'" class="kd-coop-bg" aria-hidden="true"><img src="/img/coop/coop.webp" alt="" draggable="false" /></div>
     <HomeHeroBanner @start="scrollToCases" />
     <HomeBigWins />
 
@@ -64,7 +61,9 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
 
       <template v-for="(s, i) in sections" :key="s.id">
       <!-- sections after the first are skipped by the renderer until they come near the screen -->
-      <section class="flex flex-col gap-4" :class="i > 0 && 'kd-offscreen'">
+      <!-- a themed row draws its scene edge to edge, so it is never skipped by the renderer (that would clip the scene) -->
+      <section class="relative flex flex-col gap-4" :class="[s.theme && `kd-themed is-${s.theme}`, i > 0 && !s.theme && 'kd-offscreen']">
+        <div v-if="s.theme" class="kd-row-scene" aria-hidden="true"><img :src="`/img/coop/${s.theme}.webp`" alt="" draggable="false" loading="lazy" /></div>
         <UiSectionHeader
           :title="s.title"
           collapsible
@@ -88,7 +87,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
             :key="c.id"
             :item="c"
             :shape="shapeOf(c, s.cases)"
-            :look="look"
+            :look="s.theme ?? tint"
             :class="shapeOf(c, s.cases) && SHAPE_CELL[shapeOf(c, s.cases)!]"
           />
         </div>
@@ -105,33 +104,33 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
   </div>
 </template>
 
-<style>
-/* coop: the body lets the wall through */
-html body.kd-coop {
-  background: transparent;
+<style scoped>
+/* A themed row: the scene spans the whole screen width behind the row and melts into the page at every edge */
+.kd-themed {
+  isolation: isolate;
+  padding-block: 24px 8px;
 }
-.kd-coop-bg {
-  position: fixed;
-  inset: 0;
+.kd-row-scene {
+  position: absolute;
   z-index: -1;
-  background: var(--color-neutral-1);
+  top: -40px;
+  bottom: -48px;
+  left: 50%;
+  width: 100vw;
+  translate: -50% 0;
+  pointer-events: none;
+  mask-image: linear-gradient(180deg, transparent, #000 20%, #000 50%, transparent 92%), linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  mask-composite: intersect;
 }
-.kd-coop-bg img {
+.kd-row-scene img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 50% 0;
+  /* the straw floor under the nests */
+  object-position: 50% 100%;
+  opacity: 0.85;
 }
-/* darker towards the bottom, where the text sits */
-.kd-coop-bg::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgb(10 9 12 / 0.15), rgb(10 9 12 / 0.55) 60%, rgb(10 9 12 / 0.8));
-}
-</style>
 
-<style scoped>
 /* Stuck under the header: the bar sheds its labels' air and floats over the cases */
 @media (min-width: 64rem) {
   .kd-filters-wrap {
