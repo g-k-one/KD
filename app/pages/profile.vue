@@ -64,6 +64,11 @@ const sortedInventory = computed(() => {
   if (invSort.value === 'newest') return list.sort((a, b) => Date.parse(b.acquiredAt) - Date.parse(a.acquiredAt))
   return list.sort((a, b) => (invSort.value === 'priceAsc' ? a.price - b.price : b.price - a.price))
 })
+// Two rows of skins, the rest behind "Show all": with a big inventory the history would sit far down the page
+const isSm = useMediaQuery('(min-width: 40rem)')
+const skinsCap = computed(() => (isSm.value ? 10 : 6))
+const showAllSkins = ref(false)
+const shownInventory = computed(() => (showAllSkins.value ? sortedInventory.value : sortedInventory.value.slice(0, skinsCap.value)))
 const selectAll = () => (selected.value = sortedInventory.value.map((i) => i.uid))
 function toggle(uid: string) {
   selected.value = selected.value.includes(uid) ? selected.value.filter((u) => u !== uid) : [...selected.value, uid]
@@ -132,8 +137,6 @@ const statCards = computed(() => [
   { key: 'skins', icon: 'inventory', label: t('account.skinsValue'), price: session.user?.skinsValue ?? 0 },
 ])
 
-/** What the level bar says: how many coins of play to the next level, and what levels are for */
-const levelLeft = computed(() => (session.user?.levelLeft != null ? formatCoins(session.user.levelLeft) : null))
 
 // --- Steam trade link (settings) --------------------------------------------------------
 const TRADE_RE = /^https:\/\/steamcommunity\.com\/tradeoffer\/new\/\?partner=\d+&token=[\w-]{6,}$/
@@ -181,16 +184,13 @@ async function saveTrade() {
               <h1 class="type-16-caps truncate">{{ session.user.nickname }}</h1>
               <UiLevelBadge :level="session.user.level" />
             </div>
-            <!-- the level in words: where the bar leads, how far it is in coins, and what levels give -->
+            <!-- the bar and where it leads; what levels give is told on the Bonuses page -->
             <div class="flex max-w-72 items-center gap-2">
               <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-5">
                 <div class="bg-brand-gradient h-full rounded-full transition-[width] duration-700" :style="{ width: `${session.user.levelProgress}%` }" />
               </div>
               <span class="type-12-caps shrink-0 text-neutral-12 tabular-nums">{{ $t('account.levelNext', { n: session.user.level + 1 }) }}</span>
             </div>
-            <span class="type-12-regular text-neutral-11">
-              <template v-if="levelLeft">{{ $t('account.levelLeft', { amount: levelLeft }) }} · </template>{{ $t('account.levelWhy') }}
-            </span>
           </div>
         </div>
         <!-- quiet here: the header and the tab bar already carry Deposit; the profile is about the skins -->
@@ -227,8 +227,11 @@ async function saveTrade() {
           </div>
           <template v-else-if="inventory.length">
             <div class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
-              <ItemTile v-for="it in sortedInventory" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
+              <ItemTile v-for="it in shownInventory" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
             </div>
+            <UiButton v-if="sortedInventory.length > skinsCap" variant="ghost" size="s" :icon="showAllSkins ? 'chevron-up' : 'chevron-down'" class="mx-auto -mt-1 mb-2" @click="showAllSkins = !showAllSkins">
+              {{ showAllSkins ? $t('account.skinsLess') : $t('account.skinsAll', { n: sortedInventory.length }) }}
+            </UiButton>
             <p v-if="!selected.length" class="type-12-regular px-4 pb-3 text-neutral-11 lg:px-6 lg:pb-0">{{ $t('account.pickHint') }}</p>
           </template>
           <UiEmptyState v-else :text="$t('account.emptyInventory')" class="m-3 lg:m-4">

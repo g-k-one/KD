@@ -504,8 +504,8 @@
     "skinsCount": "{n} skin | {n} skins",
     "pickHint": "Tap skins to pick them: sell for coins, upgrade, or withdraw one to Steam.",
     "levelNext": "LVL {n}",
-    "levelLeft": "{amount} of play to go",
-    "levelWhy": "every coin you play counts; each 5 levels the daily case gets better",
+    "skinsAll": "Show all {n}",
+    "skinsLess": "Show less",
     "withdrawOne": "Withdraw one skin at a time"
   },
   "pvp": {
@@ -631,6 +631,10 @@
     "promoOk": "Code applied · +{coins}",
     "dailyShort": "Daily case",
     "dailyReadyTitle": "Your daily case is ready",
+    "toNext": "To LVL {n}",
+    "ofPlay": "of play",
+    "nextTierAt": "Tier {tier} at LVL {n}",
+    "levelHow": "Your level grows with every coin you play on cases, upgrades and battles. Every 5 levels the daily case moves up a tier: better skins inside.",
     "dailyText": "Free every 24 hours, and it gets better every 5 levels.",
     "nextIn": "Next free case in {t}",
     "pokeLabel": "Poke the chicken",

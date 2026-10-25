@@ -10,7 +10,8 @@ import type { StageLayer, StageLoot } from '~/components/banner/Stage.vue'
  * Race, season pass, missions, chains, rakeback and level rewards were cut on 2026-10-23 (docs/ux-research-v3.md).
  * The page opens with a banner, like the home page and Provably Fair (no page bar): the chicken with a gift on the
  * BannerStage and the one thing on offer now — the welcome cases, the daily case, or when the next one comes —
- * with its button; the bonuses themselves follow under it.
+ * with its button. Under it the level (what it is, how far the next one is, what it does for the daily case) and the
+ * promo code side by side; then the free case on the reel the full width, and everything it holds.
  */
 useHead({ title: 'Bonuses · KurwaDROP' })
 const { t } = useI18n()
@@ -66,6 +67,16 @@ async function sell(uid: string) {
   }
 }
 const tierNames = ['I', 'II', 'III', 'IV']
+
+// --- Level -----------------------------------------------------------------------------------------------------
+// The daily case moves up a tier every LEVELS_PER_TIER levels (admin: bonuses.daily.levelsPerTier), from level 5
+const LEVELS_PER_TIER = 5
+/** The level that brings the daily case's next tier; null at the top tier */
+const nextTierAt = computed(() => (daily.value && daily.value.tier < tierNames.length - 1 ? (daily.value.tier + 2) * LEVELS_PER_TIER : null))
+const chance = (tickets: number) => {
+  const p = tickets / 10_000
+  return `${p >= 1 ? +p.toFixed(1) : +p.toPrecision(2)}%`
+}
 
 // --- Banner -----------------------------------------------------------------------------------------------------
 const { onMove, onLeave, vars } = usePointerTilt()
@@ -153,8 +164,57 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
       </div>
     </section>
 
-    <!-- The free case on the reel, its contents and the promo code beside it -->
-    <section v-if="session.user && daily && freeCase" class="grid gap-4 lg:grid-cols-[1fr_320px] lg:gap-6">
+    <!-- The level and the promo code, side by side -->
+    <section v-if="session.user && daily" class="grid gap-4 lg:grid-cols-2 lg:gap-6">
+      <div class="flex flex-col gap-4 rounded-5xl bg-neutral-2 p-5">
+        <div class="flex items-center gap-3">
+          <UiAvatar :src="session.user.avatar" :size="44" />
+          <div class="flex min-w-0 flex-1 flex-col gap-1.5">
+            <div class="flex items-center gap-2">
+              <span class="type-16-caps">{{ $t('account.memberLevel', { level: session.user.level }) }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="h-2 flex-1 overflow-hidden rounded-full bg-neutral-5">
+                <div class="bg-brand-gradient h-full rounded-full transition-[width] duration-700" :style="{ width: `${session.user.levelProgress}%` }" />
+              </div>
+              <span class="type-12-caps shrink-0 text-neutral-12 tabular-nums">{{ $t('account.levelNext', { n: session.user.level + 1 }) }}</span>
+            </div>
+          </div>
+        </div>
+        <!-- what the level is, in two plain facts -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="flex min-w-0 flex-col gap-1 rounded-2xl bg-neutral-3 px-3 py-2.5">
+            <span class="type-10-caps text-neutral-11">{{ $t('bonus.toNext', { n: session.user.level + 1 }) }}</span>
+            <span class="type-14 flex items-center gap-1 tabular-nums">
+              <UiPrice v-if="session.user.levelLeft != null" :amount="session.user.levelLeft" size="s" />
+              <span class="type-12-regular text-neutral-11">{{ $t('bonus.ofPlay') }}</span>
+            </span>
+          </div>
+          <div class="flex min-w-0 flex-col gap-1 rounded-2xl bg-neutral-3 px-3 py-2.5">
+            <span class="type-10-caps text-neutral-11">{{ $t('bonus.dailyShort') }}</span>
+            <span class="type-14 text-coin">
+              {{ $t('bonus.tier', { tier: tierNames[daily.tier] }) }}<span v-if="nextTierAt" class="type-12-regular text-neutral-11"> · {{ $t('bonus.nextTierAt', { tier: tierNames[daily.tier + 1], n: nextTierAt }) }}</span>
+            </span>
+          </div>
+        </div>
+        <p class="type-12-regular text-neutral-11">{{ $t('bonus.levelHow') }}</p>
+      </div>
+      <div ref="promoEl" class="scroll-mt-24 flex flex-col gap-3 rounded-5xl bg-neutral-2 p-5">
+        <span class="type-16-caps">{{ $t('bonus.promo') }}</span>
+        <p class="type-12-regular text-neutral-11">{{ $t('bonus.promoText') }}</p>
+        <BonusPromo bare class="mt-auto" />
+      </div>
+    </section>
+
+    <!-- The free case on the reel, the full width, and everything it holds -->
+    <section v-if="session.user && daily && freeCase" class="flex flex-col gap-4">
+      <div class="flex items-center gap-3">
+        <img :src="freeCase.image" alt="" class="size-12 object-contain" />
+        <div class="flex flex-col gap-0.5">
+          <h2 class="type-16-caps lg:type-20-caps">{{ welcome ? $t('welcome.name') : $t('bonus.dailyShort') }}</h2>
+          <span class="type-12-caps text-coin">{{ welcome ? $t('welcome.left', { n: welcome.left, total: welcome.total }) : $t('bonus.tier', { tier: tierNames[daily.tier] }) }}</span>
+        </div>
+      </div>
       <div ref="reelEl" class="flex scroll-mt-24 flex-col gap-4">
         <CaseReel ref="reel" :key="freeCase.slug" :data="freeCase" :count="1" :phase="phase" :results="results" :sold-uids="sold" @sell="sell" />
         <div class="flex justify-center">
@@ -168,29 +228,16 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
           </div>
         </div>
       </div>
-      <div class="flex flex-col gap-4">
-        <aside class="flex flex-col gap-4 rounded-5xl bg-neutral-2 p-5">
-          <div class="flex items-center gap-3">
-            <img :src="freeCase.image" alt="" class="size-14 object-contain" />
-            <div class="flex flex-col gap-0.5">
-              <span class="type-16-caps">{{ welcome ? $t('welcome.name') : $t('bonus.dailyShort') }}</span>
-              <span class="type-12-caps text-coin">{{ welcome ? $t('welcome.left', { n: welcome.left, total: welcome.total }) : $t('bonus.tier', { tier: tierNames[daily.tier] }) }}</span>
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-2">
-            <div v-for="it in freeCase.items.slice(0, 6)" :key="it.id" class="group flex flex-col items-center gap-1 rounded-2xl bg-neutral-3 p-2">
-              <ItemArt :image="it.image" :rarity="it.rarity" :size="44" class="w-full" />
-              <UiPrice :amount="it.price" size="xs" />
-            </div>
-          </div>
-        </aside>
-        <div ref="promoEl" class="scroll-mt-24"><BonusPromo /></div>
+      <UiSectionHeader :title="$t('case.contents')" />
+      <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-3">
+        <ItemDropCard v-for="it in freeCase.items" :key="it.id" :item="it" :chance="chance(it.tickets)" />
       </div>
     </section>
 
-    <div v-else-if="session.user" class="grid gap-4 lg:grid-cols-[1fr_320px]">
-      <span class="kd-skeleton h-[278px] rounded-5xl" />
-      <span class="kd-skeleton h-[278px] rounded-5xl" />
+    <div v-else-if="session.user" class="grid gap-4 lg:grid-cols-2">
+      <span class="kd-skeleton h-44 rounded-5xl" />
+      <span class="kd-skeleton h-44 rounded-5xl" />
+      <span class="kd-skeleton h-[278px] rounded-5xl lg:col-span-2" />
     </div>
   </div>
 </template>
