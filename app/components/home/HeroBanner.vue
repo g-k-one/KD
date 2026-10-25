@@ -82,7 +82,6 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
         :mascot="CHICKEN"
         :front="FRONT"
         :loot="LOOT"
-        :rays="{ x: 365, y: 190, color: 'rgb(255 200 90 / 0.16)' }"
         :bubble="bubble ? $t(bubble) : ''"
         :poke-label="$t('hero.pokeLabel')"
         @poke="onPoke"

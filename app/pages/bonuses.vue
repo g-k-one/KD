@@ -140,7 +140,6 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
           ref="stage"
           :mascot="MASCOT"
           :loot="loot"
-          :rays="{ x: 330, y: 150, color: 'rgb(255 205 90 / 0.16)' }"
           :bubble="$t(bubble)"
           :bubble-at="{ x: 470, y: 10 }"
           :poke-label="$t('bonus.pokeLabel')"

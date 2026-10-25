@@ -113,7 +113,6 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
           :back="PF_CASE"
           :mascot="PF_CHICKEN"
           :loot="pfLoot"
-          :rays="{ x: 190, y: 230, color: 'rgb(80 230 140 / 0.14)' }"
           :bubble="$t(pfBubble)"
           :bubble-at="{ x: 470, y: 80 }"
           :poke-label="$t('fair.pokeLabel')"
