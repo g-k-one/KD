@@ -109,14 +109,14 @@ function contentsFor(def: CaseDef): string[] {
 const CASE_DEFS: CaseDef[] = [
   { id: 'c1', slug: 'pierogi-pack', name: 'Pierogi Pack', image: '/img/cases/pierogi-pack.webp', price: 99, risk: 'low', tag: 'new', targetRtp: 9350, createdAt: '2026-10-10' },
   { id: 'c2', slug: 'kurwa-classic', name: 'Kurwa Classic', image: '/img/cases/kurwa-chicken.webp', rig: { skeleton: '/img/cases/rig/kurwa-chicken.json', atlas: '/img/cases/rig/kurwa-chicken.atlas', hover: 'hover', look: { bone: 'look', range: 60 } }, price: 1250, risk: 'medium', targetRtp: 9240, createdAt: '2026-08-01' },
-  { id: 'c3', slug: 'zloty-rush', name: 'Zloty Rush', image: '/img/cases/zloty-rush.webp', rig: { skeleton: '/img/cases/rig/zloty-rush.json', atlas: '/img/cases/rig/zloty-rush.atlas' }, price: 490, risk: 'high', tag: 'new', targetRtp: 9100, createdAt: '2026-10-12' },
+  { id: 'c3', slug: 'zloty-rush', name: 'Zloty Rush', image: '/img/cases/zloty-rush.webp', rig: { skeleton: '/img/cases/rig/zloty-rush.json', atlas: '/img/cases/rig/zloty-rush.atlas' }, price: 490, risk: 'high', tag: 'new', targetRtp: 9100, createdAt: '2026-10-12', limited: { total: 1000, left: 214 } },
   { id: 'c4', slug: 'babcias-box', name: 'Babcia’s Box', image: '/img/cases/babcias-box.webp', price: 750, risk: 'medium', targetRtp: 9300, createdAt: '2026-07-15' },
-  { id: 'c5', slug: 'warsaw-nights', name: 'Warsaw Nights', image: '/img/cases/warsaw-nights.webp', price: 1250, risk: 'extreme', tag: 'new', targetRtp: 9240, createdAt: '2026-10-14' },
+  { id: 'c5', slug: 'warsaw-nights', name: 'Warsaw Nights', image: '/img/cases/warsaw-nights.webp', price: 1250, risk: 'extreme', tag: 'new', targetRtp: 9240, createdAt: '2026-10-14', limited: { total: 500, left: 37 } },
   { id: 'c6', slug: 'vodka-drop', name: 'Vodka Drop', image: '/img/cases/vodka-drop.webp', price: 2900, risk: 'medium', targetRtp: 9200, createdAt: '2026-06-02' },
   { id: 'c7', slug: 'krakow-knife', name: 'Krakow Knife', image: '/img/cases/krakow-agent.webp', animation: '/img/cases/krakow-knife.avif', price: 4900, risk: 'high', targetRtp: 9050, createdAt: '2026-05-20' },
   { id: 'c8', slug: 'golden-kielbasa', name: 'Golden Kielbasa', image: '/img/cases/golden-kielbasa.webp', price: 9900, risk: 'extreme', targetRtp: 9000, createdAt: '2026-04-11' },
   { id: 'c9', slug: 'budget-boom', name: 'Budget Boom', image: '/img/cases/budget-boom.webp', price: 14900, risk: 'low', targetRtp: 9400, createdAt: '2026-03-08' },
-  { id: 'c10', slug: 'high-roller', name: 'High Roller', image: '/img/cases/high-roller.webp', price: 29900, risk: 'high', tag: 'hot', targetRtp: 9150, createdAt: '2026-02-01' },
+  { id: 'c10', slug: 'high-roller', name: 'High Roller', image: '/img/cases/high-roller.webp', price: 29900, risk: 'high', tag: 'hot', targetRtp: 9150, createdAt: '2026-02-01', limited: { total: 100, left: 12 } },
 ]
 
 /**
@@ -563,9 +563,12 @@ export async function openCase(slug: string, count: number, demo: boolean, kurwa
   const cs = getCase(slug)
   const n = Math.min(5, Math.max(1, Math.floor(count)))
   const price = kurwadrop ? cs.kurwadrop.price : cs.price
+  // a limited case: the stock must cover every case of the open (x1…x5); demo spins never spend it
+  if (!demo && cs.limited && cs.limited.left < n) throw new MockError(409, cs.limited.left ? `Only ${cs.limited.left} left` : 'Sold out')
   if (!demo) spend(price * n)
   if (!demo) {
     cs.opens += n
+    if (cs.limited) cs.limited = { ...cs.limited, left: cs.limited.left - n }
   }
   return roll(cs, n, demo, kurwadrop, price)
 }

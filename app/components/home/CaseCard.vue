@@ -4,7 +4,7 @@ import type { RigPlayback } from '~/utils/spineStage'
 
 // Figma "CaseCard" states: Default → Hover (surface lifts to neutral-4, art settles 232→220,
 // price becomes the brand-gradient button, risk reveals its label) → Active (80% opacity).
-const props = defineProps<{ item: CaseSummary }>()
+const props = defineProps<{ item: CaseSummary; big?: boolean }>()
 const { onPointerMove } = useSpotlight()
 const { t } = useI18n()
 const session = useSessionStore()
@@ -18,6 +18,14 @@ const badge = computed(() => {
 })
 
 const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-light', extreme: 'text-danger' } as const
+
+/** A limited case: what is left, and how full the bar is; low stock turns hot */
+const stock = computed(() => {
+  const l = props.item.limited
+  if (!l) return null
+  const share = l.total ? l.left / l.total : 0
+  return { left: l.left, share, out: l.left <= 0, low: share <= 0.1 }
+})
 
 // Skeletal art plays only while the card is on screen and holds a playback slot; until the rig's
 // first frame is drawn (and after it stops, or if it never loads) the static WebP stays in place.
@@ -65,10 +73,11 @@ function onArtLeave() {
   <NuxtLink
     :to="`/case/${item.slug}`"
     class="kd-case-card kd-spotlight group relative flex h-full flex-col items-center gap-2 rounded-5xl border"
+    :class="[stock?.out && 'is-sold-out', big && 'is-big']"
     @pointermove="onArtPointer"
     @pointerleave="onArtLeave"
   >
-    <div ref="artBox" class="kd-case-art-box relative aspect-square w-full lg:aspect-auto lg:h-55">
+    <div ref="artBox" class="kd-case-art-box relative aspect-square w-full lg:aspect-auto" :class="big ? 'lg:min-h-55 lg:flex-1' : 'lg:h-55'">
       <img
         :src="item.image"
         :alt="item.name"
@@ -95,10 +104,18 @@ function onArtLeave() {
         :class="{ invisible: !animReady }"
         @load="animReady = true"
       />
+      <!-- a limited case: how many are left, as a plate with a bar over the art's foot -->
+      <span v-if="stock" class="kd-stock type-10-caps absolute bottom-1 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 rounded-md px-2 pt-1 pb-1.5" :class="[stock.low && 'is-low', stock.out && 'is-out']">
+        <span class="flex items-center gap-1 whitespace-nowrap tabular-nums">
+          <UiIcon :name="stock.out ? 'x-circle' : 'fire'" :size="12" />
+          {{ stock.out ? $t('cases.soldOut') : $t('cases.left', { n: stock.left }) }}
+        </span>
+        <span v-if="!stock.out" class="kd-stock-track h-0.5 w-full overflow-hidden rounded-full"><span class="kd-stock-fill block h-full rounded-full" :style="{ width: `${Math.max(4, stock.share * 100)}%` }" /></span>
+      </span>
     </div>
 
     <div class="flex w-full flex-col items-center gap-2 px-3 pb-3 lg:gap-3 lg:px-4 lg:pb-[14px]">
-      <h3 class="type-12-caps lg:type-14-caps w-full truncate text-center">{{ item.name }}</h3>
+      <h3 class="w-full truncate text-center" :class="big ? 'type-14-caps lg:type-20-caps' : 'type-12-caps lg:type-14-caps'">{{ item.name }}</h3>
 
       <div class="kd-case-price relative flex w-full items-center justify-center rounded-lg py-1.5 lg:py-2">
         <span class="kd-case-price-fill bg-brand-gradient absolute inset-0 rounded-lg shadow-inner-primary" />
@@ -110,7 +127,8 @@ function onArtLeave() {
 
       <div class="flex h-4 w-full items-center">
         <span class="kd-case-risk-label type-10-caps overflow-hidden text-neutral-11">{{ $t('risk.label') }}</span>
-        <UiRiskMeter :level="item.risk" class="flex-1" />
+        <!-- risk as the case page shows it: peppers -->
+        <span class="flex flex-1 justify-center"><UiRiskPeppers :level="item.risk" :size="16" /></span>
         <span class="kd-case-risk-label type-12 overflow-hidden text-right" :class="RISK_TEXT[item.risk]">
           {{ $t(`risk.${item.risk}`) }}
         </span>
@@ -198,6 +216,35 @@ function onArtLeave() {
   100% {
     transform: translateX(100%);
   }
+}
+/* the stock plate sits on the art's foot */
+.kd-stock {
+  z-index: 2;
+  background: rgb(12 13 16 / 0.82);
+  color: var(--color-neutral-14);
+  box-shadow: inset 0 0 0 1px var(--color-neutral-6);
+  backdrop-filter: blur(6px);
+  min-width: 84px;
+}
+.kd-stock-track {
+  background: var(--color-neutral-5);
+}
+.kd-stock-fill {
+  background: var(--color-coin);
+}
+.kd-stock.is-low {
+  color: var(--color-brand-light);
+  box-shadow: inset 0 0 0 1px rgb(255 95 31 / 0.55);
+}
+.kd-stock.is-low .kd-stock-fill {
+  background: var(--color-brand-base);
+}
+.kd-stock.is-out {
+  color: var(--color-neutral-11);
+}
+.kd-case-card.is-sold-out .kd-case-art {
+  opacity: 0.4;
+  filter: grayscale(1);
 }
 .kd-case-card {
   background: var(--color-neutral-2);

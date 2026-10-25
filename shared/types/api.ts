@@ -29,6 +29,8 @@ export interface CaseSummary {
   payback: number
   /** Biggest multiplier (drop price / case price) this case paid in the last 24 h; null if nothing notable */
   bestToday: number | null
+  /** A limited case: how many there were and how many are left. Every open spends one; at 0 it is sold out. */
+  limited?: { total: number; left: number }
   createdAt: string
 }
 

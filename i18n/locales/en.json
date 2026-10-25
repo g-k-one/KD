@@ -131,7 +131,9 @@
       "upgrades": "Upgrades",
       "battles": "Battles",
       "online": "Online now"
-    }
+    },
+    "left": "{n} left",
+    "soldOut": "Sold out"
   },
   "footer": {
     "play": "Play",

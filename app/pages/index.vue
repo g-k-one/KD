@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CasesResponse } from '#shared/types/api'
+import type { CaseSummary, CasesResponse } from '#shared/types/api'
 
 const { data } = await useFetch<CasesResponse>('/api/cases', { key: 'cases' })
 const filters = useCaseFilters()
@@ -23,6 +23,13 @@ useIntersectionObserver(filtersSentinel, ([e]) => (filtersStuck.value = !!e && !
 // Sections with a clock (the weekly picks) count down on their header
 const clock = useClock(1000)
 const allCases = computed(() => (data.value?.sections ?? []).flatMap((s) => s.cases))
+
+// --- Under review: a bento grid (?grid=bento). Desktop only: the section's star case — limited, else hot, else the
+// biggest win today — takes a 2×2 cell; phones keep the even grid.
+const route = useRoute()
+const bento = computed(() => route.query.grid === 'bento')
+const starOf = (cases: CaseSummary[]) =>
+  (cases.find((c) => c.limited && c.limited.left > 0) ?? cases.find((c) => c.tag === 'hot') ?? [...cases].sort((a, b) => (b.bestToday ?? 0) - (a.bestToday ?? 0))[0])?.id
 
 const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 </script>
@@ -67,8 +74,15 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
         <div
           v-show="!collapsed[s.id]"
           class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5"
+          :class="bento && 'lg:grid-flow-dense'"
         >
-          <HomeCaseCard v-for="c in s.cases" :key="c.id" :item="c" />
+          <HomeCaseCard
+            v-for="c in s.cases"
+            :key="c.id"
+            :item="c"
+            :big="bento && c.id === starOf(s.cases)"
+            :class="bento && c.id === starOf(s.cases) && 'lg:col-span-2 lg:row-span-2'"
+          />
         </div>
       </section>
       <HomeContinue v-if="i === 0" :cases="allCases" />
