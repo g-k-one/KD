@@ -3,16 +3,11 @@
 // the rounds from startedAt + roundMs.
 import type { Battle, BattleCaseRef, BattleMode, BattlePlayerRef, BattleRoundResult, CreateBattleRequest } from '#shared/types/api'
 import { pickByTicket, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
-import { getCase, getCaseSections, getMockState, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory } from './mock-db'
+import { adminSettings, getCase, getCaseSections, getMockState, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory } from './mock-db'
 
-const ROUND_MS = 4200
-const BOT_NAMES = ['Bot Pierogi', 'Bot Babcia', 'Bot Zloty', 'Bot Vodka']
-const PLAYERS: BattlePlayerRef[] = [
-  { nickname: 'krakow_kid', avatar: '/img/brand/avatar.webp', level: 8 },
-  { nickname: 'babcia99', avatar: '/img/brand/avatar.webp', level: 21 },
-  { nickname: 'zlotyboy', avatar: '/img/brand/avatar.webp', level: 4 },
-  { nickname: 'ez_drop', avatar: '/img/brand/avatar.webp', level: 33 },
-]
+// Round time, round cap and bot names are admin settings (adminSettings.games.pvp); lobby players are the fake players
+const pvp = () => adminSettings.games.pvp
+const lobbyPlayers = (): BattlePlayerRef[] => adminSettings.players.slice(0, 4).map((p) => ({ nickname: p.nickname, avatar: '/img/brand/avatar.webp', level: p.level }))
 
 interface StoredBattle extends Battle {
   serverSeed: string
@@ -52,7 +47,7 @@ async function newBattle(size: number, rounds: BattleCaseRef[], mode: BattleMode
     slots: Array.from({ length: size }, (_, slot) => ({ slot, player: null })),
     results: null,
     startedAt: null,
-    roundMs: ROUND_MS,
+    roundMs: pvp().roundMs,
     winnerSlot: null,
     winners: [],
     viewers: 0,
@@ -165,7 +160,8 @@ function ensureSeeded() {
     ]
     for (const [i, sp] of specs.entries()) {
       const b = await newBattle(sp.size, sp.rounds, sp.mode)
-      for (let s = 0; s < sp.filled; s++) b.slots[s]!.player = PLAYERS[(i + s) % PLAYERS.length]!
+      const players = lobbyPlayers()
+      for (let s = 0; s < sp.filled; s++) b.slots[s]!.player = players[(i + s) % players.length]!
       if (sp.filled === sp.size) {
         await start(b)
         if (sp.past) b.startedAt = new Date(Date.now() - 600_000).toISOString()
@@ -208,7 +204,7 @@ export async function createBattle(req: CreateBattleRequest) {
   const size = Math.min(4, Math.max(2, Math.floor(req.size)))
   const rounds = (req.cases ?? []).flatMap((c) => Array.from({ length: Math.min(10, Math.max(0, c.qty)) }, () => caseRef(c.slug)))
   if (!rounds.length) throw new MockError(400, 'Add at least one case')
-  if (rounds.length > 25) throw new MockError(400, 'A battle can have up to 25 rounds')
+  if (rounds.length > pvp().maxRounds) throw new MockError(400, `A battle can have up to ${pvp().maxRounds} rounds`)
   const b = await newBattle(size, rounds, mode)
   spend(b.cost)
   b.slots[0]!.player = you()
@@ -236,7 +232,8 @@ export async function callBot(id: string, slot?: number) {
   if (b.status !== 'waiting') throw new MockError(409, 'This battle has already started')
   const free = b.slots.find((s) => !s.player && (slot == null || s.slot === slot))
   if (!free) throw new MockError(409, 'No free seats')
-  free.player = { nickname: BOT_NAMES[free.slot % BOT_NAMES.length]!, avatar: '/img/brand/logo-mark.svg', level: 1, bot: true }
+  const bots = pvp().botNames.length ? pvp().botNames : ['Bot']
+  free.player = { nickname: bots[free.slot % bots.length]!, avatar: '/img/brand/logo-mark.svg', level: 1, bot: true }
   if (b.slots.every((s) => s.player)) await start(b)
   return { battle: publicBattle(b, true) }
 }

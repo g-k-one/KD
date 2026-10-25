@@ -36,25 +36,30 @@ function writeSession(on: boolean) {
 
 let loggedIn = readSession()
 
-// The admin's home layout outlives a reload here (there is no server to keep it): saved on every change,
-// handed back to the mock before the first request
+// The admin's settings outlive a reload here (there is no server to keep them): after every admin change the
+// mock's snapshot (GET /api/admin/snapshot) is saved, and handed back to the mock before the first request
+const ADMIN_KEY = 'kd_admin'
+// the home layout alone, from before the admin panel
 const LAYOUT_KEY = 'kd_home_layout'
-let layoutRestored = false
-async function restoreLayout() {
-  layoutRestored = true
+let adminRestored = false
+async function restoreAdmin() {
+  adminRestored = true
   try {
-    const saved = localStorage.getItem(LAYOUT_KEY)
-    if (saved) await mockRoute('PUT', '/api/admin/home-layout', { layout: JSON.parse(saved) }, {}, { loggedIn })
+    const saved = localStorage.getItem(ADMIN_KEY)
+    const layout = localStorage.getItem(LAYOUT_KEY)
+    if (saved) await mockRoute('PUT', '/api/admin/snapshot', JSON.parse(saved), {}, { loggedIn })
+    else if (layout) await mockRoute('PUT', '/api/admin/home-layout', { layout: JSON.parse(layout) }, {}, { loggedIn })
   } catch {
-    // storage blocked or a stale shape: the default layout stays
+    // storage blocked or a stale shape: the defaults stay
   }
 }
-function saveLayout(data: unknown, path: string) {
+async function saveAdmin(path: string) {
   try {
-    if (path.endsWith('/reset')) localStorage.removeItem(LAYOUT_KEY)
-    else localStorage.setItem(LAYOUT_KEY, JSON.stringify((data as { layout: unknown }).layout))
+    localStorage.removeItem(LAYOUT_KEY)
+    if (path === '/api/admin/reset') localStorage.removeItem(ADMIN_KEY)
+    else localStorage.setItem(ADMIN_KEY, JSON.stringify(await mockRoute('GET', '/api/admin/snapshot', {}, {}, { loggedIn })))
   } catch {
-    // storage blocked: the layout lives until the reload
+    // storage blocked: the settings live until the reload
   }
 }
 
@@ -68,7 +73,7 @@ export async function handleMockRequest(
   for (const [k, v] of Object.entries({ ...opts.params, ...opts.query })) if (v != null) query[k] = String(v)
   // no fake latency: the artifact should feel instant (still async, like the network)
   await Promise.resolve()
-  if (!layoutRestored) await restoreLayout()
+  if (!adminRestored) await restoreAdmin()
 
   if (method === 'POST' && path === '/api/auth/login') {
     loggedIn = true
@@ -82,7 +87,7 @@ export async function handleMockRequest(
   try {
     // JSON copy, not structuredClone: bodies can hold reactive arrays (Proxy), which structuredClone rejects
     const data = await mockRoute(method, path, JSON.parse(JSON.stringify(opts.body ?? {})) as Record<string, unknown>, query, { loggedIn })
-    if (method !== 'GET' && path.startsWith('/api/admin/home-layout')) saveLayout(data, path)
+    if (method !== 'GET' && path.startsWith('/api/admin/')) await saveAdmin(path)
     // Behave like the network: hand the UI a copy, never the mock's live state objects
     const copy = JSON.parse(JSON.stringify(data))
     return hasStore ? toStore(copy) : copy

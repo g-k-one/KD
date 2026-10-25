@@ -17,6 +17,21 @@
       "autoPort": false
     },
     {
+      "name": "kurwadrop-dev-2",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "4327",
+        "--host",
+        "127.0.0.1"
+      ],
+      "port": 4327,
+      "autoPort": false
+    },
+    {
       "name": "kurwadrop-prod",
       "runtimeExecutable": "node",
       "runtimeArgs": [

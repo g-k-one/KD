@@ -1,13 +1,18 @@
 // In-memory mock backend state. Resets on dev server restart (or page reload in the artifact build).
 // Replaced by the Go backend later — the UI only talks to it through mock-api.ts routes.
-import { upgradeChanceBp } from '#shared/upgrade'
+import { DEFAULT_UPGRADE_RULES, upgradeChanceBp } from '#shared/upgrade'
 import type {
+  AdminBonuses,
+  AdminFeed,
+  AdminPlayer,
+  GameRules,
   BigWin,
   CaseDetails,
   CaseTopDrop,
   CaseItem,
   CaseOdds,
   CaseSection,
+  HomeCardKind,
   HomeLayout,
   CaseSummary,
   FeedDrop,
@@ -36,6 +41,54 @@ export class MockError extends Error {
     super(message)
   }
 }
+
+// --- Admin settings (the admin panel changes them through mock-admin.ts) ----------------------------
+
+export const adminSettings: {
+  /** Fake players of the feed, big wins, top drops and PvP lobbies */
+  players: AdminPlayer[]
+  bonuses: AdminBonuses
+  games: GameRules
+  feed: AdminFeed
+} = {
+  players: [
+    { nickname: 'pierogi_king', level: 27 },
+    { nickname: 'babcia99', level: 21 },
+    { nickname: 'zlotyboy', level: 9 },
+    { nickname: 'ez_drop', level: 33 },
+    { nickname: 'krakow_kid', level: 8 },
+    { nickname: 'kurwa_pro', level: 15 },
+    { nickname: 'vodkashot', level: 12 },
+    { nickname: 'wroclaw_wolf', level: 4 },
+  ],
+  bonuses: {
+    daily: {
+      cooldownHours: 24,
+      levelsPerTier: 5,
+      // worth 150 · tier² cents, each tier's skins a step up
+      tiers: [
+        { price: 150, itemIds: ['mp9-wild-lily', 'p250-asiimov', 'glock-water-elemental', 'm4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed'] },
+        { price: 600, itemIds: ['p250-asiimov', 'glock-water-elemental', 'm4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed', 'awp-asiimov'] },
+        { price: 1350, itemIds: ['glock-water-elemental', 'm4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed', 'awp-asiimov', 'awp-wildfire', 'ak-vulcan'] },
+        { price: 2400, itemIds: ['m4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed', 'awp-asiimov', 'awp-wildfire', 'ak-vulcan', 'sport-omega'] },
+      ],
+    },
+    welcome: { total: 3, price: 150, itemIds: ['mp9-wild-lily', 'p250-asiimov', 'glock-water-elemental', 'm4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed'] },
+    promos: [
+      { code: 'KURWA', kind: 'coins', value: 500 },
+      { code: 'WELCOME', kind: 'coins', value: 250 },
+      { code: 'PIEROGI', kind: 'coins', value: 100 },
+      { code: 'KURWA10', kind: 'deposit', value: 1000 },
+      { code: 'PIEROGI', kind: 'deposit', value: 500 },
+    ],
+  },
+  games: {
+    upgrade: { ...DEFAULT_UPGRADE_RULES },
+    pvp: { roundMs: 4200, maxRounds: 25, botNames: ['Bot Pierogi', 'Bot Babcia', 'Bot Zloty', 'Bot Vodka'] },
+  },
+  feed: { paused: false, rateBp: 6000, upgradeShareBp: 1500, pvpShareBp: 1000 },
+}
+const nicknames = () => adminSettings.players.map((p) => p.nickname)
 
 // --- Item catalog (prices in coin cents) ---------------------------------
 
@@ -69,16 +122,24 @@ const uniq = (list: Item[]) => list.filter((i, k) => list.findIndex((x) => x.id 
 export const CATALOG: Item[] = uniq([...cs2, ...gemItems, ...LEGACY.filter((l) => !cs2.some((c) => key(c) === key(l)))]).sort((a, b) => b.price - a.price)
 
 const byId = (id: string) => CATALOG.find((i) => i.id === id) ?? CATALOG.find((i) => key(i) === key(LEGACY.find((l) => l.id === id)!))!
+/** A catalog skin by id, or undefined (ids from the admin panel may be anything) */
+export function findItem(id: string): Item | undefined {
+  const legacy = LEGACY.find((l) => l.id === id)
+  return CATALOG.find((i) => i.id === id) ?? (legacy ? CATALOG.find((i) => key(i) === key(legacy)) : undefined)
+}
 
 // --- Cases ---------------------------------------------------------------
 
-interface CaseDef extends Omit<CaseSummary, 'rtp' | 'payback' | 'bestToday'> {
+export interface CaseDef extends Omit<CaseSummary, 'rtp' | 'payback' | 'bestToday'> {
   /** Target RTP from the admin panel, basis points */
   targetRtp: number
   /** Fixed contents; otherwise picked from the catalog by price and risk (contentsFor) */
   itemIds?: string[]
-  /** Contents with fixed odds (cases modelled on a live site); the price then decides the RTP */
+  /** Contents with fixed odds (cases modelled on a live site, or manual odds from the admin); the price then decides the RTP */
   preset?: Array<Item & { tickets: number }>
+  /** A copy uses the art of the case it was made from */
+  artSlug?: string
+  copyOf?: string
 }
 
 /** Top prize as a multiple of the case price, by risk */
@@ -195,7 +256,7 @@ function finishCase(def: CaseDef, withTickets: Array<Item & { tickets: number }>
   const kurwadrop = { price: def.price, chickenTickets: pool.reduce((a, i) => a + i.tickets, 0), poolIds: pool.map((i) => i.id) }
 
   // Top drops of the last 7 days: stable per case, from the items worth 2× the case or more
-  const NICKS = ['pierogi_king', 'babcia99', 'zlotyboy', 'kurwa_pro', 'vodkashot', 'krakow_kid', 'ez_drop', 'wroclaw_wolf']
+  const NICKS = nicknames()
   const rich = caseItems.filter((i) => i.price >= def.price * 2).sort((a, b) => b.price - a.price).slice(0, 10)
   const topDrops: CaseTopDrop[] = Array.from({ length: Math.min(6, rich.length) }, (_, k) => {
     const h = hashStr(`${def.slug}:${k}`)
@@ -203,11 +264,12 @@ function finishCase(def: CaseDef, withTickets: Array<Item & { tickets: number }>
     return { item, nickname: NICKS[h % NICKS.length]!, multiplier: Math.round((item.price / def.price) * 10) / 10, at: new Date(Date.now() - ((h % 160) + 2) * 3600_000).toISOString() }
   }).sort((a, b) => b.multiplier - a.multiplier)
 
-  const { targetRtp: _t, itemIds: _i, ...summary } = def
+  const { targetRtp: _t, itemIds: _i, preset: _p, artSlug: _a, copyOf: _c, ...summary } = def
+  // every case has its wide, tall and full-scene pictures, named after it (a copy: after its original)
+  const art = def.artSlug ?? def.slug
   return {
     ...summary,
-    // every case has its wide, tall and full-scene pictures, named after it
-    art: { wide: `/img/cases/wide/${def.slug}.webp`, tall: `/img/cases/tall/${def.slug}.webp`, full: `/img/cases/full/${def.slug}.webp` },
+    art: { wide: `/img/cases/wide/${art}.webp`, tall: `/img/cases/tall/${art}.webp`, full: `/img/cases/full/${art}.webp` },
     rtp: Math.round((realEv / def.price) * 10_000),
     payback: pct((i) => i.price >= def.price),
     bestToday: null,
@@ -230,21 +292,41 @@ const GEM_LOOK: Record<string, Omit<CaseDef, 'price' | 'targetRtp' | 'preset'>> 
 }
 const GEM_DEFS: CaseDef[] = (GEM_CASES as GemCase[]).map((g) => ({ ...GEM_LOOK[g.slug]!, price: g.price, targetRtp: 9200, preset: g.items }))
 
-const CASES: CaseDetails[] = [...CASE_DEFS, ...GEM_DEFS].map(buildCase)
+/** Every case as the admin set it, and what it builds into (same order) */
+export const caseDefs: CaseDef[] = [...CASE_DEFS, ...GEM_DEFS]
+const CASES: CaseDetails[] = caseDefs.map(buildCase)
+
+/** Builds a def again after an admin change. Opens and today's best stay: they are what happened, not settings */
+export function rebuildCase(def: CaseDef) {
+  const next = buildCase(def)
+  const i = CASES.findIndex((c) => c.slug === def.slug)
+  if (i < 0) {
+    CASES.push(next)
+    return next
+  }
+  next.opens = CASES[i]!.opens
+  next.bestToday = CASES[i]!.bestToday
+  CASES[i] = next
+  return next
+}
+export function removeCase(slug: string) {
+  const i = CASES.findIndex((c) => c.slug === slug)
+  if (i >= 0) CASES.splice(i, 1)
+  const d = caseDefs.findIndex((c) => c.slug === slug)
+  if (d >= 0) caseDefs.splice(d, 1)
+  delete homeLayout.cards[slug]
+}
+export const builtCase = (slug: string) => CASES.find((c) => c.slug === slug)
 
 // --- Big wins of the day (seeded, then the user's own big drops join) -------------------------------
 
-const WINNERS = [
-  { nickname: 'pierogi_king', level: 27 },
-  { nickname: 'babcia99', level: 21 },
-  { nickname: 'zlotyboy', level: 9 },
-  { nickname: 'ez_drop', level: 33 },
-  { nickname: 'krakow_kid', level: 8 },
-]
-const bigWins: BigWin[] = []
+const WINNERS = adminSettings.players.slice(0, 5)
+export const bigWins: BigWin[] = []
 let winSeq = 0
 export function pushBigWin(cs: Pick<CaseDetails, 'slug' | 'name' | 'image'>, item: Item, cost: number, who: { nickname: string; level: number; avatar?: string }, at = new Date()) {
-  winSeq += 1
+  // ids stay unique after the admin restored a list of wins
+  do winSeq += 1
+  while (bigWins.some((w) => w.id === `w${winSeq}`))
   const multiplier = Math.floor(item.price / Math.max(1, cost))
   bigWins.push({ id: `w${winSeq}`, nickname: who.nickname, avatar: who.avatar ?? '/img/brand/avatar.webp', level: who.level, item, caseSlug: cs.slug, caseName: cs.name, caseImage: cs.image, cost, multiplier, at: at.toISOString() })
   const c = CASES.find((x) => x.slug === cs.slug)
@@ -264,8 +346,8 @@ CASES.forEach((cs, k) => {
   pushBigWin(cs, item, cs.price, WINNERS[k % WINNERS.length]!, new Date(Date.now() - (k + 1) * 47 * 60_000))
 })
 // Not only cases: a few long-shot upgrades and PvP wins made the day too
-const UPGRADE_SRC = { slug: 'upgrade', name: 'Upgrade', image: '' }
-const PVP_SRC = { slug: 'pvp', name: 'PvP battle', image: '' }
+export const UPGRADE_SRC = { slug: 'upgrade', name: 'Upgrade', image: '' }
+export const PVP_SRC = { slug: 'pvp', name: 'PvP battle', image: '' }
 ;[
   { src: UPGRADE_SRC, rank: 2, x: 312, h: 1.5 },
   { src: PVP_SRC, rank: 6, x: 96, h: 3.2 },
@@ -275,6 +357,14 @@ const PVP_SRC = { slug: 'pvp', name: 'PvP battle', image: '' }
   const item = CATALOG[rank]!
   pushBigWin(src, item, +(item.price / x).toFixed(2), WINNERS[(k + 2) % WINNERS.length]!, new Date(Date.now() - h * 3600_000))
 })
+
+/** Today's best per case, again from the big wins (after the admin removed one) */
+export function syncBestToday() {
+  for (const c of CASES) {
+    const best = Math.max(0, ...bigWins.filter((w) => w.caseSlug === c.slug && w.multiplier >= 5).map((w) => w.multiplier))
+    c.bestToday = best || null
+  }
+}
 
 export function getBigWins() {
   const dayAgo = Date.now() - 24 * 3600_000
@@ -295,6 +385,10 @@ const DEFAULT_HOME_LAYOUT: HomeLayout = {
   cards: { mafia: 'full', 'babcias-box': 'full', 'vodka-drop': 'full' },
 }
 let homeLayout: HomeLayout = structuredClone(DEFAULT_HOME_LAYOUT)
+export function setCaseCard(slug: string, kind: HomeCardKind) {
+  if (kind === 'standard') delete homeLayout.cards[slug]
+  else homeLayout.cards[slug] = kind
+}
 
 export const getHomeLayout = () => ({ layout: homeLayout })
 export function resetHomeLayout() {
@@ -392,7 +486,6 @@ interface MockState {
   previousSeed: (SeedState & { serverSeed: string }) | null
   /** Every revealed pair, newest first */
   seedHistory: Array<SeedState & { rotatedAt: string; clientChanged: boolean }>
-  feedPaused: boolean
   /** Drops pushed from /debug or by the user's own opens, served before random ones */
   queuedDrops: FeedDrop[]
   history: HistoryEntry[]
@@ -405,8 +498,6 @@ interface MockState {
   promoUsed: string[]
 }
 
-/** Free welcome cases a new player gets (admin-configured on the backend) */
-export const WELCOME_TOTAL = 3
 
 /** XP (coin cents spent) for the next level: grows with the level, 25 coins at level 1, ~205 at level 12 */
 export const xpFor = (level: number) => 2500 + level * 1500
@@ -417,12 +508,11 @@ const state: MockState = {
   seed: { serverSeed: '', serverSeedHash: '', clientSeed: randomSeed(5), nonce: 0, createdAt: new Date(Date.now() - 2 * 86_400_000).toISOString() },
   previousSeed: null,
   seedHistory: [],
-  feedPaused: false,
   queuedDrops: [],
   history: [],
   xp: Math.round((DEFAULT_USER.levelProgress / 100) * xpFor(DEFAULT_USER.level)),
   dailyAt: 0,
-  welcomeLeft: WELCOME_TOTAL,
+  welcomeLeft: adminSettings.bonuses.welcome.total,
   promoUsed: [],
 }
 
@@ -533,7 +623,7 @@ export function resetMockUser() {
   state.user = structuredClone(DEFAULT_USER)
   state.xp = Math.round((DEFAULT_USER.levelProgress / 100) * xpFor(DEFAULT_USER.level))
   state.dailyAt = 0
-  state.welcomeLeft = WELCOME_TOTAL
+  state.welcomeLeft = adminSettings.bonuses.welcome.total
   state.inventory = STARTER_INVENTORY.map((id) => toInventory(byId(id), 'case'))
   syncSkinsValue()
 }
@@ -546,11 +636,10 @@ export function spend(amount: number) {
 
 // --- Promo codes ------------------------------------------------------------------
 
-/** Demo codes; the real ones live in the admin panel */
-const PROMO: Record<string, number> = { KURWA: 500, WELCOME: 250, PIEROGI: 100 }
+const promoValue = (kind: 'coins' | 'deposit', code: string) => adminSettings.bonuses.promos.find((p) => p.kind === kind && p.code === code)?.value
 export function redeemPromo(code: string) {
   const c = String(code ?? '').trim().toUpperCase()
-  const amount = PROMO[c]
+  const amount = promoValue('coins', c)
   if (!amount) throw new MockError(400, 'This code does not exist')
   if (state.promoUsed.includes(c)) throw new MockError(400, 'You have already used this code')
   state.promoUsed.push(c)
@@ -706,29 +795,32 @@ export function getInventory() {
 // --- Bonuses: the daily case and the welcome cases --------------------------------------------
 
 export const DAILY_SLUG = 'daily'
-const DAILY_TIERS = [
-  ['mp9-wild-lily', 'p250-asiimov', 'glock-water-elemental', 'm4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed'],
-  ['p250-asiimov', 'glock-water-elemental', 'm4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed', 'awp-asiimov'],
-  ['glock-water-elemental', 'm4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed', 'awp-asiimov', 'awp-wildfire', 'ak-vulcan'],
-  ['m4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed', 'awp-asiimov', 'awp-wildfire', 'ak-vulcan', 'sport-omega'],
-]
-const dailyTier = () => Math.min(DAILY_TIERS.length - 1, Math.floor(state.user.level / 5) - 1 < 0 ? 0 : Math.floor(state.user.level / 5) - 1)
+const dailyTier = () => {
+  const { tiers, levelsPerTier } = adminSettings.bonuses.daily
+  return Math.min(tiers.length - 1, Math.max(0, Math.floor(state.user.level / levelsPerTier) - 1))
+}
 const dailyCache = new Map<number, CaseDetails>()
+/** The bonus cases are built once; a change in the admin panel drops them */
+export function clearBonusCases() {
+  dailyCache.clear()
+  welcomeCache = null
+}
 /** Free once a day; worth ~0.5 coin per level band and pays it all back on average (RTP 100%). */
 function dailyCase(): CaseDetails {
   const tier = dailyTier()
   let cs = dailyCache.get(tier)
   if (!cs) {
+    const t = adminSettings.bonuses.daily.tiers[tier]!
     cs = buildCase({
       id: `daily-${tier}`,
       slug: DAILY_SLUG,
       name: 'Babcia’s Daily',
       image: '/img/cases/babcias-box.webp',
-      price: 150 * (tier + 1) ** 2,
+      price: t.price,
       risk: 'low',
       targetRtp: 10_000,
       createdAt: '2026-10-01',
-      itemIds: DAILY_TIERS[tier]!,
+      itemIds: t.itemIds,
     })
     dailyCache.set(tier, cs)
   }
@@ -745,11 +837,11 @@ function welcomeCase(): CaseDetails {
     slug: WELCOME_SLUG,
     name: 'Welcome Pack',
     image: '/img/cases/kurwa-classic.webp',
-    price: 150,
+    price: adminSettings.bonuses.welcome.price,
     risk: 'low',
     targetRtp: 10_000,
     createdAt: '2026-10-01',
-    itemIds: DAILY_TIERS[0]!,
+    itemIds: adminSettings.bonuses.welcome.itemIds,
   })
   return welcomeCache
 }
@@ -764,22 +856,22 @@ export async function openWelcome() {
 export function getBonuses() {
   return {
     daily: { case: dailyCase(), tier: dailyTier(), nextAt: state.dailyAt > Date.now() ? new Date(state.dailyAt).toISOString() : null },
-    welcome: { case: welcomeCase(), left: state.welcomeLeft, total: WELCOME_TOTAL },
+    welcome: { case: welcomeCase(), left: state.welcomeLeft, total: adminSettings.bonuses.welcome.total },
   }
 }
 
 export async function openDaily() {
   if (state.dailyAt > Date.now()) throw new MockError(409, 'The daily case is not ready yet')
   await ensureSeed()
-  state.dailyAt = Date.now() + 24 * 3600_000
+  state.dailyAt = Date.now() + adminSettings.bonuses.daily.cooldownHours * 3600_000
   return roll(dailyCase(), 1, false, false, 0)
 }
 
 // --- Upgrade ----------------------------------------------------------------
 
-/** House edge for upgrades: 5%, max chance 80% (shared/upgrade.ts). Chance in basis points. */
+/** Chance in basis points by the admin's upgrade rules (shared/upgrade.ts) */
 export function upgradeChance(inputValue: number, targetPrice: number) {
-  return upgradeChanceBp(inputValue, targetPrice)
+  return upgradeChanceBp(inputValue, targetPrice, adminSettings.games.upgrade)
 }
 
 /** The market lists every real skin once: the CS2 base and the csgogem case items overlap under different ids
@@ -805,10 +897,11 @@ export async function upgrade(itemUids: string[], balanceAmount: number, targetI
   const extra = Math.max(0, Math.floor(balanceAmount))
   const input = items.reduce((a, i) => a + i.price, 0) + extra
   if (input <= 0) throw new MockError(400, 'Choose skins or add balance')
-  if (items.length + (extra > 0 ? 1 : 0) > 6) throw new MockError(400, 'An upgrade takes up to 6 items')
+  const { maxItems, minChanceBp } = adminSettings.games.upgrade
+  if (items.length + (extra > 0 ? 1 : 0) > maxItems) throw new MockError(400, `An upgrade takes up to ${maxItems} items`)
   if (target.price <= input) throw new MockError(400, 'Pick a skin worth more than your stake')
   const chance = upgradeChance(input, target.price)
-  if (chance < 100) throw new MockError(400, 'Chance is below 1%')
+  if (chance < minChanceBp) throw new MockError(400, `Chance is below ${minChanceBp / 100}%`)
 
   spend(extra)
   addXp(items.reduce((a, i) => a + i.price, 0))
@@ -853,10 +946,8 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   { id: 'crypto', name: 'Crypto', logo: '/img/pay/crypto.svg', bonusBp: 0, min: 20, max: 10000 },
 ]
 
-export const PROMO_CODES: Record<string, number> = { KURWA10: 1000, PIEROGI: 500 }
-
 export function checkPromo(code: string) {
-  const bp = PROMO_CODES[code.trim().toUpperCase()]
+  const bp = promoValue('deposit', code.trim().toUpperCase())
   if (!bp) throw new MockError(404, 'Promo code not found')
   return { code: code.trim().toUpperCase(), bonusBp: bp }
 }
@@ -865,7 +956,7 @@ export function quoteDeposit(amount: number, currency: FiatCurrency, methodId: s
   const method = PAYMENT_METHODS.find((m) => m.id === methodId)
   const coins = Math.round(amount * FX[currency] * 100)
   const methodBonus = Math.round((coins * (method?.bonusBp ?? 0)) / 10_000)
-  const promoBp = promoCode ? (PROMO_CODES[promoCode.trim().toUpperCase()] ?? 0) : 0
+  const promoBp = promoCode ? (promoValue('deposit', promoCode.trim().toUpperCase()) ?? 0) : 0
   const promoBonus = Math.round((coins * promoBp) / 10_000)
   return { amount, currency, coins, methodBonus, promoBonus, total: coins + methodBonus + promoBonus }
 }
@@ -882,8 +973,6 @@ export function deposit(amount: number, currency: FiatCurrency, methodId: string
 
 // --- Live feed -----------------------------------------------------------------
 
-const NICKNAMES = ['pierogi_king', 'babcia99', 'zlotyboy', 'kurwa_pro', 'vodkashot', 'krakow_kid', 'ez_drop']
-
 let dropSeq = 0
 const feed: FeedDrop[] = []
 
@@ -893,8 +982,9 @@ export function makeDrop(overrides: Partial<FeedDrop> & Partial<Item> = {}): Fee
   dropSeq += 1
   // The strip mixes games: mostly case drops, some upgrade wins (a pricier skin for a stake) and PvP wins
   const r = Math.random()
-  if (!overrides.caseSlug && r < 0.25) {
-    const up = r < 0.15
+  const { upgradeShareBp, pvpShareBp } = adminSettings.feed
+  if (!overrides.caseSlug && r < (upgradeShareBp + pvpShareBp) / 10_000) {
+    const up = r < upgradeShareBp / 10_000
     const skin = up ? CATALOG[Math.floor(Math.random() * Math.min(CATALOG.length, 160))]! : it
     const chance = up ? 0.08 + Math.random() * 0.6 : 0
     return makeDrop({
@@ -918,7 +1008,7 @@ export function makeDrop(overrides: Partial<FeedDrop> & Partial<Item> = {}): Fee
     caseSlug: cs.slug,
     caseName: cs.name,
     casePrice: cs.price,
-    userNickname: NICKNAMES[Math.floor(Math.random() * NICKNAMES.length)]!,
+    userNickname: nicknames()[Math.floor(Math.random() * nicknames().length)] ?? 'player',
     userAvatar: '/img/brand/avatar.webp',
     createdAt: new Date().toISOString(),
     ...overrides,
@@ -944,7 +1034,7 @@ bigWins
 export function tickFeed() {
   if (state.queuedDrops.length) {
     feed.unshift(...state.queuedDrops.splice(0))
-  } else if (!state.feedPaused && Math.random() < 0.6) {
+  } else if (!adminSettings.feed.paused && Math.random() < adminSettings.feed.rateBp / 10_000) {
     feed.unshift(makeDrop())
   }
   feed.splice(40)
@@ -979,10 +1069,10 @@ export interface DebugStateBody {
 export function applyDebugState(body: DebugStateBody) {
   if (body.resetUser) resetMockUser()
   if (body.user) Object.assign(state.user, body.user)
-  if (typeof body.feedPaused === 'boolean') state.feedPaused = body.feedPaused
+  if (typeof body.feedPaused === 'boolean') adminSettings.feed.paused = body.feedPaused
   if (body.pushDrop) state.queuedDrops.push(makeDropOfRarity(body.pushDrop))
   if (body.resetDaily) state.dailyAt = 0
-  if (body.resetWelcome) state.welcomeLeft = WELCOME_TOTAL
+  if (body.resetWelcome) state.welcomeLeft = adminSettings.bonuses.welcome.total
   if (body.inventory === 'empty') for (const i of state.inventory) if (i.status === 'owned') i.status = 'sold'
   if (body.inventory === 'loaded') for (let k = 0; k < 12; k++) state.inventory.unshift(toInventory(CATALOG[Math.floor((k / 12) * CATALOG.length)]!, 'case'))
   if (body.levels) {
@@ -993,5 +1083,5 @@ export function applyDebugState(body: DebugStateBody) {
     for (let k = 0; k < body.feedBurst; k++) state.queuedDrops.push(k % 5 === 4 ? makeDropOfRarity(k % 10 === 9 ? 'gold' : 'covert') : makeDrop())
   }
   syncSkinsValue()
-  return { user: state.user, feedPaused: state.feedPaused }
+  return { user: state.user, feedPaused: adminSettings.feed.paused }
 }

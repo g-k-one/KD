@@ -20,6 +20,7 @@ const spaced = (n: number) => n.toLocaleString('en-US').replace(/,/g, ' ')
 const isLg = useMediaQuery('(min-width: 1024px)')
 
 // Sell all, in one tap
+const rules = useGameRules()
 const unsoldTotal = computed(() => props.unsold.reduce((a, i) => a + i.price, 0))
 const sellAll = () => emit('sellAll')
 
@@ -32,7 +33,7 @@ const upgrade = computed(() => {
   if (!items.length) return null
   const aim = value * 2.5
   const target = items.reduce((best, i) => (Math.abs(i.price - aim) < Math.abs(best.price - aim) ? i : best))
-  const chance = upgradeChanceBp(value, target.price) / 100
+  const chance = upgradeChanceBp(value, target.price, rules.value.upgrade) / 100
   return { target, chance, to: `/upgrade?item=${props.unsold.map((i) => i.uid).join(',')}&target=${target.id}&from=${props.data.slug}` }
 })
 

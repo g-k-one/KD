@@ -510,3 +510,165 @@ export interface PromoResponse {
   credited: number
 }
 
+
+// --- Game rules (admin settings the UI plays by too) ---------------------------------------------
+
+/** Upgrade odds: chance = stake / target × (100% − edge), between the floor and the cap. Basis points. */
+export interface UpgradeRules {
+  /** House edge, basis points (500 = 5%) */
+  edgeBp: number
+  /** Best chance an upgrade can have (8000 = 80%) */
+  maxChanceBp: number
+  /** Upgrades below this chance are refused (100 = 1%) */
+  minChanceBp: number
+  /** Skins in one stake; balance coins count as one of them */
+  maxItems: number
+}
+
+export interface PvpRules {
+  /** ms per round the client replays */
+  roundMs: number
+  /** Rounds (cases) one battle can have */
+  maxRounds: number
+  /** Names the bots take when called into a seat */
+  botNames: string[]
+}
+
+/** GET /api/rules (public): the numbers the backend plays by, so the UI shows the same chances and limits */
+export interface GameRules {
+  upgrade: UpgradeRules
+  pvp: PvpRules
+}
+
+// --- Admin panel (/admin) -------------------------------------------------------------------------
+//
+// Every setting of the site. Each section is read with GET and saved whole with PUT; the answer is the saved
+// value as the backend took it (clamped, unknown ids dropped), and the UI shows that. Errors: 400 { message }.
+//
+//   GET    /api/admin/cases                   → { cases: AdminCase[] }
+//   GET    /api/admin/cases/:slug             → { case: AdminCase }
+//   PUT    /api/admin/cases/:slug             { case: AdminCaseInput } → { case: AdminCase }
+//   POST   /api/admin/cases/:slug/duplicate   → { case: AdminCase } (a copy with the same art, contents and odds)
+//   DELETE /api/admin/cases/:slug             → { ok: true } (copies only)
+//   GET    /api/admin/home-layout             → { layout: HomeLayout }   (PUT { layout }, POST …/reset)
+//   GET    /api/admin/bonuses                 → { bonuses: AdminBonuses }   (PUT { bonuses })
+//   GET    /api/admin/games                   → { games: GameRules }        (PUT { games })
+//   GET    /api/admin/feed                    → { feed: AdminFeed }         (PUT { feed })
+//   GET    /api/admin/big-wins                → { wins: BigWin[] } (all of the last 24 h, best first)
+//   POST   /api/admin/big-wins                { win: AdminBigWinInput } → { wins }
+//   DELETE /api/admin/big-wins/:id            → { wins }
+//   GET    /api/admin/users                   → { users: AdminUsers }       (PUT { users })
+//   GET    /api/admin/snapshot                → AdminSnapshot (every section at once: backup, or move between envs)
+//   PUT    /api/admin/snapshot                AdminSnapshot → AdminSnapshot
+//   POST   /api/admin/reset                   → AdminSnapshot (everything back to the defaults)
+
+/** How a case's odds are set: auto solves them from the target RTP; manual takes each skin's tickets as given */
+export type AdminOddsMode = 'auto' | 'manual'
+
+export interface AdminCase {
+  slug: string
+  name: string
+  image: string
+  /** Coin cents */
+  price: number
+  /** The RTP the auto odds aim at, basis points (9240 = 92.40%) */
+  targetRtp: number
+  /** What the odds table really pays, basis points */
+  rtp: number
+  risk: RiskLevel
+  tag: CaseTag | null
+  /** A limited case: every open spends one, at 0 it is sold out */
+  limited: { total: number; left: number } | null
+  /** Its card on home (the same as HomeLayout.cards) */
+  card: HomeCardKind
+  /** The art it has; a card kind needs its art */
+  art: { wide?: string; tall?: string; full?: string }
+  odds: AdminOddsMode
+  /** Contents, priciest first, each with its tickets out of PF_TICKETS (auto: what the solver gave) */
+  items: Array<Item & { tickets: number }>
+  /** Set on a copy: the case it was made from. Only copies can be deleted */
+  copyOf: string | null
+}
+
+/**
+ * PUT /api/admin/cases/:slug. Items name skins by id; tickets count in manual mode only and are scaled to add
+ * up to PF_TICKETS. A case needs 2 skins or more.
+ */
+export interface AdminCaseInput {
+  name: string
+  price: number
+  targetRtp: number
+  risk: RiskLevel
+  tag: CaseTag | null
+  limited: { total: number; left: number } | null
+  card: HomeCardKind
+  odds: AdminOddsMode
+  items: Array<{ id: string; tickets: number }>
+}
+
+/** Promo codes: coins are credited on Bonuses (value = coin cents); deposit codes add a bonus to a deposit (value = bp) */
+export interface AdminPromo {
+  code: string
+  kind: 'coins' | 'deposit'
+  value: number
+}
+
+export interface AdminBonuses {
+  daily: {
+    /** Hours until the daily case can be opened again */
+    cooldownHours: number
+    /** Every this many levels the player moves to the next tier */
+    levelsPerTier: number
+    /** Tier 1, 2, …: what the case is worth and the skins in it (RTP 100%, the odds are solved) */
+    tiers: Array<{ price: number; itemIds: string[] }>
+  }
+  welcome: {
+    /** Free cases a new player gets */
+    total: number
+    price: number
+    itemIds: string[]
+  }
+  promos: AdminPromo[]
+}
+
+export interface AdminFeed {
+  /** No random drops; the players' own drops still show */
+  paused: boolean
+  /** Chance a poll brings a new random drop, basis points */
+  rateBp: number
+  /** Of the random drops: upgrade wins and PvP wins, basis points (the rest are case drops) */
+  upgradeShareBp: number
+  pvpShareBp: number
+}
+
+/** POST /api/admin/big-wins: a seeded big win. Source: a case slug, "upgrade" or "pvp" */
+export interface AdminBigWinInput {
+  nickname: string
+  itemId: string
+  source: string
+  multiplier: number
+  /** How long ago it happened, hours (under 24 to show today) */
+  hoursAgo: number
+}
+
+/** A fake player: shows in the live feed, big wins, case top drops and PvP lobbies */
+export interface AdminPlayer {
+  nickname: string
+  level: number
+}
+
+export interface AdminUsers {
+  /** The signed-in demo player */
+  player: { nickname: string; balance: number; level: number; levelProgress: number }
+  players: AdminPlayer[]
+}
+
+export interface AdminSnapshot {
+  cases: AdminCase[]
+  layout: HomeLayout
+  bonuses: AdminBonuses
+  games: GameRules
+  feed: AdminFeed
+  bigWins: BigWin[]
+  users: AdminUsers
+}

@@ -21,7 +21,9 @@ const modeOptions = computed(() => (['classic', 'crazy', 'team'] as const).map((
 const playerOptions = computed(() => ([2, 3, 4] as const).map((n) => ({ value: n, label: t(`pvp.modes.${n}`) })))
 const qty = ref<Record<string, number>>({})
 const search = ref('')
-const MAX_ROUNDS = 25
+// an admin setting (GET /api/rules)
+const rules = useGameRules()
+const MAX_ROUNDS = computed(() => rules.value.pvp.maxRounds)
 
 const visible = computed(() => {
   const q = search.value.trim().toLowerCase()
@@ -33,7 +35,7 @@ const picked = computed(() => cases.value.filter((c) => qty.value[c.slug]))
 
 function add(slug: string, d: number) {
   const next = Math.max(0, (qty.value[slug] ?? 0) + d)
-  if (d > 0 && rounds.value >= MAX_ROUNDS) return toast.show(t('pvp.maxRounds'))
+  if (d > 0 && rounds.value >= MAX_ROUNDS.value) return toast.show(t('pvp.maxRounds', { n: MAX_ROUNDS.value }))
   qty.value = { ...qty.value, [slug]: next }
   if (!next) {
     const { [slug]: _, ...rest } = qty.value

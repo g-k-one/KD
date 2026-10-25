@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { targetPriceFor, UPGRADE_MAX_PCT, upgradeChanceBp } from '#shared/upgrade'
+import { targetPriceFor, upgradeChanceBp, upgradeKeep } from '#shared/upgrade'
 import type { ForgeHandle } from '~/composables/useForge'
 import type { CasesResponse, InventoryItem, InventoryResponse, Item, MarketResponse, Rarity, UpgradeResponse } from '#shared/types/api'
 
@@ -63,17 +63,18 @@ const panelTab = ref<'mine' | 'desired'>('mine')
 
 const selectedItems = computed(() => inventory.value.filter((i) => selected.value.includes(i.uid)))
 const inputValue = computed(() => selectedItems.value.reduce((a, i) => a + i.price, 0) + extra.value)
-// Same formula as the backend (shared/upgrade.ts): 5% house edge, capped at 80%
-const chance = computed(() => (target.value ? upgradeChanceBp(inputValue.value, target.value.price) : 0))
+// Same formula and numbers as the backend (shared/upgrade.ts, the admin's rules): 5% house edge, capped at 80%
+const rules = useGameRules()
+const chance = computed(() => (target.value ? upgradeChanceBp(inputValue.value, target.value.price, rules.value.upgrade) : 0))
 
-/** An upgrade takes at most 6 pieces; balance coins count as one */
-const MAX_PIECES = 6
-const skinSlots = computed(() => MAX_PIECES - (extra.value > 0 ? 1 : 0))
+/** An upgrade takes at most 6 pieces (an admin setting); balance coins count as one */
+const MAX_PIECES = computed(() => rules.value.upgrade.maxItems)
+const skinSlots = computed(() => MAX_PIECES.value - (extra.value > 0 ? 1 : 0))
 function toggle(uid: string) {
   if (state.value === 'spinning') return
   resetResult()
   if (selected.value.includes(uid)) return (selected.value = selected.value.filter((u) => u !== uid))
-  if (selected.value.length >= skinSlots.value) return toast.show(t('upgrade.maxPieces', { n: MAX_PIECES }))
+  if (selected.value.length >= skinSlots.value) return toast.show(t('upgrade.maxPieces', { n: MAX_PIECES.value }))
   selected.value = [...selected.value, uid]
 }
 
@@ -93,7 +94,7 @@ const extraModel = computed({
   set: (v: number) => {
     resetResult()
     // coins need a free slot
-    if (v > 0 && !extra.value && selected.value.length >= MAX_PIECES) return toast.show(t('upgrade.maxPieces', { n: MAX_PIECES }))
+    if (v > 0 && !extra.value && selected.value.length >= MAX_PIECES.value) return toast.show(t('upgrade.maxPieces', { n: MAX_PIECES.value }))
     extra.value = v
   },
 })
@@ -119,7 +120,7 @@ function resetAll() {
 const aimed = ref<number | null>(null)
 function aim(c: number) {
   aimed.value = c
-  if (inputValue.value > 0) pickTarget(targetPriceFor(inputValue.value, c))
+  if (inputValue.value > 0) pickTarget(targetPriceFor(inputValue.value, c, rules.value.upgrade))
 }
 // Nothing is pinned: whatever the player set last leads. Aimed at a chance → a new stake re-picks the skin
 // for that chance; picked a skin by hand → the chance follows the stake. A stake with no target and no aim yet
@@ -127,9 +128,9 @@ function aim(c: number) {
 watch(inputValue, (v) => {
   if (v <= 0 || state.value !== 'idle') return
   if (aimed.value == null && !target.value) return aim(50)
-  if (aimed.value != null) pickTarget(targetPriceFor(v, aimed.value))
+  if (aimed.value != null) pickTarget(targetPriceFor(v, aimed.value, rules.value.upgrade))
 })
-const tileChance = (price: number) => (inputValue.value > 0 && price > inputValue.value ? Math.min(UPGRADE_MAX_PCT, (inputValue.value / price) * 95) : null)
+const tileChance = (price: number) => (inputValue.value > 0 && price > inputValue.value ? Math.min(rules.value.upgrade.maxChanceBp / 100, (inputValue.value / price) * upgradeKeep(rules.value.upgrade) * 100) : null)
 const tileHint = (price: number) => {
   const c = tileChance(price)
   return c == null ? undefined : `${c >= 10 ? c.toFixed(0) : c.toFixed(1)}%`
@@ -249,7 +250,7 @@ function resetResult() {
 async function runUpgrade() {
   if (!session.user) return ui.openSignIn()
   if (!target.value) return toast.show(t('upgrade.chooseTarget'))
-  if (chance.value < 100) return toast.show(t('upgrade.chanceTooLow'), 'danger')
+  if (chance.value < rules.value.upgrade.minChanceBp) return toast.show(t('upgrade.chanceTooLow', { n: rules.value.upgrade.minChanceBp / 100 }), 'danger')
   if (target.value.price <= inputValue.value) return toast.show(t('upgrade.targetTooCheap'), 'danger')
   state.value = 'spinning'
   playedChance.value = chance.value

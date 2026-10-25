@@ -35,6 +35,28 @@ import {
   type DebugStateBody,
 } from './mock-db'
 import { callBot, createBattle, getBattle, joinBattle, listBattles } from './mock-battles'
+import {
+  addBigWin,
+  deleteCase,
+  duplicateCase,
+  exportSnapshot,
+  getAdminBigWins,
+  getAdminBonuses,
+  getAdminCase,
+  getAdminFeed,
+  getAdminGames,
+  getAdminUsers,
+  getGameRules,
+  importSnapshot,
+  listAdminCases,
+  removeBigWin,
+  resetAdmin,
+  setAdminBonuses,
+  setAdminCase,
+  setAdminFeed,
+  setAdminGames,
+  setAdminUsers,
+} from './mock-admin'
 
 export interface MockContext {
   loggedIn: boolean
@@ -59,6 +81,29 @@ export async function mockRoute(method: string, path: string, body: Body, query:
   if (m === 'GET' && path === '/api/admin/home-layout') return getHomeLayout()
   if (m === 'PUT' && path === '/api/admin/home-layout') return setHomeLayout(body.layout ?? {})
   if (m === 'POST' && path === '/api/admin/home-layout/reset') return resetHomeLayout()
+  // the admin panel (/admin): every other setting, section by section (shared/types/api.ts, Admin*)
+  if (m === 'GET' && path === '/api/admin/cases') return listAdminCases()
+  if ((match = path.match(/^\/api\/admin\/cases\/([\w-]+)$/))) {
+    if (m === 'GET') return getAdminCase(match[1]!)
+    if (m === 'PUT') return setAdminCase(match[1]!, body.case ?? {})
+    if (m === 'DELETE') return deleteCase(match[1]!)
+  }
+  if (m === 'POST' && (match = path.match(/^\/api\/admin\/cases\/([\w-]+)\/duplicate$/))) return duplicateCase(match[1]!)
+  if (m === 'GET' && path === '/api/admin/bonuses') return getAdminBonuses()
+  if (m === 'PUT' && path === '/api/admin/bonuses') return setAdminBonuses(body.bonuses ?? {})
+  if (m === 'GET' && path === '/api/admin/games') return getAdminGames()
+  if (m === 'PUT' && path === '/api/admin/games') return setAdminGames(body.games ?? {})
+  if (m === 'GET' && path === '/api/admin/feed') return getAdminFeed()
+  if (m === 'PUT' && path === '/api/admin/feed') return setAdminFeed(body.feed ?? {})
+  if (m === 'GET' && path === '/api/admin/big-wins') return getAdminBigWins()
+  if (m === 'POST' && path === '/api/admin/big-wins') return addBigWin(body.win ?? {})
+  if (m === 'DELETE' && (match = path.match(/^\/api\/admin\/big-wins\/([\w-]+)$/))) return removeBigWin(match[1]!)
+  if (m === 'GET' && path === '/api/admin/users') return getAdminUsers()
+  if (m === 'PUT' && path === '/api/admin/users') return setAdminUsers(body.users ?? {})
+  if (m === 'GET' && path === '/api/admin/snapshot') return exportSnapshot()
+  if (m === 'PUT' && path === '/api/admin/snapshot') return importSnapshot(body)
+  if (m === 'POST' && path === '/api/admin/reset') return resetAdmin()
+  if (m === 'GET' && path === '/api/rules') return getGameRules()
   if (m === 'GET' && (match = path.match(/^\/api\/cases\/([\w-]+)$/))) return { case: getCase(match[1]!) }
   if (m === 'POST' && (match = path.match(/^\/api\/cases\/([\w-]+)\/open$/))) {
     if (!body.demo) authed()

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Item } from '#shared/types/api'
-import { UPGRADE_MAX_PCT } from '#shared/upgrade'
+import { upgradeKeep } from '#shared/upgrade'
 
 /*
  * The upgrade's control panel, after Stake Dice / Limbo (docs/ux-audit-v2.md), sized so the whole game
@@ -42,8 +42,11 @@ const onCta = () => (props.settling ? undefined : busy.value ? emit('skip') : of
 const busy = computed(() => props.state === 'spinning')
 const real = computed(() => props.chance / 100)
 const MIN = 1
-const MAX = UPGRADE_MAX_PCT
-const pos = (c: number) => ((Math.min(MAX, Math.max(MIN, c)) - MIN) / (MAX - MIN)) * 100
+// the cap and the house edge are admin settings (GET /api/rules)
+const rules = useGameRules()
+const MAX = computed(() => rules.value.upgrade.maxChanceBp / 100)
+const KEEP = computed(() => upgradeKeep(rules.value.upgrade) * 100)
+const pos = (c: number) => ((Math.min(MAX.value, Math.max(MIN, c)) - MIN) / (MAX.value - MIN)) * 100
 
 // --- Chance bar ---------------------------------------------------------------
 const bar = useTemplateRef<HTMLElement>('bar')
@@ -51,17 +54,17 @@ const dragging = ref<number | null>(null)
 const shown = computed(() => dragging.value ?? (props.target ? real.value : 0))
 /** Chances of every skin the stake can reach (upgrade targets must cost more than the stake) */
 const dots = computed(() =>
-  props.input ? props.prices.filter((p) => p > props.input).map((p) => Math.max(MIN, Math.min(MAX, (props.input / p) * 95))) : [],
+  props.input ? props.prices.filter((p) => p > props.input).map((p) => Math.max(MIN, Math.min(MAX.value, (props.input / p) * KEEP.value))) : [],
 )
 const reachable = computed(() => dots.value.length > 0)
 /** The lit span of the bar: from the cheapest reachable chance to the best one */
 const span = computed(() => (reachable.value ? { from: pos(Math.min(...dots.value)), to: pos(Math.max(...dots.value)) } : { from: 0, to: 0 }))
-const PRESETS = [10, 5, 3, 2, 1.5].map((m) => ({ m, c: 95 / m }))
+const PRESETS = computed(() => [10, 5, 3, 2, 1.5].map((m) => ({ m, c: KEEP.value / m })))
 
 let lastAim = 0
 const valueAt = (x: number) => {
   const r = bar.value!.getBoundingClientRect()
-  return MIN + Math.min(1, Math.max(0, (x - r.left) / r.width)) * (MAX - MIN)
+  return MIN + Math.min(1, Math.max(0, (x - r.left) / r.width)) * (MAX.value - MIN)
 }
 function onDown(e: PointerEvent) {
   if (busy.value || !reachable.value) return
@@ -90,7 +93,7 @@ function onKey(e: KeyboardEvent) {
   const step = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -1 : 0
   if (!step || busy.value || !reachable.value) return
   e.preventDefault()
-  emit('aim', Math.min(MAX, Math.max(MIN, (shown.value || 50) + step * 5)))
+  emit('aim', Math.min(MAX.value, Math.max(MIN, (shown.value || 50) + step * 5)))
 }
 
 const multiplier = computed(() => (props.target && props.input ? props.target.price / props.input : 0))
