@@ -37,7 +37,8 @@ function boot() {
   stage ??= import('@esotericsoftware/spine-webgl').then((spine) => {
     const canvas = document.createElement('canvas')
     canvas.width = canvas.height = SIZE
-    const context = new spine.ManagedWebGLRenderingContext(canvas, { alpha: true, premultipliedAlpha: false, antialias: true })
+    // 4.3 premultiplies every texture on upload and blends PMA, so the canvas holds premultiplied colours
+    const context = new spine.ManagedWebGLRenderingContext(canvas, { alpha: true, premultipliedAlpha: true, antialias: true })
     const renderer = new spine.SceneRenderer(canvas, context)
     renderer.camera.setViewport(FRAME, FRAME)
     renderer.camera.position.set(0, 0, 0)
@@ -74,7 +75,7 @@ async function frame(now: number) {
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
     renderer.begin()
-    renderer.drawSkeleton(p.skeleton, false)
+    renderer.drawSkeleton(p.skeleton)
     renderer.end()
     const c = p.ctx.canvas
     p.ctx.clearRect(0, 0, c.width, c.height)

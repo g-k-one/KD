@@ -11,7 +11,7 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
-    "@esotericsoftware/spine-webgl": "^4.2.99",
+    "@esotericsoftware/spine-webgl": "^4.3.13",
     "@nuxt/fonts": "^1.0.1",
     "@nuxt/image": "^2.1.0",
     "@nuxtjs/i18n": "^10.6.0",
