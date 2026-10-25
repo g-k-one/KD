@@ -21,7 +21,8 @@ const root = useTemplateRef<HTMLElement>('root')
 defineExpose({
   rank: (rarity: Rarity, scale: number) => rarityRank(fx, root.value?.querySelector<HTMLElement>('.kd-art img'), rarity, scale),
   // centred on the skin like the rank reveal, sized by the card as before
-  aura: (scale: number) => fx.at('kdAura', root.value?.querySelector<HTMLElement>('.kd-art img') ?? root.value, scale, true, { sizeEl: root.value }),
+  // while the dial turns: the big wins' calm flame in the target's rarity, lifted so it rises from the skin's lower edge, not the price
+  aura: (scale: number, color: string) => fx.at('kdFlame', root.value?.querySelector<HTMLElement>('.kd-art img') ?? root.value, scale, true, { sizeEl: root.value, color, lift: 0.2 }),
 })
 const rc = computed(() => (props.item ? RARITY_COLOR[props.item.rarity] : undefined))
 const priceSrc = computed(() => props.item?.price ?? 0)
