@@ -123,10 +123,8 @@ function onArtLeave() {
         <FxFire :on="!stock.out" effect="kdBlaze" :spread="stock.low ? 1.6 : 1.3">
           <span class="kd-stock type-12-caps relative z-[2] inline-flex h-6 items-center overflow-hidden rounded-md px-2 whitespace-nowrap tabular-nums" :class="[stock.low && 'is-low', stock.out && 'is-out']">
             <span v-if="!stock.out" class="kd-stock-fill absolute inset-0" :style="{ transform: `scaleX(${Math.max(0.06, stock.share)})` }" />
-            <span class="relative flex items-center gap-1">
-              <UiIcon :name="stock.out ? 'x-circle' : 'fire'" :size="12" />
-              {{ stock.out ? $t('cases.soldOut') : $t('cases.left', { n: stock.left }) }}
-            </span>
+            <!-- words only: the fire around the plate already says it burns -->
+            <span class="relative">{{ stock.out ? $t('cases.soldOut') : $t('cases.left', { n: stock.left }) }}</span>
           </span>
         </FxFire>
       </span>
