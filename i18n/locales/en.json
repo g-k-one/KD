@@ -628,6 +628,16 @@
     "redeem": "Redeem",
     "promoOk": "Code applied · +{coins}",
     "dailyShort": "Daily case",
+    "dailyReadyTitle": "Your daily case is ready",
+    "dailyText": "Free every 24 hours, and it gets better every 5 levels.",
+    "nextIn": "Next free case in {t}",
+    "pokeLabel": "Poke the chicken",
+    "poke0": "Poke me",
+    "poke1": "Shake it!",
+    "poke2": "Rattling…",
+    "poke3": "Something’s in there",
+    "poke4": "One more!",
+    "pokeDone": "Surprise!",
     "open": "Open"
   },
   "withdraw": {

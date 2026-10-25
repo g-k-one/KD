@@ -130,7 +130,6 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
     radial-gradient(60% 90% at 78% 70%, rgb(255 110 30 / 0.42), transparent 70%),
     radial-gradient(40% 60% at 70% 100%, rgb(255 190 80 / 0.25), transparent 70%),
     linear-gradient(110deg, var(--color-neutral-2) 30%, #2a1209 100%);
-  box-shadow: inset 0 0 0 1px rgb(255 120 40 / 0.14);
 }
 .kd-hero-egg {
   background: rgb(12 13 16 / 0.9);

@@ -30,7 +30,7 @@ const artSize = (rank: number) => (rank === 1 ? (isLg.value ? 150 : 76) : isLg.v
         v-for="(p, i) in podium"
         :key="p.win.id"
         :to="sourceLink(p.win.caseSlug)"
-        class="kd-win kd-press group relative flex min-w-0 flex-col items-center rounded-3xl border px-2 pb-3 lg:px-4 lg:pb-4"
+        class="kd-win kd-press group relative flex min-w-0 flex-col items-center rounded-3xl px-2 pb-3 lg:px-4 lg:pb-4"
         :class="p.rank === 1 ? 'is-first' : ''"
         :style="{ '--rc': RARITY_COLOR[p.win.item.rarity], '--i': i, '--art': `${artSize(p.rank)}px` }"
       >
@@ -69,14 +69,12 @@ const artSize = (rank: number) => (rank === 1 ? (isLg.value ? 150 : 76) : isLg.v
   /* the card's top is the skin's middle: half the art above, half inside */
   margin-top: calc(var(--art) * 0.5);
   background: linear-gradient(180deg, color-mix(in srgb, var(--rc) 12%, var(--color-neutral-2)), var(--color-neutral-2) 60%);
-  border-color: var(--color-neutral-4);
   animation: kd-win-in var(--dur-slow) var(--ease-out) backwards;
   animation-delay: calc(var(--i) * 70ms);
 }
-/* the winner's card: a gold rim and a warmer ground */
+/* the winner's card: a warmer, golden ground (no rim: the cards are flat, like the banners) */
 .kd-win.is-first {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-gold) 16%, var(--color-neutral-2)), var(--color-neutral-2) 65%);
-  border-color: color-mix(in srgb, var(--color-gold) 45%, var(--color-neutral-4));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-gold) 20%, var(--color-neutral-2)), var(--color-neutral-2) 65%);
 }
 .kd-win-art {
   margin-top: calc(var(--art) * -0.5);
@@ -84,9 +82,6 @@ const artSize = (rank: number) => (rank === 1 ? (isLg.value ? 150 : 76) : isLg.v
   transition: transform var(--dur-slow) var(--ease-spring);
 }
 @media (hover: hover) {
-  .kd-win:hover {
-    border-color: color-mix(in srgb, var(--rc) 55%, var(--color-neutral-7));
-  }
   .kd-win:hover .kd-win-art {
     transform: rotate(-3deg) translateY(-6px) scale(1.06);
   }

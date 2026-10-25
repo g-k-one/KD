@@ -94,8 +94,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
-    <UiPageBar :title="$t('fair.title')" :left="[{ label: $t('case.allCases'), icon: 'arrow-left', to: '/' }]" />
-
+    <!-- no page bar: the banner opens the page, like the home page's -->
     <!-- Hero -->
     <section
       class="relative isolate flex min-h-80 flex-col overflow-hidden rounded-5xl px-5 pt-6 pb-6 lg:h-81 lg:overflow-visible lg:px-10 lg:pt-8 lg:pb-10"
@@ -295,7 +294,6 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
     radial-gradient(55% 90% at 72% 70%, rgb(40 200 110 / 0.32), transparent 70%),
     radial-gradient(40% 60% at 66% 100%, rgb(120 255 170 / 0.18), transparent 70%),
     linear-gradient(110deg, var(--color-neutral-2) 30%, #0a2a17 100%);
-  box-shadow: inset 0 0 0 1px rgb(80 230 140 / 0.14);
 }
 @keyframes kd-hero-in {
   from {

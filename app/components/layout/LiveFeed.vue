@@ -83,7 +83,8 @@ watch(y, (v) => {
         @click="mode = m"
       >
         <span v-if="m === 'live'" class="kd-live-dot size-2 rounded-full bg-success" />
-        <span v-else class="text-sm leading-none font-extrabold text-coin">×</span>
+        <!-- the best multipliers: the trophy, as on the case page's top drops -->
+        <UiIcon v-else name="trophy" :size="12" class="text-coin" />
         <!-- the words stay on phones too: a dot and a cross alone don't say what they switch -->
         <span>{{ m === 'live' ? $t('feed.live') : $t('feed.best') }}</span>
       </button>
