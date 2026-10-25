@@ -25,7 +25,7 @@ const clock = useClock(1000)
 const allCases = computed(() => (data.value?.sections ?? []).flatMap((s) => s.cases))
 
 // --- Under review: a bento grid (?grid=bento). Desktop only: the section's star case — limited, else hot, else the
-// biggest win today — takes a 2×2 cell; phones keep the even grid.
+// biggest win today — takes a wide 2×1 cell first in its section (art on the left, the rest on the right); phones keep the even grid.
 const route = useRoute()
 const bento = computed(() => route.query.grid === 'bento')
 const starOf = (cases: CaseSummary[]) =>
@@ -81,7 +81,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
             :key="c.id"
             :item="c"
             :big="bento && c.id === starOf(s.cases)"
-            :class="bento && c.id === starOf(s.cases) && 'lg:col-span-2 lg:row-span-2'"
+            :class="bento && c.id === starOf(s.cases) && 'lg:order-first lg:col-span-2'"
           />
         </div>
       </section>

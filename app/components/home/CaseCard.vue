@@ -73,11 +73,11 @@ function onArtLeave() {
   <NuxtLink
     :to="`/case/${item.slug}`"
     class="kd-case-card kd-spotlight group relative flex h-full flex-col items-center gap-2 rounded-5xl border"
-    :class="[stock?.out && 'is-sold-out', big && 'is-big']"
+    :class="[stock?.out && 'is-sold-out', big && 'is-big lg:flex-row lg:gap-0']"
     @pointermove="onArtPointer"
     @pointerleave="onArtLeave"
   >
-    <div ref="artBox" class="kd-case-art-box relative aspect-square w-full lg:aspect-auto" :class="big ? 'lg:min-h-55 lg:flex-1' : 'lg:h-55'">
+    <div ref="artBox" class="kd-case-art-box relative aspect-square w-full lg:aspect-auto" :class="big ? 'lg:h-full lg:min-h-55 lg:w-1/2 lg:shrink-0' : 'lg:h-55'">
       <img
         :src="item.image"
         :alt="item.name"
@@ -114,7 +114,7 @@ function onArtLeave() {
       </span>
     </div>
 
-    <div class="flex w-full flex-col items-center gap-2 px-3 pb-3 lg:gap-3 lg:px-4 lg:pb-[14px]">
+    <div class="flex w-full flex-col items-center gap-2 px-3 pb-3 lg:gap-3 lg:px-4 lg:pb-[14px]" :class="big && 'lg:justify-center lg:py-6 lg:pr-6 lg:pl-2'">
       <h3 class="w-full truncate text-center" :class="big ? 'type-14-caps lg:type-20-caps' : 'type-12-caps lg:type-14-caps'">{{ item.name }}</h3>
 
       <div class="kd-case-price relative flex w-full items-center justify-center rounded-lg py-1.5 lg:py-2">
