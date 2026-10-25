@@ -161,6 +161,23 @@ function hashStr(s: string) {
   return h >>> 0
 }
 
+// Each case's colour, by its theme (the art itself is mostly the orange chicken, so it is picked by hand)
+const CASE_TINT: Record<string, string> = {
+  pieklo: '#ff3b1f',
+  'warsaw-nights': '#a23dff',
+  'zloty-rush': '#f5b82e',
+  'golden-kielbasa': '#e0662a',
+  'high-roller': '#4f6bff',
+  'babcias-box': '#e0334d',
+  'vodka-drop': '#3fb6ff',
+  'kurwa-classic': '#ff7a1f',
+  'pierogi-pack': '#ff5fa8',
+  'krakow-knife': '#2fc4c4',
+  'budget-boom': '#9bd630',
+  wiosna: '#5fd068',
+  mafia: '#1f9e5b',
+}
+
 function finishCase(def: CaseDef, withTickets: Array<Item & { tickets: number }>): CaseDetails {
   const items: Item[] = withTickets
   const tickets = withTickets.map((i) => i.tickets)
@@ -205,6 +222,7 @@ function finishCase(def: CaseDef, withTickets: Array<Item & { tickets: number }>
   const { targetRtp: _t, itemIds: _i, ...summary } = def
   return {
     ...summary,
+    tint: CASE_TINT[def.slug],
     rtp: Math.round((realEv / def.price) * 10_000),
     payback: pct((i) => i.price >= def.price),
     bestToday: null,

@@ -5,7 +5,8 @@ import type { RigPlayback } from '~/utils/spineStage'
 // Figma "CaseCard" states: Default → Hover (surface lifts to neutral-4, art settles 232→220,
 // price becomes the brand-gradient button, risk reveals its label) → Active (80% opacity).
 /** shape: the bento cell this card fills — wide 2×1 or tall 1×2 shows the matching picture (desktop) */
-const props = defineProps<{ item: CaseSummary; shape?: 'wide' | 'tall' }>()
+/** look (under review): tint paints the card with the case's colour; coop drops the plate and sits the case in a nest */
+const props = defineProps<{ item: CaseSummary; shape?: 'wide' | 'tall'; look?: 'tint' | 'coop' }>()
 const shaped = computed(() => (props.shape ? props.item.art?.[props.shape] : undefined))
 const { onPointerMove } = useSpotlight()
 const { t } = useI18n()
@@ -75,11 +76,14 @@ function onArtLeave() {
   <NuxtLink
     :to="`/case/${item.slug}`"
     class="kd-case-card kd-spotlight group relative flex h-full flex-col items-center gap-2 rounded-5xl border"
-    :class="[stock?.out && 'is-sold-out', shape && `is-${shape}`]"
+    :class="[stock?.out && 'is-sold-out', shape && `is-${shape}`, look && `look-${look}`]"
+    :style="look === 'tint' && item.tint ? { '--tint': item.tint } : undefined"
     @pointermove="onArtPointer"
     @pointerleave="onArtLeave"
   >
     <div ref="artBox" class="kd-case-art-box relative aspect-square w-full lg:aspect-auto" :class="shape === 'tall' ? 'lg:min-h-55 lg:flex-1' : 'lg:h-55'">
+      <!-- coop: the nest's back half sits behind the case, its front rim over it, so the case sits inside -->
+      <img v-if="look === 'coop'" src="/img/coop/nest-back.webp" alt="" aria-hidden="true" draggable="false" class="kd-nest is-back" />
       <img
         :src="item.image"
         :alt="item.name"
@@ -108,6 +112,7 @@ function onArtLeave() {
         :class="{ invisible: !animReady }"
         @load="animReady = true"
       />
+      <img v-if="look === 'coop'" src="/img/coop/nest-front.webp" alt="" aria-hidden="true" draggable="false" class="kd-nest is-front" />
       <!-- a limited case: how many are left, as a plate with a bar over the art's foot -->
       <span v-if="stock" class="kd-stock type-10-caps absolute bottom-1 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 rounded-md px-2 pt-1 pb-1.5" :class="[stock.low && 'is-low', stock.out && 'is-out']">
         <span class="flex items-center gap-1 whitespace-nowrap tabular-nums">
@@ -129,11 +134,11 @@ function onArtLeave() {
         </span>
       </div>
 
-      <div class="flex h-4 w-full items-center">
-        <span class="kd-case-risk-label type-10-caps overflow-hidden text-neutral-11">{{ $t('risk.label') }}</span>
-        <!-- risk as the case page shows it: peppers -->
-        <span class="flex flex-1 justify-center"><UiRiskPeppers :level="item.risk" :size="16" /></span>
-        <span class="kd-case-risk-label type-12 overflow-hidden text-right" :class="RISK_TEXT[item.risk]">
+      <!-- risk as the case page shows it: peppers, pinned to the middle; the labels fade in at the edges on hover -->
+      <div class="relative flex h-4 w-full items-center justify-center">
+        <span class="kd-case-risk-label is-start type-10-caps absolute left-0 text-neutral-11">{{ $t('risk.label') }}</span>
+        <UiRiskPeppers :level="item.risk" :size="16" />
+        <span class="kd-case-risk-label is-end type-12 absolute right-0" :class="RISK_TEXT[item.risk]">
           {{ $t(`risk.${item.risk}`) }}
         </span>
       </div>
@@ -286,13 +291,17 @@ function onArtLeave() {
   transform: translateY(4px);
 }
 .kd-case-risk-label {
-  max-width: 0;
   opacity: 0;
   white-space: nowrap;
   transition:
-    max-width var(--dur-slow) var(--ease-out),
     opacity var(--dur-base) var(--ease-out),
-    margin var(--dur-slow) var(--ease-out);
+    transform var(--dur-slow) var(--ease-out);
+}
+.kd-case-risk-label.is-start {
+  transform: translateX(-6px);
+}
+.kd-case-risk-label.is-end {
+  transform: translateX(6px);
 }
 
 @media (hover: hover) {
@@ -316,14 +325,71 @@ function onArtLeave() {
     transform: none;
   }
   .kd-case-card:hover .kd-case-risk-label {
-    max-width: 80px;
+    opacity: 1;
+    transform: none;
+  }
+}
+/* --- tint: the case's colour runs down from the top, a glow of it sits behind the art and brightens on hover --- */
+.kd-case-card.look-tint {
+  --card-fill: linear-gradient(180deg, color-mix(in oklab, var(--tint) 30%, var(--color-neutral-2)), var(--color-neutral-2) 72%);
+  isolation: isolate;
+  background: var(--card-fill);
+  border-color: color-mix(in oklab, var(--tint) 32%, var(--color-neutral-4));
+}
+.kd-case-card.look-tint::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(60% 42% at 50% 36%, color-mix(in oklab, var(--tint) 60%, transparent), transparent);
+  opacity: 0.55;
+  transition: opacity var(--dur-base) var(--ease-out);
+  pointer-events: none;
+}
+/* --- coop: no plate; the case sits low in a straw nest and hops up out of it on hover --- */
+.kd-case-card.look-coop {
+  background: none;
+  border-color: transparent;
+}
+.look-coop .kd-case-art-box {
+  isolation: isolate;
+}
+.kd-nest {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 70%;
+  translate: -50% 0;
+  pointer-events: none;
+}
+.kd-nest.is-back {
+  z-index: -1;
+}
+.kd-nest.is-front {
+  z-index: 1;
+}
+.look-coop .kd-case-art {
+  transform: translateY(-15%) scale(0.78);
+  transition: transform var(--dur-slow) var(--ease-spring);
+}
+.look-coop h3 {
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+}
+@media (hover: hover) {
+  .kd-case-card.look-tint:hover {
+    background: var(--card-fill);
+    border-color: color-mix(in oklab, var(--tint) 60%, var(--color-neutral-6));
+  }
+  .kd-case-card.look-tint:hover::before {
     opacity: 1;
   }
-  .kd-case-card:hover .kd-case-risk-label:first-child {
-    margin-right: 8px;
+  .kd-case-card.look-coop:hover {
+    background: none;
+    border-color: transparent;
   }
-  .kd-case-card:hover .kd-case-risk-label:last-child {
-    margin-left: 8px;
+  .look-coop:hover .kd-case-art {
+    transform: translateY(-22%) scale(0.8);
   }
 }
 .kd-case-card:active {

@@ -33,11 +33,16 @@ const shapeOf = (c: CaseSummary, cases: CaseSummary[]) =>
   !bento.value ? undefined : c.art?.wide ? ('wide' as const) : c.art?.tall && cases.length > 5 ? ('tall' as const) : undefined
 const SHAPE_CELL = { wide: 'lg:order-first lg:col-span-2', tall: 'lg:order-first lg:row-span-2' } as const
 
+// --- Under review: card looks (?cards=tint | ?cards=coop). Coop also puts the page on the coop wall.
+const look = computed(() => (route.query.cards === 'tint' || route.query.cards === 'coop' ? route.query.cards : undefined))
+useHead(() => ({ bodyAttrs: { class: look.value === 'coop' ? 'kd-coop' : '' } }))
 const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 </script>
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
+    <!-- coop: the wall stays put while the page scrolls over it (one fixed layer, nothing repaints) -->
+    <div v-if="look === 'coop'" class="kd-coop-bg" aria-hidden="true"><img src="/img/coop/coop.webp" alt="" draggable="false" /></div>
     <HomeHeroBanner @start="scrollToCases" />
     <HomeBigWins />
 
@@ -83,6 +88,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
             :key="c.id"
             :item="c"
             :shape="shapeOf(c, s.cases)"
+            :look="look"
             :class="shapeOf(c, s.cases) && SHAPE_CELL[shapeOf(c, s.cases)!]"
           />
         </div>
@@ -98,6 +104,32 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
     </div>
   </div>
 </template>
+
+<style>
+/* coop: the body lets the wall through */
+html body.kd-coop {
+  background: transparent;
+}
+.kd-coop-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-neutral-1);
+}
+.kd-coop-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 0;
+}
+/* darker towards the bottom, where the text sits */
+.kd-coop-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(10 9 12 / 0.15), rgb(10 9 12 / 0.55) 60%, rgb(10 9 12 / 0.8));
+}
+</style>
 
 <style scoped>
 /* Stuck under the header: the bar sheds its labels' air and floats over the cases */
