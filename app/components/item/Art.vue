@@ -16,7 +16,8 @@ const props = withDefaults(defineProps<{ image: string; rarity: Rarity; size?: n
 })
 /** The reveal step by rarity: -1 none, 0 mil-spec and below … 4 gold */
 const step = computed(() => (props.reveal ? RARITY_TIER[props.rarity] : -1))
-const waves = computed(() => Math.min(3, Math.max(0, step.value)))
+// from covert up the loot beam's rings (Forge) carry the echo: one soft wave here, not three flat copies of the shape
+const waves = computed(() => (step.value >= 3 ? 1 : Math.max(0, step.value)))
 </script>
 
 <template>
@@ -119,24 +120,73 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
     transform: translate(-50%, -50%) scale(2.5) rotate(20deg);
   }
 }
-/* covert and gold: the glow swells once behind it all */
+/* covert and gold — the hit: the glow swells once behind it all, a white-hot core flashes out of the shape for two
+   frames' worth, and the skin takes the blow (squash, a held beat at the top, a spring back): short and bright, the
+   loot beam behind it then gives the long soft tail */
 .kd-art.is-bloom .kd-art-glow {
   animation: kd-bloom 1200ms var(--ease-out) both;
 }
 @keyframes kd-bloom {
   30% {
-    transform: translate(-50%, -50%) scale(1.45);
+    transform: translate(-50%, -50%) scale(1.3);
     opacity: 1;
   }
   100% {
     transform: translate(-50%, -50%) scale(1);
   }
 }
+.kd-art.is-bloom::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(150px * var(--s));
+  height: calc(150px * var(--s));
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff, color-mix(in srgb, var(--rc) 70%, #fff) 35%, color-mix(in srgb, var(--rc) 40%, transparent) 60%, transparent);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: 0;
+  animation: kd-core 420ms var(--ease-out) 40ms both;
+}
+@keyframes kd-core {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.7);
+  }
+}
+.kd-art.is-bloom .kd-art-img {
+  z-index: 1;
+  animation: kd-art-punch 620ms var(--ease-spring) both;
+}
+@keyframes kd-art-punch {
+  0% {
+    transform: translate(-50%, -50%) scale(0.86, 0.92);
+  }
+  /* the held beat: the skin stays big for a moment before it settles (the hit-stop) */
+  22%,
+  34% {
+    transform: translate(-50%, -50%) scale(1.14) rotate(-3deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .kd-art-star.is-reveal {
+  .kd-art-star.is-reveal,
+  .kd-art.is-bloom .kd-art-img {
     animation: none;
   }
-  .kd-art-wave {
+  .kd-art-wave,
+  .kd-art.is-bloom::after {
     display: none;
   }
 }

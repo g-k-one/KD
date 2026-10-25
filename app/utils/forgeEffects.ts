@@ -21,8 +21,11 @@ import { RARITY_HEX } from './rarity'
  *               (the label's middle sits at y ≈ 300)
  *   kdBlaze   — kdBurn turned up for a small plate that must read as on fire (a limited case's stock): tall licks
  *               that clear the plate's top edge, a denser shower of embers, a hotter glow; same base line
- *   kdRank    — Forge's rank reveal (motion pack, `tier`: base → luck → mega → ultra → jackpot) in the rarity's own
- *               colour, one burst on the drop's rarity shape; opts { color: '#hex', level: 0…4 }
+ *   kdHit     — the hit of a covert or a gold drop, after the rarity pack's reveal (realtimevfx's five-step loot):
+ *               a white-hot core for a couple of frames, the rarity's bloom, a fan of rays that snaps open and fades,
+ *               sparks stretched along their flight, embers rising after; gold (level 4) adds streaks shooting up
+ *               and a wide warm glow. No rings or seals: shapes that hang in the air read stiff. The loot beam
+ *               (rarity pack, rarityBeam) then gives the long soft tail. opts { color: '#hex', level: 3 | 4 }
  */
 type Cell = number
 type Rgb = number[]
@@ -80,41 +83,73 @@ export function hexToRgb(hex: string): Rgb {
 type Coin = { x: number; y: number; vx: number; vy: number; spin: number; vs: number; size: number; feather: number; rot: number; vr: number }
 
 export function defineKdEffects(engine: Engine) {
-  // The rank reveal, recoloured: the light core, the rarity colour, the dark tail of each spark. Without the
-  // motion pack it draws nothing rather than failing.
-  engine.define('kdRank', (h) => {
-    const tier = (h as unknown as { DEF: Record<string, Def | undefined> }).DEF.tier
-    if (!tier) return { atlas: 'aura', init: () => {}, update: () => {}, render: () => {} }
-    return {
-      ...tier,
-      // the tier's sparks are thrown with a downward bias and fall hard (grav 260), so its mass sat under the shape:
-      // halve the fall and drop the bias, once per spark
-      update(s, dt, at) {
-        tier.update(s, dt, at)
-        for (const p of (s.p as Particle[] | undefined) ?? []) {
-          if (p.kd) continue
-          p.kd = 1
-          if ((p.grav as number) > 0) {
-            p.grav = (p.grav as number) * 0.45
-            p.vy = (p.vy as number) + 40
+  engine.define('kdHit', (h) => ({
+    atlas: 'kd',
+    period: 2.2,
+    init(s) {
+      const o = (s as State & { o: { color?: string; level?: number } }).o
+      const c = o.color ? hexToRgb(o.color) : GOLD
+      // the rarity colour pushed a little more vivid, and a hot near-white version of it for cores and the rays
+      const l = 0.3 * c[0]! + 0.59 * c[1]! + 0.11 * c[2]!
+      const vivid = c.map((v) => Math.min(1, Math.max(0, l + (v - l) * 1.3)))
+      Object.assign(s, { fired: 0, sparks: [] as Particle[], motes: [] as Particle[], tint: vivid, hot: vivid.map((v) => v * 0.35 + 0.65), L: o.level ?? 3 })
+    },
+    update(s, dt, at) {
+      const { R, PI } = h
+      const L = s.L as number
+      const tint = s.tint as Rgb
+      const hot = s.hot as Rgb
+      if (!s.fired && s.cycle > 0.01) {
+        s.fired = 1
+        // sparks: thrown out, stretched along their speed, white-hot first, then the colour
+        const n = L >= 4 ? 34 : 24
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * PI * 2 + R(-0.12, 0.12)
+          const v = R(260, 420 + L * 60)
+          h.spawn(s.sparks as Particle[], { x: 180 + Math.cos(a) * 14, y: 180 + Math.sin(a) * 14, vx: Math.cos(a) * v, vy: Math.sin(a) * v, drag: 3, size: R(10, 16), speedStretch: 0.012, orient: true, life: R(0.45, 0.8), cells: [at.map.spark], add: 1, tint: i % 3 ? tint : hot, fadeIn: 0.01, fadeOut: 0.45 })
+        }
+        // the aftermath: embers drifting up from behind the skin
+        for (let i = 0; i < (L >= 4 ? 16 : 10); i++) {
+          h.spawn(s.motes as Particle[], { x: 180 + R(-70, 70), y: R(190, 240), vx: R(-10, 10), vy: R(-140, -60), drag: 0.6, size: R(9, 14), life: R(1, 1.7), rot: R(0, 6), vr: R(-2, 2), cells: [at.map.ember], add: 1, tint: i % 2 ? tint : hot, fadeIn: 0.12, fadeOut: 0.5 })
+        }
+        // gold: streaks shooting straight up out of the hit
+        if (L >= 4)
+          for (let i = 0; i < 7; i++) {
+            h.spawn(s.sparks as Particle[], { x: 180 + R(-26, 26), y: 190, vx: R(-20, 20), vy: -R(520, 820), drag: 2.4, size: R(14, 20), speedStretch: 0.02, orient: true, life: R(0.3, 0.5), cells: [at.map.spark], add: 1, tint: GOLD_HI, fadeIn: 0.02, fadeOut: 0.6 })
           }
-        }
-      },
-      init(s) {
-        tier.init(s)
-        const o = (s as State & { o: { color?: string; level?: number } }).o
-        if (o.color) {
-          // clean rarity colour: a light core, the colour itself pushed a little more saturated, and tails that fade
-          // out in the colour — dimming the whole palette or a 25% tail read as a muddy brown over the reel
-          const c = hexToRgb(o.color)
-          const l = 0.3 * c[0]! + 0.59 * c[1]! + 0.11 * c[2]!
-          const vivid = c.map((v) => Math.min(1, Math.max(0, l + (v - l) * 1.3)))
-          s.pal = [vivid.map((v) => v * 0.55 + 0.45), vivid, vivid.map((v) => v * 0.6)]
-        }
-        if (o.level != null) s.L = o.level
-      },
-    }
-  })
+      }
+      h.step(s.sparks as Particle[], dt)
+      h.step(s.motes as Particle[], dt)
+    },
+    render(s, c) {
+      const t = s.cycle
+      const L = s.L as number
+      const m = c.at.map
+      // the white-hot core: two frames' worth of light, gone in a fifth of a second
+      if (t < 0.22) {
+        const k = h.easeOut(t / 0.22)
+        h.sprite(c, 180, 180, 60 + 200 * k, 0, (1 - k) ** 1.2 * 0.95, 1, m.glow!, 1, [1, 1, 1])
+      }
+      // the rarity's bloom behind it, wider and slower
+      if (t < 0.6) {
+        const k = h.easeOut(t / 0.6)
+        h.sprite(c, 180, 180, (200 + 60 * L) * (0.5 + 0.7 * k), 0, (1 - k) ** 2 * 0.8, 1, m.glow!, 1, s.tint as Rgb)
+      }
+      // a fan of rays: snaps open in a few frames, turns a touch and fades
+      if (t < 0.75) {
+        const k = t / 0.75
+        const size = (220 + 40 * L) * (k < 0.15 ? h.easeOut(k / 0.15) * 1.1 : 1.1 - 0.3 * k)
+        h.sprite(c, 180, 180, size, k * 0.6, (1 - k) ** 1.6 * (L >= 4 ? 1 : 0.75), 1, m.rays!, 1, s.hot as Rgb)
+      }
+      // gold: a wide warm glow under it all
+      if (L >= 4 && t < 0.9) {
+        const k = t / 0.9
+        h.sprite(c, 180, 180, 420 * (1 - 0.2 * k), 0, (1 - k) ** 1.5 * 0.5, 1, m.glow!, 1, GOLD_HI)
+      }
+      h.draw(c, s.motes as Particle[])
+      h.draw(c, s.sparks as Particle[])
+    },
+  }))
 
   /** A spinning KD coin: face, squeezing to the edge and back; feathers tumble instead */
   const coinSprite = (h: Helpers, c: Ctx, k: Coin, alpha: number) => {
@@ -396,11 +431,11 @@ export function defineKdEffects(engine: Engine) {
 type Layer = { at: (name: string, el: HTMLElement | null | undefined, scale?: number, loop?: boolean, opts?: ForgeAtOptions) => Promise<{ stop(): void; kill(): void } | null> }
 
 /**
- * Rarity → rank of Forge's accent on the reveal. The reveal itself is the rarity shape (ItemArt: the pop, then waves
- * of the shape, a flash, a bloom); Forge adds only sparks and stars on covert (rank 1) and the full rank on gold
- * (rank 3: rays up, a wide flash, a freeze frame). Below covert, Forge stays out: its round rings fought the shape.
+ * Rarity → level of Forge's hit on the reveal (kdHit). The reveal itself is the rarity shape (ItemArt: the pop, a wave
+ * of the shape, a flash, a bloom); Forge hits only covert (level 3) and gold (level 4: streaks up, a wide glow), and
+ * the loot beam follows. Below covert, Forge stays out: its round rings fought the shape.
  */
-export const RANK_LEVEL: Record<Rarity, number> = { industrial: -1, milspec: -1, restricted: -1, classified: -1, covert: 1, gold: 3 }
+export const RANK_LEVEL: Record<Rarity, number> = { industrial: -1, milspec: -1, restricted: -1, classified: -1, covert: 3, gold: 4 }
 /**
  * One burst on a landed drop in the rarity's colour, centred on the drop's picture (el, the skin image) and sized by
  * it — the same rule everywhere (reel, PvP, upgrade): the middle of the skin, not the rarity shape or a lift off it.
@@ -408,7 +443,28 @@ export const RANK_LEVEL: Record<Rarity, number> = { industrial: -1, milspec: -1,
  */
 export function rarityRank(layer: Layer, el: HTMLElement | null | undefined, rarity: Rarity, scale = 1) {
   if (RANK_LEVEL[rarity] < 0) return Promise.resolve(null)
-  return layer.at('kdRank', el, scale, false, { color: RARITY_HEX[rarity], level: RANK_LEVEL[rarity], follow: true })
+  return layer.at('kdHit', el, scale, false, { color: RARITY_HEX[rarity], level: RANK_LEVEL[rarity], follow: true })
+}
+
+/**
+ * The loot beam (rarity pack, after realtimevfx's five-step loot and the Diablo / PoE drop beams) behind a gold
+ * drop, after the hit: light rises out from under the skin — rings climbing it, motes drifting up,
+ * a swirl (level 3, covert); gold adds the tall streak, a white core and the wide glow (level 4). It is the
+ * aftermath the hit was missing: the hit is short and bright, the beam long and soft, then it fades on its own.
+ * Runs BEAM_HOLD ms, then stops: its particles finish and nothing keeps working while the drop sits on screen.
+ */
+// gold only: at level 3 (covert) the beam is just flat rings lying under the skin — a pedestal, stiff; covert keeps
+// the hit and its rising embers, and the rarest drop alone gets the beam (the rarer, the bigger)
+export const BEAM_LEVEL: Partial<Record<Rarity, number>> = { gold: 4 }
+const BEAM_HOLD = 3200
+export function rarityBeam(layer: Layer, el: HTMLElement | null | undefined, rarity: Rarity, scale = 1) {
+  const level = BEAM_LEVEL[rarity]
+  if (level == null) return Promise.resolve(null)
+  // ground: where the beam stands in the effect's 360 square — a little under the skin's middle, so it rises from behind it
+  return layer.at('lootbeam', el, scale, true, { color: RARITY_HEX[rarity], level, ground: 236, follow: true }).then((h) => {
+    if (h) setTimeout(() => h.stop(), BEAM_HOLD)
+    return h
+  })
 }
 
 let coinUrl: Promise<string> | null = null

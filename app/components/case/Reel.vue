@@ -376,8 +376,11 @@ async function rareFx(winners: Item[]) {
     const w = horizontal.value ? winners[0] : winners[i]
     const tier = w ? RARITY_TIER[w.rarity] : 0
     if (!w) return
-    // centred on the item picture (the rarity shape), on the layer behind the cards: it bursts from behind the skin
-    rarityRank(fxBg, el.querySelector<HTMLElement>('.kd-art img') ?? el, w.rarity, 1.3)
+    // centred on the item picture (the rarity shape), on the layer behind the cards: it bursts from behind the skin;
+    // covert and gold keep a loot beam rising behind it after the hit
+    const img = el.querySelector<HTMLElement>('.kd-art img') ?? el
+    rarityRank(fxBg, img, w.rarity, 1.3)
+    rarityBeam(fxBg, img, w.rarity, 1.7)
   })
 }
 
@@ -438,10 +441,10 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     :class="[shaking && 'is-shaking', punch && 'is-punch', tense.some(Boolean) && 'is-tense', (respinning || chickenHit.some(Boolean)) && 'is-kurwa', phase, horizontal ? 'is-h h-68 sm:h-[278px]' : 'is-v', grid ? 'is-grid' : !horizontal && 'h-[278px]']"
     :style="{ ...(grid ? { height: `${MOBILE_H}px` } : {}) }"
   >
-    <!-- Forge layer: behind the cards, and not clipped by the frame — it reaches 128px past the top and the bottom,
-         so a rank burst (rays and sparks well past the drop) is not cut off (the drop sits high in its card, ~90px
-         under the top). Not past the sides: on phones that would widen the page. -->
-    <div ref="fxHost" class="pointer-events-none absolute inset-x-0 -inset-y-32" />
+    <!-- Forge layer: behind the cards, and not clipped by the frame — it reaches 128px past the top and the bottom
+         and 80px past the sides, so a rank burst and a gold drop's wide flash are not cut off flat (the drop sits
+         high in its card, ~90px under the top). The page's root clips sideways overflow, so phones don't widen. -->
+    <div ref="fxHost" class="pointer-events-none absolute -inset-x-20 -inset-y-32" />
 
     <!-- The aim (x1): a thin glass reticle under the markers for the last stretch, gone on the landing -->
     <svg v-if="horizontal" class="kd-aim pointer-events-none absolute top-1/2 left-1/2" :class="aim && `is-${aim}`" viewBox="0 0 200 200" aria-hidden="true">
