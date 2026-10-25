@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CaseSummary } from '#shared/types/api'
+import type { RigPlayback } from '~/utils/spineStage'
 
 // Figma "CaseCard" states: Default → Hover (surface lifts to neutral-4, art settles 232→220,
 // price becomes the brand-gradient button, risk reveals its label) → Active (80% opacity).
@@ -28,16 +29,34 @@ watch(playing, (v) => !v && !props.item.rig && (animReady.value = false))
 // The rig is square: fit it into the art box like object-contain, drawn at device resolution
 const { width: boxW, height: boxH } = useElementSize(artBox)
 const side = computed(() => Math.floor(Math.min(boxW.value, boxH.value)))
+let rigPlayback: RigPlayback | null = null
 watch(
   [rigCanvas, side],
   ([canvas, s], _, onCleanup) => {
     animReady.value = false
     if (!canvas || !s || !props.item.rig) return
     canvas.width = canvas.height = Math.min(512, Math.round(s * Math.min(2, window.devicePixelRatio || 1)))
-    onCleanup(playRig(canvas, props.item.rig, () => (animReady.value = true)))
+    const playback = playRig(canvas, props.item.rig, () => (animReady.value = true))
+    rigPlayback = playback
+    onCleanup(() => {
+      playback.stop()
+      if (rigPlayback === playback) rigPlayback = null
+    })
   },
   { flush: 'post' },
 )
+// A mouse over the card: the rig plays its hover animation and looks toward the pointer
+function onArtPointer(e: PointerEvent) {
+  onPointerMove(e)
+  if (e.pointerType !== 'mouse' || !rigPlayback || !artBox.value) return
+  const r = artBox.value.getBoundingClientRect()
+  rigPlayback.hover(true)
+  rigPlayback.look(((e.clientX - r.left) / r.width) * 2 - 1)
+}
+function onArtLeave() {
+  rigPlayback?.hover(false)
+  rigPlayback?.look(null)
+}
 </script>
 
 <template>
@@ -46,7 +65,8 @@ watch(
   <NuxtLink
     :to="`/case/${item.slug}`"
     class="kd-case-card kd-spotlight group relative flex h-full flex-col items-center gap-2 rounded-5xl border"
-    @pointermove="onPointerMove"
+    @pointermove="onArtPointer"
+    @pointerleave="onArtLeave"
   >
     <div ref="artBox" class="kd-case-art-box relative aspect-square w-full lg:aspect-auto lg:h-55">
       <img

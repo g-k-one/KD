@@ -32,12 +32,16 @@ export interface CaseSummary {
   createdAt: string
 }
 
-/** A Spine 4.2 rig: skeleton JSON plus its atlas (the atlas names its page image, next to it). */
+/** A Spine 4.3 rig: skeleton JSON plus its atlas (the atlas names its page image, next to it). */
 export interface CaseRig {
   skeleton: string
   atlas: string
   /** Looping animation to play; `idle` when omitted */
   animation?: string
+  /** Looping animation while the pointer is over the card */
+  hover?: string
+  /** A control bone the pointer moves sideways (a slider on it turns the head), up to ±`range` world units */
+  look?: { bone: string; range: number }
 }
 
 export interface CaseSection {

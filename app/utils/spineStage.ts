@@ -19,6 +19,17 @@ interface Player {
   skeleton: import('@esotericsoftware/spine-webgl').Skeleton
   state: import('@esotericsoftware/spine-webgl').AnimationState
   onFirstFrame?: () => void
+  // Pointer look-at: the control bone eases toward the pointer and back to the animation when it leaves
+  look?: { bone: import('@esotericsoftware/spine-webgl').Bone; base: number; range: number; target: number; value: number; mix: number; on: boolean }
+}
+
+/** What a card can do with its playing rig */
+export interface RigPlayback {
+  stop: () => void
+  /** Pointer on / off the card: switches to the rig's hover animation and back */
+  hover: (on: boolean) => void
+  /** Pointer position across the art, -1 (left) … 1 (right); null lets the animation drive the look again */
+  look: (x: number | null) => void
 }
 
 let stage: Promise<{
@@ -70,6 +81,14 @@ async function frame(now: number) {
   for (const p of players) {
     p.state.update(dt)
     p.state.apply(p.skeleton)
+    const l = p.look
+    if (l) {
+      const k = Math.min(1, dt * 8)
+      l.mix += ((l.on ? 1 : 0) - l.mix) * k
+      l.value += (l.target - l.value) * k
+      const pose = l.bone.pose
+      pose.x += (l.base + l.value * l.range - pose.x) * l.mix
+    }
     p.skeleton.updateWorldTransform(spine.Physics.update)
     gl.viewport(0, 0, SIZE, SIZE)
     gl.clearColor(0, 0, 0, 0)
@@ -89,21 +108,29 @@ async function frame(now: number) {
  * Plays `rig` onto `canvas` until the returned stop function is called. `onFirstFrame` fires once the
  * first frame is on the canvas (swap the static art out then); a rig that fails to load never fires it.
  */
-export function playRig(canvas: HTMLCanvasElement, rig: CaseRig, onFirstFrame?: () => void) {
+export function playRig(canvas: HTMLCanvasElement, rig: CaseRig, onFirstFrame?: () => void): RigPlayback {
   let player: Player | null = null
   let stopped = false
+  // Pointer input that arrives before the rig has loaded is kept and applied once it plays
+  let hovering = false
+  let lookX: number | null = null
+  const idle = rig.animation ?? 'idle'
   loadRig(rig)
     .then(async (data) => {
       if (stopped) return
       const { spine } = await boot()
       const skeleton = new spine.Skeleton(data)
-      const state = new spine.AnimationState(new spine.AnimationStateData(data))
-      const entry = state.setAnimation(0, rig.animation ?? 'idle', true)
+      const stateData = new spine.AnimationStateData(data)
+      stateData.defaultMix = 0.25
+      const state = new spine.AnimationState(stateData)
+      const entry = state.setAnimation(0, hovering && rig.hover ? rig.hover : idle, true)
       // Start each card somewhere else in the loop, so several copies never move in lockstep
       entry.trackTime = Math.random() * entry.animationEnd
       const ctx = canvas.getContext('2d')
       if (!ctx) return
-      player = { ctx, skeleton, state, onFirstFrame }
+      const bone = rig.look ? skeleton.findBone(rig.look.bone) : null
+      const look = bone && rig.look ? { bone, base: bone.data.setupPose.x, range: rig.look.range, target: lookX ?? 0, value: lookX ?? 0, mix: 0, on: lookX !== null } : undefined
+      player = { ctx, skeleton, state, onFirstFrame, look }
       players.add(player)
       if (!raf) {
         last = 0
@@ -111,8 +138,22 @@ export function playRig(canvas: HTMLCanvasElement, rig: CaseRig, onFirstFrame?: 
       }
     })
     .catch(() => {})
-  return () => {
-    stopped = true
-    if (player) players.delete(player)
+  return {
+    stop() {
+      stopped = true
+      if (player) players.delete(player)
+    },
+    hover(on) {
+      if (on === hovering) return
+      hovering = on
+      if (player && rig.hover) player.state.setAnimation(0, on ? rig.hover : idle, true)
+    },
+    look(x) {
+      lookX = x
+      const l = player?.look
+      if (!l) return
+      l.on = x !== null
+      if (x !== null) l.target = Math.max(-1, Math.min(1, x))
+    },
   }
 }
