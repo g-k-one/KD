@@ -29,7 +29,7 @@ const short = (s?: string) => (s ? `${s.slice(0, 12)}…${s.slice(-8)}` : '—')
         <span class="flex min-w-0 flex-1 flex-col">
           <span class="type-14 truncate" :style="{ color: RARITY_COLOR[r.d.rarity] }">{{ r.d.weapon }} | {{ r.d.skin }}</span>
           <span class="type-12-regular text-neutral-11">
-            {{ $t('case.range', { range: r.range }) }}<template v-if="r.kurwa"> · <img src="/img/brand/logo-mark.svg" alt="" class="inline h-3.5 w-auto align-[-2px]" /> {{ $t('case.kurwaRespin') }}</template>
+            {{ $t('case.range', { range: r.range }) }}<template v-if="r.kurwa"> · <UiIcon name="kurwa" :size="12" class="inline text-coin" /> {{ $t('case.kurwaRespin') }}</template>
           </span>
         </span>
         <span class="flex shrink-0 flex-col items-end">

@@ -63,9 +63,8 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
     <div class="grid grid-cols-2 gap-2 lg:flex lg:justify-end">
       <UiChip size="m" tone="coin" icon="fast" class="!h-12 w-full lg:w-auto lg:px-4" :active="fast" @click="fast = !fast">{{ $t('upgrade.fast') }}</UiChip>
       <UiTooltip :text="$t('case.kurwaHint')" class="min-w-0">
-        <!-- the brand's mode wears the brand's mark itself, in colour (a one-colour 16 px head did not read) -->
-        <UiChip size="m" tone="gold" class="!h-12 w-full min-w-0 lg:px-4" :active="kurwadrop" @click="kurwadrop = !kurwadrop">
-          <img src="/img/brand/logo-mark.svg" alt="" class="h-5 w-auto shrink-0" />
+        <!-- a chicken head in the same line weight as Fast's bolt -->
+        <UiChip size="m" tone="gold" icon="kurwa" class="!h-12 w-full min-w-0 lg:px-4" :active="kurwadrop" @click="kurwadrop = !kurwadrop">
           <span :class="kurwadrop && 'kd-kurwa-word'">{{ $t('case.kurwadrop') }}</span>
         </UiChip>
       </UiTooltip>
