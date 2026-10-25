@@ -281,15 +281,15 @@ async function saveTrade() {
               <component
                 :is="h.nonce ? NuxtLink : 'div'"
                 :to="h.nonce ? `/fairness?roll=${h.id}` : undefined"
-                class="kd-hrow grid grid-cols-[40px_minmax(0,1fr)_44px_76px_24px] items-center gap-2.5 rounded-2xl px-1.5 py-2 lg:grid-cols-[44px_minmax(0,1fr)_auto_120px_32px] lg:gap-4 lg:px-2"
+                class="kd-hrow grid grid-cols-[40px_minmax(0,1fr)_44px_76px_24px] items-center gap-2.5 rounded-2xl px-1.5 py-2 lg:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_160px_32px] lg:gap-4 lg:px-3 lg:py-3"
                 :class="h.nonce && 'kd-press is-roll'"
               >
                 <!-- what it was: the case itself, else the game's sign -->
-                <span class="grid size-10 place-items-center rounded-xl bg-neutral-3 text-neutral-13 lg:size-11">
-                  <img v-if="h.caseImage" :src="h.caseImage" alt="" class="size-9 object-contain" loading="lazy" />
+                <span class="grid size-10 place-items-center rounded-xl bg-neutral-3 text-neutral-13 lg:size-12">
+                  <img v-if="h.caseImage" :src="h.caseImage" alt="" class="size-9 object-contain lg:size-10" loading="lazy" />
                   <UiIcon v-else :name="GAME_ICON[h.game]" :size="18" />
                 </span>
-                <span class="flex min-w-0 flex-col gap-0.5">
+                <span class="flex min-w-0 flex-col gap-0.5 lg:gap-1">
                   <!-- phones: the name on top, the game and the time under it; desktop: game · name, then time · stake · × -->
                   <span class="type-14 truncate"><span class="max-lg:hidden">{{ $t(`account.games.${h.game}`) }} · </span><span class="lg:text-neutral-12">{{ h.title }}</span></span>
                   <span class="type-12-regular truncate text-neutral-11">

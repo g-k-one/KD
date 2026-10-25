@@ -6,7 +6,7 @@ import type { HistoryEntry, HistoryResponse, SeedsResponse } from '#shared/types
  * knows its seed pair: rolls of a revealed pair verify in one tap (the verifier checks them against the result),
  * rolls of the current seed wait for it to be revealed — the banner says so in plain words and reveals in place.
  * `focus` (a nonce from "Check this roll" on a case or upgrade) highlights that roll and, once its seed is
- * revealed, opens the check by itself: one tap from the case to "matches".
+ * revealed, opens the verifier filled in with it: Calculate there shows "matches".
  */
 // focusRoll: a history entry's id (any roll, from the profile's game history), focused and checked the same way
 const props = defineProps<{ seeds: SeedsResponse | null; focus?: number; focusRoll?: string; rotating?: boolean }>()
@@ -109,16 +109,16 @@ watch(
           <component
             :is="r.pair ? 'button' : 'div'"
             :type="r.pair ? 'button' : undefined"
-            class="kd-roll grid w-full grid-cols-[40px_minmax(0,1fr)_28px] items-center gap-2.5 rounded-2xl px-1.5 py-2 text-left lg:grid-cols-[44px_minmax(0,1fr)_auto_120px_32px] lg:gap-4 lg:px-2"
+            class="kd-roll grid w-full grid-cols-[40px_minmax(0,1fr)_28px] items-center gap-2.5 rounded-2xl px-1.5 py-2 text-left lg:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_160px_32px] lg:gap-4 lg:px-3 lg:py-3"
             :class="{ 'is-focus': r.focus, 'kd-press is-roll': r.pair }"
             :aria-label="r.pair ? `${$t('fair.check')}: ${r.e.drop ?? r.e.title}` : undefined"
             @click="verify(r)"
           >
-            <span class="grid size-10 place-items-center rounded-xl bg-neutral-3 text-neutral-13 lg:size-11">
-              <img v-if="r.e.caseImage" :src="r.e.caseImage" alt="" class="size-9 object-contain" loading="lazy" />
+            <span class="grid size-10 place-items-center rounded-xl bg-neutral-3 text-neutral-13 lg:size-12">
+              <img v-if="r.e.caseImage" :src="r.e.caseImage" alt="" class="size-9 object-contain lg:size-10" loading="lazy" />
               <UiIcon v-else :name="r.e.game === 'upgrade' ? 'upgrade' : 'cases'" :size="18" />
             </span>
-            <span class="flex min-w-0 flex-col gap-0.5">
+            <span class="flex min-w-0 flex-col gap-0.5 lg:gap-1">
               <span class="type-14 truncate"><span class="max-lg:hidden">{{ $t(`account.games.${r.e.game}`) }} · </span><span class="lg:text-neutral-12">{{ r.e.title }}</span></span>
               <!-- the nonce stays: it is what the verifier needs -->
               <span class="type-12-regular truncate text-neutral-11">
