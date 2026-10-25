@@ -217,6 +217,13 @@ const filteredMarket = computed(() => {
 const pages = computed(() => Math.max(1, Math.ceil(filteredMarket.value.length / PAGE)))
 const marketPage = computed(() => filteredMarket.value.slice(page.value * PAGE, page.value * PAGE + PAGE))
 watch([search, priceFrom, priceTo, rarities, sortDesc], () => (page.value = 0))
+function resetMarketFilters() {
+  search.value = ''
+  priceFrom.value = ''
+  priceTo.value = ''
+  rarities.value = []
+  searchOpen.value = false
+}
 
 const sortedInventory = computed(() => [...inventory.value].sort((a, b) => (invSortDesc.value ? b.price - a.price : a.price - b.price)))
 // My skins page by page too, like the market (15 a page; the empty slots fill the last page)
@@ -537,6 +544,10 @@ async function runUpgrade() {
         <div v-if="session.user && inventoryLoading" class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
           <span v-for="n in 15" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl lg:aspect-auto lg:h-[105px]" :style="{ animationDelay: `${n * 40}ms` }" />
         </div>
+        <!-- nothing to stake yet: one big step, open a case (no second, small "open cases" line under it) -->
+        <UiEmptyState v-else-if="session.user && !inventory.length" :text="$t('account.emptyInventory')" class="flex-1 justify-center">
+          <UiButton size="l" icon="cases" to="/" class="w-full max-w-72">{{ $t('account.openCases') }}</UiButton>
+        </UiEmptyState>
         <div v-else-if="session.user" class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
           <template v-for="n in PAGE" :key="n">
             <ItemTile
@@ -547,12 +558,11 @@ async function runUpgrade() {
             />
           </template>
         </div>
-        <div v-else class="flex flex-1 flex-col items-center justify-center gap-4 p-10">
-          <span class="type-14-regular text-neutral-12">{{ $t('auth.required') }}</span>
-          <UiButton icon="sign-in" @click="ui.openSignIn()">{{ $t('auth.signInToPlay') }}</UiButton>
-        </div>
+        <UiEmptyState v-else :text="$t('upgrade.signInText')" mood="laugh" class="flex-1 justify-center">
+          <UiButton size="l" icon="sign-in" class="w-full max-w-72" @click="ui.openSignIn()">{{ $t('auth.signInToPlay') }}</UiButton>
+        </UiEmptyState>
         <UiPager v-if="session.user && invPages > 1" v-model="invPage" :pages="invPages" class="mt-auto h-12 lg:h-10" />
-        <NuxtLink v-else to="/" class="kd-press type-12-caps mt-auto flex h-12 items-center lg:h-10 justify-center gap-2 text-neutral-12 hover:text-neutral-15">
+        <NuxtLink v-else-if="session.user && inventory.length" to="/" class="kd-press type-12-caps mt-auto flex h-12 items-center lg:h-10 justify-center gap-2 text-neutral-12 hover:text-neutral-15">
           <UiIcon name="cases" :size="16" />
           {{ $t('upgrade.openCases') }}
         </NuxtLink>
@@ -589,7 +599,8 @@ async function runUpgrade() {
           <UiButton variant="ghost" :size="isLg ? 'm' : 's'" :icon="searchOpen ? 'close' : 'search'" icon-only :aria-label="$t(searchOpen ? 'common.close' : 'upgrade.search')" @click="searchOpen = !searchOpen" />
         </div>
         <!-- Always a full page of slots (empty ones on the last page), so paging never changes the height -->
-        <TransitionGroup tag="div" name="kd-grid" class="relative grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
+        <div class="relative">
+        <TransitionGroup tag="div" name="kd-grid" class="relative grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4" :class="market && !filteredMarket.length && 'opacity-30'">
           <template v-for="n in PAGE" :key="marketPage[n - 1]?.id ?? `empty-${n}`">
             <ItemTile
               v-if="marketPage[n - 1]"
@@ -603,7 +614,14 @@ async function runUpgrade() {
             <ItemTile v-else :item="undefined" />
           </template>
         </TransitionGroup>
-        <UiPager v-model="page" :pages="pages" class="mt-auto h-12 lg:h-10" />
+        <!-- the filters found nothing: say so over the empty slots (the panel keeps its height) and undo them in a tap -->
+        <div v-if="market && !filteredMarket.length" class="absolute inset-0 grid place-items-center p-4">
+          <UiEmptyState :text="$t('upgrade.noMatch')" class="bg-transparent py-0 lg:py-0">
+            <UiButton variant="secondary" size="m" icon="close" @click="resetMarketFilters">{{ $t('upgrade.resetFilters') }}</UiButton>
+          </UiEmptyState>
+        </div>
+        </div>
+        <UiPager v-model="page" :pages="pages" class="mt-auto h-12 lg:h-10" :class="!filteredMarket.length && 'invisible'" />
       </div>
     </section>
     <div class="sticky bottom-0 flex items-center gap-3 border-t border-neutral-4 bg-neutral-1 p-3 lg:hidden">
