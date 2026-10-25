@@ -15,7 +15,7 @@ const wins = computed(() => (data.value?.wins ?? []).slice(0, 3).map((win, k) =>
 const isLg = useMediaQuery('(min-width: 1024px)')
 // big enough to fill the left half (the picture is 1⅔ × the size): it stands in the card on its shadow and breaks
 // out over the top edge by about a quarter
-const artSize = () => (isLg.value ? 118 : 66)
+const artSize = () => (isLg.value ? 106 : 62)
 
 // --- the cards' own sparkle (Forge): one canvas over the cards, running only while the block is on screen ---------
 const section = useTemplateRef<HTMLElement>('section')
@@ -134,20 +134,14 @@ onBeforeUnmount(stopFx)
     min-height: 176px;
   }
 }
-/* the stage: the art is centred in the left half and lifted, so a quarter of it rises over the card's top edge */
+/* the stage: the skin and its rarity shape sit in the middle of the card's left half */
 .kd-win-stage {
   display: grid;
   place-items: center;
 }
 .kd-win-art {
-  translate: 0 -6px;
   transform: rotate(-12deg);
   transition: transform var(--dur-slow) var(--ease-spring);
-}
-@media (min-width: 64rem) {
-  .kd-win-art {
-    translate: 0 -16px;
-  }
 }
 /* a soft contact shadow under the skin: it stands in the card instead of floating in the air */
 .kd-win-shadow {
