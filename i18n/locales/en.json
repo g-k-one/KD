@@ -500,10 +500,12 @@
     "statWagered": "Played",
     "statTopX": "Best multiplier",
     "statBest": "Best drop",
-    "sellAll": "Sell all",
     "day": "24h",
     "skinsCount": "{n} skin | {n} skins",
     "pickHint": "Tap skins to pick them: sell for coins, upgrade, or withdraw one to Steam.",
+    "levelNext": "LVL {n}",
+    "levelLeft": "{amount} of play to go",
+    "levelWhy": "every coin you play counts; each 5 levels the daily case gets better",
     "withdrawOne": "Withdraw one skin at a time"
   },
   "pvp": {

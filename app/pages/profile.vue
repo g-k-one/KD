@@ -1,10 +1,12 @@
 <script setup lang="ts">
+// Imported, not resolveComponent(): the static artifact build left that as a literal <nuxtlink> tag
+import { NuxtLink } from '#components'
 import type { HistoryEntry, HistoryGame, HistoryResponse, InventoryItem, InventoryResponse, SellResponse } from '#shared/types/api'
 
-// Profile: one header — who, the level, the money in one line and Deposit — with the stats as one line under it;
-// tabs on top (Inventory · History · Settings) for every size; the money moves sit where they act: on the inventory
-// (Sell all next to the search, Upgrade / Withdraw / Sell on the selection bar). History rows: Figma "Tables"
-// (desktop) / "MobileHistoryRow" (mobile).
+// Profile: one header — who, the level (and what it takes to the next one), Deposit, the money. Under it the skins,
+// and beside them the Steam trade link (where withdrawals go) with the player's numbers; the game history runs the
+// full width below, each roll a tap away from its check on the Provably Fair page. Picking skins brings up a bar
+// fixed to the screen's bottom edge: Upgrade / Withdraw / Sell. History rows: Figma "Tables" / "MobileHistoryRow".
 useHead({ title: 'Profile · KurwaDROP' })
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -130,11 +132,8 @@ const statCards = computed(() => [
   { key: 'skins', icon: 'inventory', label: t('account.skinsValue'), price: session.user?.skinsValue ?? 0 },
 ])
 
-// the sell preview lives on the inventory tab, so selling everything goes there first
-function sellEverything() {
-  selected.value = inventory.value.map((i) => i.uid)
-  sellOpen.value = true
-}
+/** What the level bar says: how many coins of play to the next level, and what levels are for */
+const levelLeft = computed(() => (session.user?.levelLeft != null ? formatCoins(session.user.levelLeft) : null))
 
 // --- Steam trade link (settings) --------------------------------------------------------
 const TRADE_RE = /^https:\/\/steamcommunity\.com\/tradeoffer\/new\/\?partner=\d+&token=[\w-]{6,}$/
@@ -165,6 +164,7 @@ async function saveTrade() {
         { label: $t('case.allCases'), icon: 'arrow-left', to: '/' },
         ...(session.user ? [{ label: $t('account.settings'), icon: 'sliders', onClick: () => (settingsOpen = true) }] : []),
       ]"
+      :right="session.user ? [{ label: $t('auth.logOut'), icon: 'logout', onClick: () => session.logout() }] : []"
     />
     <div v-if="!session.user" class="flex flex-col items-center gap-4 rounded-5xl bg-neutral-2 px-6 py-16 text-center">
       <p class="type-14-regular text-neutral-12">{{ $t('account.signInHint') }}</p>
@@ -181,12 +181,16 @@ async function saveTrade() {
               <h1 class="type-16-caps truncate">{{ session.user.nickname }}</h1>
               <UiLevelBadge :level="session.user.level" />
             </div>
-            <div class="flex max-w-56 items-center gap-2">
+            <!-- the level in words: where the bar leads, how far it is in coins, and what levels give -->
+            <div class="flex max-w-72 items-center gap-2">
               <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-5">
                 <div class="bg-brand-gradient h-full rounded-full transition-[width] duration-700" :style="{ width: `${session.user.levelProgress}%` }" />
               </div>
-              <span class="type-12 shrink-0 text-neutral-11 tabular-nums">{{ session.user.levelProgress }}%</span>
+              <span class="type-12-caps shrink-0 text-neutral-12 tabular-nums">{{ $t('account.levelNext', { n: session.user.level + 1 }) }}</span>
             </div>
+            <span class="type-12-regular text-neutral-11">
+              <template v-if="levelLeft">{{ $t('account.levelLeft', { amount: levelLeft }) }} · </template>{{ $t('account.levelWhy') }}
+            </span>
           </div>
         </div>
         <!-- quiet here: the header and the tab bar already carry Deposit; the profile is about the skins -->
@@ -203,8 +207,8 @@ async function saveTrade() {
         </div>
       </section>
 
-      <!-- Two panels, the upgrade page's: my skins | game history -->
-      <section class="grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-5">
+      <!-- The skins | the trade link and the player's numbers; the history full width below -->
+      <section class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start lg:gap-5">
         <!-- My skins: the upgrade page's panel, tiles to pick; picked ones get the bar below -->
         <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2 lg:pb-4">
           <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
@@ -225,60 +229,83 @@ async function saveTrade() {
             <div class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
               <ItemTile v-for="it in sortedInventory" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
             </div>
-            <div class="flex items-center justify-between gap-3 px-4 pb-3 lg:px-6 lg:pb-0">
-              <span class="type-12-regular text-neutral-11">{{ $t('account.pickHint') }}</span>
-              <UiButton variant="secondary" size="s" class="shrink-0" @click="sellEverything">
-                {{ $t('account.sellAll') }}
-                <span class="btn-value"><UiPrice :amount="session.user.skinsValue" size="s" /></span>
-              </UiButton>
-            </div>
+            <p v-if="!selected.length" class="type-12-regular px-4 pb-3 text-neutral-11 lg:px-6 lg:pb-0">{{ $t('account.pickHint') }}</p>
           </template>
           <UiEmptyState v-else :text="$t('account.emptyInventory')" class="m-3 lg:m-4">
             <UiButton to="/" icon="cases">{{ $t('account.openCases') }}</UiButton>
           </UiEmptyState>
         </div>
 
-        <!-- Game history: the same panel; what the player did, newest first -->
-        <div ref="historyEl" class="flex min-w-0 scroll-mt-36 flex-col rounded-5xl bg-neutral-2 lg:pb-4">
-          <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
-            <UiIcon name="history" :size="24" class="text-neutral-13" />
-            <span class="type-14 lg:type-16-medium">{{ $t('account.history') }}</span>
-            <UiSelect v-model="gameFilter" :options="gameOptions" menu-width="fixed" class="ml-auto w-36 lg:w-40" :active="gameFilter !== 'all'" />
-          </div>
-          <!-- the player's numbers, one quiet line -->
-          <dl class="grid grid-cols-3 gap-2 p-3 lg:px-4">
+        <!-- The right column: where withdrawals go, then the player's numbers -->
+        <div class="flex min-w-0 flex-col gap-4 lg:gap-5">
+          <form class="flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4 lg:p-6" @submit.prevent="saveTrade">
+            <div class="flex items-center gap-3">
+              <UiIcon name="steam" :size="24" class="text-neutral-13" />
+              <span class="type-14 lg:type-16-medium">{{ $t('withdraw.tradeLink') }}</span>
+              <UiIcon v-if="session.user.tradeUrl && tradeValid" name="check-circle" :size="18" class="ml-auto text-success" />
+            </div>
+            <UiInput id="profile-trade" v-model="tradeLink" size="l" icon="steam" inputmode="url" clearable :error="!!tradeLink && !tradeValid" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…" />
+            <span class="type-12-regular text-neutral-11">
+              {{ $t('withdraw.whereLink') }}
+              <a href="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" target="_blank" rel="noopener" class="text-brand-light hover:underline">{{ $t('withdraw.openSteam') }}</a>
+            </span>
+            <UiButton type="submit" size="m" class="self-start" :loading="tradeSaving" :disabled="!tradeValid || tradeLink.trim() === session.user?.tradeUrl">{{ $t('common.save') }}</UiButton>
+          </form>
+          <dl class="grid grid-cols-3 gap-2 rounded-5xl bg-neutral-2 p-3 lg:p-4">
             <div v-for="s in statCards.slice(1, 4)" :key="s.key" class="flex min-w-0 flex-col gap-1 rounded-2xl bg-neutral-3 px-3 py-2.5">
-              <dt class="type-10-caps truncate text-neutral-11">{{ s.label }}</dt>
+              <dt class="type-10-caps leading-tight text-neutral-11">{{ s.label }}</dt>
               <dd class="type-14 tabular-nums" :class="s.coin && 'text-coin'">
                 <UiPrice v-if="s.price != null" :amount="s.price" size="s" tone="coin" />
                 <template v-else>{{ s.value }}</template>
               </dd>
             </div>
           </dl>
+        </div>
+      </section>
+
+      <!-- Game history, the full width: what the player did, newest first; a roll opens its check -->
+      <section>
+        <div ref="historyEl" class="flex min-w-0 scroll-mt-36 flex-col rounded-5xl bg-neutral-2 lg:pb-4">
+          <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
+            <UiIcon name="history" :size="24" class="text-neutral-13" />
+            <span class="type-14 lg:type-16-medium">{{ $t('account.history') }}</span>
+            <UiSelect v-model="gameFilter" :options="gameOptions" menu-width="fixed" class="ml-auto w-36 lg:w-40" :active="gameFilter !== 'all'" />
+          </div>
           <UiEmptyState v-if="!filteredHistory.length" :text="$t('account.emptyHistory')" class="m-3 mt-0 lg:m-4 lg:mt-0" />
-          <ul v-else class="kd-history flex flex-col gap-1 overflow-y-auto px-3 pb-3 lg:px-4 lg:pb-0">
-            <li v-for="h in filteredHistory" :key="h.id" class="flex items-center gap-3 rounded-2xl px-2 py-2 hover:bg-neutral-3">
-              <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-neutral-4 text-neutral-13">
-                <UiIcon :name="GAME_ICON[h.game]" :size="18" />
-              </span>
-              <span class="flex min-w-0 flex-1 flex-col">
-                <span class="type-14 truncate">{{ $t(`account.games.${h.game}`) }} · <span class="text-neutral-12">{{ h.title }}</span></span>
-                <span class="type-12-regular text-neutral-11">{{ when(h.at) }} · {{ mult(h) }}</span>
-              </span>
-              <span class="flex flex-col items-end">
-                <UiPrice :amount="h.payout" :tone="h.status === 'lost' ? 'muted' : 'success'" />
-                <UiPrice v-if="h.bet" :amount="h.bet" size="xs" tone="muted" />
-              </span>
+          <ul v-else class="kd-history flex flex-col gap-1 overflow-y-auto px-3 pt-3 pb-3 lg:px-4 lg:pb-0">
+            <li v-for="h in filteredHistory" :key="h.id">
+              <!-- a roll (case, upgrade) is a link to its check on the Provably Fair page -->
+              <component
+                :is="h.nonce ? NuxtLink : 'div'"
+                :to="h.nonce ? `/fairness?roll=${h.id}` : undefined"
+                class="kd-hrow flex items-center gap-3 rounded-2xl px-2 py-2"
+                :class="h.nonce && 'kd-press is-roll'"
+              >
+                <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-neutral-4 text-neutral-13">
+                  <UiIcon :name="GAME_ICON[h.game]" :size="18" />
+                </span>
+                <span class="flex min-w-0 flex-1 flex-col">
+                  <span class="type-14 truncate">{{ $t(`account.games.${h.game}`) }} · <span class="text-neutral-12">{{ h.title }}</span></span>
+                  <span class="type-12-regular text-neutral-11">{{ when(h.at) }} · {{ mult(h) }}</span>
+                </span>
+                <span class="flex flex-col items-end">
+                  <UiPrice :amount="h.payout" :tone="h.status === 'lost' ? 'muted' : 'success'" />
+                  <UiPrice v-if="h.bet" :amount="h.bet" size="xs" tone="muted" />
+                </span>
+                <span v-if="h.nonce" class="kd-hrow-check type-12-caps flex shrink-0 items-center gap-1 text-success">
+                  <UiIcon name="shield-check" :size="18" /><span class="max-sm:hidden">{{ $t('fair.check') }}</span>
+                </span>
+              </component>
             </li>
           </ul>
         </div>
       </section>
 
-      <!-- Selection bar floats above the bottom nav on mobile -->
+      <!-- Selection bar: fixed to the screen's bottom edge (over the tab bar on phones) while skins are picked -->
       <Transition name="kd-bar">
         <div
           v-if="selected.length"
-          class="sticky bottom-[calc(76px+env(safe-area-inset-bottom))] z-20 flex flex-wrap items-center gap-2 rounded-3xl border border-neutral-5 bg-neutral-3 p-3 shadow-elevation-2 lg:bottom-6"
+          class="fixed inset-x-3 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-[760px] flex-wrap items-center gap-2 rounded-3xl border border-neutral-5 bg-neutral-3 p-3 shadow-elevation-2 lg:bottom-6"
         >
           <span class="type-14 flex-1">{{ $t('account.selected', { count: selected.length }) }}</span>
           <UiButton variant="ghost" size="m" @click="selected = []">{{ $t('account.clear') }}</UiButton>
@@ -294,28 +321,30 @@ async function saveTrade() {
       <WalletWithdrawModal v-model="withdrawOpen" :items="selectedItems.slice(0, 1)" @done="onWithdrawn" />
       <WalletSellPreview v-model="sellOpen" :items="selectedItems" :loading="selling" @confirm="sellSelected" />
 
-      <!-- Settings: the trade link and the app's settings, in a modal from the page bar -->
+      <!-- Settings: the app's settings (sound, vibration…), in a modal from the page bar; the trade link has its card -->
       <UiModal v-model="settingsOpen" :title="$t('account.settings')" :width="560">
-        <div class="flex flex-col gap-4">
-          <form class="flex flex-col gap-3" @submit.prevent="saveTrade">
-            <span class="type-14-caps">{{ $t('withdraw.tradeLink') }}</span>
-            <UiInput id="settings-trade" v-model="tradeLink" size="l" icon="steam" inputmode="url" clearable :error="!!tradeLink && !tradeValid" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…" />
-            <span class="type-12-regular text-neutral-11">
-              {{ $t('withdraw.whereLink') }}
-              <a href="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" target="_blank" rel="noopener" class="text-brand-light hover:underline">{{ $t('withdraw.openSteam') }}</a>
-            </span>
-            <UiButton type="submit" size="m" class="self-start" :loading="tradeSaving" :disabled="!tradeValid || tradeLink.trim() === session.user?.tradeUrl">{{ $t('common.save') }}</UiButton>
-          </form>
-          <div class="border-t border-neutral-4 pt-4">
-            <LayoutSettingsPanel />
-          </div>
-        </div>
+        <LayoutSettingsPanel />
       </UiModal>
     </template>
   </div>
 </template>
 
 <style scoped>
+.kd-hrow.is-roll {
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+.kd-hrow-check {
+  opacity: 0.6;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+@media (hover: hover) {
+  .kd-hrow.is-roll:hover {
+    background: var(--color-neutral-3);
+  }
+  .kd-hrow.is-roll:hover .kd-hrow-check {
+    opacity: 1;
+  }
+}
 /* the plate is the case page's dock: 24px radius, 12px padding; its chips are 48px high with a 12px radius */
 .kd-dock {
   border-radius: 24px;

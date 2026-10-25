@@ -23,6 +23,7 @@ import {
   getMarket,
   getMockState,
   getSeeds,
+  xpFor,
   MockError,
   openCase,
   PAYMENT_METHODS,
@@ -34,6 +35,12 @@ import {
   upgrade,
   type DebugStateBody,
 } from './mock-db'
+
+/** The player, with the XP still to spend for the next level (what the level bar can say in coins) */
+function meUser() {
+  const st = getMockState()
+  return { ...st.user, levelLeft: Math.max(0, xpFor(st.user.level) - st.xp) }
+}
 import { callBot, createBattle, getBattle, joinBattle, listBattles } from './mock-battles'
 import {
   addBigWin,
@@ -72,8 +79,8 @@ export async function mockRoute(method: string, path: string, body: Body, query:
 
   let match: RegExpMatchArray | null
 
-  if (m === 'GET' && path === '/api/me') return { user: ctx.loggedIn ? getMockState().user : null }
-  if (m === 'POST' && path === '/api/auth/login') return { user: getMockState().user }
+  if (m === 'GET' && path === '/api/me') return { user: ctx.loggedIn ? meUser() : null }
+  if (m === 'POST' && path === '/api/auth/login') return { user: meUser() }
   if (m === 'POST' && path === '/api/auth/logout') return { ok: true }
 
   if (m === 'GET' && path === '/api/cases') return { sections: getCaseSections() }

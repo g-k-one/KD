@@ -8,7 +8,8 @@ import type { HistoryEntry, HistoryResponse, SeedsResponse } from '#shared/types
  * `focus` (a nonce from "Check this roll" on a case or upgrade) highlights that roll and, once its seed is
  * revealed, opens the check by itself: one tap from the case to "matches".
  */
-const props = defineProps<{ seeds: SeedsResponse | null; focus?: number; rotating?: boolean }>()
+// focusRoll: a history entry's id (any roll, from the profile's game history), focused and checked the same way
+const props = defineProps<{ seeds: SeedsResponse | null; focus?: number; focusRoll?: string; rotating?: boolean }>()
 const emit = defineEmits<{
   verify: [{ serverSeed: string; clientSeed: string; nonce: number; expect: { ticket?: number; roll?: number } }]
   rotate: []
@@ -21,7 +22,11 @@ const loaded = ref(false)
 async function load() {
   if (!session.user) return ((entries.value = []), (loaded.value = true))
   try {
-    entries.value = (await $fetch<HistoryResponse>('/api/history')).entries.filter((e) => e.nonce && e.seedHash).slice(0, 8)
+    const all = (await $fetch<HistoryResponse>('/api/history')).entries.filter((e) => e.nonce && e.seedHash)
+    // the latest eight, and the roll asked for by id (from the game history) even when it is older
+    const asked = props.focusRoll ? all.find((e) => e.id === props.focusRoll) : undefined
+    const latest = all.slice(0, 8)
+    entries.value = asked && !latest.includes(asked) ? [asked, ...latest] : latest
   } catch {
     entries.value = []
   } finally {
@@ -37,7 +42,7 @@ const rows = computed(() =>
   entries.value.map((e) => {
     const pair = props.seeds?.history.find((h) => h.serverSeedHash === e.seedHash) ?? null
     const active = e.seedHash === props.seeds?.active.serverSeedHash
-    return { e, pair, focus: active && e.nonce === props.focus }
+    return { e, pair, focus: (active && e.nonce === props.focus) || e.id === props.focusRoll }
   }),
 )
 const sealed = computed(() => rows.value.filter((r) => !r.pair).length)

@@ -86,6 +86,8 @@ export interface User {
   level: number
   /** 0..100 progress to the next level */
   levelProgress: number
+  /** Coin cents still to spend for the next level (XP left) */
+  levelLeft?: number
   balance: number
   skinsValue: number
   /** Steam trade offer link the skins are sent to; null until the player saves one */

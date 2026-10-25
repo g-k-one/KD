@@ -52,6 +52,8 @@ function openVerifier(init?: typeof verifierInit.value) {
 // "Check this roll" on a case or upgrade lands here with ?verify=<nonce>: a roll of the active pair, so
 // "Your rolls" highlights it next to the rotation that reveals its seed (and checks it once revealed)
 const focusNonce = computed(() => Number(route.query.verify) || undefined)
+// ?roll=<history id>: any roll from the game history (the profile links each one here)
+const focusRoll = computed(() => (typeof route.query.roll === 'string' ? route.query.roll : undefined))
 
 const toast = useToast()
 const { t, locale } = useI18n()
@@ -130,7 +132,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
       </div>
     </section>
 
-    <FairMyRolls :seeds="seeds" :focus="focusNonce" :rotating="rotating" @verify="openVerifier" @rotate="rotate" />
+    <FairMyRolls :seeds="seeds" :focus="focusNonce" :focus-roll="focusRoll" :rotating="rotating" @verify="openVerifier" @rotate="rotate" />
 
     <!-- Steps -->
     <section class="grid gap-3 md:grid-cols-3 lg:gap-4">
