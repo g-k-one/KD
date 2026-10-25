@@ -754,10 +754,10 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   filter: grayscale(0.6);
 }
 /* The drop floats and its glow breathes while it is yours; once sold it stops and dims */
-.kd-reel-card[data-win]:not(.is-sold) > .kd-art {
-  /* translate only (compositor), the glow is static: animating a drop-shadow filter stuttered. No will-change and
-     no float until the reveal is over (the last wave and the bloom end by ~1.4 s): a layer made for the drop at the
-     landing was sized to it and cut the rarity waves and the bloom off flat as they grew past it */
+.kd-reel-card[data-win]:not(.is-sold) > .kd-art :deep(.kd-art-img) {
+  /* translate only (compositor), on the skin's picture alone: animating the whole art made a layer the art's size,
+     and the rarity glow, the waves and the bloom (all bigger than it) were cut off flat at its top and bottom.
+     The glow stays put; no float until the reveal is over (the last wave and the bloom end by ~1.4 s) */
   animation: kd-drop-float 3.2s cubic-bezier(0.45, 0, 0.55, 1) 1500ms infinite;
 }
 @keyframes kd-drop-float {
