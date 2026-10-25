@@ -83,21 +83,34 @@ const artSize = () => (isLg.value ? 106 : 62)
 .kd-win :deep(.kd-art-glow) {
   display: none;
 }
-/* the pulse: each copy starts at the shape's size, grows to twice it and fades; three of them a third apart, the
-   cards offset so they don't beat together */
+/* the pulse, one beat every 2 s: the shape shrinks a little, swells back and a copy leaves it at that moment, growing
+   to twice its size and fading over 6 s (three copies, a beat apart); the cards are offset so they don't beat together */
+.kd-win :deep(.kd-art-star) {
+  animation: kd-win-beat 2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation-delay: calc(var(--i) * 0.5s);
+}
+@keyframes kd-win-beat {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+}
 .kd-win-echo {
   top: 50%;
   left: 50%;
   width: var(--size);
   height: var(--size);
   opacity: 0;
-  animation: kd-win-echo 3.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-  animation-delay: calc(var(--k) * 1.2s + var(--i) * 0.5s);
+  animation: kd-win-echo 6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation-delay: calc(var(--k) * 2s + var(--i) * 0.5s);
 }
 @keyframes kd-win-echo {
   0% {
     opacity: 0.55;
-    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    transform: translate(-50%, -50%) scale(1.08) rotate(0deg);
   }
   100% {
     opacity: 0;
@@ -107,6 +120,9 @@ const artSize = () => (isLg.value ? 106 : 62)
 @media (prefers-reduced-motion: reduce) {
   .kd-win-echo {
     display: none;
+  }
+  .kd-win :deep(.kd-art-star) {
+    animation: none;
   }
 }
 /* the rarity shape stands out from the card's light (same hue, so it needs the contrast) */
