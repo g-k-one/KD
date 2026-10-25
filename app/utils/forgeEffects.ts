@@ -15,10 +15,6 @@ import { RARITY_HEX } from './rarity'
  *   kdAura    — loop behind the upgrade target while the dial turns: a glow that pulses and sparks drifting up
  *               over the whole card.
  *               Colour per rarity: handle.set('tint', [r, g, b])
- *   kdTrophy  — loop over a big win's skin (home, top 3): glints that pop, turn and fade around the skin (the
- *               matter pack's shader glint: crisp at any size), and soft motes drifting up from under it, in the
- *               rarity's colour with white among them; opts { color, level 1…3 } (the winner's: 3 — more of both).
- *               No glow: the card has its own light. Cheap: ~20 sprites alive.
  *   kdWin     — won upgrade: one beat — a burst of green and gold sparks and a single thin ring that stays
  *               close to the dial (no glow wash, no second wave)
  *   kdBurn    — loop around a label: a flat warm glow hugging it, licks and embers rising along its width
@@ -331,55 +327,6 @@ export function defineKdEffects(engine: Engine) {
     },
   }))
 
-  engine.define('kdTrophy', (h) => ({
-    // Forge's own atlas: the shader glint is drawn against it (on ours it came out grey), its glow makes the motes
-    atlas: 'aura',
-    // slow and calm: an idle shimmer, not a burst
-    rate: 0.55,
-    init(s) {
-      const o = (s as State & { o: { color?: string; level?: number } }).o
-      Object.assign(s, { glints: [] as Particle[], motes: [] as Particle[], tint: o.color ? hexToRgb(o.color) : GOLD, L: o.level ?? 2 })
-    },
-    update(s, dt, at) {
-      const { R } = h
-      const L = s.L as number
-      const tint = s.tint as Rgb
-      const hot = tint.map((v) => v * 0.4 + 0.6)
-      // glints: a four-point star pops up somewhere on the skin and goes out — the shader's glint when the matter pack
-      // is there (crisp), the atlas spark otherwise
-      h.emit(s.acc, 1, 1.8 + L * 1.2, dt, () => {
-        // a square around the skin
-        const x = 180 + R(-92, 92)
-        const y = 180 + R(-92, 92)
-        if (h.glint) h.glint(s.glints as Particle[], x, y, R(0.55, 1), Math.random() < 0.45 ? [1, 0.98, 0.9] : hot)
-        else h.spawn(s.glints as Particle[], { x, y, size: R(16, 28), sc: [[0, 0], [0.35, 1], [1, 0]], life: R(0.55, 0.85), rot: R(0, 6), cells: [at.map['twinkle:W0']!], add: 1, tint: hot, fadeIn: 0.05, fadeOut: 0.4 })
-      })
-      // motes: soft dots of light drifting up from under the skin, swaying a little
-      h.emit(s.acc, 2, 3 + L * 2.2, dt, () =>
-        h.spawn(s.motes as Particle[], {
-          x: 180 + R(-88, 88),
-          y: R(230, 268),
-          vx: R(-6, 6),
-          vy: R(-55, -25),
-          sway: 10,
-          size: R(8, 15),
-          life: R(1.2, 2),
-          cells: [at.map['glow:W0']!],
-          add: 1,
-          tint: Math.random() < 0.3 ? [1, 1, 1] : tint,
-          fadeIn: 0.25,
-          fadeOut: 0.45,
-        }),
-      )
-      h.step(s.glints as Particle[], dt)
-      h.step(s.motes as Particle[], dt)
-    },
-    render(s, c) {
-      h.draw(c, s.motes as Particle[])
-      h.draw(c, s.glints as Particle[])
-    },
-  }))
-
   engine.define('kdWin', (h) => ({
     atlas: 'kd',
     period: 2.2,
@@ -428,6 +375,8 @@ export function defineKdEffects(engine: Engine) {
 
   engine.define('kdBlaze', (h) => ({
     atlas: 'kd',
+    // a slower burn: the licks and embers rise at 70% speed
+    rate: 0.7,
     init: (s) => Object.assign(s, { em: [] as Particle[], lick: [] as Particle[] }),
     update(s, dt, at) {
       const { R } = h

@@ -125,7 +125,7 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
 }
 @keyframes kd-bloom {
   30% {
-    transform: translate(-50%, -50%) scale(1.45);
+    transform: translate(-50%, -50%) scale(1.28);
     opacity: 1;
   }
   100% {

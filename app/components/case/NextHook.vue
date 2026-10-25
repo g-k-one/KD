@@ -83,14 +83,14 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
 
       <!-- Before a drop: what this case has paid lately -->
       <div v-else-if="top.length" key="top" class="kd-hook-card kd-top w-full justify-center">
-        <span class="flex shrink-0 flex-col pr-1 max-sm:hidden">
+        <span class="flex shrink-0 flex-col gap-1 pr-1 max-sm:hidden">
           <span class="type-12-caps flex items-center gap-1.5 text-neutral-11"><UiIcon name="trophy" :size="14" class="text-coin" />{{ $t('case.topDrops') }}</span>
           <span class="type-12-regular text-neutral-11">{{ $t('case.topDropsWindow') }}</span>
         </span>
         <div class="scrollbar-none flex min-w-0 flex-1 gap-1.5 overflow-x-auto max-sm:-mr-2 max-sm:pr-2 mask-r-from-85% sm:mask-none">
           <div v-for="(d, i) in top" :key="i" class="kd-top-drop" :style="{ '--rc': RARITY_COLOR[d.item.rarity], '--i': i }" :title="`${d.item.weapon} | ${d.item.skin} · ${d.nickname} · ${timeAgo(d.at)}`">
             <ItemArt :image="d.item.image" :rarity="d.item.rarity" :size="34" class="w-12 shrink-0" />
-            <span class="flex min-w-0 flex-col">
+            <span class="flex min-w-0 flex-col gap-0.5">
               <span class="kd-top-x tabular-nums">{{ xLabel(d.multiplier) }}</span>
               <span class="type-10-caps truncate normal-case text-neutral-11">{{ timeAgo(d.at) }}</span>
             </span>

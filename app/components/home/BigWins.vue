@@ -7,8 +7,8 @@ import type { BigWinsResponse } from '#shared/types/api'
 // multiplier as the headline, the price, the skin and who won it, each on its own line with air between.
 // Desktop: #1, #2, #3 in one row, the cards one height, the winner's golden, its multiplier burning.
 // Phones: a short leaderboard — #1, #2, #3 one under another, the same card at full width.
-// A Forge loop of their own (kdTrophy) over the cards while the block is on screen: glints that pop and fade
-// around each skin and motes rising in its rarity's colour — more of them, in gold, on the winner's.
+// Behind each skin a slow galaxy in its rarity's colour: two layers of the same spiral arms (a procedural mask,
+// public/img/fx/swirl.webp) turning at different speeds — transform only, no canvas.
 // The room above the cards is only what the skins break out by. Each card links to where the drop came from.
 const { data } = useFetch<BigWinsResponse>('/api/wins/today', { key: 'wins-today', lazy: true, server: false })
 const wins = computed(() => (data.value?.wins ?? []).slice(0, 3).map((win, k) => ({ win, rank: k + 1 })))
@@ -17,35 +17,11 @@ const isLg = useMediaQuery('(min-width: 1024px)')
 // out over the top edge by about a quarter
 const artSize = () => (isLg.value ? 106 : 62)
 
-// --- the cards' own sparkle (Forge): one canvas over the cards, running only while the block is on screen ---------
-const section = useTemplateRef<HTMLElement>('section')
-const fxHost = useTemplateRef<HTMLElement>('fxHost')
-const fx = useForge(fxHost)
-let loops: Array<{ stop(): void } | null> = []
-const stopFx = () => {
-  loops.forEach((h) => h?.stop())
-  loops = []
-}
-async function startFx() {
-  stopFx()
-  await nextTick()
-  const cards = section.value?.querySelectorAll<HTMLElement>('.kd-win') ?? []
-  loops = await Promise.all(
-    [...cards].map((card, i) => {
-      const w = wins.value[i]
-      const img = card.querySelector<HTMLElement>('.kd-art img')
-      return w ? fx.at('kdTrophy', img, 1.45, true, { color: RARITY_HEX[w.win.item.rarity], level: w.rank === 1 ? 3 : 2 }) : null
-    }),
-  )
-}
-const onScreen = ref(false)
-useIntersectionObserver(section, ([e]) => (onScreen.value = !!e?.isIntersecting))
-watch([onScreen, () => wins.value.length, isLg], ([on, n]) => (on && n ? startFx() : stopFx()))
-onBeforeUnmount(stopFx)
+
 </script>
 
 <template>
-  <section v-if="wins.length" ref="section" class="flex flex-col gap-2 lg:gap-3">
+  <section v-if="wins.length" class="flex flex-col gap-2 lg:gap-3">
     <div class="flex items-center gap-2">
       <UiIcon name="fire" :size="20" class="text-brand-light" />
       <h2 class="type-16-caps lg:type-20-caps">{{ $t('wins.title') }}</h2>
@@ -53,8 +29,6 @@ onBeforeUnmount(stopFx)
     </div>
     <!-- the room above is what the skins break out by, no more -->
     <div class="relative flex flex-col gap-3 pt-2 lg:grid lg:grid-cols-3 lg:gap-4 lg:pt-4">
-      <!-- the sparkle's canvas, over the cards (pointer-free) -->
-      <div ref="fxHost" class="pointer-events-none absolute -inset-4 z-[3]" aria-hidden="true" />
       <NuxtLink
         v-for="(p, i) in wins"
         :key="p.win.id"
@@ -67,6 +41,8 @@ onBeforeUnmount(stopFx)
         <!-- the skin stands on its shadow in the left half and breaks out over the card's top edge -->
         <div class="kd-win-stage relative self-stretch">
           <span class="kd-win-shadow absolute" aria-hidden="true" />
+          <span class="kd-win-galaxy absolute" aria-hidden="true" />
+          <span class="kd-win-galaxy is-inner absolute" aria-hidden="true" />
           <ItemArt :image="p.win.item.image" :rarity="p.win.item.rarity" :size="artSize()" float class="kd-win-art relative w-full" />
         </div>
         <div class="relative z-[2] flex min-w-0 flex-col items-start gap-1 lg:gap-1.5">
@@ -94,13 +70,49 @@ onBeforeUnmount(stopFx)
 </template>
 
 <style scoped>
+/* the galaxy's faint outer arms stay inside the card */
+.kd-win {
+  overflow: hidden;
+}
 /* the card: lit from the skin — the rarity's light spreads from behind it to the left, over a lifted ground */
 .kd-win {
   background:
-    radial-gradient(40% 90% at 25% 42%, color-mix(in srgb, var(--rc) 18%, transparent), transparent 75%),
     linear-gradient(100deg, color-mix(in srgb, var(--rc) 10%, var(--color-neutral-3)), var(--color-neutral-3) 55%, var(--color-neutral-2));
   animation: kd-win-in var(--dur-slow) var(--ease-out) backwards;
   animation-delay: calc(var(--i) * 70ms);
+}
+/* the galaxy: the spiral mask filled with the rarity's colour (white-hot at the core), two layers turning slowly at
+   different speeds; it replaces the art's own glow here */
+.kd-win-galaxy {
+  top: 50%;
+  left: 50%;
+  width: 145%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--rc) 55%, #fff) 0%, color-mix(in srgb, var(--rc) 85%, #fff) 25%, var(--rc) 55%);
+  mask: url('/img/fx/swirl.webp') center / contain no-repeat;
+  opacity: 0.95;
+  animation: kd-galaxy 48s linear infinite;
+  pointer-events: none;
+}
+.kd-win-galaxy.is-inner {
+  width: 90%;
+  opacity: 0.6;
+  rotate: 60deg;
+  animation-duration: 30s;
+}
+@keyframes kd-galaxy {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kd-win-galaxy {
+    animation: none;
+  }
+}
+.kd-win :deep(.kd-art-glow) {
+  display: none;
 }
 /* the rarity shape stands out from the card's light (same hue, so it needs the contrast) */
 .kd-win :deep(.kd-art-star) {
@@ -120,7 +132,6 @@ onBeforeUnmount(stopFx)
 }
 .kd-win.is-first {
   background:
-    radial-gradient(40% 90% at 25% 42%, color-mix(in srgb, var(--color-gold) 20%, transparent), transparent 75%),
     linear-gradient(100deg, color-mix(in srgb, var(--color-gold) 13%, var(--color-neutral-3)), var(--color-neutral-3) 55%, var(--color-neutral-2));
 }
 .kd-win.is-first::after {

@@ -120,7 +120,7 @@ function onArtLeave() {
       <!-- a limited case: a burning plate on the art's foot. The plate is its own gauge: the fire-coloured part is
            what is left of the stock, the rest is burnt-out ember. Sold out, it goes cold and grey. -->
       <span v-if="stock" class="absolute bottom-1 left-1/2 z-[2] -translate-x-1/2">
-        <FxFire :on="!stock.out" effect="kdBlaze" :spread="stock.low ? 2 : 1.6">
+        <FxFire :on="!stock.out" effect="kdBlaze" :spread="stock.low ? 1.6 : 1.3">
           <span class="kd-stock type-12-caps relative z-[2] inline-flex h-6 items-center overflow-hidden rounded-md px-2 whitespace-nowrap tabular-nums" :class="[stock.low && 'is-low', stock.out && 'is-out']">
             <span v-if="!stock.out" class="kd-stock-fill absolute inset-0" :style="{ transform: `scaleX(${Math.max(0.06, stock.share)})` }" />
             <span class="relative flex items-center gap-1">

@@ -458,7 +458,8 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     </svg>
 
     <!-- Horizontal (x1): the strip clips itself (the frame no longer does) -->
-    <div v-if="horizontal" class="absolute inset-0 overflow-hidden rounded-[20px]">
+    <!-- the window fades out at its top and bottom edges: a reveal growing past them dissolves instead of being cut -->
+    <div v-if="horizontal" class="kd-reel-window absolute inset-0 overflow-hidden rounded-[20px]">
     <div :ref="(el) => (tracks = el ? [el as HTMLElement] : [])" class="kd-reel-track absolute inset-y-0 left-0 flex items-center" :class="phase === 'spinning' && 'will-change-transform'">
       <div
         v-for="(it, i) in strips[0]"
@@ -664,6 +665,9 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     transform var(--dur-slow) var(--ease-spring),
     filter var(--dur-slow) var(--ease-out);
 }
+.kd-reel-window {
+  mask-image: linear-gradient(180deg, transparent, #000 26px, #000 calc(100% - 26px), transparent);
+}
 .kd-reel-card {
   contain: layout style;
 }
@@ -776,40 +780,10 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   opacity: 1;
   transform: scale(1.18) translateY(-18px);
   z-index: 1;
-  animation: kd-win-flash 700ms var(--ease-out);
 }
-/* The drop flares bright for a beat as it lands */
-@keyframes kd-win-flash {
-  0% {
-    filter: brightness(2.2) saturate(1.4);
-  }
-  100% {
-    filter: none;
-  }
-}
-/* Rare wins get a ring of light that breathes once. */
-.kd-reel-card[data-win]::after {
-  content: '';
-  position: absolute;
-  inset: 10%;
-  border-radius: 9999px;
-  background: radial-gradient(circle, rgb(255 255 255 / 0.12), transparent 65%);
-  animation: kd-win-pulse 1.4s var(--ease-out) both;
-  pointer-events: none;
-}
-@keyframes kd-win-pulse {
-  0% {
-    opacity: 0;
-    transform: scale(0.6);
-  }
-  30% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.6);
-  }
-}
+/* No brightness flash and no white ring on the landing any more: the flash (a filter on the whole card) cut the
+   rarity reveal off flat at the card's edges, and the white ring muddied the rarity's own colour. The landing beat
+   is the rarity shape popping (ItemArt reveal). */
 
 /* Skin.club "rouletteDropFloat": the case levitates and its shadow grows softer as it rises */
 .kd-reel-case {
