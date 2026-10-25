@@ -7,8 +7,8 @@ import type { BigWinsResponse } from '#shared/types/api'
 // multiplier as the headline, the price, the skin and who won it, each on its own line with air between.
 // Desktop: #1, #2, #3 in one row, the cards one height, the winner's golden, its multiplier burning.
 // Phones: a short leaderboard — #1, #2, #3 one under another, the same card at full width.
-// Behind each skin its rarity shape pulses: copies of the shape keep coming out of it, growing and fading away
-// (transform and opacity only).
+// Behind each skin a fire in its rarity's colour (the stock plate's kdBlaze, recoloured): licks and embers rise from
+// under the skin. Its own Forge layer between the cards' ground and their skin and text; it burns only on screen.
 // The room above the cards is only what the skins break out by. Each card links to where the drop came from.
 const { data } = useFetch<BigWinsResponse>('/api/wins/today', { key: 'wins-today', lazy: true, server: false })
 const wins = computed(() => (data.value?.wins ?? []).slice(0, 3).map((win, k) => ({ win, rank: k + 1 })))
@@ -16,6 +16,8 @@ const isLg = useMediaQuery('(min-width: 1024px)')
 // big enough to fill the left half (the picture is 1⅔ × the size): it stands in the card on its shadow and breaks
 // out over the top edge by about a quarter
 const artSize = () => (isLg.value ? 106 : 62)
+const fxHost = useTemplateRef<HTMLElement>('fxHost')
+provideForge(fxHost)
 
 
 
@@ -30,6 +32,8 @@ const artSize = () => (isLg.value ? 106 : 62)
     </div>
     <!-- the room above is what the skins break out by, no more -->
     <div class="relative flex flex-col gap-3 pt-2 lg:grid lg:grid-cols-3 lg:gap-4 lg:pt-4">
+      <!-- the fire's canvas: over the cards' ground (z 1), under their skin and text (z 2) -->
+      <div ref="fxHost" class="pointer-events-none absolute inset-0 z-[1]" aria-hidden="true" />
       <NuxtLink
         v-for="(p, i) in wins"
         :key="p.win.id"
@@ -42,8 +46,8 @@ const artSize = () => (isLg.value ? 106 : 62)
         <!-- the skin stands on its shadow in the left half and breaks out over the card's top edge -->
         <div class="kd-win-stage relative z-[2] self-stretch">
           <span class="kd-win-shadow absolute" aria-hidden="true" />
-          <!-- the pulse: copies of the rarity shape leaving it, one after another -->
-          <span v-for="k in 3" :key="k" class="kd-rarity-star kd-win-echo absolute" :style="{ '--size': `${artSize() * 0.75}px`, '--k': k }" aria-hidden="true" />
+          <!-- the fire: its base line on the skin's lower edge, licks rising behind it -->
+          <span class="kd-win-fire absolute"><FxFire effect="kdBlaze" :color="RARITY_HEX[p.win.item.rarity]" :spread="1.25" class="w-full"><span class="block h-2 w-full" /></FxFire></span>
           <ItemArt :image="p.win.item.image" :rarity="p.win.item.rarity" :size="artSize()" float class="kd-win-art relative w-full" />
         </div>
         <div class="relative z-[2] flex min-w-0 flex-col items-start gap-1 lg:gap-1.5">
@@ -73,9 +77,7 @@ const artSize = () => (isLg.value ? 106 : 62)
 <style scoped>
 /* the card: lit from the skin — the rarity's light spreads from behind it to the left, over a lifted ground */
 .kd-win {
-  /* the pulse's copies fade out inside the card */
-  overflow: hidden;
-  background:
+    background:
     linear-gradient(100deg, color-mix(in srgb, var(--rc) 10%, var(--color-neutral-3)), var(--color-neutral-3) 55%, var(--color-neutral-2));
   animation: kd-win-in var(--dur-slow) var(--ease-out) backwards;
   animation-delay: calc(var(--i) * 70ms);
@@ -83,49 +85,11 @@ const artSize = () => (isLg.value ? 106 : 62)
 .kd-win :deep(.kd-art-glow) {
   display: none;
 }
-/* the pulse, one beat every 2 s: the shape shrinks a little, swells back and a copy leaves it at that moment, growing
-   to twice its size and fading over 6 s (three copies, a beat apart); the cards are offset so they don't beat together */
-.kd-win :deep(.kd-art-star) {
-  animation: kd-win-beat 2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  animation-delay: calc(var(--i) * 0.5s);
-}
-@keyframes kd-win-beat {
-  0%,
-  100% {
-    transform: translate(-50%, -50%) scale(1.08);
-  }
-  70% {
-    transform: translate(-50%, -50%) scale(0.92);
-  }
-}
-.kd-win-echo {
-  /* the copies leave the shape as it stands: the same centre and the same tilt as the art (kd-win-art) */
-  --tilt: -12deg;
-  top: 50%;
-  left: 50%;
-  width: var(--size);
-  height: var(--size);
-  opacity: 0;
-  animation: kd-win-echo 6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-  animation-delay: calc(var(--k) * 2s + var(--i) * 0.5s);
-}
-@keyframes kd-win-echo {
-  0% {
-    opacity: 0.55;
-    transform: translate(-50%, -50%) rotate(var(--tilt)) scale(1.08);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) rotate(var(--tilt)) scale(2.1);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .kd-win-echo {
-    display: none;
-  }
-  .kd-win :deep(.kd-art-star) {
-    animation: none;
-  }
+/* the fire sits along the skin's lower edge, the width of the stage */
+.kd-win-fire {
+  left: 8%;
+  right: 8%;
+  bottom: 22%;
 }
 /* the rarity shape stands out from the card's light (same hue, so it needs the contrast) */
 .kd-win :deep(.kd-art-star) {

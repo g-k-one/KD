@@ -377,21 +377,35 @@ export function defineKdEffects(engine: Engine) {
     atlas: 'kd',
     // a slower burn: the licks and embers rise at 70% speed
     rate: 0.7,
-    init: (s) => Object.assign(s, { em: [] as Particle[], lick: [] as Particle[] }),
+    // opts.color: burn in that colour (a rarity's) — the licks in it and a hotter version of it, embers likewise
+    init(s) {
+      const o = (s as State & { o: { color?: string } }).o
+      const c = o.color ? hexToRgb(o.color) : null
+      const hot = c ? c.map((v) => v * 0.45 + 0.55) : null
+      Object.assign(s, {
+        em: [] as Particle[],
+        lick: [] as Particle[],
+        cEm: c ? [c, hot] : [ORANGE, AMBER],
+        cLick: c ? [c.map((v) => v * 0.9), hot!.map((v) => v * 0.95)] : [[1, 0.42, 0.08], [1, 0.62, 0.18]],
+        cGlow: c ?? ORANGE,
+      })
+    },
     update(s, dt, at) {
       const { R } = h
+      const em = s.cEm as Rgb[]
+      const lick = s.cLick as Rgb[]
       h.emit(s.acc, 1, 44, dt, () =>
-        h.spawn(s.em as Particle[], { x: R(50, 310), y: R(270, 300), vx: R(-16, 16), vy: R(-240, -130), sway: R(10, 26), size: R(18, 32), life: R(0.6, 1.1), cells: [at.map.ember], add: 1, tint: Math.random() < 0.5 ? ORANGE : AMBER, fadeIn: 0.08, fadeOut: 0.7 }),
+        h.spawn(s.em as Particle[], { x: R(50, 310), y: R(270, 300), vx: R(-16, 16), vy: R(-240, -130), sway: R(10, 26), size: R(18, 32), life: R(0.6, 1.1), cells: [at.map.ember], add: 1, tint: Math.random() < 0.5 ? em[0] : em[1], fadeIn: 0.08, fadeOut: 0.7 }),
       )
       // the licks start on the plate's top edge and climb well over it, so the fire shows above the plate, not behind it
       h.emit(s.acc, 2, 22, dt, () =>
-        h.spawn(s.lick as Particle[], { x: R(80, 280), y: R(262, 282), vy: R(-150, -90), size: R(90, 150), stretch: 1.9, sc: [[0, 0.45], [0.3, 1], [1, 0.25]], life: R(0.4, 0.7), cells: [at.map.glow], add: 1, alpha: 0.75, tint: Math.random() < 0.5 ? [1, 0.42, 0.08] : [1, 0.62, 0.18], fadeIn: 0.2, fadeOut: 0.6 }),
+        h.spawn(s.lick as Particle[], { x: R(80, 280), y: R(262, 282), vy: R(-150, -90), size: R(90, 150), stretch: 1.9, sc: [[0, 0.45], [0.3, 1], [1, 0.25]], life: R(0.4, 0.7), cells: [at.map.glow], add: 1, alpha: 0.75, tint: Math.random() < 0.5 ? lick[0] : lick[1], fadeIn: 0.2, fadeOut: 0.6 }),
       )
       h.step(s.em as Particle[], dt)
       h.step(s.lick as Particle[], dt)
     },
     render(s, c) {
-      h.sprite(c, 180, 292, 440, 0, 0.62 + 0.1 * Math.sin(s.t * 8), 1, c.at.map.glow!, 0.3, ORANGE)
+      h.sprite(c, 180, 292, 440, 0, 0.62 + 0.1 * Math.sin(s.t * 8), 1, c.at.map.glow!, 0.3, s.cGlow as Rgb)
       h.draw(c, s.lick as Particle[])
       h.draw(c, s.em as Particle[])
     },

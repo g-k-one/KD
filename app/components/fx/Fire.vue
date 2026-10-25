@@ -8,7 +8,8 @@ import { FORGE_KEY, type ForgeLayer, type ForgeHandle } from '~/composables/useF
  * embers rise from its whole width. Draws on the nearest provided Forge layer (provideForge on the
  * section) so it stays under the sticky header and behind the label text. Runs only while on screen.
  */
-const props = withDefaults(defineProps<{ effect?: string; spread?: number; on?: boolean }>(), { effect: 'kdBurn', spread: 1.35, on: true })
+// color: burn in that colour (effects that take opts.color, e.g. kdBlaze in a rarity's colour)
+const props = withDefaults(defineProps<{ effect?: string; spread?: number; on?: boolean; color?: string }>(), { effect: 'kdBurn', spread: 1.35, on: true })
 const root = useTemplateRef<HTMLElement>('root')
 const box = useTemplateRef<HTMLElement>('box')
 const { width: w, height: h } = useElementSize(root)
@@ -20,7 +21,7 @@ let want = false
 async function start() {
   want = true
   if (handle || !box.value || !props.on) return
-  const hd = await fx.play(props.effect, { el: box.value, loop: true })
+  const hd = await fx.play(props.effect, { el: box.value, loop: true, ...(props.color ? { color: props.color } : {}) })
   // Scrolled away while the engine was loading
   if (!want) hd?.kill()
   else handle = hd
