@@ -70,7 +70,7 @@ const bubble = computed(() => `hero.poke${Math.min(pecks.value, PECKS - 1)}`)
     <!-- Mobile: art sits in the flow above the text -->
     <div class="relative -mx-4 -mt-4 mb-2 h-28 overflow-hidden sm:hidden">
       <button ref="artMobile" type="button" class="kd-hero-poke absolute -top-2 left-1" :aria-label="$t('hero.pokeLabel')" @click="poke">
-        <span :key="jolt" class="kd-hero-jolt block" :class="jolt && 'is-on'">
+        <span :key="jolt" class="kd-hero-jolt block" :class="jolt > 0 && 'is-on'">
           <img src="/img/brand/hero-mascot.webp" alt="" class="h-36 w-auto max-w-none" draggable="false" />
         </span>
       </button>
@@ -93,7 +93,7 @@ const bubble = computed(() => `hero.poke${Math.min(pecks.value, PECKS - 1)}`)
     <!-- Desktop art: bob (idle) → lean (pointer) → jolt (tap), one wrapper each so they never fight -->
     <div class="kd-hero-bob pointer-events-none absolute top-[calc(50%-3.5px)] right-0 hidden sm:block lg:right-[31px]">
       <button ref="art" type="button" class="kd-hero-poke kd-hero-lean pointer-events-auto block" :aria-label="$t('hero.pokeLabel')" @click="poke">
-        <span :key="jolt" class="kd-hero-jolt block" :class="jolt && 'is-on'">
+        <span :key="jolt" class="kd-hero-jolt block" :class="jolt > 0 && 'is-on'">
           <img
             src="/img/brand/hero-mascot.webp"
             alt=""
