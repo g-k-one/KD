@@ -8,6 +8,7 @@ import { goldenChicken, KURWA_CHICKEN_ID } from '#shared/kurwadrop'
  * On phones x2–x5 become a grid of mini reels (2 or 3 per row, 2 rows max for x4/x5).
  * The reel keeps one height for x1–x5 (278 desktop, 272 phone); rows split that height.
  * Idle, a "Try free" pill sits on the stage under the case: the demo spin belongs to the reel it spins.
+ * After a demo spin the same pill stands where Sell would be (under the middle reel for x2–x5), for another go.
  * so every result keeps room for its name and Sell button.
  *
  * Motion (docs/motion.md → Reel):
@@ -36,6 +37,8 @@ const props = defineProps<{
   fast?: boolean
 }>()
 const emit = defineEmits<{ sell: [uid: string]; demo: []; share: [item: InventoryItem] }>()
+// after a demo spin of several cases, "Try free" again sits once, under the middle reel
+const tryCol = computed(() => Math.floor((props.results.length - 1) / 2))
 
 const sfx = useSfx()
 const haptics = useHaptics()
@@ -543,6 +546,19 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
               >
                 <template v-if="!(compact || isMobile)">{{ $t('share.share') }}</template>
               </UiButton>
+              <UiButton
+                v-if="phase === 'result' && demo && tryFree && col === tryCol"
+                variant="secondary"
+                size="s"
+                icon="demo"
+                :icon-only="compact || isMobile"
+                :aria-label="$t('case.tryFree')"
+                class="max-sm:h-7 max-sm:w-7"
+                @click.stop="emit('demo')"
+              >
+                <!-- a mini reel on a phone is too narrow for the label: the icon, like Share -->
+                <template v-if="!(compact || isMobile)">{{ $t('case.tryFree') }}</template>
+              </UiButton>
               </div>
             </div>
           </Transition>
@@ -589,6 +605,8 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
             <UiButton variant="secondary" size="s" icon="upgrade" :to="`/upgrade?item=${results[0].uid}&from=${data.slug}`">{{ $t('upgrade.upgrade') }}</UiButton>
             <UiButton v-if="results[0].price >= data.price" variant="secondary" size="s" icon="share" @click="emit('share', results[0])">{{ $t('share.share') }}</UiButton>
           </div>
+          <!-- a demo drop: nothing to sell, so another free go stands in its place -->
+          <UiButton v-else-if="tryFree" variant="secondary" size="s" icon="demo" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
         </div>
       </Transition>
     </div>
