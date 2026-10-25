@@ -77,7 +77,11 @@ async function create() {
     await navigateTo(`/pvp/${res.battle.id}`)
   } catch (e) {
     if ((e as { statusCode?: number }).statusCode === 402) ui.openDeposit()
-    else toast.error(e, t('common.error'))
+    else {
+      console.error('[pvp create]', e)
+      // an error that is not the API's (the page after create failing to open) still says what it was
+      toast.error(e, e instanceof Error && e.message ? e.message : t('common.error'))
+    }
   } finally {
     creating.value = false
   }

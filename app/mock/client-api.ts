@@ -96,6 +96,9 @@ export async function handleMockRequest(
       // Same shape as an ofetch FetchError so UI error handling works in both modes
       throw Object.assign(new Error(e.message), { statusCode: e.statusCode, statusMessage: e.message, data: { message: e.message } })
     }
-    throw e
+    // a bug in the mock itself: say what broke (the toast shows it) instead of a bare "Something went wrong"
+    console.error('[mock]', method, path, e)
+    const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e)
+    throw Object.assign(new Error(msg), { statusCode: 500, statusMessage: msg, data: { message: `${path} — ${msg}` } })
   }
 }
