@@ -827,12 +827,13 @@ function dailyLadder() {
   const { tiers, levelsPerTier } = adminSettings.bonuses.daily
   return tiers.map((t, tier) => {
     const best = t.itemIds.map((id) => byId(id)).filter((i): i is Item => !!i).reduce((b, i) => (i.price > b.price ? i : b))
-    return { tier, fromLevel: tier === 0 ? 1 : (tier + 1) * levelsPerTier, value: t.price, best: histItem(best) }
+    // every tier's contents too, so the Bonuses page can show what the next tiers hold
+    return { tier, fromLevel: tier === 0 ? 1 : (tier + 1) * levelsPerTier, value: t.price, best: histItem(best), items: dailyCaseFor(tier).items }
   })
 }
 
-function dailyCase(): CaseDetails {
-  const tier = dailyTier()
+const dailyCase = () => dailyCaseFor(dailyTier())
+function dailyCaseFor(tier: number): CaseDetails {
   let cs = dailyCache.get(tier)
   if (!cs) {
     const t = adminSettings.bonuses.daily.tiers[tier]!

@@ -508,6 +508,8 @@ export interface DailyInfo {
 
 export interface DailyStep {
   tier: number
+  /** What this tier's case holds (the current tier's is the daily case itself) */
+  items: CaseDetails['items']
   /** The level this tier starts at */
   fromLevel: number
   /** What this tier's case is worth (coin cents): it grows tier by tier */

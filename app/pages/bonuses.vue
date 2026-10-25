@@ -68,6 +68,23 @@ async function sell(uid: string) {
 }
 const tierNames = ['I', 'II', 'III', 'IV']
 
+// The contents can show any tier: the player's own by default, the others to see what levels bring (locked ones
+// say from which level). Tapping a step of the level's ladder opens its tier here too.
+const isSm = useMediaQuery('(min-width: 640px)')
+const viewTier = ref<number | null>(null)
+watch(() => daily.value?.tier, () => (viewTier.value = null))
+const shownTier = computed({ get: () => viewTier.value ?? daily.value?.tier ?? 0, set: (v: number) => (viewTier.value = v) })
+const tierOptions = computed(() =>
+  (daily.value?.ladder ?? []).map((st) => ({ value: st.tier, label: t('bonus.tier', { tier: tierNames[st.tier] }), icon: st.tier > daily.value!.tier ? 'lock' : undefined })),
+)
+const shownStep = computed(() => daily.value?.ladder?.find((st) => st.tier === shownTier.value) ?? null)
+const contents = computed(() => (welcome.value || !shownStep.value || shownTier.value === daily.value?.tier ? freeCase.value?.items : shownStep.value.items) ?? [])
+const contentsEl = useTemplateRef<HTMLElement>('contentsEl')
+function peekTier(tier: number) {
+  shownTier.value = tier
+  contentsEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 // the drop chances on the case's contents
 const chance = (tickets: number) => {
   const p = tickets / 10_000
@@ -180,12 +197,14 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
         <div class="flex flex-col gap-2">
           <span class="type-14">{{ $t('bonus.levelsGive') }}</span>
           <ol class="grid grid-cols-4 gap-2">
-            <li
-              v-for="st in daily.ladder ?? []"
-              :key="st.tier"
-              class="kd-step relative flex min-w-0 flex-col items-center gap-1 rounded-2xl px-1.5 pt-1.5 pb-2 text-center"
+            <li v-for="st in daily.ladder ?? []" :key="st.tier" class="flex min-w-0">
+            <!-- a step opens its tier's contents below -->
+            <button
+              type="button"
+              class="kd-step kd-press relative flex w-full min-w-0 flex-col items-center gap-1 rounded-2xl px-1.5 pt-1.5 pb-2 text-center"
               :class="st.tier === daily.tier ? 'is-now' : st.tier < daily.tier ? 'is-done' : 'is-locked'"
               :style="{ '--rc': RARITY_COLOR[st.best.rarity] }"
+              @click="peekTier(st.tier)"
             >
               <ItemArt :image="st.best.image" :rarity="st.best.rarity" :size="40" class="w-full" :dim="st.tier > daily.tier" />
               <span class="type-12-caps">{{ $t('bonus.tier', { tier: tierNames[st.tier] }) }}</span>
@@ -193,6 +212,8 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
               <!-- the tier's worth: it grows step by step (the best skins don't, tier to tier) -->
               <UiPrice :amount="st.value" size="xs" />
               <UiIcon v-if="st.tier < daily.tier" name="check-circle" :size="14" class="absolute top-1.5 right-1.5 text-success" />
+              <UiIcon v-else-if="st.tier > daily.tier" name="lock" :size="14" class="absolute top-1.5 right-1.5 text-neutral-11" />
+            </button>
             </li>
           </ol>
           <p class="type-12-regular text-neutral-11">
@@ -229,9 +250,27 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
           </div>
         </div>
       </div>
-      <UiSectionHeader :title="$t('case.contents')" />
-      <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-3">
-        <ItemDropCard v-for="it in freeCase.items" :key="it.id" :item="it" :chance="chance(it.tickets)" />
+      <!-- the contents, by tier: the switch shows that the case changes with the level and what each tier holds -->
+      <div ref="contentsEl" class="flex scroll-mt-24 flex-col gap-3">
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <h2 class="type-20-caps flex-1 text-neutral-15">{{ $t('case.contents') }}</h2>
+          <UiSegmented v-if="!welcome && tierOptions.length" v-model="shownTier" :options="tierOptions" size="s" class="max-sm:w-full" :block="!isSm" />
+        </div>
+        <!-- what the shown tier is to the player, in one line -->
+        <p v-if="!welcome && shownStep" class="type-14-regular flex items-center gap-2 text-neutral-12">
+          <template v-if="shownStep.tier === daily.tier">
+            <UiIcon name="check-circle" :size="18" class="shrink-0 text-success" />{{ $t('bonus.tierYours') }}
+          </template>
+          <template v-else-if="shownStep.tier > daily.tier">
+            <UiIcon name="lock" :size="18" class="shrink-0 text-neutral-11" />{{ $t('bonus.tierLocked', { n: shownStep.fromLevel, left: shownStep.fromLevel - session.user.level, amount: formatCoins(shownStep.value) }, shownStep.fromLevel - session.user.level) }}
+          </template>
+          <template v-else>
+            <UiIcon name="check-circle" :size="18" class="shrink-0 text-neutral-11" />{{ $t('bonus.tierPassed') }}
+          </template>
+        </p>
+        <TransitionGroup tag="div" name="kd-tier" class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-3">
+          <ItemDropCard v-for="it in contents" :key="`${shownTier}-${it.id}`" :item="it" :chance="chance(it.tickets)" />
+        </TransitionGroup>
       </div>
     </section>
 
@@ -244,6 +283,19 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
 </template>
 
 <style scoped>
+/* switching tiers: the new contents rise in, the old ones step out of the grid at once (no height jump) */
+.kd-tier-enter-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+.kd-tier-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.kd-tier-leave-active {
+  display: none;
+}
 /* the ladder: done steps quiet with a check, the player's step lit in the brand colour, the next ones dimmed */
 .kd-step {
   background: var(--color-neutral-3);
