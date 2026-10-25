@@ -505,6 +505,7 @@
     "pickHint": "Tap skins to pick them: sell for coins, upgrade, or withdraw one to Steam.",
     "levelNext": "LVL {n}",
     "skinsAll": "Show all {n}",
+    "stakeOf": "stake {amount}",
     "skinsLess": "Show less",
     "withdrawOne": "Withdraw one skin at a time"
   },

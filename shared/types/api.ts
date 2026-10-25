@@ -352,6 +352,14 @@ export interface PromoResponse {
 
 export type HistoryGame = 'case' | 'upgrade' | 'deposit' | 'sell' | 'withdraw'
 
+/** A skin as the history shows it: its picture, name, rarity and what it was worth then */
+export interface HistoryItem {
+  name: string
+  image: string
+  rarity: Rarity
+  price: number
+}
+
 export interface HistoryEntry {
   id: string
   at: string
@@ -371,6 +379,13 @@ export interface HistoryEntry {
   chance?: number
   roll?: number
   targetPrice?: number
+  /** Cases: the case's picture */
+  caseImage?: string
+  /** Upgrades: the skins put in, and the coins added on top */
+  stake?: HistoryItem[]
+  stakeCoins?: number
+  /** What came out or left: the case's drop, the upgrade's target (won or not), the skin sold or withdrawn */
+  result?: HistoryItem
 }
 
 export interface HistoryResponse {

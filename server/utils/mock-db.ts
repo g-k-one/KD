@@ -19,6 +19,7 @@ import type {
   FeedResponse,
   FiatCurrency,
   HistoryEntry,
+  HistoryItem,
   InventoryItem,
   Item,
   PaymentMethod,
@@ -567,6 +568,11 @@ export function takeForcedBattle(): ForcedBattle {
 }
 
 let historySeq = 0
+/** A skin for a history row */
+const histItem = (i: { weapon: string; skin: string; image: string; rarity: Rarity; price: number }): HistoryItem => ({ name: `${i.weapon} | ${i.skin}`, image: i.image, rarity: i.rarity, price: i.price })
+const catalogItem = (name: string) => CATALOG.find((c) => `${c.weapon} | ${c.skin}` === name)
+const nearestPriced = (cents: number) => CATALOG.reduce((b, c) => (Math.abs(c.price - cents) < Math.abs(b.price - cents) ? c : b))
+
 export function record(e: Omit<HistoryEntry, "id" | "at">) {
   historySeq += 1
   state.history.unshift({ id: `h${historySeq}`, at: new Date().toISOString(), ...e })
@@ -603,10 +609,16 @@ async function ensureSeed() {
     const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString()
     const { serverSeed, serverSeedHash: seedHash, clientSeed } = state.seed
     const ticket = async (n: number) => (await pfTicket(serverSeed, clientSeed, n)).ticket
+    const named = (name: string, price: number): HistoryItem | undefined => {
+      const c = catalogItem(name)
+      return c ? { ...histItem(c), price } : undefined
+    }
+    const classic = CASES.find((c) => c.slug === 'kurwa-classic')?.image
+    const stakeSkin = nearestPriced(6300)
     state.history.push(
-      { id: 'h-s1', at: ago(12), game: 'upgrade', title: 'AWP | Asiimov', bet: 6300, payout: 12000, status: 'won', nonce: 3, seedHash, roll: (await pfRoll(serverSeed, clientSeed, 3)).roll },
-      { id: 'h-s2', at: ago(40), game: 'case', title: 'Kurwa Classic', bet: 1250, payout: 420, status: 'lost', nonce: 2, seedHash, ticket: await ticket(2), drop: 'P250 | Asiimov' },
-      { id: 'h-s3', at: ago(41), game: 'case', title: 'Kurwa Classic', bet: 1250, payout: 2200, status: 'won', nonce: 1, seedHash, ticket: await ticket(1), drop: 'AK-47 | Redline' },
+      { id: 'h-s1', at: ago(12), game: 'upgrade', title: 'AWP | Asiimov', bet: 6300, payout: 12000, status: 'won', nonce: 3, seedHash, roll: (await pfRoll(serverSeed, clientSeed, 3)).roll, stake: [{ ...histItem(stakeSkin), price: 6300 }], result: named('AWP | Asiimov', 12000) },
+      { id: 'h-s2', at: ago(40), game: 'case', title: 'Kurwa Classic', bet: 1250, payout: 420, status: 'lost', nonce: 2, seedHash, ticket: await ticket(2), drop: 'P250 | Asiimov', caseImage: classic, result: named('P250 | Asiimov', 420) },
+      { id: 'h-s3', at: ago(41), game: 'case', title: 'Kurwa Classic', bet: 1250, payout: 2200, status: 'won', nonce: 1, seedHash, ticket: await ticket(1), drop: 'AK-47 | Redline', caseImage: classic, result: named('AK-47 | Redline', 2200) },
       { id: 'h-s4', at: ago(65), game: 'deposit', title: 'BLIK', bet: 0, payout: 5727, status: 'done' },
     )
     state.seed.nonce = 3
@@ -744,7 +756,7 @@ async function roll(cs: CaseDetails, n: number, demo: boolean, kurwadrop: boolea
   }
   if (!demo) {
     drops.forEach((d, k) =>
-      record({ game: 'case', title: cs.name, bet: price, payout: d.price, status: d.price >= price ? 'won' : 'lost', nonce: rolls[k]!.nonce, seedHash: state.seed.serverSeedHash, ticket: rolls[k]!.ticket, drop: `${d.weapon} | ${d.skin}` }),
+      record({ game: 'case', title: cs.name, bet: price, payout: d.price, status: d.price >= price ? 'won' : 'lost', nonce: rolls[k]!.nonce, seedHash: state.seed.serverSeedHash, ticket: rolls[k]!.ticket, drop: `${d.weapon} | ${d.skin}`, caseImage: cs.image, result: histItem(d) }),
     )
   }
   syncSkinsValue()
@@ -758,7 +770,7 @@ export function sellItems(uids: string[]) {
       it.status = 'sold'
       state.user.balance += it.price
       sold.push(it.uid)
-      record({ game: 'sell', title: `${it.weapon} | ${it.skin}`, bet: 0, payout: it.price, status: 'done' })
+      record({ game: 'sell', title: `${it.weapon} | ${it.skin}`, bet: 0, payout: it.price, status: 'done', result: histItem(it) })
     }
   }
   syncSkinsValue()
@@ -781,7 +793,7 @@ export function withdrawItems(uids: string[]) {
   if (!items.length) throw new MockError(400, 'Choose skins to withdraw')
   for (const it of items) {
     it.status = 'withdrawn'
-    record({ game: 'withdraw', title: `${it.weapon} | ${it.skin}`, bet: 0, payout: it.price, status: 'done' })
+    record({ game: 'withdraw', title: `${it.weapon} | ${it.skin}`, bet: 0, payout: it.price, status: 'done', result: histItem(it) })
   }
   syncSkinsValue()
   offerSeq += 1
@@ -931,7 +943,7 @@ export async function upgrade(itemUids: string[], balanceAmount: number, targetI
     if (target.price >= input * 10) pushBigWin({ slug: 'upgrade', name: 'Upgrade', image: '' }, target, input, state.user)
     state.queuedDrops.push(makeDrop({ ...target, itemName: target.weapon, skinName: target.skin, caseSlug: 'upgrade', caseName: 'Upgrade', casePrice: input, userNickname: state.user.nickname }))
   }
-  record({ game: 'upgrade', title: `${target.weapon} | ${target.skin}`, bet: input, payout: win ? target.price : 0, status: win ? 'won' : 'lost', nonce, seedHash: state.seed.serverSeedHash, chance, roll, targetPrice: target.price })
+  record({ game: 'upgrade', title: `${target.weapon} | ${target.skin}`, bet: input, payout: win ? target.price : 0, status: win ? 'won' : 'lost', nonce, seedHash: state.seed.serverSeedHash, chance, roll, targetPrice: target.price, stake: items.map(histItem), stakeCoins: extra || undefined, result: histItem(target) })
   syncSkinsValue()
   return { win, roll, chance, item: won, balance: state.user.balance, nonce, seed: publicSeed() }
 }

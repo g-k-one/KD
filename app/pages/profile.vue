@@ -281,22 +281,41 @@ async function saveTrade() {
               <component
                 :is="h.nonce ? NuxtLink : 'div'"
                 :to="h.nonce ? `/fairness?roll=${h.id}` : undefined"
-                class="kd-hrow flex items-center gap-3 rounded-2xl px-2 py-2"
+                class="kd-hrow grid grid-cols-[40px_minmax(0,1fr)_44px_76px_24px] items-center gap-2.5 rounded-2xl px-1.5 py-2 lg:grid-cols-[44px_minmax(0,1fr)_auto_120px_32px] lg:gap-4 lg:px-2"
                 :class="h.nonce && 'kd-press is-roll'"
               >
-                <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-neutral-4 text-neutral-13">
-                  <UiIcon :name="GAME_ICON[h.game]" :size="18" />
+                <!-- what it was: the case itself, else the game's sign -->
+                <span class="grid size-10 place-items-center rounded-xl bg-neutral-3 text-neutral-13 lg:size-11">
+                  <img v-if="h.caseImage" :src="h.caseImage" alt="" class="size-9 object-contain" loading="lazy" />
+                  <UiIcon v-else :name="GAME_ICON[h.game]" :size="18" />
                 </span>
-                <span class="flex min-w-0 flex-1 flex-col">
-                  <span class="type-14 truncate">{{ $t(`account.games.${h.game}`) }} · <span class="text-neutral-12">{{ h.title }}</span></span>
-                  <span class="type-12-regular text-neutral-11">{{ when(h.at) }} · {{ mult(h) }}</span>
+                <span class="flex min-w-0 flex-col gap-0.5">
+                  <!-- phones: the name on top, the game and the time under it; desktop: game · name, then time · stake · × -->
+                  <span class="type-14 truncate"><span class="max-lg:hidden">{{ $t(`account.games.${h.game}`) }} · </span><span class="lg:text-neutral-12">{{ h.title }}</span></span>
+                  <span class="type-12-regular truncate text-neutral-11">
+                    <span class="lg:hidden">{{ $t(`account.games.${h.game}`) }} · </span>{{ when(h.at) }}<span v-if="h.bet" class="max-lg:hidden"> · {{ $t('account.stakeOf', { amount: formatCoins(h.bet) }) }} · {{ mult(h) }}</span>
+                  </span>
                 </span>
-                <span class="flex flex-col items-end">
-                  <UiPrice :amount="h.payout" :tone="h.status === 'lost' ? 'muted' : 'success'" />
-                  <UiPrice v-if="h.bet" :amount="h.bet" size="xs" tone="muted" />
+                <!-- what went in and what came out: the upgrade's skins → its target, the case → its drop; phones: the result -->
+                <span class="flex items-center gap-1.5">
+                  <template v-if="h.stake?.length || h.stakeCoins">
+                    <span class="flex items-center -space-x-3 max-lg:hidden">
+                      <span v-for="(s, k) in (h.stake ?? []).slice(0, 3)" :key="k" class="kd-hthumb" :style="{ '--rc': RARITY_COLOR[s.rarity] }" :title="s.name">
+                        <ItemArt :image="s.image" :rarity="s.rarity" :size="24" class="w-10" />
+                      </span>
+                      <span v-if="h.stakeCoins" class="kd-hthumb grid place-items-center"><UiCoin :size="18" /></span>
+                    </span>
+                    <UiIcon name="chevron-right" :size="16" class="text-neutral-9 max-lg:hidden" />
+                  </template>
+                  <span v-if="h.result" class="kd-hthumb" :class="h.status === 'lost' && h.game === 'upgrade' && 'is-lost'" :style="{ '--rc': RARITY_COLOR[h.result.rarity] }" :title="h.result.name">
+                    <ItemArt :image="h.result.image" :rarity="h.result.rarity" :size="24" class="w-10" />
+                  </span>
                 </span>
-                <span v-if="h.nonce" class="kd-hrow-check type-12-caps flex shrink-0 items-center gap-1 text-success">
-                  <UiIcon name="shield-check" :size="18" /><span class="max-sm:hidden">{{ $t('fair.check') }}</span>
+                <!-- one amount: what came out (green when it beat the stake) -->
+                <UiPrice :amount="h.payout" :tone="h.status === 'lost' ? 'muted' : 'success'" class="justify-self-end" />
+                <!-- the check, its own quiet column so every row lines up -->
+                <span class="kd-hrow-check grid size-7 place-items-center justify-self-end rounded-lg lg:size-8" :aria-label="h.nonce ? $t('fair.check') : undefined">
+                  <UiIcon v-if="h.nonce" name="shield-check" :size="18" />
                 </span>
               </component>
             </li>
@@ -337,15 +356,32 @@ async function saveTrade() {
   transition: background-color var(--dur-base) var(--ease-out);
 }
 .kd-hrow-check {
-  opacity: 0.6;
-  transition: opacity var(--dur-base) var(--ease-out);
+  color: var(--color-neutral-10);
+  transition:
+    color var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
+}
+/* a skin in a row: a small tile tinted by its rarity; an upgrade's target that was missed is dimmed */
+.kd-hthumb {
+  display: grid;
+  width: 44px;
+  height: 36px;
+  place-items: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--rc, var(--color-neutral-6)) 18%, var(--color-neutral-3));
+  box-shadow: 0 0 0 2px var(--color-neutral-2);
+}
+.kd-hthumb.is-lost {
+  opacity: 0.45;
+  filter: grayscale(0.7);
 }
 @media (hover: hover) {
   .kd-hrow.is-roll:hover {
     background: var(--color-neutral-3);
   }
   .kd-hrow.is-roll:hover .kd-hrow-check {
-    opacity: 1;
+    color: var(--color-success);
+    background: rgb(18 183 106 / 0.12);
   }
 }
 /* the plate is the case page's dock: 24px radius, 12px padding; its chips are 48px high with a 12px radius */

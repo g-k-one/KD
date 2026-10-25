@@ -12,7 +12,8 @@ export default defineNuxtPlugin({
       const url = typeof request === 'string' ? request : (request as Request)?.url
       if (url?.startsWith('/api/')) return handleMockRequest(url, options)
       return original(request as string, options as never)
-    }) as typeof $fetch
+      // through unknown: comparing against $fetch's route-typed signature runs too deep for TypeScript
+    }) as unknown as typeof $fetch
     patched.raw = original.raw
     patched.create = original.create
 
