@@ -814,6 +814,10 @@ async function runUpgrade() {
 .kd-grid-enter-from {
   opacity: 0;
 }
+/* the page's old tiles leave the layout at once: kept in the grid for their leave they doubled its height */
+.kd-grid-leave-active {
+  display: none;
+}
 .kd-search-enter-active,
 .kd-search-leave-active {
   transition:

@@ -22,11 +22,6 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
 <template>
   <div class="kd-art relative" :class="[float && 'is-float', morph && 'is-morph', step >= 3 && 'is-bloom']" :style="{ height: `${size}px`, '--rc': RARITY_COLOR[rarity], '--s': size / 96 }">
     <span class="kd-art-glow absolute top-1/2 left-1/2 rounded-full" />
-    <!-- covert and gold: a galaxy in the rarity's colour opens up behind it all and keeps turning slowly -->
-    <template v-if="step >= 3">
-      <span class="kd-art-galaxy absolute top-1/2 left-1/2" />
-      <span class="kd-art-galaxy is-inner absolute top-1/2 left-1/2" />
-    </template>
     <!-- waves of the rarity shape, behind the skin; each starts a beat after the pop -->
     <span v-for="n in waves" :key="`w${n}`" class="kd-rarity-star kd-art-wave absolute top-1/2 left-1/2" :style="{ animationDelay: `${160 + (n - 1) * 150}ms` }" />
     <span class="kd-rarity-star kd-art-star absolute top-1/2 left-1/2" :class="[reveal && 'is-reveal', step >= 2 && 'is-flash']" />
@@ -124,46 +119,7 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
     transform: translate(-50%, -50%) scale(2.5) rotate(20deg);
   }
 }
-/* covert and gold — depth: a galaxy (the big wins' spiral) opens behind the drop, two layers at different speeds and
-   sizes, and the rarity shape turns in from the side in 3D instead of only growing */
-.kd-art-galaxy {
-  width: calc(230px * var(--s));
-  height: calc(230px * var(--s));
-  background: radial-gradient(circle, color-mix(in srgb, var(--rc) 55%, #fff) 0%, color-mix(in srgb, var(--rc) 85%, #fff) 25%, var(--rc) 55%);
-  mask: url('/img/fx/swirl.webp') center / contain no-repeat;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  animation:
-    kd-galaxy-in 1100ms var(--ease-out) both,
-    kd-galaxy-turn 26s linear 1100ms infinite;
-}
-.kd-art-galaxy.is-inner {
-  width: calc(150px * var(--s));
-  height: calc(150px * var(--s));
-  animation:
-    kd-galaxy-in 900ms var(--ease-out) 120ms both,
-    kd-galaxy-turn 16s linear 1000ms infinite reverse;
-}
-@keyframes kd-galaxy-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.3) rotate(-120deg);
-  }
-  to {
-    opacity: 0.85;
-    transform: translate(-50%, -50%) scale(1) rotate(0deg);
-  }
-}
-@keyframes kd-galaxy-turn {
-  from {
-    opacity: 0.85;
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  to {
-    opacity: 0.85;
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
+/* covert and gold — depth: the rarity shape turns in from the side in 3D instead of only growing */
 .kd-art.is-bloom .kd-art-star.is-reveal {
   animation: kd-star-in-3d 900ms var(--ease-spring) both;
 }
@@ -204,10 +160,6 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
   }
   .kd-art-wave {
     display: none;
-  }
-  .kd-art-galaxy {
-    animation: none;
-    opacity: 0.85;
   }
 }
 .kd-art.is-float .kd-art-img {

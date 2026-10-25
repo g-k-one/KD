@@ -308,4 +308,53 @@ const readout = computed(() =>
 .is-lose .kd-gauge-value {
   color: var(--color-danger);
 }
+/* Lost, around the dial: two thin red rings ripple out from its rim and fade, and a soft red light breathes out
+   once behind it (transform and opacity only) */
+.kd-gauge::before,
+.kd-gauge::after {
+  content: '';
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+}
+.kd-gauge.is-lose::before {
+  box-shadow: 0 0 0 2px rgb(240 68 56 / 0.7);
+  animation: kd-lose-ring 900ms var(--ease-out) 80ms both;
+}
+.kd-gauge.is-lose::after {
+  z-index: -1;
+  background: radial-gradient(closest-side, transparent 72%, rgb(240 68 56 / 0.28) 86%, transparent);
+  animation: kd-lose-glow 1400ms var(--ease-out) both;
+}
+@keyframes kd-lose-ring {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.16);
+  }
+}
+@keyframes kd-lose-glow {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kd-gauge.is-lose::before,
+  .kd-gauge.is-lose::after {
+    animation: none;
+  }
+}
 </style>
