@@ -20,9 +20,12 @@ const router = useRouter()
 const link = computed(() => (import.meta.client ? new URL(router.resolve(`/case/${props.slug}`).href, location.href).href : ''))
 const mult = computed(() => (props.item ? Math.round((props.item.price / props.casePrice) * 10) / 10 : 0))
 
+// A picture from another site (catalog skins on the Steam CDN) is asked for with CORS, so it can't taint the canvas;
+// a host that refuses CORS leaves the card without the skin instead of breaking the export
 const load = (src: string) =>
   new Promise<HTMLImageElement>((res, rej) => {
     const img = new Image()
+    if (/^https?:/.test(src) && new URL(src).origin !== location.origin) img.crossOrigin = 'anonymous'
     img.onload = () => res(img)
     img.onerror = rej
     img.src = src
@@ -48,20 +51,22 @@ async function draw() {
   g.fillStyle = glow
   g.fillRect(0, 0, W, H)
 
-  const [skin, logo] = await Promise.all([load(it.image), load('/img/brand/logo-word.svg').catch(() => null)])
+  const [skin, logo] = await Promise.all([load(it.image).catch(() => null), load('/img/brand/logo-word.svg').catch(() => null)])
   // the skin, as big as the right side holds, slightly tilted; the catalog art is 320×240, so it is scaled up ~2.7×:
   // the browser's best resampling keeps its edges clean
-  g.save()
-  g.imageSmoothingEnabled = true
-  g.imageSmoothingQuality = 'high'
-  g.translate(800, 315)
-  g.rotate(-0.08)
-  const s = Math.min(880 / skin.width, 580 / skin.height)
-  g.shadowColor = 'rgba(0,0,0,0.6)'
-  g.shadowBlur = 40
-  g.shadowOffsetY = 20
-  g.drawImage(skin, (-skin.width * s) / 2, (-skin.height * s) / 2, skin.width * s, skin.height * s)
-  g.restore()
+  if (skin) {
+    g.save()
+    g.imageSmoothingEnabled = true
+    g.imageSmoothingQuality = 'high'
+    g.translate(800, 315)
+    g.rotate(-0.08)
+    const s = Math.min(880 / skin.width, 580 / skin.height)
+    g.shadowColor = 'rgba(0,0,0,0.6)'
+    g.shadowBlur = 40
+    g.shadowOffsetY = 20
+    g.drawImage(skin, (-skin.width * s) / 2, (-skin.height * s) / 2, skin.width * s, skin.height * s)
+    g.restore()
+  }
 
   // left column, centred on the height: logo, multiplier, weapon, skin
   if (logo?.width) g.drawImage(logo, 64, 110, 200, (200 * logo.height) / logo.width)

@@ -6,8 +6,12 @@ Sources (download them into one folder first):
                  (names, rarity, wears, Steam CDN image)
   skinport.json — https://prices.csgotrader.app/latest/skinport.json (Skinport "starting at" prices, USD)
 
-Usage: python scripts/import-cs2-skins.py <folder> [--no-images] [--per-band 40]
+Usage: python scripts/import-cs2-skins.py <folder> [--no-images] [--per-band 40] [--extend]
 Images are saved straight as 320px WebP.
+--extend keeps every skin already in the catalog as it is (id, price, image) and only adds new ones until each band
+holds --per-band skins, so inventories, cases and odds built on the old ones don't shift.
+--remote <dir> points the new skins' images at the Steam CDN (256 px) instead of files in the project; the WebP copies go
+to <dir>, to be uploaded to the artifact's asset store (the artifact can't load pictures from other sites).
 
 Picks --per-band (default 12) well-known skins per price band ($0.05 … $10 000+), one wear each (the cheapest common one
 that has a price), so cases at every price have something to pay out. 1 coin = 1 USD, prices in coin cents.
@@ -44,6 +48,13 @@ POPULAR = ['AK-47', 'AWP', 'M4A4', 'M4A1-S', 'Desert Eagle', 'USP-S', 'Glock-18'
            'P250', 'Five-SeveN', 'MP9', 'MAC-10', 'P90', 'UMP-45', 'Galil AR', 'FAMAS', 'SSG 08', 'Tec-9', 'CZ75-Auto', 'MP7', 'Nova', 'XM1014']
 BANDS = [0.05, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 30000]
 PER_BAND = int(sys.argv[sys.argv.index('--per-band') + 1]) if '--per-band' in sys.argv else 12
+EXTEND = '--extend' in sys.argv
+REMOTE = sys.argv[sys.argv.index('--remote') + 1] if '--remote' in sys.argv else None
+
+slug = lambda t: re.sub(r'[^a-z0-9]+', '-', t.lower().replace('★', '')).strip('-')
+kept = json.load(open('shared/data/cs2-skins.json', encoding='utf8')) if EXTEND else []
+kept_ids = {k['id'] for k in kept}
+row_id = lambda r: slug(f"{r['weapon']}-{r['skin']}")
 
 rows = []
 seen_names = set()
@@ -79,22 +90,28 @@ def rank(r):
 
 chosen = []
 for lo, hi in zip(BANDS, BANDS[1:]):
-    band = sorted([r for r in rows if lo <= r['price'] < hi], key=rank)
+    band = sorted([r for r in rows if lo <= r['price'] < hi and row_id(r) not in kept_ids], key=rank)
+    # skins kept from the catalog already fill part of the band (catalog prices are in coin cents)
+    have = sum(1 for k in kept if lo * 100 <= k['price'] < hi * 100)
     seen = set()
     for r in band:
+        if have >= PER_BAND:
+            break
         if r['weapon'] in seen and len(band) > PER_BAND * 2:
             continue  # spread across weapons when the band is crowded
         seen.add(r['weapon'])
         chosen.append(r)
-        if sum(1 for c in chosen if lo <= c['price'] < hi) >= PER_BAND:
-            break
+        have += 1
 
-slug = lambda t: re.sub(r'[^a-z0-9]+', '-', t.lower().replace('★', '')).strip('-')
-out = []
+out = list(kept)
 os.makedirs('public/img/items/cs2', exist_ok=True)
 for r in sorted(chosen, key=lambda r: -r['price']):
     iid = slug(f"{r['weapon']}-{r['skin']}")
-    path = f'public/img/items/cs2/{iid}.webp'
+    if any(o['id'] == iid for o in out):
+        continue  # two names that slug the same: keep the first
+    path = os.path.join(REMOTE, f'{iid}.webp') if REMOTE else f'public/img/items/cs2/{iid}.webp'
+    if REMOTE:
+        os.makedirs(REMOTE, exist_ok=True)
     if images and not os.path.exists(path):
         try:
             req = urllib.request.Request(r['img'], headers={'User-Agent': 'Mozilla/5.0'})
@@ -105,7 +122,8 @@ for r in sorted(chosen, key=lambda r: -r['price']):
         except Exception as e:  # skip skins whose image fails to download
             print('skip', iid, e)
             continue
-    out.append({'id': iid, 'weapon': r['weapon'].replace('★ ', ''), 'skin': r['skin'], 'rarity': r['rarity'], 'wear': r['wear'], 'image': f'/img/items/cs2/{iid}.webp', 'price': int(round(r['price'] * 100))})
+    image = f"{r['img']}/256fx256f" if REMOTE else f'/img/items/cs2/{iid}.webp'
+    out.append({'id': iid, 'weapon': r['weapon'].replace('★ ', ''), 'skin': r['skin'], 'rarity': r['rarity'], 'wear': r['wear'], 'image': image, 'price': int(round(r['price'] * 100))})
 
 os.makedirs('shared/data', exist_ok=True)
 with open('shared/data/cs2-skins.json', 'w', encoding='utf8') as f:
