@@ -31,6 +31,42 @@ const load = (src: string) =>
     img.src = src
   })
 
+/**
+ * Where the picture's visible pixels reach once it is turned by `tilt` around its centre (the catalog art has empty
+ * margins, so the card's margin is measured from the gun itself); the whole picture when its pixels can't be read
+ */
+function visibleBounds(img: HTMLImageElement, tilt: number) {
+  const cos = Math.cos(tilt)
+  const sin = Math.sin(tilt)
+  const w = img.width
+  const h = img.height
+  let x0 = Infinity
+  let x1 = -Infinity
+  let y0 = Infinity
+  let y1 = -Infinity
+  const take = (x: number, y: number) => {
+    const rx = (x - w / 2) * cos - (y - h / 2) * sin
+    const ry = (x - w / 2) * sin + (y - h / 2) * cos
+    x0 = Math.min(x0, rx)
+    x1 = Math.max(x1, rx)
+    y0 = Math.min(y0, ry)
+    y1 = Math.max(y1, ry)
+  }
+  try {
+    const c = document.createElement('canvas')
+    c.width = w
+    c.height = h
+    const g = c.getContext('2d', { willReadFrequently: true })!
+    g.drawImage(img, 0, 0)
+    const { data } = g.getImageData(0, 0, w, h)
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (data[(y * w + x) * 4 + 3]! > 16) take(x, y)
+  } catch {
+    // a tainted picture: its corners
+  }
+  if (x1 < x0) for (const [x, y] of [[0, 0], [w, 0], [0, h], [w, h]] as const) take(x, y)
+  return { x0, x1, y0, y1 }
+}
+
 async function draw() {
   const it = props.item
   if (!it) return
@@ -41,45 +77,57 @@ async function draw() {
   const font = getComputedStyle(document.body).fontFamily
   const tint = RARITY_HEX[it.rarity]
 
+  // one margin all round, the left column's: the logo sits that far from the top, the skin's name from the bottom,
+  // the skin's visible edge from the right
+  const PAD = 64
+  const [skin, logo] = await Promise.all([load(it.image).catch(() => null), load('/img/brand/logo-word.svg').catch(() => null)])
+  // the skin, as big as the right side holds inside the margin once tilted; the art is 320×240, so it is scaled up
+  // ~2×: the browser's best resampling keeps its edges clean
+  const TILT = -0.08
+  const vis = skin ? visibleBounds(skin, TILT) : null
+  // clear of the left column, whose text is capped at 460 px
+  const left = 560
+  const k = vis ? Math.min((W - PAD - left) / (vis.x1 - vis.x0), (H - PAD * 2) / (vis.y1 - vis.y0)) : 1
+  const cx = vis ? W - PAD - k * vis.x1 : 848
+  const cy = vis ? H / 2 - (k * (vis.y0 + vis.y1)) / 2 : H / 2
+
   // ground: the site's near-black with the drop's rarity glowing behind the skin
   g.fillStyle = '#0c0d10'
   g.fillRect(0, 0, W, H)
-  const glow = g.createRadialGradient(800, 315, 20, 800, 315, 470)
+  const glow = g.createRadialGradient(cx, cy, 20, cx, cy, 470)
   glow.addColorStop(0, `${tint}cc`)
   glow.addColorStop(0.45, `${tint}33`)
   glow.addColorStop(1, '#0c0d1000')
   g.fillStyle = glow
   g.fillRect(0, 0, W, H)
 
-  const [skin, logo] = await Promise.all([load(it.image).catch(() => null), load('/img/brand/logo-word.svg').catch(() => null)])
-  // the skin, as big as the right side holds, slightly tilted; the catalog art is 320×240, so it is scaled up ~2.7×:
-  // the browser's best resampling keeps its edges clean
-  if (skin) {
+  if (skin && vis) {
     g.save()
     g.imageSmoothingEnabled = true
     g.imageSmoothingQuality = 'high'
-    g.translate(800, 315)
-    g.rotate(-0.08)
-    const s = Math.min(880 / skin.width, 580 / skin.height)
+    g.translate(cx, cy)
+    g.rotate(TILT)
     g.shadowColor = 'rgba(0,0,0,0.6)'
     g.shadowBlur = 40
     g.shadowOffsetY = 20
-    g.drawImage(skin, (-skin.width * s) / 2, (-skin.height * s) / 2, skin.width * s, skin.height * s)
+    g.drawImage(skin, (-skin.width * k) / 2, (-skin.height * k) / 2, skin.width * k, skin.height * k)
     g.restore()
   }
 
-  // left column, centred on the height: logo, multiplier, weapon, skin
-  if (logo?.width) g.drawImage(logo, 64, 110, 200, (200 * logo.height) / logo.width)
+  // left column: the logo at the top margin; the multiplier, weapon and skin stacked on the bottom margin
+  // (caps have no descenders, so the last baseline is the text's bottom)
+  if (logo?.width) g.drawImage(logo, PAD, PAD, 200, (200 * logo.height) / logo.width)
+  const base = H - PAD
   g.textBaseline = 'alphabetic'
   g.fillStyle = '#ffc93b'
   g.font = `800 150px ${font}`
-  g.fillText(`x${mult.value}`, 56, 370)
+  g.fillText(`x${mult.value}`, PAD - 8, base - 116)
   g.fillStyle = '#9aa0ad'
   g.font = `600 30px ${font}`
-  g.fillText(it.weapon.toUpperCase(), 64, 432)
+  g.fillText(it.weapon.toUpperCase(), PAD, base - 54)
   g.fillStyle = tint
   g.font = `800 48px ${font}`
-  g.fillText(it.skin.toUpperCase(), 64, 486, 460)
+  g.fillText(it.skin.toUpperCase(), PAD, base, 460)
 
   blob.value = await new Promise<Blob | null>((res) => c.toBlob(res, 'image/png'))
   if (preview.value) URL.revokeObjectURL(preview.value)
