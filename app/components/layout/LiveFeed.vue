@@ -242,6 +242,8 @@ watch(y, (v) => {
 }
 .kd-feed-src {
   color: var(--color-brand-light);
+  /* a dark edge lifts the icon off the skin under it */
+  filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.85));
 }
 .kd-hovercard {
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.6);

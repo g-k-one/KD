@@ -2,9 +2,16 @@
 import type { BigWinsResponse } from '#shared/types/api'
 
 // "Big wins today" (player audit D1): the day's best multipliers, so the home page has heat.
-// Each card links to the case it came from. Desktop: 3 in a row; phones: a swipeable strip.
+// A podium of the top three — #2, #1, #3 — in one row at every width (no strip to swipe, nothing cut off):
+// the winner stands taller, crowned, its multiplier burning; each skin stands on a pedestal of its rarity's light.
+// Each card links to where the drop came from.
 const { data } = useFetch<BigWinsResponse>('/api/wins/today', { key: 'wins-today', lazy: true, server: false })
 const wins = computed(() => (data.value?.wins ?? []).slice(0, 3))
+// podium order: second, first, third (fewer than three: as they come)
+const podium = computed(() => {
+  const w = wins.value.map((win, k) => ({ win, rank: k + 1 }))
+  return w.length === 3 ? [w[1]!, w[0]!, w[2]!] : w
+})
 const isLg = useMediaQuery('(min-width: 1024px)')
 </script>
 
@@ -15,59 +22,107 @@ const isLg = useMediaQuery('(min-width: 1024px)')
       <h2 class="type-16-caps lg:type-20-caps">{{ $t('wins.title') }}</h2>
       <span class="type-12 ml-auto text-neutral-11">{{ $t('wins.window') }}</span>
     </div>
-    <div class="scrollbar-none -mx-4 flex snap-x gap-3 overflow-x-auto px-4 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0">
+    <div class="grid grid-cols-3 items-end gap-2 lg:gap-4">
       <NuxtLink
-        v-for="(w, i) in wins"
-        :key="w.id"
-        :to="sourceLink(w.caseSlug)"
-        class="kd-win kd-press group relative flex w-[78%] shrink-0 snap-start items-center gap-3 overflow-hidden rounded-3xl border p-3 sm:w-[48%] lg:w-auto lg:gap-4 lg:p-4"
-        :style="{ '--rc': RARITY_COLOR[w.item.rarity], '--i': i }"
+        v-for="(p, i) in podium"
+        :key="p.win.id"
+        :to="sourceLink(p.win.caseSlug)"
+        class="kd-win kd-press group relative flex min-w-0 flex-col items-center gap-1 overflow-hidden rounded-3xl border px-2 pt-3 pb-3 lg:gap-2 lg:px-4 lg:pb-4"
+        :class="p.rank === 1 ? 'is-first pt-4 lg:pt-6' : 'lg:pt-4'"
+        :style="{ '--rc': RARITY_COLOR[p.win.item.rarity], '--i': i }"
       >
-        <ItemArt :image="w.item.image" :rarity="w.item.rarity" :size="isLg ? 72 : 60" class="w-22 shrink-0 lg:w-26" />
-        <div class="relative z-[2] flex min-w-0 flex-1 flex-col gap-1">
-          <!-- x and the price share a row; the day's best multiplier burns, the other two stay calm -->
-          <div class="flex items-center justify-between gap-2">
-            <FxFire :on="i === 0" class="min-w-0">
-              <span class="kd-win-x relative z-[2]">x{{ w.multiplier }}</span>
-            </FxFire>
-            <UiPrice :amount="w.item.price" size="m" tone="coin" class="shrink-0" />
-          </div>
-          <span class="type-14 truncate" :style="{ color: 'var(--rc)' }">{{ w.item.weapon }} | {{ w.item.skin }}</span>
-          <span class="type-12-regular flex min-w-0 items-center gap-1.5 text-neutral-11">
-            <span class="grid size-5 shrink-0 place-items-center">
-              <img v-if="sourceOf(w.caseSlug) === 'case'" :src="w.caseImage" alt="" class="size-5 object-contain" />
-              <UiIcon v-else :name="SOURCE_ICON[sourceOf(w.caseSlug) as 'upgrade' | 'pvp']" :size="16" class="text-brand-light" />
-            </span>
-            <span class="truncate">{{ w.caseName }} · {{ w.nickname }} · {{ timeAgo(w.at) }}</span>
-          </span>
-        </div>
+        <!-- the place: a crown for the day's best, a number for the rest -->
+        <span class="kd-win-rank type-10-caps absolute top-2 left-2 flex h-5 items-center gap-0.5 rounded-sm px-1.5 lg:top-3 lg:left-3" :class="`is-${p.rank}`">
+          <UiIcon v-if="p.rank === 1" name="crown" :size="12" />#{{ p.rank }}
+        </span>
+        <!-- the skin on its pedestal of rarity light -->
+        <span class="relative w-full">
+          <span class="kd-win-pedestal pointer-events-none absolute inset-x-0 bottom-0 h-1/2" aria-hidden="true" />
+          <ItemArt
+            :image="p.win.item.image"
+            :rarity="p.win.item.rarity"
+            :size="p.rank === 1 ? (isLg ? 132 : 76) : isLg ? 104 : 64"
+            class="kd-win-art relative w-full"
+          />
+        </span>
+        <FxFire :on="p.rank === 1" class="relative z-[2]">
+          <span class="kd-win-x relative z-[2]" :class="p.rank === 1 && 'is-first'">x{{ p.win.multiplier }}</span>
+        </FxFire>
+        <UiPrice :amount="p.win.item.price" :size="isLg ? 'm' : 's'" tone="coin" />
+        <span class="type-12 lg:type-14 w-full truncate text-center" :style="{ color: 'var(--rc)' }">
+          <span class="max-lg:hidden">{{ p.win.item.weapon }} | </span>{{ p.win.item.skin }}
+        </span>
+        <span class="type-12-regular flex w-full min-w-0 items-center justify-center gap-1 text-neutral-11">
+          <img v-if="sourceOf(p.win.caseSlug) === 'case'" :src="p.win.caseImage" alt="" class="size-4 shrink-0 object-contain lg:size-5" />
+          <UiIcon v-else :name="SOURCE_ICON[sourceOf(p.win.caseSlug) as 'upgrade' | 'pvp']" :size="14" class="shrink-0 text-brand-light" />
+          <span class="truncate">{{ p.win.nickname }}<span class="max-lg:hidden"> · {{ p.win.caseName }}</span> · {{ timeAgo(p.win.at) }}</span>
+        </span>
       </NuxtLink>
     </div>
   </section>
 </template>
 
-
 <style scoped>
 .kd-win {
-  background: linear-gradient(110deg, color-mix(in srgb, var(--rc) 16%, var(--color-neutral-2)), var(--color-neutral-2) 55%);
+  background: var(--color-neutral-2);
   border-color: var(--color-neutral-4);
   animation: kd-win-in var(--dur-slow) var(--ease-out) backwards;
   animation-delay: calc(var(--i) * 70ms);
+}
+/* the winner's card: a gold rim and a warmer ground */
+.kd-win.is-first {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-gold) 14%, var(--color-neutral-2)), var(--color-neutral-2) 70%);
+  border-color: color-mix(in srgb, var(--color-gold) 45%, var(--color-neutral-4));
 }
 @media (hover: hover) {
   .kd-win:hover {
     border-color: color-mix(in srgb, var(--rc) 55%, var(--color-neutral-7));
   }
+  .kd-win:hover .kd-win-art {
+    transform: translateY(-4px) scale(1.04);
+  }
+}
+.kd-win-art {
+  transition: transform var(--dur-slow) var(--ease-spring);
+}
+/* a pool of the rarity's light under the skin, like a spotlight on a podium step */
+.kd-win-pedestal {
+  background: radial-gradient(50% 60% at 50% 100%, color-mix(in srgb, var(--rc) 55%, transparent), transparent 70%);
+}
+.kd-win-rank {
+  z-index: 2;
+  color: var(--color-neutral-13);
+  background: rgb(12 13 16 / 0.72);
+  box-shadow: inset 0 0 0 1px var(--color-neutral-6);
+}
+.kd-win-rank.is-1 {
+  color: #3a2400;
+  background: linear-gradient(180deg, #ffe58a, #f5b82e 55%, var(--color-gold-dark));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5);
 }
 .kd-win-x {
-  font-size: 28px;
-  line-height: 32px;
+  font-size: 20px;
+  line-height: 24px;
   font-weight: 800;
   letter-spacing: -0.01em;
   background: linear-gradient(180deg, var(--color-gold-light), var(--color-brand-bright) 55%, var(--color-brand-base));
   background-clip: text;
   color: transparent;
   filter: drop-shadow(0 2px 8px rgb(255 95 31 / 0.5));
+}
+.kd-win-x.is-first {
+  font-size: 26px;
+  line-height: 30px;
+}
+@media (min-width: 64rem) {
+  .kd-win-x {
+    font-size: 28px;
+    line-height: 32px;
+  }
+  .kd-win-x.is-first {
+    font-size: 40px;
+    line-height: 44px;
+  }
 }
 @keyframes kd-win-in {
   from {

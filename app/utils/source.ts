@@ -9,4 +9,5 @@ export const sourceLink = (slug: string) => {
   return s === 'case' ? `/case/${slug}` : `/${s}`
 }
 
-export const SOURCE_ICON = { upgrade: 'upgrade', pvp: 'pvp' } as const
+// the nav's own symbols, filled: a line icon at 16 px over a skin's art got lost in it
+export const SOURCE_ICON = { upgrade: 'upgrade-fill', pvp: 'pvp-fill' } as const
