@@ -34,7 +34,7 @@ async function startFx() {
     [...cards].map((card, i) => {
       const w = wins.value[i]
       const img = card.querySelector<HTMLElement>('.kd-art img')
-      return w ? fx.at('kdTrophy', img, 2.1, true, { color: RARITY_HEX[w.win.item.rarity], level: w.rank === 1 ? 3 : 2 }) : null
+      return w ? fx.at('kdTrophy', img, 1.45, true, { color: RARITY_HEX[w.win.item.rarity], level: w.rank === 1 ? 3 : 2 }) : null
     }),
   )
 }

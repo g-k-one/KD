@@ -63,6 +63,8 @@ interface Ctx {
 type Def = {
   atlas: string
   period?: number
+  /** the effect's own clock: 0.6 runs everything at 60% speed */
+  rate?: number
   init: (s: State) => void
   update: (s: State, dt: number, at: Atlas) => void
   render: (s: State, c: Ctx) => void
@@ -332,6 +334,8 @@ export function defineKdEffects(engine: Engine) {
   engine.define('kdTrophy', (h) => ({
     // Forge's own atlas: the shader glint is drawn against it (on ours it came out grey), its glow makes the motes
     atlas: 'aura',
+    // slow and calm: an idle shimmer, not a burst
+    rate: 0.55,
     init(s) {
       const o = (s as State & { o: { color?: string; level?: number } }).o
       Object.assign(s, { glints: [] as Particle[], motes: [] as Particle[], tint: o.color ? hexToRgb(o.color) : GOLD, L: o.level ?? 2 })
@@ -344,18 +348,19 @@ export function defineKdEffects(engine: Engine) {
       // glints: a four-point star pops up somewhere on the skin and goes out — the shader's glint when the matter pack
       // is there (crisp), the atlas spark otherwise
       h.emit(s.acc, 1, 1.8 + L * 1.2, dt, () => {
-        const x = 180 + R(-135, 135)
-        const y = 180 + R(-80, 80)
+        // a square around the skin
+        const x = 180 + R(-92, 92)
+        const y = 180 + R(-92, 92)
         if (h.glint) h.glint(s.glints as Particle[], x, y, R(0.55, 1), Math.random() < 0.45 ? [1, 0.98, 0.9] : hot)
         else h.spawn(s.glints as Particle[], { x, y, size: R(16, 28), sc: [[0, 0], [0.35, 1], [1, 0]], life: R(0.55, 0.85), rot: R(0, 6), cells: [at.map['twinkle:W0']!], add: 1, tint: hot, fadeIn: 0.05, fadeOut: 0.4 })
       })
       // motes: soft dots of light drifting up from under the skin, swaying a little
       h.emit(s.acc, 2, 3 + L * 2.2, dt, () =>
         h.spawn(s.motes as Particle[], {
-          x: 180 + R(-125, 125),
-          y: R(215, 260),
-          vx: R(-8, 8),
-          vy: R(-70, -30),
+          x: 180 + R(-88, 88),
+          y: R(230, 268),
+          vx: R(-6, 6),
+          vy: R(-55, -25),
           sway: 10,
           size: R(8, 15),
           life: R(1.2, 2),
