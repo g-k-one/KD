@@ -89,8 +89,9 @@ export function henWarm(base: string) {
     ready ??= make(base)
     ready.catch(() => (ready = null))
   }
-  if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 2000 })
-  else setTimeout(go, 300)
+  // when the page is idle, or after 1.5 s at the latest (some browsers never call idle callbacks in a background tab)
+  const late = setTimeout(go, 1500)
+  if ('requestIdleCallback' in window) requestIdleCallback(() => (clearTimeout(late), go()), { timeout: 1500 })
 }
 function take(base: string) {
   const p = ready ?? make(base)

@@ -12,8 +12,51 @@ function audio() {
   }
 }
 
+// KURWADROP's chicken: recorded sounds in one sprite (public/sfx/hen.mp3, generated in Magnific), [start, length] s
+const HEN: Record<'swap' | 'body' | 'scream' | 'inflate' | 'pop', [number, number]> = {
+  swap: [0, 1],
+  body: [1.2, 1],
+  scream: [2.4, 2],
+  inflate: [4.6, 0.92],
+  pop: [5.714, 1.48],
+}
+let henBuf: Promise<AudioBuffer | null> | null = null
+
 export function useSfx() {
   const settings = useSettingsStore()
+  const base = useRuntimeConfig().app.baseURL || '/'
+
+  /** Loads and decodes the chicken's sprite once (henWarm time, so the hit only plays it) */
+  function henLoad() {
+    const a = audio()
+    if (!a) return Promise.resolve(null)
+    henBuf ??= fetch(`${base.endsWith('/') ? base : `${base}/`}sfx/hen.mp3`)
+      .then((r) => r.arrayBuffer())
+      .then((b) => a.decodeAudioData(b))
+      .catch(() => (henBuf = null))
+    return henBuf
+  }
+  /** Plays one cut of the sprite; false when it is not loaded yet (the caller falls back to the synth) */
+  function hen(name: keyof typeof HEN, len?: number, gain = 1) {
+    const s = settings.settings
+    if (!s.sound || s.volume <= 0) return true
+    const a = audio()
+    if (!a || !henBuf) return false
+    henBuf.then((buf) => {
+      if (!buf) return
+      const [t0, d] = HEN[name]
+      const src = a.createBufferSource()
+      const g = a.createGain()
+      src.buffer = buf
+      const l = Math.min(len ?? d, d)
+      g.gain.setValueAtTime(gain * (s.volume / 100), a.currentTime)
+      g.gain.setValueAtTime(gain * (s.volume / 100), a.currentTime + Math.max(0, l - 0.08))
+      g.gain.linearRampToValueAtTime(0.0001, a.currentTime + l)
+      src.connect(g).connect(a.destination)
+      src.start(0, t0, l)
+    })
+    return true
+  }
 
   function blip(freq: number, duration: number, gain: number, type: OscillatorType = 'triangle') {
     const s = settings.settings
@@ -130,15 +173,19 @@ export function useSfx() {
       sweep(700, 1500, 0.32, 0.12)
       setTimeout(() => sweep(800, 1700, 0.42, 0.12), 260)
     },
+    /** Get the chicken's recorded sounds ready (with henWarm) */
+    henLoad,
     /** KURWADROP's chicken (henShow): the logo zooms in with a rising swish and turns into the head with a bright ting */
     henSwap: () => {
+      if (hen('swap')) return
       swish(500, 4200, 0.13, 0.12)
       setTimeout(() => blip(1760, 0.22, 0.07), 120)
     },
     /** ...its body springs out of the head */
-    henBody: () => glide(220, 560, 0.26, 0.1, 'sine', 14, 40),
+    henBody: () => hen('body', 0.6, 0.8) || glide(220, 560, 0.26, 0.1, 'sine', 14, 40),
     /** ...the scream: a sawtooth "AAAA" through a vowel-like band, rising then shaking (Fast: half as long) */
     henScream: (fast = false) => {
+      if (hen('scream', fast ? 1 : 2)) return
       const dur = fast ? 0.6 : 1.15
       voice(dur, 0.1, (a, t) => {
         const o = a.createOscillator()
@@ -163,9 +210,10 @@ export function useSfx() {
       setTimeout(() => sweep(900, 1800, 0.3, 0.06), 60)
     },
     /** ...the belly stretches: a rubbery squeak rising with a fast tremble */
-    henInflate: (fast = false) => glide(300, 1150, fast ? 0.2 : 0.4, 0.07, 'triangle', 18, 60),
+    henInflate: (fast = false) => hen('inflate', fast ? 0.45 : 0.92, 0.8) || glide(300, 1150, fast ? 0.2 : 0.4, 0.07, 'triangle', 18, 60),
     /** ...the pop: a noise burst, a low thump and a sparkle of coins */
     henPop: () => {
+      if (hen('pop')) return
       swish(5000, 260, 0.38, 0.22, 'lowpass')
       glide(140, 40, 0.28, 0.24, 'sine')
       ;[1320, 1760, 2350].forEach((f, i) => setTimeout(() => blip(f, 0.16, 0.05), 90 + i * 70))

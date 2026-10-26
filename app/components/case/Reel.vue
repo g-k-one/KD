@@ -227,7 +227,15 @@ const henOn = ref(false)
 /** The chicken screams: the reel trembles under it */
 const screaming = ref(false)
 // the chicken gets ready while the page is idle whenever KURWADROP is on, so the hit itself does not hitch
-watch(() => props.kurwadrop, (on) => on && henWarm(appBase), { immediate: true })
+watch(
+  () => props.kurwadrop,
+  (on) => {
+    if (!on) return
+    henWarm(appBase)
+    sfx.henLoad()
+  },
+  { immediate: true },
+)
 const { t } = useI18n()
 
 // Gold drops shake the frame once
@@ -566,7 +574,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
         <!-- Result inside its own reel -->
         <div class="pointer-events-none absolute inset-x-0 flex justify-center px-1 sm:bottom-5" :class="compact ? 'bottom-1.5' : 'bottom-3'">
           <Transition name="kd-result">
-            <div v-if="landed[col] && results[col]" class="pointer-events-auto flex max-w-full min-w-0 flex-col items-center gap-1 sm:gap-2">
+            <div v-if="landed[col] && results[col] && !kurwaCols.includes(col)" class="pointer-events-auto flex max-w-full min-w-0 flex-col items-center gap-1 sm:gap-2">
               <span v-if="!compact" class="type-10-caps sm:type-12-caps max-w-full truncate text-weapon">{{ results[col]!.weapon }}</span>
               <span class="type-12 sm:type-14 max-w-full truncate" :style="{ color: RARITY_COLOR[results[col]!.rarity] }">{{ results[col]!.skin }}</span>
               <div class="flex items-center gap-1.5">
@@ -998,19 +1006,19 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 .kd-reel.is-hen .kd-chicken-hit {
   animation: none;
 }
-/* the Golden Chicken's logo sits well smaller on the reel than the skins (60%; the chicken grows from it, so it follows) */
-.kd-art[data-gold-chicken] .kd-art-img {
-  width: calc(96px * var(--s));
-  height: calc(96px * var(--s));
+/* the Golden Chicken's logo sits well smaller on the reel than the skins (80%; the chicken grows from it, so it follows) */
+.kd-art[data-gold-chicken] :deep(.kd-art-img) {
+  width: calc(128px * var(--s));
+  height: calc(128px * var(--s));
 }
-.kd-chicken-hit.is-hen-out .kd-art-img {
+.kd-chicken-hit.is-hen-out :deep(.kd-art-img) {
   opacity: 0;
   transform: translate(-50%, -50%) scale(var(--hen-zoom, 1.55));
   transition:
     opacity 0s calc(0.12s * var(--hen-k, 1)),
     transform calc(0.12s * var(--hen-k, 1)) cubic-bezier(0.55, 0, 1, 0.45);
 }
-.kd-chicken-hit.is-hen-back .kd-art-img {
+.kd-chicken-hit.is-hen-back :deep(.kd-art-img) {
   animation: kd-hen-back 0.6s var(--ease-spring) both;
 }
 @keyframes kd-hen-back {
