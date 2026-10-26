@@ -611,7 +611,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
             <UiButton v-if="results[0].price >= data.price" variant="secondary" size="s" icon="share" @click="emit('share', results[0])">{{ $t('share.share') }}</UiButton>
           </div>
           <!-- a demo drop: nothing to sell, so another free go stands in its place -->
-          <UiButton v-else-if="tryFree" variant="secondary" size="s" icon="demo" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
+          <UiButton v-else-if="tryFree" variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
         </div>
       </Transition>
     </div>
