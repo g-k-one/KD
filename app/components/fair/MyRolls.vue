@@ -46,9 +46,8 @@ const rows = computed(() =>
   }),
 )
 const sealed = computed(() => rows.value.filter((r) => !r.pair).length)
+const pairOf = (e: HistoryEntry) => rows.value.find((r) => r.e.id === e.id)?.pair ?? null
 
-const spaced = (n: number) => n.toLocaleString('en-US').replace(/,/g, ' ')
-const value = (e: HistoryEntry) => (e.ticket != null ? spaced(e.ticket) : e.roll != null ? e.roll.toFixed(2) : '—')
 
 function verify(r: (typeof rows.value)[number]) {
   if (!r.pair) return
@@ -102,70 +101,17 @@ watch(
         <p class="type-14-regular flex-1 text-neutral-14">{{ $t('fair.sealedHint', { n: sealed }, sealed) }}</p>
         <UiButton variant="fair" size="l" icon="refresh" :loading="rotating" class="shrink-0" @click="emit('rotate')">{{ $t('fair.rotateReveal') }}</UiButton>
       </div>
-      <!-- the same rows as the profile's game history: what it was, what went in and out, the roll's number, and a
-           quiet check at the end; the whole row checks it -->
-      <ul ref="list" class="flex flex-col gap-1 rounded-5xl bg-neutral-2 p-3 lg:p-4">
-        <li v-for="r in rows" :key="r.e.id">
-          <component
-            :is="r.pair ? 'button' : 'div'"
-            :type="r.pair ? 'button' : undefined"
-            class="kd-roll grid w-full grid-cols-[40px_minmax(0,1fr)_28px] items-center gap-2.5 rounded-2xl px-1.5 py-2 text-left lg:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_160px_32px] lg:gap-4 lg:px-3 lg:py-3"
-            :class="{ 'is-focus': r.focus, 'kd-press kd-press-wide is-roll': r.pair }"
-            :aria-label="r.pair ? `${$t('fair.check')}: ${r.e.drop ?? r.e.title}` : undefined"
-            @click="verify(r)"
-          >
-            <span class="grid size-10 place-items-center rounded-xl bg-neutral-3 text-neutral-13 lg:size-12">
-              <img v-if="r.e.caseImage" :src="r.e.caseImage" alt="" class="size-9 object-contain lg:size-10" loading="lazy" />
-              <UiIcon v-else :name="r.e.game === 'upgrade' ? 'upgrade' : 'cases'" :size="18" />
-            </span>
-            <span class="flex min-w-0 flex-col gap-0.5 lg:gap-1">
-              <span class="type-14 truncate"><span class="max-lg:hidden">{{ $t(`account.games.${r.e.game}`) }} · </span><span class="lg:text-neutral-12">{{ r.e.title }}</span></span>
-              <!-- the nonce stays: it is what the verifier needs -->
-              <span class="type-12-regular truncate text-neutral-11">
-                <span class="lg:hidden">{{ $t(`account.games.${r.e.game}`) }} · </span>{{ $t('fair.nonce') }} {{ r.e.nonce }} · {{ timeAgo(r.e.at) }}<span class="lg:hidden"> · {{ value(r.e) }}</span>
-              </span>
-            </span>
-            <HistoryItems :entry="r.e" class="max-lg:hidden" />
-            <!-- the roll's number in one line, where the profile shows the amount -->
-            <span class="type-14 flex items-baseline justify-end gap-1.5 whitespace-nowrap max-lg:hidden">
-              <span class="type-12-regular text-neutral-11">{{ r.e.ticket != null ? $t('fair.ticket') : $t('fair.roll') }}</span>
-              <span class="font-mono tabular-nums">{{ value(r.e) }}</span>
-            </span>
-            <span class="kd-roll-check grid size-7 place-items-center justify-self-end rounded-lg lg:size-8" :class="!r.pair && 'is-sealed'" :title="r.pair ? $t('fair.check') : $t('fair.sealed')">
-              <UiIcon :name="r.pair ? 'shield-check' : 'shield'" :size="18" />
-            </span>
-          </component>
-        </li>
-      </ul>
+      <!-- the profile's history table, with the roll's number; a revealed roll checks in place -->
+      <div ref="list" class="rounded-5xl bg-neutral-2 px-1 py-2 lg:px-3">
+        <HistoryTable
+          roll
+          :entries="rows.map((r) => r.e)"
+          :clickable="(e) => !!pairOf(e)"
+          :sealed="(e) => !pairOf(e)"
+          :focus-id="rows.find((r) => r.focus)?.e.id ?? null"
+          @pick="(e) => verify(rows.find((r) => r.e.id === e.id)!)"
+        />
+      </div>
     </template>
   </section>
 </template>
-
-<style scoped>
-/* as the profile's history rows: a revealed roll is a button, lit on hover, its check turning green */
-.kd-roll.is-roll {
-  transition: background-color var(--dur-base) var(--ease-out);
-}
-.kd-roll-check {
-  color: var(--color-success);
-  background: rgb(18 183 106 / 0.12);
-  transition: background-color var(--dur-base) var(--ease-out);
-}
-.kd-roll-check.is-sealed {
-  color: var(--color-neutral-10);
-  background: none;
-}
-@media (hover: hover) {
-  .kd-roll.is-roll:hover {
-    background: var(--color-neutral-3);
-  }
-  .kd-roll.is-roll:hover .kd-roll-check {
-    background: rgb(18 183 106 / 0.24);
-  }
-}
-.kd-roll.is-focus {
-  box-shadow:
-    inset 0 0 0 1px rgb(18 183 106 / 0.6),
-    0 0 24px rgb(18 183 106 / 0.18);
-}
-</style>

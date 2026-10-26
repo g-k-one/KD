@@ -649,6 +649,17 @@
     "left": "{n} of {total} left",
     "openFree": "Open free · {n} left"
   },
+  "history": {
+    "game": "Game",
+    "drop": "Drop",
+    "stake": "Stake",
+    "payout": "Payout",
+    "profit": "Profit",
+    "roll": "Roll",
+    "time": "Time",
+    "free": "free",
+    "ofChance": "of {pct}%"
+  },
   "bonus": {
     "title": "Bonuses",
     "signIn": "Sign in for a free case every day, a case for every level and rakeback on every bet.",

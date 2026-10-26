@@ -1,6 +1,5 @@
 <script setup lang="ts">
 // Imported, not resolveComponent(): the static artifact build left that as a literal <nuxtlink> tag
-import { NuxtLink } from '#components'
 import type { HistoryEntry, HistoryGame, HistoryResponse, InventoryItem, InventoryResponse, SellResponse } from '#shared/types/api'
 
 // Profile: one header — who, the level (and what it takes to the next one), Deposit, the money. Under it the skins,
@@ -107,11 +106,6 @@ async function onWithdrawn() {
 // --- History -----------------------------------------------------------------
 const gameFilter = ref<HistoryGame | 'all'>('all')
 const filteredHistory = computed(() => history.value.filter((h) => gameFilter.value === 'all' || h.game === gameFilter.value))
-const GAME_ICON: Record<HistoryGame, string> = { case: 'cases', upgrade: 'upgrade', deposit: 'plus', sell: 'wallet', withdraw: 'steam' }
-// short, so a phone row never cuts it: "12m ago" within a day, then the date alone
-const when = (iso: string) =>
-  Date.now() - Date.parse(iso) < 86_400_000 ? timeAgo(iso) : new Date(iso).toLocaleDateString(locale.value, { day: 'numeric', month: 'short' })
-const mult = (h: HistoryEntry) => (h.bet > 0 ? `${(h.payout / h.bet).toFixed(2)}x` : '—')
 
 // --- Stats (from the history the profile already loads) ------------------------------
 const stats = computed(() => {
@@ -279,38 +273,10 @@ async function saveTrade() {
             <UiSelect v-model="gameFilter" :options="gameOptions" menu-width="fixed" class="ml-auto w-36 lg:w-40" :active="gameFilter !== 'all'" />
           </div>
           <UiEmptyState v-if="!filteredHistory.length" :text="$t('account.emptyHistory')" class="m-3 mt-0 lg:m-4 lg:mt-0" />
-          <ul v-else class="kd-history flex flex-col gap-1 overflow-y-auto px-3 pt-3 pb-3 lg:px-4 lg:pb-0">
-            <li v-for="h in filteredHistory" :key="h.id">
-              <!-- a roll (case, upgrade) is a link to its check on the Provably Fair page -->
-              <component
-                :is="h.nonce ? NuxtLink : 'div'"
-                :to="h.nonce ? `/fairness?roll=${h.id}` : undefined"
-                class="kd-hrow grid grid-cols-[40px_minmax(0,1fr)_44px_76px_24px] items-center gap-2.5 rounded-2xl px-1.5 py-2 lg:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_160px_32px] lg:gap-4 lg:px-3 lg:py-3"
-                :class="h.nonce && 'kd-press kd-press-wide is-roll'"
-              >
-                <!-- what it was: the case itself, else the game's sign -->
-                <span class="grid size-10 place-items-center rounded-xl bg-neutral-3 text-neutral-13 lg:size-12">
-                  <img v-if="h.caseImage" :src="h.caseImage" alt="" class="size-9 object-contain lg:size-10" loading="lazy" />
-                  <UiIcon v-else :name="GAME_ICON[h.game]" :size="18" />
-                </span>
-                <span class="flex min-w-0 flex-col gap-0.5 lg:gap-1">
-                  <!-- phones: the name on top, the game and the time under it; desktop: game · name, then time · stake · × -->
-                  <span class="type-14 truncate"><span class="max-lg:hidden">{{ $t(`account.games.${h.game}`) }} · </span><span class="lg:text-neutral-12">{{ h.title }}</span></span>
-                  <span class="type-12-regular truncate text-neutral-11">
-                    <span class="lg:hidden">{{ $t(`account.games.${h.game}`) }} · </span>{{ when(h.at) }}<span v-if="h.bet" class="max-lg:hidden"> · {{ $t('account.stakeOf', { amount: formatCoins(h.bet) }) }} · {{ mult(h) }}</span>
-                  </span>
-                </span>
-                <!-- what went in and what came out (shared with the Provably Fair page's rolls) -->
-                <HistoryItems :entry="h" />
-                <!-- one amount: what came out (green when it beat the stake) -->
-                <UiPrice :amount="h.payout" :tone="h.status === 'lost' ? 'muted' : 'success'" class="justify-self-end" />
-                <!-- the check, its own quiet column so every row lines up -->
-                <span class="kd-hrow-check grid size-7 place-items-center justify-self-end rounded-lg lg:size-8" :aria-label="h.nonce ? $t('fair.check') : undefined">
-                  <UiIcon v-if="h.nonce" name="shield-check" :size="18" />
-                </span>
-              </component>
-            </li>
-          </ul>
+          <!-- the table: game · drop · stake · payout · profit · time · check; a roll opens its check -->
+          <div v-else class="kd-history overflow-y-auto px-1 pb-2 lg:px-3">
+            <HistoryTable :entries="filteredHistory" :link="(h) => (h.nonce ? `/fairness?roll=${h.id}` : undefined)" />
+          </div>
         </div>
       </section>
 
