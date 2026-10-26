@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { AdminCase, AdminCaseInput, CaseTag, HomeCardKind, RiskLevel } from '#shared/types/api'
 
-// Admin · one case: name, price, risk, tag; limited stock; its home card; odds (auto from the target RTP, or each
-// skin's chance by hand) and contents. One draft, one Save (PUT /api/admin/cases/:slug).
+// Admin · one case: name, price, risk, tag; limited stock; its home card; its pictures (square, full card, wide,
+// tall); odds (auto from the target RTP, or each skin's chance by hand) and contents. One draft, one Save
+// (PUT /api/admin/cases/:slug).
 const route = useRoute()
 const slug = computed(() => String(route.params.slug))
 const toast = useToast()
@@ -10,7 +11,9 @@ const toast = useToast()
 const { saved, draft, dirty, saving, save, discard } = useAdminDraft<AdminCase>(
   async () => (await $fetch<{ case: AdminCase }>(`/api/admin/cases/${slug.value}`)).case,
   async (c) => {
-    const body: AdminCaseInput = { ...c, items: c.items.map((i) => ({ id: i.id, tickets: i.tickets })) }
+    // a picture taken away goes as null; pictures left as they were go as they are
+    const art = { wide: c.art.wide ?? null, tall: c.art.tall ?? null, full: c.art.full ?? null }
+    const body: AdminCaseInput = { ...c, art, items: c.items.map((i) => ({ id: i.id, tickets: i.tickets })) }
     return (await $fetch<{ case: AdminCase }>(`/api/admin/cases/${slug.value}`, { method: 'PUT', body: { case: body } })).case
   },
   () => refreshNuxtData('cases'),
@@ -111,22 +114,28 @@ async function duplicate() {
         </AdminPanel>
       </div>
 
-      <AdminPanel title="Odds and contents" icon="sliders">
-        <AdminField label="Odds"><UiSegmented v-model="draft.odds" :options="ODDS" size="s" block /></AdminField>
-        <div class="grid grid-cols-2 items-end gap-3">
-          <AdminField v-if="draft.odds === 'auto'" label="Target RTP"><AdminPercentInput v-model="draft.targetRtp" /></AdminField>
-          <div class="col-start-2 flex h-10 flex-col items-end justify-center">
-            <span class="type-10-caps text-neutral-11">Real RTP</span>
-            <span class="type-16-caps tabular-nums" :class="rtpOff ? 'text-warning' : ''">{{ ((saved?.rtp ?? 0) / 100).toFixed(2) }}%</span>
+      <div class="flex min-w-0 flex-col gap-4 lg:gap-5">
+        <AdminPanel title="Pictures" icon="image" hint="One picture per place it shows. Tap a picture to upload a new one.">
+          <AdminCaseArt v-model="draft" />
+        </AdminPanel>
+
+        <AdminPanel title="Odds and contents" icon="sliders">
+          <AdminField label="Odds"><UiSegmented v-model="draft.odds" :options="ODDS" size="s" block /></AdminField>
+          <div class="grid grid-cols-2 items-end gap-3">
+            <AdminField v-if="draft.odds === 'auto'" label="Target RTP"><AdminPercentInput v-model="draft.targetRtp" /></AdminField>
+            <div class="col-start-2 flex h-10 flex-col items-end justify-center">
+              <span class="type-10-caps text-neutral-11">Real RTP</span>
+              <span class="type-16-caps tabular-nums" :class="rtpOff ? 'text-warning' : ''">{{ ((saved?.rtp ?? 0) / 100).toFixed(2) }}%</span>
+            </div>
           </div>
-        </div>
-        <p class="type-12-regular text-neutral-11">
-          <template v-if="draft.odds === 'auto'">The chances are solved so the case pays the target RTP: cheap skins often, top skins rarely.</template>
-          <template v-else>Each skin's chance as you set it; the RTP follows from them and the price.</template>
-          <span v-if="rtpOff" class="text-warning"> These skins can't reach the target at this price: cheaper or pricier ones get it closer.</span>
-        </p>
-        <AdminContents v-model="draft.items" :odds="draft.odds" :case-price="draft.price" :stale="stale" />
-      </AdminPanel>
+          <p class="type-12-regular text-neutral-11">
+            <template v-if="draft.odds === 'auto'">The chances are solved so the case pays the target RTP: cheap skins often, top skins rarely.</template>
+            <template v-else>Each skin's chance as you set it; the RTP follows from them and the price.</template>
+            <span v-if="rtpOff" class="text-warning"> These skins can't reach the target at this price: cheaper or pricier ones get it closer.</span>
+          </p>
+          <AdminContents v-model="draft.items" :odds="draft.odds" :case-price="draft.price" :stale="stale" />
+        </AdminPanel>
+      </div>
     </div>
     <div v-else class="grid gap-4 xl:grid-cols-[340px_1fr]">
       <span class="kd-skeleton h-96 rounded-5xl" />

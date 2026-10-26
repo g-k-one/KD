@@ -28,6 +28,7 @@ import {
   getHomeLayout,
   getMockState,
   MockError,
+  placeLike,
   pushBigWin,
   PVP_SRC,
   rebuildCase,
@@ -73,6 +74,7 @@ function toAdminCase(def: CaseDef): AdminCase {
     limited: c.limited ? { ...c.limited } : null,
     card: getHomeLayout().layout.cards[def.slug] ?? 'standard',
     art: { ...c.art },
+    animated: !!(def.rig || def.animation),
     odds: def.preset ? 'manual' : 'auto',
     items: c.items.map(({ ticketFrom: _f, ticketTo: _t, drops24h: _d, ...i }) => i),
     copyOf: def.copyOf ?? null,
@@ -121,8 +123,27 @@ export function setAdminCase(slug: string, input: Partial<AdminCaseInput>) {
     delete def.preset
     def.itemIds = picked.map((r) => r.item.id)
   }
+  // pictures: a URL or an uploaded image (data:image/…); a new square picture drops the animation drawn from the old one
+  const isPic = (v: unknown): v is string => typeof v === 'string' && (/^data:image\//.test(v) || /^(\/|https?:\/\/)/.test(v))
+  if (isPic(input.image) && input.image !== def.image) {
+    def.image = input.image
+    delete def.rig
+    delete def.animation
+  }
+  if (input.art && typeof input.art === 'object') {
+    def.art ??= {}
+    for (const k of ['wide', 'tall', 'full'] as const) {
+      const v = input.art[k]
+      if (v === null) def.art[k] = null
+      else if (isPic(v) && v !== `/img/cases/${k}/${def.artSlug ?? def.slug}.webp`) def.art[k] = v
+    }
+  }
   if (input.card && CARDS.includes(input.card)) setCaseCard(slug, input.card)
   rebuildCase(def)
+  // a card kind whose picture was taken away falls back to the plain card
+  const built = builtCase(slug)!
+  const kind = getHomeLayout().layout.cards[slug]
+  if (kind && kind !== 'standard' && !built.art?.[kind]) setCaseCard(slug, 'standard')
   return getAdminCase(slug)
 }
 
@@ -147,6 +168,7 @@ function copyCase(from: string, slug?: string) {
   caseDefs.push(copy)
   rebuildCase(copy)
   setCaseCard(next, getHomeLayout().layout.cards[from] ?? 'standard')
+  placeLike(from, next)
   return copy
 }
 export const duplicateCase = (slug: string) => ({ case: toAdminCase(copyCase(slug)) })

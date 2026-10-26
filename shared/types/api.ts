@@ -67,8 +67,12 @@ export type SectionTheme = 'coop'
 
 /** The home layout an admin sets. GET / PUT /api/admin/home-layout; POST /api/admin/home-layout/reset. */
 export interface HomeLayout {
-  /** Every row in its order; a hidden row stays listed so it can come back */
-  sections: Array<{ id: string; title: string; hidden?: boolean; theme?: SectionTheme | null }>
+  /**
+   * Every row in its order; a hidden row stays listed so it can come back. `cases`: the row's cases in order (slugs).
+   * The Weekly picks row fills itself (five new cases every Monday) and has no list; rows added in the admin panel
+   * have ids starting "row-" and can be removed.
+   */
+  sections: Array<{ id: string; title: string; hidden?: boolean; theme?: SectionTheme | null; cases?: string[] }>
   /** Card kind per case slug, the same in every row; a case left out is plain */
   cards: Record<string, HomeCardKind>
 }
@@ -648,6 +652,8 @@ export interface AdminCase {
   card: HomeCardKind
   /** The art it has; a card kind needs its art */
   art: { wide?: string; tall?: string; full?: string }
+  /** It has an animated picture (a Spine rig or a looping video) drawn from the square one; a new square picture drops it */
+  animated: boolean
   odds: AdminOddsMode
   /** Contents, priciest first, each with its tickets out of PF_TICKETS (auto: what the solver gave) */
   items: Array<Item & { tickets: number }>
@@ -669,6 +675,10 @@ export interface AdminCaseInput {
   card: HomeCardKind
   odds: AdminOddsMode
   items: Array<{ id: string; tickets: number }>
+  /** The square picture on a transparent ground (a URL or an uploaded data: URL) */
+  image?: string
+  /** The card pictures; null takes one away */
+  art?: { wide?: string | null; tall?: string | null; full?: string | null }
 }
 
 /** Promo codes: coins are credited on Bonuses (value = coin cents); deposit codes add a bonus to a deposit (value = bp) */

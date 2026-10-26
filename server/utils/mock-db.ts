@@ -139,7 +139,7 @@ export function findItem(id: string): Item | undefined {
 
 // --- Cases ---------------------------------------------------------------
 
-export interface CaseDef extends Omit<CaseSummary, 'rtp' | 'payback' | 'bestToday'> {
+export interface CaseDef extends Omit<CaseSummary, 'rtp' | 'payback' | 'bestToday' | 'art'> {
   /** Target RTP from the admin panel, basis points */
   targetRtp: number
   /** Fixed contents; otherwise picked from the catalog by price and risk (contentsFor) */
@@ -148,6 +148,8 @@ export interface CaseDef extends Omit<CaseSummary, 'rtp' | 'payback' | 'bestToda
   preset?: Array<Item & { tickets: number }>
   /** A copy uses the art of the case it was made from */
   artSlug?: string
+  /** Card pictures set in the admin panel: a URL, or null for none; a key left out uses the file named after the case */
+  art?: { wide?: string | null; tall?: string | null; full?: string | null }
   copyOf?: string
 }
 
@@ -273,12 +275,14 @@ function finishCase(def: CaseDef, withTickets: Array<Item & { tickets: number }>
     return { item, nickname: NICKS[h % NICKS.length]!, multiplier: Math.round((item.price / def.price) * 10) / 10, at: new Date(Date.now() - ((h % 160) + 2) * 3600_000).toISOString() }
   }).sort((a, b) => b.multiplier - a.multiplier)
 
-  const { targetRtp: _t, itemIds: _i, preset: _p, artSlug: _a, copyOf: _c, ...summary } = def
-  // every case has its wide, tall and full-scene pictures, named after it (a copy: after its original)
-  const art = def.artSlug ?? def.slug
+  const { targetRtp: _t, itemIds: _i, preset: _p, artSlug: _a, copyOf: _c, art: own, ...summary } = def
+  // every case has its wide, tall and full-scene pictures, named after it (a copy: after its original), unless the
+  // admin panel set its own (or took one away)
+  const named = def.artSlug ?? def.slug
+  const artOf = (k: 'wide' | 'tall' | 'full') => (own && k in own ? (own[k] ?? undefined) : `/img/cases/${k}/${named}.webp`)
   return {
     ...summary,
-    art: { wide: `/img/cases/wide/${art}.webp`, tall: `/img/cases/tall/${art}.webp`, full: `/img/cases/full/${art}.webp` },
+    art: Object.fromEntries((['wide', 'tall', 'full'] as const).map((k) => [k, artOf(k)]).filter(([, v]) => v)),
     rtp: Math.round((realEv / def.price) * 10_000),
     payback: pct((i) => i.price >= def.price),
     bestToday: null,
@@ -324,6 +328,14 @@ export function removeCase(slug: string) {
   const d = caseDefs.findIndex((c) => c.slug === slug)
   if (d >= 0) caseDefs.splice(d, 1)
   delete homeLayout.cards[slug]
+  for (const r of homeLayout.sections) if (r.cases) r.cases = r.cases.filter((s) => s !== slug)
+}
+/** A new copy shows up where its original does: right after it in every row that has it */
+export function placeLike(from: string, slug: string) {
+  for (const r of homeLayout.sections) {
+    const i = r.cases?.indexOf(from) ?? -1
+    if (i >= 0 && !r.cases!.includes(slug)) r.cases!.splice(i + 1, 0, slug)
+  }
 }
 export const builtCase = (slug: string) => CASES.find((c) => c.slug === slug)
 
@@ -384,12 +396,14 @@ const toSummary = ({ items: _i, odds: _o, oddsVersion: _v, kurwadrop: _k, ...s }
 
 // --- Home layout (an admin setting): rows in order, their scenes, each case's card ----------------------------
 
+/** The row that fills itself: five cases a week, none of them from the first row */
+export const AUTO_ROW = 'weekly'
 const DEFAULT_HOME_LAYOUT: HomeLayout = {
   sections: [
-    { id: 'hot', title: 'Hot right now' },
-    { id: 'weekly', title: 'Weekly picks', theme: 'coop' },
-    { id: 'featured', title: 'Featured cases' },
-    { id: 'polish-classics', title: 'Polish classics' },
+    { id: 'hot', title: 'Hot right now', cases: ['pieklo', 'mafia', 'wiosna', 'high-roller', 'krakow-knife'] },
+    { id: AUTO_ROW, title: 'Weekly picks', theme: 'coop' },
+    { id: 'featured', title: 'Featured cases', cases: ['pierogi-pack', 'kurwa-classic', 'zloty-rush', 'babcias-box', 'warsaw-nights', 'vodka-drop', 'krakow-knife', 'golden-kielbasa', 'budget-boom', 'high-roller'] },
+    { id: 'polish-classics', title: 'Polish classics', cases: ['babcias-box', 'vodka-drop', 'golden-kielbasa', 'kurwa-classic', 'pierogi-pack'] },
   ],
   cards: { mafia: 'full', 'babcias-box': 'full', 'vodka-drop': 'full' },
 }
@@ -404,13 +418,19 @@ export function resetHomeLayout() {
   homeLayout = structuredClone(DEFAULT_HOME_LAYOUT)
   return getHomeLayout()
 }
-/** Takes the admin's layout as far as it makes sense: known rows only (any left out go to the end), known kinds only */
+/**
+ * Takes the admin's layout as far as it makes sense: the built-in rows (any left out go to the end) and rows added in
+ * the panel ("row-…"), each with its own title and cases (known cases only, each once); known card kinds only.
+ */
 export function setHomeLayout(next: Partial<HomeLayout>) {
   const known = DEFAULT_HOME_LAYOUT.sections
-  const rows = (next.sections ?? []).filter((r, i, all) => known.some((k) => k.id === r.id) && all.findIndex((o) => o.id === r.id) === i)
+  const isRow = (id: string) => known.some((k) => k.id === id) || /^row-[a-z0-9-]{1,40}$/.test(id)
+  const rows = (next.sections ?? []).filter((r, i, all) => r && isRow(String(r.id)) && all.findIndex((o) => o.id === r.id) === i)
   const sections = [...rows, ...known.filter((k) => !rows.some((r) => r.id === k.id))].map((r) => {
-    const base = known.find((k) => k.id === r.id)!
-    return { id: r.id, title: base.title, hidden: !!r.hidden || undefined, theme: r.theme === 'coop' ? ('coop' as const) : null }
+    const base = known.find((k) => k.id === r.id)
+    const title = String(r.title ?? base?.title ?? '').trim().slice(0, 40) || base?.title || 'New row'
+    const cases = r.id === AUTO_ROW ? undefined : (Array.isArray(r.cases) ? r.cases : (base?.cases ?? [])).filter((s, i, all) => CASES.some((c) => c.slug === s) && all.indexOf(s) === i)
+    return { id: r.id, title, hidden: !!r.hidden || undefined, theme: r.theme === 'coop' ? ('coop' as const) : null, ...(cases && { cases }) }
   })
   const KINDS: string[] = ['full', 'wide', 'tall']
   const cards = Object.fromEntries(
@@ -423,27 +443,24 @@ export function setHomeLayout(next: Partial<HomeLayout>) {
 /** The cases the lobby's own battles are made of: the cheaper ones (up to 30 coins) of the catalogue, not the hot
  * three. From the catalogue, not the home rows: a row hidden in the admin panel must not break the lobby. */
 export const lobbyCaseSlugs = () => CASES.filter((c) => c.price <= 3000 && !['pieklo', 'mafia', 'wiosna'].includes(c.slug)).map((c) => c.slug)
+/** Every case, for the admin panel's row editor */
+export const caseOptions = () => CASES.map((c) => ({ slug: c.slug, name: c.name, image: c.image, price: c.price }))
 
 export function getCaseSections(): CaseSection[] {
   const all = CASES.map(toSummary).map((c) => {
     const card = homeLayout.cards[c.slug]
     return card && card !== 'standard' ? { ...c, card } : c
   })
-  const pick = (slugs: string[]) => slugs.map((s) => all.find((c) => c.slug === s)!)
-  // Weekly picks choose from outside the hot five, so the two rows next to each other never share a case
-  const HOT = ['pieklo', 'mafia', 'wiosna', 'high-roller', 'krakow-knife']
-  const rows: Record<string, () => CaseSection> = {
-    hot: () => ({ id: 'hot', title: 'Hot right now', cases: pick(HOT) }),
-    weekly: () => weeklyPicks(all.filter((c) => !HOT.includes(c.slug))),
-    featured: () => ({ id: 'featured', title: 'Featured cases', cases: all.filter((c) => !['pieklo', 'mafia', 'wiosna'].includes(c.slug)) }),
-    'polish-classics': () => ({ id: 'polish-classics', title: 'Polish classics', cases: pick(['babcias-box', 'vodka-drop', 'golden-kielbasa', 'kurwa-classic', 'pierogi-pack']) }),
-  }
+  const pick = (slugs: string[]) => slugs.map((s) => all.find((c) => c.slug === s)).filter((c): c is CaseSummary => !!c)
+  // Weekly picks choose from outside the first row, so two rows near the top never share a case
+  const first = homeLayout.sections.find((r) => r.id !== AUTO_ROW && !r.hidden)?.cases ?? []
   return homeLayout.sections
     .filter((r) => !r.hidden)
     .map((r) => {
-      const row = rows[r.id]!()
+      const row: CaseSection = r.id === AUTO_ROW ? { ...weeklyPicks(all.filter((c) => !first.includes(c.slug))), title: r.title } : { id: r.id, title: r.title, cases: pick(r.cases ?? []) }
       return r.theme ? { ...row, theme: r.theme } : row
     })
+    .filter((r) => r.cases.length)
 }
 
 // Weekly picks (#36, Casehug's "new bestsellers in 6d"): five cases that change every Monday 00:00 UTC,
