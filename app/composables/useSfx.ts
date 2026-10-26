@@ -12,13 +12,11 @@ function audio() {
   }
 }
 
-// KURWADROP's chicken: recorded sounds in one sprite (public/sfx/hen.mp3, generated in Magnific), [start, length] s
-const HEN: Record<'swap' | 'body' | 'scream' | 'inflate' | 'pop', [number, number]> = {
+// KURWADROP's chicken: recorded sounds in one sprite (public/sfx/hen.mp3, generated in Magnific), [start, length] s;
+// only the appearance and the pop are used (its boing, scream and stretch frightened rather than amused)
+const HEN: Record<'swap' | 'pop', [number, number]> = {
   swap: [0, 1],
-  body: [1.2, 1],
-  scream: [2.4, 2],
-  inflate: [4.6, 0.92],
-  pop: [5.714, 1.48],
+  pop: [1.2, 1.48],
 }
 let henBuf: Promise<AudioBuffer | null> | null = null
 
@@ -160,6 +158,12 @@ export function useSfx() {
     })
   }
 
+  /** Golden Chicken: two squawks */
+  function squawkNow() {
+    sweep(700, 1500, 0.32, 0.12)
+    setTimeout(() => sweep(800, 1700, 0.42, 0.12), 260)
+  }
+
   /** Result revealed: a longer, brighter arpeggio the rarer the drop (tier 0–4, or true for "rare") */
   function reveal(tier: number | boolean) {
     const t = tier === true ? 3 : tier === false ? 0 : tier
@@ -169,10 +173,7 @@ export function useSfx() {
 
   return {
     /** Golden Chicken: two squawks */
-    squawk: () => {
-      sweep(700, 1500, 0.32, 0.12)
-      setTimeout(() => sweep(800, 1700, 0.42, 0.12), 260)
-    },
+    squawk: squawkNow,
     /** Get the chicken's recorded sounds ready (with henWarm) */
     henLoad,
     /** KURWADROP's chicken (henShow): the logo zooms in with a rising swish and turns into the head with a bright ting */
@@ -182,35 +183,11 @@ export function useSfx() {
       setTimeout(() => blip(1760, 0.22, 0.07), 120)
     },
     /** ...its body springs out of the head */
-    henBody: () => hen('body', 0.6, 0.8) || glide(220, 560, 0.26, 0.1, 'sine', 14, 40),
-    /** ...the scream: a sawtooth "AAAA" through a vowel-like band, rising then shaking (Fast: half as long) */
-    henScream: (fast = false) => {
-      if (hen('scream', fast ? 1 : 2)) return
-      const dur = fast ? 0.6 : 1.15
-      voice(dur, 0.1, (a, t) => {
-        const o = a.createOscillator()
-        o.type = 'sawtooth'
-        o.frequency.setValueAtTime(480, t)
-        o.frequency.exponentialRampToValueAtTime(940, t + 0.12)
-        o.frequency.exponentialRampToValueAtTime(820, t + dur)
-        const lfo = a.createOscillator()
-        const lg = a.createGain()
-        lfo.frequency.value = 8
-        lg.gain.value = 55
-        lfo.connect(lg).connect(o.frequency)
-        lfo.start(t)
-        lfo.stop(t + dur + 0.02)
-        const f = a.createBiquadFilter()
-        f.type = 'bandpass'
-        f.frequency.value = 1150
-        f.Q.value = 1.4
-        o.connect(f)
-        return { src: o, out: f }
-      })
-      setTimeout(() => sweep(900, 1800, 0.3, 0.06), 60)
-    },
+    henBody: () => {},   // no sound for the body (the recorded boing scared rather than amused)
+    /** ...the scream: the site's own two squawks (the recorded scream frightened; a funnier one is to be recorded) */
+    henScream: (_fast = false) => squawkNow(),
     /** ...the belly stretches: a rubbery squeak rising with a fast tremble */
-    henInflate: (fast = false) => hen('inflate', fast ? 0.45 : 0.92, 0.8) || glide(300, 1150, fast ? 0.2 : 0.4, 0.07, 'triangle', 18, 60),
+    henInflate: (_fast = false) => {},   // no sound for the stretch either
     /** ...the pop: a noise burst, a low thump and a sparkle of coins */
     henPop: () => {
       if (hen('pop')) return
