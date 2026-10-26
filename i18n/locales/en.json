@@ -740,6 +740,7 @@
   },
   "home": {
     "continue": "Continue",
+    "continueHint": "Opened lately",
     "battles": "PvP battles",
     "allBattles": "All battles",
     "newPicks": "New picks in"
