@@ -108,3 +108,36 @@ The mascot as <образ>, <поза>, holding <предмет>, surrounded by 
 | Mafia | mafia boss chicken in a fedora and pinstripe suit, a tommy gun, a cigar (unlit) |
 
 Если нужен только один кадр, бери квадрат: широкий и высокий я соберу из него раздвижкой фона.
+
+---
+
+## 7. Главный баннер: «курица тащит ящики» (параллакс)
+
+Справа в баннере, на площадке примерно 620 × 420. Курица тащит на санях шаткую башню из кейсов CS2, из щелей торчат и вылетают скины. Сцена собирается из слоёв, и каждый слой двигается за курсором на свою глубину. Поэтому всё, что связано верёвкой, лежит в одном слое: курица, верёвка, сани и ящики. Отдельно генерируются только предметы, которые летят сами по себе.
+
+Порядок: сначала основной слой (7.1). Потом к нему, приложив его в чат как образец света и масштаба, остальные слои. Для каждого слоя: образец `hero/chicken.webp`, **общий блок** сверху, потом промпт слоя.
+
+### 7.1 Основной слой: курица с санями (`hero/haul.webp`, 3:2, прозрачный фон)
+```
+The mascot hauling a heavy load: it leans far forward toward the left of the frame, full body in three-quarter side view,
+a thick rope over its shoulder gripped with both wings, feet dug in and skidding, beak wide open in a strained, furious
+scream, eyes huge, crest flying back, sweat drops. The rope runs back to a small wooden sled on the right holding a tall,
+wobbly tower of 5 stacked CS2 weapon cases (rugged dark crates with orange metal corners and latches, like real CS2
+cases, no logos, no text), the top two leaning dangerously. Lids cracked open: golden light leaks out of the gaps, the
+barrel of an AK-47 and the handle of a knife stick out of the crates. Motion: dust kicked up behind the sled, short speed
+streaks. The chicken takes the left 40% of the frame, the sled and tower the right 60%; the whole group fits inside the
+frame with a clear margin. Landscape 3:2.
+```
+
+### 7.2 Летящие скины (по одному на картинку, прозрачный фон, 1:1)
+Они слетают с верхушки башни. В баннере я разведу их по глубине: ближние крупнее и быстрее.
+- `hero/haul-knife.webp`: `A CS2 Butterfly Knife with a Doppler finish (deep purple-blue with a pink glow), open, spinning in the air, slight motion blur on the blade tip, lit like the reference. Square 1:1.`
+- `hero/haul-awp.webp`: `A CS2 AWP sniper rifle with the Dragon Lore finish (gold dragon on light green-beige), tumbling through the air at a 30° tilt, lit like the reference. Square 1:1.`
+- `hero/haul-gloves.webp`: `A pair of CS2 Sport Gloves with the Pandora's Box finish (purple and black), flung in the air, fingers spread, lit like the reference. Square 1:1.`
+
+### 7.3 Ближний план (прозрачный фон, 1:1)
+- `hero/haul-coins.webp`: `Five gold coins with a star in a circle, scattered mid-air at different angles and distances, two of them big and slightly blurred as if very close to the camera. Square 1:1.`
+- `hero/haul-dust.webp`: `A low cloud of warm brown dust and small pebbles kicked up from the ground, soft edges, seen from the side, wide and flat. Landscape 3:1.`
+
+### Как соберу
+По глубине, от дальнего к ближнему: пыль за санями → основной слой (курица с башней) → скины (AWP дальше, нож и перчатки ближе) → монеты. Курсор сдвигает слои на разную величину. Скины медленно кувыркаются, верхушка башни покачивается. Если ткнуть в курицу, она дёргает верёвку, башня вздрагивает и с неё слетает ещё один скин.
