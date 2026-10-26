@@ -28,19 +28,21 @@ if (props.part === 'art') provideForge(fxHost)
     :aria-label="`${drop.itemName} | ${drop.skinName}, ${x}`"
   >
     <span ref="fxHost" class="pointer-events-none absolute inset-0" aria-hidden="true" />
-    <!-- the number, a giant behind everything -->
-    <span class="kd-drop-x pointer-events-none absolute" aria-hidden="true">{{ x }}</span>
-    <!-- the fire rises from under the skin, in its rarity's colour -->
-    <span v-if="isLg" class="kd-drop-fire pointer-events-none absolute" aria-hidden="true">
-      <FxFire :key="drop.id" effect="kdFlame" :color="RARITY_HEX[drop.rarity]" :spread="1.6" class="w-full"><span class="block h-2 w-full" /></FxFire>
-    </span>
-
-    <!-- the skin: floats, leans to the pointer; a new top drop falls in -->
-    <span class="kd-drop-stage absolute">
-      <span class="kd-drop-lean block">
-        <Transition name="kd-drop-swap" mode="out-in">
-          <img :key="drop.id" :src="drop.image" alt="" class="kd-drop-skin block" draggable="false" fetchpriority="high" />
-        </Transition>
+    <!-- one group, sized by the number: centred on phones, against the column's right edge on desktop -->
+    <span class="kd-drop-group absolute">
+      <!-- the number, a giant behind everything -->
+      <span class="kd-drop-x pointer-events-none block" aria-hidden="true">{{ x }}</span>
+      <!-- the fire rises from under the skin, in its rarity's colour -->
+      <span v-if="isLg" class="kd-drop-fire pointer-events-none absolute" aria-hidden="true">
+        <FxFire :key="drop.id" effect="kdFlame" :color="RARITY_HEX[drop.rarity]" :spread="1.6" class="w-full"><span class="block h-2 w-full" /></FxFire>
+      </span>
+      <!-- the skin: floats, leans to the pointer; a new top drop falls in -->
+      <span class="kd-drop-stage absolute">
+        <span class="kd-drop-lean block">
+          <Transition name="kd-drop-swap" mode="out-in">
+            <img :key="drop.id" :src="drop.image" alt="" class="kd-drop-skin block" draggable="false" fetchpriority="high" />
+          </Transition>
+        </span>
       </span>
     </span>
   </NuxtLink>
@@ -60,11 +62,20 @@ if (props.part === 'art') provideForge(fxHost)
 .kd-drop {
   perspective: 1200px;
 }
+.kd-drop-group {
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+}
+@media (min-width: 1024px) {
+  .kd-drop-group {
+    left: auto;
+    right: 0;
+    translate: none;
+  }
+}
 /* the multiplier: big, the burning gold-to-orange of the big wins' numbers, fading toward its foot */
 .kd-drop-x {
-  left: 50%;
-  top: 0;
-  translate: -50% 0;
   font-size: 220px;
   line-height: 1;
   font-weight: 800;
@@ -78,14 +89,14 @@ if (props.part === 'art') provideForge(fxHost)
 }
 /* a strip under the skin the fire rises from */
 .kd-drop-fire {
-  left: 24%;
-  right: 24%;
-  bottom: 36%;
+  left: 12%;
+  right: 12%;
+  top: 118%;
   z-index: 1;
 }
 .kd-drop-stage {
   left: 50%;
-  top: 38%;
+  top: 73%;
   z-index: 2;
   translate: -50% -50%;
   animation: kd-drop-float 5.5s ease-in-out infinite alternate;
@@ -146,7 +157,7 @@ if (props.part === 'art') provideForge(fxHost)
     font-size: 110px;
   }
   .kd-drop-stage {
-    top: 62%;
+    top: 96%;
   }
   .kd-drop-skin {
     width: 240px;
@@ -155,6 +166,9 @@ if (props.part === 'art') provideForge(fxHost)
 @media (min-width: 640px) and (max-width: 1023px) {
   .kd-drop-x {
     font-size: 150px;
+  }
+  .kd-drop-stage {
+    top: 85%;
   }
   .kd-drop-skin {
     width: 340px;

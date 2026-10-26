@@ -12,7 +12,7 @@ import type { StageLayer, StageLoot } from '~/components/banner/Stage.vue'
 // egg — an honest one: it offers the free demo spin every case has.
 // `bare`: no ground, no frame and no side padding — the full-width band around it (HomeHeroBleed) paints the light;
 // the words line up with the page's column and sit high. The `art` slot replaces the chicken's stage; the `aside` slot
-// sits on the buttons' line, centred under the art (desktop).
+// sits on the buttons' line, at its right end (desktop).
 const session = useSessionStore()
 const ui = useUiStore()
 const { dailyReady, welcomeLeft } = useBonuses()
@@ -114,7 +114,7 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
         <UiButton v-else-if="offer.to" size="l" :icon="offer.icon" :to="offer.to" class="max-sm:h-10 max-sm:px-4">{{ $t(offer.cta) }}</UiButton>
         <UiButton v-else size="l" :icon="offer.icon" class="max-sm:h-10 max-sm:px-4" @click="start">{{ $t(offer.cta) }}</UiButton>
         <UiButton variant="ghost" size="l" icon="info" to="/fairness" class="max-sm:h-10 max-sm:px-3">{{ $t('hero.howItWorks') }}</UiButton>
-        <div v-if="$slots.aside" class="ml-auto hidden w-[620px] justify-center lg:flex"><slot name="aside" /></div>
+        <div v-if="$slots.aside" class="ml-auto hidden lg:flex"><slot name="aside" /></div>
       </div>
     </div>
 
