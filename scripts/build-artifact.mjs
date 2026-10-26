@@ -62,6 +62,7 @@ const headKeep = relativize(head)
   .replace(/<meta charset[^>]*>/i, '')
   .replace(/<meta name="viewport"[^>]*>/i, '')
   .replace(/<title>[\s\S]*?<\/title>/i, '')
+  .replace('href="/favicon.svg"', 'href="favicon.svg"')
 writeFileSync(join(out, 'index.html'), `<title>KurwaDROP</title>\n${headKeep.trim()}\n${relativize(body).trim()}\n`)
 
 const files = walk(out).map((f) => relative(out, f).replaceAll('\\', '/'))
