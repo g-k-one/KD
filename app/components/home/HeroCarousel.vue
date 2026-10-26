@@ -97,7 +97,7 @@ function up() {
    so the carousel is as tall as the tallest */
 .kd-track {
   --gap: 12px;
-  width: min(1232px, calc(100vw - 56px));
+  width: min(1232px, calc(100vw - 64px));
   touch-action: pan-y;
 }
 @media (min-width: 1024px) {
@@ -107,6 +107,8 @@ function up() {
 }
 .kd-slide {
   grid-area: 1 / 1;
+  /* a peeking slide shrinks toward its inner edge, so the strip that shows keeps its width */
+  transform-origin: calc(50% - var(--o) * 50%) 50%;
   transform: translate3d(calc(var(--o) * (100% + var(--gap)) + var(--drag, 0px)), 0, 0) scale(1);
   transition:
     transform var(--dur-slow) var(--ease-out),
