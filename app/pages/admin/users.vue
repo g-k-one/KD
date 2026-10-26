@@ -31,7 +31,7 @@ const addPlayer = () => draft.value!.players.push({ nickname: '', level: 1 })
 
       <AdminPanel :title="`Fake players (${draft.players.length})`" icon="user-empty" body="list" hint="Nicknames and levels; the first five win today's seeded big wins">
         <div v-for="(p, k) in draft.players" :key="k" class="flex items-center gap-2 rounded-2xl bg-neutral-3 p-1.5">
-          <UiAvatar src="/img/brand/avatar.webp" :size="32" class="shrink-0" />
+          <UiAvatar :src="avatarFor(p.nickname)" :size="32" class="shrink-0" />
           <UiInput v-model="p.nickname" size="s" lazy placeholder="nickname" class="flex-1" />
           <UiInput v-model.number="p.level" size="s" lazy align="right" inputmode="numeric" class="w-20">
             <template #leading><span class="type-10-caps shrink-0 text-neutral-11">Lvl</span></template>

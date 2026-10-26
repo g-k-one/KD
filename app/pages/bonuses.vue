@@ -268,8 +268,8 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
             <UiIcon name="check-circle" :size="18" class="shrink-0 text-neutral-11" />{{ $t('bonus.tierPassed') }}
           </template>
         </p>
-        <TransitionGroup tag="div" name="kd-tier" class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-3">
-          <ItemDropCard v-for="it in contents" :key="`${shownTier}-${it.id}`" :item="it" :chance="chance(it.tickets)" />
+        <TransitionGroup tag="div" name="kd-tier" class="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-6 lg:gap-3">
+          <ItemDropCard v-for="it in contents" :key="`${shownTier}-${it.id}`" :item="it" :compact="!isSm" :chance="chance(it.tickets)" />
         </TransitionGroup>
       </div>
     </section>

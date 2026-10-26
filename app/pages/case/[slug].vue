@@ -7,6 +7,7 @@ const { t } = useI18n()
 const session = useSessionStore()
 const ui = useUiStore()
 const toast = useToast()
+const isSm = useMediaQuery('(min-width: 640px)')
 // Sound sits in the bar (CSGOGem, Casehug): three icons a side on phones — back · share · ‹ | › · sound · fairness
 
 const { data, error } = await useFetch<CaseResponse>(() => `/api/cases/${slug.value}`, { key: `case-${slug.value}` })
@@ -277,8 +278,9 @@ if (import.meta.client) {
           </span>
         </template>
       </UiSectionHeader>
-      <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-3">
-        <ItemDropCard v-for="it in cs.items" :key="it.id" :item="it" :chance="chance(it.tickets)" :range="[it.ticketFrom, it.ticketTo]" :drops="it.drops24h" :flash="flashId === it.id" />
+      <!-- phones: three compact cards a row, so a case's contents is a short scroll -->
+      <div class="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-6 lg:gap-3">
+        <ItemDropCard v-for="it in cs.items" :key="it.id" :item="it" :compact="!isSm" :chance="chance(it.tickets)" :range="[it.ticketFrom, it.ticketTo]" :drops="it.drops24h" :flash="flashId === it.id" />
       </div>
     </section>
   </div>

@@ -533,8 +533,9 @@ async function runUpgrade() {
     <section class="kd-dimmable -mt-2 grid gap-4 lg:mt-0 lg:grid-cols-2 lg:gap-5" :class="state === 'spinning' && 'is-dimmed'">
       <div class="flex flex-col rounded-5xl bg-neutral-2 lg:pb-4" :class="panelTab !== 'mine' && 'max-lg:hidden'">
         <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
-          <UiIcon name="inventory" :size="isLg ? 24 : 20" class="text-neutral-13" />
-          <span class="type-14 lg:type-16-medium">{{ $t('upgrade.mySkins') }} ({{ inventory.length }})</span>
+          <!-- phones: the sheet's tab already names the panel, so the header keeps only its tools -->
+          <UiIcon name="inventory" :size="isLg ? 24 : 20" class="text-neutral-13 max-lg:hidden" />
+          <span class="type-14 lg:type-16-medium max-lg:hidden">{{ $t('upgrade.mySkins') }} ({{ inventory.length }})</span>
           <UiPrice :amount="inventoryTotal" :size="isLg ? 'm' : 's'" tone="coin" class="opacity-64" />
           <UiButton v-if="inventory.length" variant="ghost" size="s" class="ml-auto" :disabled="state === 'spinning'" @click="selected.length ? clearSkins() : allSkins()"><UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" /></UiButton>
           <UiButton variant="ghost" :size="isLg ? 'm' : 's'" icon-only :class="!inventory.length && 'ml-auto'" :aria-label="$t(invSortDesc ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="invSortDesc = !invSortDesc">
@@ -570,8 +571,8 @@ async function runUpgrade() {
 
       <div class="flex flex-col rounded-5xl bg-neutral-2 lg:pb-4" :class="panelTab !== 'desired' && 'max-lg:hidden'">
         <div class="flex h-14 items-center gap-2 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
-          <UiIcon name="gem" :size="isLg ? 24 : 20" class="text-neutral-13 lg:mr-1" />
-          <span class="type-14 lg:type-16-medium mr-1 whitespace-nowrap">{{ $t('upgrade.desiredSkin') }}</span>
+          <UiIcon name="gem" :size="isLg ? 24 : 20" class="text-neutral-13 max-lg:hidden lg:mr-1" />
+          <span class="type-14 lg:type-16-medium mr-1 whitespace-nowrap max-lg:hidden">{{ $t('upgrade.desiredSkin') }}</span>
           <UiButton variant="ghost" :size="isLg ? 'm' : 's'" icon-only :aria-label="$t(sortDesc ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="sortDesc = !sortDesc">
             <UiSortArrows :desc="sortDesc" />
           </UiButton>

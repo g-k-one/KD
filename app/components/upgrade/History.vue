@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { HistoryEntry, HistoryResponse } from '#shared/types/api'
 
-// "My upgrades" right on the page (player audit D8): each row shows the chance zone and where the roll landed.
+// "My upgrades" right on the page (player audit D8): the profile's history rows, each with the chance zone and where
+// the roll landed; a row opens its check.
 const props = defineProps<{ version: number }>()
 const session = useSessionStore()
 const entries = ref<HistoryEntry[]>([])
@@ -24,36 +25,54 @@ watch(() => [props.version, session.user?.id], load)
       <h2 class="type-16-caps lg:type-20-caps">{{ $t('upgrade.myUpgrades') }}</h2>
       <NuxtLink to="/profile?tab=history" class="type-12-caps text-neutral-11 hover:text-neutral-15">{{ $t('upgrade.allHistory') }}</NuxtLink>
     </div>
-    <TransitionGroup tag="ul" name="kd-hist" class="flex flex-col gap-1.5">
-      <li
-        v-for="e in entries"
-        :key="e.id"
-        class="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 rounded-2xl bg-neutral-2 px-4 py-3 lg:grid-cols-[1.3fr_170px_1fr_190px_70px]"
-      >
-        <span class="type-14 min-w-0 truncate">{{ e.title }}</span>
-        <span class="flex items-center gap-1.5 max-lg:hidden">
-          <UiPrice :amount="e.bet" size="s" tone="muted" />
-          <UiIcon name="arrow-left" :size="12" class="rotate-180 text-neutral-10" />
-          <UiPrice v-if="e.targetPrice" :amount="e.targetPrice" size="s" :tone="e.status === 'won' ? 'coin' : 'muted'" />
-        </span>
-        <!-- 0–100 bar: green up to the chance, white tick at the roll -->
-        <span v-if="e.chance != null && e.roll != null" class="relative col-span-2 h-2 rounded-full bg-neutral-5 lg:col-span-1">
-          <span class="absolute inset-y-0 left-0 rounded-full bg-success/60" :style="{ width: `${e.chance / 100}%` }" />
-          <span class="absolute -top-1 h-4 w-0.5 rounded-full bg-neutral-15 shadow-[0_0_6px_white]" :style="{ left: `calc(${e.roll}% - 1px)` }" />
-        </span>
-        <span v-else class="max-lg:hidden" />
-        <span class="type-12 text-neutral-11 tabular-nums max-lg:hidden">
-          <template v-if="e.roll != null && e.chance != null">{{ $t('upgrade.rollLine', { roll: e.roll.toFixed(2), chance: (e.chance / 100).toFixed(2) }) }}</template>
-        </span>
-        <span class="type-12-caps row-start-1 justify-self-end rounded-md px-2 py-1 max-lg:col-start-2 lg:row-start-auto" :class="e.status === 'won' ? 'bg-success-24 text-success' : 'bg-danger-24 text-danger'">
-          {{ e.status === 'won' ? $t('account.won') : $t('account.lost') }}
-        </span>
+    <!-- the same rows as the profile's game history and the Provably Fair rolls; an upgrade adds its chance zone
+         (green up to the chance, a white tick where the roll landed) under the name -->
+    <TransitionGroup tag="ul" name="kd-hist" class="flex flex-col gap-1 rounded-5xl bg-neutral-2 p-3 lg:p-4">
+      <li v-for="e in entries" :key="e.id">
+        <NuxtLink
+          :to="e.nonce ? `/fairness?roll=${e.id}` : undefined"
+          class="kd-hrow kd-press grid grid-cols-[40px_minmax(0,1fr)_44px_76px_24px] items-center gap-2.5 rounded-2xl px-1.5 py-2 lg:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_160px_32px] lg:gap-4 lg:px-3 lg:py-3"
+        >
+          <span class="grid size-10 place-items-center rounded-xl bg-neutral-3 text-neutral-13 lg:size-12"><UiIcon name="upgrade" :size="18" /></span>
+          <span class="flex min-w-0 flex-col gap-1">
+            <span class="type-14 truncate">{{ e.title }}</span>
+            <span class="type-12-regular truncate text-neutral-11 tabular-nums">
+              <template v-if="e.roll != null && e.chance != null">{{ $t('upgrade.rollLine', { roll: e.roll.toFixed(2), chance: (e.chance / 100).toFixed(2) }) }} · </template>{{ timeAgo(e.at) }}
+            </span>
+            <span v-if="e.chance != null && e.roll != null" class="relative mt-0.5 h-1.5 w-full max-w-48 rounded-full bg-neutral-5">
+              <span class="absolute inset-y-0 left-0 rounded-full bg-success/60" :style="{ width: `${e.chance / 100}%` }" />
+              <span class="absolute -top-1 h-3.5 w-0.5 rounded-full bg-neutral-15 shadow-[0_0_6px_white]" :style="{ left: `calc(${e.roll}% - 1px)` }" />
+            </span>
+          </span>
+          <HistoryItems :entry="e" />
+          <UiPrice :amount="e.payout" :tone="e.status === 'lost' ? 'muted' : 'success'" class="justify-self-end" />
+          <span class="kd-hrow-check grid size-7 place-items-center justify-self-end rounded-lg lg:size-8"><UiIcon name="shield-check" :size="18" /></span>
+        </NuxtLink>
       </li>
     </TransitionGroup>
   </section>
 </template>
 
 <style scoped>
+/* as the profile's history rows */
+.kd-hrow {
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+.kd-hrow-check {
+  color: var(--color-neutral-10);
+  transition:
+    color var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
+}
+@media (hover: hover) {
+  .kd-hrow:hover {
+    background: var(--color-neutral-3);
+  }
+  .kd-hrow:hover .kd-hrow-check {
+    color: var(--color-success);
+    background: rgb(18 183 106 / 0.12);
+  }
+}
 .kd-hist-enter-active {
   transition:
     opacity var(--dur-slow) var(--ease-out),

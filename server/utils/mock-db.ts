@@ -27,6 +27,7 @@ import type {
   Rarity,
   User,
 } from '#shared/types/api'
+import { avatarFor } from '#shared/utils/avatar'
 import { PF_TICKETS, pickByTicket, pfRoll, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
 // Real CS2 skins with Skinport prices (scripts/import-cs2-skins.py)
 import CS2_SKINS from '#shared/data/cs2-skins.json'
@@ -333,7 +334,7 @@ export function pushBigWin(cs: Pick<CaseDetails, 'slug' | 'name' | 'image'>, ite
   do winSeq += 1
   while (bigWins.some((w) => w.id === `w${winSeq}`))
   const multiplier = Math.floor(item.price / Math.max(1, cost))
-  bigWins.push({ id: `w${winSeq}`, nickname: who.nickname, avatar: who.avatar ?? '/img/brand/avatar.webp', level: who.level, item, caseSlug: cs.slug, caseName: cs.name, caseImage: cs.image, cost, multiplier, at: at.toISOString() })
+  bigWins.push({ id: `w${winSeq}`, nickname: who.nickname, avatar: who.avatar ?? avatarFor(who.nickname), level: who.level, item, caseSlug: cs.slug, caseName: cs.name, caseImage: cs.image, cost, multiplier, at: at.toISOString() })
   const c = CASES.find((x) => x.slug === cs.slug)
   if (c && multiplier >= 5 && multiplier > (c.bestToday ?? 0)) c.bestToday = multiplier
   // the player's own big drop joins this case's 7-day top
@@ -1044,7 +1045,7 @@ export function makeDrop(overrides: Partial<FeedDrop> & Partial<Item> = {}): Fee
       ...overrides,
     })
   }
-  return {
+  const drop: FeedDrop = {
     id: `d${dropSeq}`,
     itemName: it.weapon,
     skinName: it.skin,
@@ -1055,10 +1056,13 @@ export function makeDrop(overrides: Partial<FeedDrop> & Partial<Item> = {}): Fee
     caseName: cs.name,
     casePrice: cs.price,
     userNickname: nicknames()[Math.floor(Math.random() * nicknames().length)] ?? 'player',
-    userAvatar: '/img/brand/avatar.webp',
     createdAt: new Date().toISOString(),
+    userAvatar: '',
     ...overrides,
   }
+  // the player's own picture on their own drops, a stand-in for everyone else
+  drop.userAvatar = overrides.userAvatar ?? (drop.userNickname === state.user.nickname ? state.user.avatar : avatarFor(drop.userNickname))
+  return drop
 }
 
 export function makeDropOfRarity(rarity: Rarity): FeedDrop {

@@ -2,12 +2,13 @@
 // per round, a future "EOS block" as the client seed) and the battle goes live; the client replays
 // the rounds from startedAt + roundMs.
 import type { Battle, BattleCaseRef, BattleMode, BattlePlayerRef, BattleRoundResult, CreateBattleRequest } from '#shared/types/api'
+import { avatarFor } from '#shared/utils/avatar'
 import { pickByTicket, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
 import { adminSettings, getCase, getMockState, lobbyCaseSlugs, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory } from './mock-db'
 
 // Round time, round cap and bot names are admin settings (adminSettings.games.pvp); lobby players are the fake players
 const pvp = () => adminSettings.games.pvp
-const lobbyPlayers = (): BattlePlayerRef[] => adminSettings.players.slice(0, 4).map((p) => ({ nickname: p.nickname, avatar: '/img/brand/avatar.webp', level: p.level }))
+const lobbyPlayers = (): BattlePlayerRef[] => adminSettings.players.slice(0, 4).map((p) => ({ nickname: p.nickname, avatar: avatarFor(p.nickname), level: p.level }))
 
 interface StoredBattle extends Battle {
   serverSeed: string

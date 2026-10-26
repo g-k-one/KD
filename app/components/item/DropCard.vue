@@ -14,7 +14,8 @@ const rc = computed(() => RARITY_COLOR[props.item.rarity])
 
 <template>
   <div
-    class="kd-drop group kd-spotlight relative flex min-w-0 flex-col items-center gap-2 rounded-3xl p-3 lg:p-4"
+    class="kd-drop group kd-spotlight relative flex min-w-0 flex-col items-center rounded-3xl"
+    :class="compact ? 'gap-1.5 p-2.5' : 'gap-2 p-3 lg:p-4'"
     @pointermove="onPointerMove"
   >
     <div class="type-12 flex w-full items-center justify-between uppercase">

@@ -185,7 +185,17 @@ onMounted(async () => {
     /* chances stay even */
   }
 })
-const SIMS = 600
+const SIMS = 2000
+// one fixed stream of numbers per estimate: the same state always shows the same chance, nothing jitters
+function seeded(seed: number) {
+  let a = seed >>> 0
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
 function winnersBy(tt: number[]) {
   if (b.value.mode === 'team') return tt[0]! + tt[1]! >= tt[2]! + tt[3]! ? [0, 1] : [2, 3]
   const pick = b.value.mode === 'crazy' ? Math.min(...tt) : Math.max(...tt)
@@ -195,13 +205,16 @@ const chances = computed<number[]>(() => {
   const n = b.value.size
   if (done.value) return b.value.slots.map((x) => (winners.value.includes(x.slot) ? 100 : 0))
   const even = b.value.slots.map(() => (isTeam.value ? 50 : 100 / n))
+  // before the first round everyone is in the same place: exactly even, not a noisy estimate of it
+  if (!revealed.value) return even
   const left = b.value.rounds.slice(revealed.value)
   const items = caseItems.value
   if (left.some((r) => !items[r.slug]?.length)) return even
+  const rand = seeded(revealed.value * 7919 + n)
   const wins = new Array<number>(n).fill(0)
   for (let k = 0; k < SIMS; k++) {
     const tt = [...totals.value]
-    for (const r of left) for (let x = 0; x < n; x++) tt[x]! += pickByTickets(items[r.slug]!).price
+    for (const r of left) for (let x = 0; x < n; x++) tt[x]! += pickByTickets(items[r.slug]!, rand).price
     const w = winnersBy(tt)
     // a team wins together; tied players share the win
     for (const x of w) wins[x]! += isTeam.value ? 1 : 1 / w.length
