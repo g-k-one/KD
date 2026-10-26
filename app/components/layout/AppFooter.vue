@@ -22,6 +22,7 @@ const year = new Date().getFullYear()
 const { locale, locales, setLocale } = useI18n()
 const localeOptions = computed(() => locales.value.map((l) => ({ value: l.code, label: l.name ?? l.code })))
 const lang = computed({ get: () => locale.value, set: (v) => setLocale(v) })
+const consent = useConsent()
 
 const columns = computed(() => [
   { title: 'footer.play', links: PLAY },
@@ -64,6 +65,15 @@ const columns = computed(() => [
             >
               {{ $t(`nav.${l.key}`) }}
             </NuxtLink>
+            <!-- the cookie choice can be changed any time: the banner opens again on its settings -->
+            <button
+              v-if="col.title === 'footer.legal'"
+              type="button"
+              class="type-14-caps self-start whitespace-nowrap text-neutral-12 transition-colors hover:text-neutral-15"
+              @click="consent.reopen()"
+            >
+              {{ $t('nav.cookieSettings') }}
+            </button>
           </div>
         </div>
       </div>

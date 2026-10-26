@@ -13,6 +13,7 @@
     "privacy": "Privacy Policy",
     "aml": "AML Policy",
     "refund": "Refund Policy",
+    "cookieSettings": "Cookie settings",
     "new": "New"
   },
   "auth": {
@@ -151,6 +152,22 @@
     },
     "left": "{n} left",
     "soldOut": "Sold out"
+  },
+  "cookies": {
+    "title": "Cookies",
+    "text": "Necessary cookies keep you signed in and remember your settings. With your OK we also count visits and measure our ads.",
+    "policy": "Cookie policy",
+    "rejectAll": "Reject all",
+    "acceptAll": "Accept all",
+    "settings": "Settings",
+    "save": "Save choice",
+    "alwaysOn": "Always on",
+    "necessary": "Necessary",
+    "necessaryHint": "Sign-in, balance, language and sound",
+    "analytics": "Analytics",
+    "analyticsHint": "Which pages are visited, so we know what to fix",
+    "marketing": "Marketing",
+    "marketingHint": "Measure our ads and show fewer that don't fit you"
   },
   "footer": {
     "play": "Play",

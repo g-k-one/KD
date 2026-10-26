@@ -29,6 +29,7 @@ watch(() => route.fullPath, () => (ui.popover = null))
     <WalletInventoryDrawer />
     <LayoutLevelUp />
     <UiToaster />
+    <LayoutCookieConsent />
     <LayoutDebugDock v-if="debug" />
   </div>
 </template>
