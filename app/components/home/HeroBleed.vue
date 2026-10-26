@@ -127,7 +127,7 @@ const onScreen = useElementVisibility(band)
 /* c: two rows drifting right to left at different speeds; strong in the margins, faint behind the words */
 .kd-drift {
   mask-image:
-    linear-gradient(90deg, #000, #000 calc(50% - 640px), rgb(0 0 0 / 0.14) calc(50% - 380px), rgb(0 0 0 / 0.14) calc(50% + 200px), #000 calc(50% + 640px)),
+    linear-gradient(90deg, #000, #000 calc(50% - 720px), rgb(0 0 0 / 0.14) calc(50% - 560px), rgb(0 0 0 / 0.14) calc(50% + 200px), #000 calc(50% + 640px)),
     linear-gradient(180deg, #000 70%, transparent);
   mask-composite: intersect;
 }
