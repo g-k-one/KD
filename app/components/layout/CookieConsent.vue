@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { ConsentCategory } from '~/composables/useConsent'
 
-// The cookie banner (GDPR / ePrivacy): a card in the corner on desktop, above the bottom bar on phones, that never
-// blocks the page. Reject all and Accept all are the same size, one tap each; Settings opens the categories in the
-// same card, nothing pre-ticked. Reopened from the footer it opens straight on Settings with the current choice.
+// The cookie banner (GDPR / ePrivacy): a compact card in the corner on desktop, above the bottom bar on phones, that
+// never blocks the page. One row of buttons: Accept all and Reject all the same size, one tap each, and a square
+// Settings button that opens the categories in the same card, nothing pre-ticked. Reopened from the footer it opens
+// straight on Settings with the current choice.
 const consent = useConsent()
 const view = ref<'short' | 'settings'>('short')
 const choice = reactive<Record<ConsentCategory, boolean>>({ analytics: false, marketing: false })
@@ -37,17 +38,17 @@ const CATEGORIES: Array<{ key: ConsentCategory | 'necessary'; always?: boolean }
       v-if="visible"
       role="dialog"
       aria-labelledby="kd-consent-title"
-      class="kd-consent fixed inset-x-3 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 flex flex-col gap-4 rounded-3xl border border-neutral-5 bg-neutral-2 p-4 lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-105"
+      class="kd-consent fixed inset-x-3 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 flex flex-col gap-3 rounded-3xl border border-neutral-5 bg-neutral-2 p-4 lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-105"
     >
-      <div class="flex items-start gap-3">
-        <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-brand-24 text-brand-light"><UiIcon name="cookie" :size="22" /></span>
-        <div class="flex min-w-0 flex-col gap-1">
-          <h2 id="kd-consent-title" class="type-16-caps">{{ $t('cookies.title') }}</h2>
-          <p class="type-14-regular text-neutral-11">
-            {{ $t('cookies.text') }}
-            <NuxtLink to="/privacy#cookies" class="text-neutral-13 underline underline-offset-2 hover:text-neutral-15">{{ $t('cookies.policy') }}</NuxtLink>
-          </p>
-        </div>
+      <div class="flex flex-col gap-1">
+        <h2 id="kd-consent-title" class="type-16-caps flex items-center gap-2">
+          <UiIcon name="cookie" :size="20" class="text-brand-light" />
+          {{ $t('cookies.title') }}
+        </h2>
+        <p class="type-14-regular text-neutral-11">
+          {{ $t('cookies.text') }}
+          <NuxtLink to="/privacy#cookies" class="text-neutral-13 underline underline-offset-2 hover:text-neutral-15">{{ $t('cookies.policy') }}</NuxtLink>
+        </p>
       </div>
 
       <!-- the categories: necessary always on, the rest off until turned on -->
@@ -63,13 +64,21 @@ const CATEGORIES: Array<{ key: ConsentCategory | 'necessary'; always?: boolean }
         </li>
       </ul>
 
-      <div class="flex flex-col gap-2">
-        <div class="grid grid-cols-2 gap-2">
-          <UiButton v-if="view === 'short'" variant="secondary" block @click="consent.rejectAll()">{{ $t('cookies.rejectAll') }}</UiButton>
-          <UiButton v-else variant="secondary" block @click="consent.save({ ...choice })">{{ $t('cookies.save') }}</UiButton>
-          <UiButton block @click="consent.acceptAll()">{{ $t('cookies.acceptAll') }}</UiButton>
-        </div>
-        <UiButton v-if="view === 'short'" variant="ghost" size="s" icon="sliders" class="self-center" @click="view = 'settings'">{{ $t('cookies.settings') }}</UiButton>
+      <!-- one row: the two answers the same size, then Settings (in Settings the second answer saves the choice) -->
+      <div class="grid grid-cols-[1fr_1fr_auto] gap-2">
+        <UiButton block @click="consent.acceptAll()">{{ $t('cookies.acceptAll') }}</UiButton>
+        <UiButton v-if="view === 'short'" variant="secondary" block @click="consent.rejectAll()">{{ $t('cookies.rejectAll') }}</UiButton>
+        <UiButton v-else variant="secondary" block @click="consent.save({ ...choice })">{{ $t('cookies.save') }}</UiButton>
+        <UiButton
+          variant="secondary"
+          icon="sliders"
+          icon-only
+          :class="view === 'settings' && 'kd-consent-on'"
+          :title="$t('cookies.settings')"
+          :aria-label="$t('cookies.settings')"
+          :aria-pressed="view === 'settings'"
+          @click="view = view === 'settings' ? 'short' : 'settings'"
+        />
       </div>
     </section>
   </Transition>
@@ -78,6 +87,10 @@ const CATEGORIES: Array<{ key: ConsentCategory | 'necessary'; always?: boolean }
 <style scoped>
 .kd-consent {
   box-shadow: 0 12px 32px rgb(0 0 0 / 0.6);
+}
+.kd-consent-on {
+  box-shadow: inset 0 0 0 1.5px var(--color-brand-base);
+  color: var(--color-brand-light);
 }
 .kd-consent-enter-active {
   transition:
