@@ -117,7 +117,7 @@ async function editOnHome() {
     <AdminPanel title="Rows" icon="view-grid" body="list" hint="Top to bottom as on home. A hidden row keeps its place; a row with no cases is not shown.">
       <template v-if="draft">
         <div v-drag-sort="'rows'" class="flex flex-col gap-1">
-          <div v-for="(r, i) in draft.sections" :key="r.id" class="kd-drag-row flex flex-col gap-3 rounded-2xl bg-neutral-3 p-3 transition-opacity" :class="r.hidden && 'opacity-48'">
+          <div v-for="(r, i) in draft.sections" :key="r.id" class="kd-drag-row flex flex-col gap-3 rounded-3xl bg-neutral-3 p-2.5 transition-opacity" :class="r.hidden && 'opacity-48'">
             <!-- the row: a grip to drag it, its number and name, its scene, show / hide, remove (rows added here) -->
             <div class="flex flex-wrap items-center gap-2">
               <span class="kd-row-grip flex w-9 shrink-0 cursor-grab touch-none items-center justify-center gap-0.5 self-stretch rounded-lg text-neutral-11 hover:text-neutral-15" :title="`Drag ${r.title}`">

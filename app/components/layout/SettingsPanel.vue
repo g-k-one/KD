@@ -31,7 +31,7 @@ const streamer = computed({ get: () => s.value.streamerMode, set: (v) => setting
 
     <UiSelect v-model="currency" :options="currencyOptions" :label="$t('settings.currency')" />
 
-    <div class="flex flex-col gap-1.5 rounded-[10px] bg-neutral-3 p-3">
+    <div class="flex flex-col gap-1.5 rounded-lg bg-neutral-3 p-3">
       <div class="flex items-center gap-2">
         <UiIcon name="sound" :size="20" :class="sound ? 'text-brand-light' : 'text-neutral-12'" />
         <span class="type-14-caps flex-1">{{ $t('settings.sound') }}</span>
@@ -41,7 +41,7 @@ const streamer = computed({ get: () => s.value.streamerMode, set: (v) => setting
       <UiSlider v-if="sound" v-model="volume" :label="$t('settings.volume')" />
     </div>
 
-    <div class="flex flex-col gap-1.5 rounded-[10px] bg-neutral-3 p-3 lg:hidden">
+    <div class="flex flex-col gap-1.5 rounded-lg bg-neutral-3 p-3 lg:hidden">
       <div class="flex items-center gap-2">
         <UiIcon name="m-bonus" :size="20" :class="haptics ? 'text-brand-light' : 'text-neutral-12'" />
         <span class="type-14-caps flex-1">{{ $t('settings.haptics') }}</span>
@@ -50,7 +50,7 @@ const streamer = computed({ get: () => s.value.streamerMode, set: (v) => setting
       <p class="type-12-regular text-neutral-12">{{ $t('settings.hapticsHint') }}</p>
     </div>
 
-    <div class="flex flex-col gap-1.5 rounded-[10px] bg-neutral-3 p-3">
+    <div class="flex flex-col gap-1.5 rounded-lg bg-neutral-3 p-3">
       <div class="flex items-center gap-2">
         <UiIcon name="streamer" :size="20" class="transition-colors" :class="streamer ? 'text-brand-light' : 'text-neutral-12'" />
         <span class="type-14-caps flex-1">{{ $t('settings.streamerMode') }}</span>

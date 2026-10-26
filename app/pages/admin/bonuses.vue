@@ -77,14 +77,14 @@ const addPromo = () => draft.value!.promos.push({ code: '', kind: 'coins', value
       </AdminPanel>
 
       <AdminPanel title="Promo codes" icon="diamond" body="list" hint="Coins: credited on Bonuses. Deposit %: added to a deposit">
-        <div v-for="(p, k) in draft.promos" :key="k" class="flex flex-wrap items-center gap-2 rounded-2xl bg-neutral-3 p-1.5">
+        <div v-for="(p, k) in draft.promos" :key="k" class="flex flex-wrap items-center gap-2 rounded-[14px] bg-neutral-3 p-1.5">
           <UiInput v-model="p.code" size="s" uppercase lazy placeholder="CODE" class="min-w-32 flex-1" />
           <UiSegmented :model-value="p.kind" :options="KINDS" size="s" @update:model-value="setKind(p, $event)" />
           <AdminCoinInput v-if="p.kind === 'coins'" v-model="p.value" size="s" class="w-32" />
           <AdminPercentInput v-else v-model="p.value" size="s" class="w-32" />
           <UiButton variant="ghost" size="s" icon="x" icon-only :aria-label="`Remove ${p.code || 'code'}`" @click="draft.promos.splice(k, 1)" />
         </div>
-        <UiButton variant="secondary" size="s" icon="plus" class="mt-2 self-start" @click="addPromo">Add code</UiButton>
+        <UiButton variant="secondary" icon="plus" class="mt-2 self-start" @click="addPromo">Add code</UiButton>
       </AdminPanel>
     </div>
     <span v-else class="kd-skeleton block h-96 rounded-5xl" />

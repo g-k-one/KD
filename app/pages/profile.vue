@@ -256,7 +256,7 @@ async function saveTrade() {
             </div>
           </form>
           <dl class="grid grid-cols-3 gap-2 rounded-5xl bg-neutral-2 p-3 lg:p-4">
-            <div v-for="s in statCards.slice(1, 4)" :key="s.key" class="flex min-w-0 flex-col gap-1 rounded-2xl bg-neutral-3 px-3 py-2.5">
+            <div v-for="s in statCards.slice(1, 4)" :key="s.key" class="flex min-w-0 flex-col gap-1 rounded-2xl bg-neutral-3 px-3 py-2.5 lg:rounded-lg">
               <dt class="type-10-caps leading-tight text-neutral-11">{{ s.label }}</dt>
               <dd class="type-14 tabular-nums" :class="s.coin && 'text-coin'">
                 <UiPrice v-if="s.price != null" :amount="s.price" size="s" tone="coin" />
@@ -339,6 +339,8 @@ async function saveTrade() {
 @media (min-width: 64rem) {
   .kd-dock {
     padding-inline: 16px;
+    /* its 12px chips stand 16px in: 12 + 16 */
+    border-radius: 28px;
   }
 }
 .kd-dock-stat {

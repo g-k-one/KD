@@ -101,7 +101,7 @@ async function pay() {
               type="button"
               role="radio"
               :aria-checked="methodId === m.id"
-              class="kd-method kd-press group relative flex flex-col items-center justify-center gap-4 rounded-2xl border px-3 py-5 lg:h-34"
+              class="kd-method kd-press group relative flex flex-col items-center justify-center gap-4 rounded-xl border px-3 py-5 lg:h-34 lg:rounded-lg"
               @click="methodId = m.id"
             >
               <span class="grid h-14 w-full max-w-32 place-items-center rounded-sm bg-white-8 transition-transform duration-300 group-hover:-translate-y-0.5 lg:h-16">

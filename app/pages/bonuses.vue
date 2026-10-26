@@ -256,7 +256,7 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
 
       <!-- the three rewards, one card each: what it is, what is waiting, one button -->
       <div class="grid gap-3 lg:grid-cols-3 lg:gap-4">
-        <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-5">
+        <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4">
           <div class="flex items-center gap-3">
             <img :src="daily.case.image" alt="" class="size-12 shrink-0 object-contain" />
             <div class="flex min-w-0 flex-col gap-0.5">
@@ -270,9 +270,9 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
             <UiIcon name="history" :size="16" class="text-neutral-11" /><span class="type-14 tabular-nums">{{ dailyIn }}</span>
           </div>
         </div>
-        <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-5" :class="levelCount > 0 && 'is-ready'">
+        <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4" :class="levelCount > 0 && 'is-ready'">
           <div class="flex items-center gap-3">
-            <span class="kd-reward-badge grid size-12 shrink-0 place-items-center rounded-2xl"><UiLevelBadge :level="level.levelCases[0]?.level ?? level.next.level" /></span>
+            <span class="kd-reward-badge grid size-12 shrink-0 place-items-center rounded-lg"><UiLevelBadge :level="level.levelCases[0]?.level ?? level.next.level" /></span>
             <div class="flex min-w-0 flex-col gap-0.5">
               <span class="type-16-caps">{{ $t('bonus.levelCase') }}</span>
               <span class="type-12-regular text-neutral-11">
@@ -284,9 +284,9 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
           <UiButton v-if="levelCount" size="m" block class="mt-auto" @click="openSource('level')">{{ $t('bonus.openFree') }}</UiButton>
           <p v-else class="type-12-regular mt-auto text-neutral-11">{{ level.next.big ? $t('bonus.levelCaseBig') : $t('bonus.levelCaseHow') }}</p>
         </div>
-        <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-5" :class="level.rakeback.pending >= 1 && 'is-ready'">
+        <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4" :class="level.rakeback.pending >= 1 && 'is-ready'">
           <div class="flex items-center gap-3">
-            <span class="kd-reward-badge grid size-12 shrink-0 place-items-center rounded-2xl text-success"><UiIcon name="refresh" :size="24" /></span>
+            <span class="kd-reward-badge grid size-12 shrink-0 place-items-center rounded-lg text-success"><UiIcon name="refresh" :size="24" /></span>
             <div class="flex min-w-0 flex-col gap-0.5">
               <span class="type-16-caps">{{ $t('bonus.rakeback') }}</span>
               <span class="type-12-regular text-neutral-11">{{ $t('bonus.rakebackHow', { pct: pct(level.rakeback.rateBp) }) }}</span>
@@ -297,7 +297,7 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
         </div>
       </div>
       <!-- the promo code sits as tall as it needs: its words and the field side by side on desktop, no empty middle -->
-      <div ref="promoEl" class="scroll-mt-24 flex flex-col gap-3 rounded-5xl bg-neutral-2 p-5 lg:flex-row lg:items-center lg:gap-6">
+      <div ref="promoEl" class="scroll-mt-24 flex flex-col gap-3 rounded-5xl bg-neutral-2 p-3.5 lg:flex-row lg:items-center lg:gap-6">
         <div class="flex min-w-0 flex-1 flex-col gap-1">
           <span class="type-16-caps">{{ $t('bonus.promo') }}</span>
           <p class="type-12-regular text-neutral-11">{{ $t('bonus.promoText') }}</p>

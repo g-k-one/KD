@@ -96,7 +96,7 @@ watch(
     </UiEmptyState>
     <template v-else-if="rows.length">
       <!-- Rolls of the active pair can't be checked yet: say why and offer the rotation right here -->
-      <div v-if="sealed" class="flex flex-col gap-3 rounded-2xl bg-success-24 p-4 sm:flex-row sm:items-center">
+      <div v-if="sealed" class="flex flex-col gap-3 rounded-5xl bg-success-24 p-3.5 sm:flex-row sm:items-center">
         <UiIcon name="shield" :size="24" class="shrink-0 text-success max-sm:hidden" />
         <p class="type-14-regular flex-1 text-neutral-14">{{ $t('fair.sealedHint', { n: sealed }, sealed) }}</p>
         <UiButton variant="fair" size="l" icon="refresh" :loading="rotating" class="shrink-0" @click="emit('rotate')">{{ $t('fair.rotateReveal') }}</UiButton>

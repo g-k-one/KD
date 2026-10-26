@@ -65,10 +65,10 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
     <!-- Switches (pressed = tinted fill, the hint lives in the tooltip): phones, two equal chips under the main
          button; desktop, the right end of the row -->
     <div class="grid grid-cols-2 gap-2 lg:flex lg:justify-end">
-      <UiChip size="m" tone="coin" icon="fast" class="!h-12 w-full lg:w-auto lg:px-4" :active="fast" @click="fast = !fast">{{ $t('upgrade.fast') }}</UiChip>
+      <UiChip size="m" tone="coin" icon="fast" class="!h-12 !rounded-xl w-full lg:w-auto lg:px-4" :active="fast" @click="fast = !fast">{{ $t('upgrade.fast') }}</UiChip>
       <UiTooltip :text="$t('case.kurwaHint')" class="min-w-0">
         <!-- a chicken head in the same line weight as Fast's bolt -->
-        <UiChip size="m" tone="gold" icon="kurwa" class="!h-12 w-full min-w-0 lg:px-4" :active="kurwadrop" @click="kurwadrop = !kurwadrop">
+        <UiChip size="m" tone="gold" icon="kurwa" class="!h-12 !rounded-xl w-full min-w-0 lg:px-4" :active="kurwadrop" @click="kurwadrop = !kurwadrop">
           <span :class="kurwadrop && 'kd-kurwa-word'">{{ $t('case.kurwadrop') }}</span>
         </UiChip>
       </UiTooltip>
@@ -86,6 +86,8 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
 @media (min-width: 64rem) {
   .kd-dock {
     padding-inline: 16px;
+    /* its 12px chips stand 16px in: 12 + 16 */
+    border-radius: 28px;
   }
 }
 .kd-kurwa-word {

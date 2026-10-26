@@ -38,7 +38,7 @@ const CATEGORIES: Array<{ key: ConsentCategory | 'necessary'; always?: boolean }
       v-if="visible"
       role="dialog"
       aria-labelledby="kd-consent-title"
-      class="kd-consent fixed inset-x-3 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 flex flex-col gap-3 rounded-3xl border border-neutral-5 bg-neutral-2 p-4 lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-105"
+      class="kd-consent fixed inset-x-3 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 flex flex-col gap-3 rounded-5xl border border-neutral-5 bg-neutral-2 p-4 lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-105"
     >
       <div class="flex flex-col gap-1">
         <h2 id="kd-consent-title" class="type-16-caps flex items-center gap-2">

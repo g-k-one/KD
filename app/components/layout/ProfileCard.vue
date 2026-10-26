@@ -31,7 +31,7 @@ const maskedSteamId = computed(() => `${props.user.steamId.slice(0, 4)}…${prop
       </div>
     </div>
 
-    <div class="flex flex-col gap-3 rounded-[10px] bg-neutral-3 p-3">
+    <div class="flex flex-col gap-3 bg-neutral-3 p-3" :class="compact ? 'rounded-lg' : 'rounded-[22px]'">
       <div class="flex items-center justify-between">
         <span class="type-12-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
         <UiPrice :amount="user.balance" size="l" :tone="compact ? 'coin' : 'default'" />

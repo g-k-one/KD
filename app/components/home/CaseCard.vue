@@ -154,7 +154,7 @@ function onArtLeave() {
     <span v-if="badge" class="absolute top-3 left-3 lg:top-4 lg:left-4">
       <!-- Only HOT cases burn; the other badges stay calm so the fire still means something -->
       <FxFire :on="badge.kind === 'hot'">
-        <span class="kd-badge type-10-caps relative z-[2] inline-flex items-center gap-1 rounded-sm px-1.5 py-1" :class="`is-${badge.kind}`">
+        <span class="kd-badge type-10-caps relative z-[2] inline-flex items-center gap-1 rounded-md px-1.5 py-1" :class="`is-${badge.kind}`">
           <UiIcon :name="badge.kind === 'today' ? 'trophy' : badge.kind === 'new' ? 'sparkle' : 'fire'" :size="12" />
           {{ badge.text }}
         </span>

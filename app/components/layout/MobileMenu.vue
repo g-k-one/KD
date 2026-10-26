@@ -49,7 +49,7 @@ async function logout() {
 
         <template v-if="session.user">
           <NuxtLink to="/profile" class="kd-press kd-press-wide block rounded-3xl" :aria-label="$t('profile.profile')">
-            <LayoutProfileCard :user="session.user" compact :actions="false" class="pointer-events-none rounded-3xl bg-neutral-3/40 p-3" />
+            <LayoutProfileCard :user="session.user" compact :actions="false" class="pointer-events-none rounded-4xl bg-neutral-3/40 p-3" />
           </NuxtLink>
           <div class="grid grid-cols-2 gap-2">
             <UiButton size="m" icon="plus" to="/deposit">{{ $t('wallet.deposit') }}</UiButton>
@@ -106,7 +106,7 @@ async function logout() {
           </button>
         </nav>
 
-        <div ref="settingsEl" class="scroll-mt-4 rounded-3xl border border-neutral-5 bg-neutral-2 p-4">
+        <div ref="settingsEl" class="scroll-mt-4 rounded-5xl border border-neutral-5 bg-neutral-2 p-4">
           <LayoutSettingsPanel />
         </div>
       </aside>

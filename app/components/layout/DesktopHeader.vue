@@ -81,7 +81,7 @@ async function logout() {
       <Transition name="kd-pop">
         <div
           v-if="ui.popover === 'settings'"
-          class="kd-popover absolute top-full right-0 z-40 mt-2 w-80 rounded-3xl border border-neutral-5 bg-neutral-2 p-4"
+          class="kd-popover absolute top-full right-0 z-40 mt-2 w-80 rounded-5xl border border-neutral-5 bg-neutral-2 p-4"
         >
           <LayoutSettingsPanel />
         </div>
@@ -115,7 +115,7 @@ async function logout() {
         <Transition name="kd-pop">
         <div
           v-if="ui.popover === 'profile'"
-          class="kd-popover absolute top-full right-0 z-40 mt-2 flex w-80 flex-col gap-4 rounded-3xl border border-neutral-5 bg-neutral-2 p-4"
+          class="kd-popover absolute top-full right-0 z-40 mt-2 flex w-80 flex-col gap-4 rounded-5xl border border-neutral-5 bg-neutral-2 p-4"
         >
           <LayoutProfileCard :user="session.user" />
           <nav class="flex flex-col gap-0.5">

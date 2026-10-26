@@ -579,7 +579,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     <!-- Depth: cards away from the centre sink into the dark (a still gradient, nothing re-rasterizes while the
          strip moves). Columns drop it on the result, where the drop's name and Sell sit at the bottom. -->
     <Transition name="kd-idle">
-      <div v-if="!grid && (horizontal || phase !== 'result')" class="kd-depth pointer-events-none absolute inset-0 rounded-5xl" :class="horizontal ? 'is-h' : 'is-v'" />
+      <div v-if="!grid && (horizontal || phase !== 'result')" class="kd-depth pointer-events-none absolute inset-0 rounded-4xl" :class="horizontal ? 'is-h' : 'is-v'" />
     </Transition>
 
     <!-- KURWADROP: the chicken screams, then the respin among the expensive items. One reel: centred over it;

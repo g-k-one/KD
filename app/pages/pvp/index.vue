@@ -116,6 +116,8 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
 @media (min-width: 64rem) {
   .kd-dock {
     padding-inline: 16px;
+    /* its 12px chips stand 16px in: 12 + 16 */
+    border-radius: 28px;
   }
 }
 /* phones: a dock cell is a column — the number, then its word */

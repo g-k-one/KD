@@ -38,7 +38,7 @@ const addPlayer = () => draft.value!.players.push({ nickname: '', level: 1 })
           </UiInput>
           <UiButton variant="ghost" size="s" icon="x" icon-only :aria-label="`Remove ${p.nickname || 'player'}`" :disabled="draft.players.length <= 1" @click="draft.players.splice(k, 1)" />
         </div>
-        <UiButton variant="secondary" size="s" icon="plus" class="mt-2 self-start" @click="addPlayer">Add player</UiButton>
+        <UiButton variant="secondary" icon="plus" class="mt-2 self-start" @click="addPlayer">Add player</UiButton>
       </AdminPanel>
     </div>
     <span v-else class="kd-skeleton block h-96 rounded-5xl" />

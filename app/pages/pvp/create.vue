@@ -149,7 +149,7 @@ async function create() {
       </div>
 
       <!-- Summary -->
-      <aside class="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-20 flex flex-col gap-2 border-t border-neutral-5 bg-neutral-2 px-4 py-3 lg:sticky lg:gap-3 lg:top-24 lg:bottom-auto lg:rounded-5xl lg:border lg:border-neutral-4 lg:bg-neutral-2 lg:p-5">
+      <aside class="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-20 flex flex-col gap-2 border-t border-neutral-5 bg-neutral-2 px-4 py-3 lg:sticky lg:gap-3 lg:top-24 lg:bottom-auto lg:rounded-5xl lg:border lg:border-neutral-4 lg:bg-neutral-2 lg:p-4">
         <div class="flex items-center justify-between gap-2">
           <h2 class="type-16-caps max-lg:hidden">{{ $t('pvp.summary') }}</h2>
           <!-- phones keep the bar low: the round count stands here instead of the totals list -->
