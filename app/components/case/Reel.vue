@@ -1008,6 +1008,12 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 .kd-reel.is-hen .kd-chicken-hit {
   animation: none;
 }
+/* while the chicken plays, the reel is its own layer above its neighbours (the controls under it): the chicken's
+   canvas lives in the reel, and without this it slipped under Skip whenever the scream's tremble made the reel a
+   layer and back over it when it stopped */
+.kd-reel.is-hen {
+  z-index: 40;
+}
 /* the Golden Chicken's logo sits well smaller on the reel than the skins (80%; the chicken grows from it, so it follows) */
 .kd-art[data-gold-chicken] :deep(.kd-art-img) {
   width: calc(128px * var(--s));
