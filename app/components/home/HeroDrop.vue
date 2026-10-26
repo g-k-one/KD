@@ -95,14 +95,14 @@ if (props.part === 'art') provideForge(fxHost)
 }
 /* a strip under the skin the fire rises from */
 .kd-drop-fire {
-  left: 22%;
-  right: 22%;
-  bottom: 22%;
+  left: 24%;
+  right: 24%;
+  bottom: 36%;
   z-index: 1;
 }
 .kd-drop-stage {
   left: 50%;
-  top: 58%;
+  top: 38%;
   z-index: 2;
   translate: -50% -50%;
   animation: kd-drop-float 5.5s ease-in-out infinite alternate;
@@ -113,7 +113,7 @@ if (props.part === 'art') provideForge(fxHost)
   transition: transform var(--dur-slow) var(--ease-out);
 }
 .kd-drop-skin {
-  width: 460px;
+  width: 400px;
   max-width: none;
   filter: drop-shadow(0 18px 20px rgb(0 0 0 / 0.35));
   transition: transform var(--dur-base) var(--ease-out);
