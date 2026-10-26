@@ -44,22 +44,22 @@ async function calculate() {
 
 interface Row {
   k: string
-  v: string
+  /** null until Calculate: the row stands with a dash, so the modal keeps its height */
+  v: string | null
   mono?: boolean
   accent?: boolean
 }
 const spaced = (n: number) => n.toLocaleString('en-US').replace(/,/g, ' ')
-const rows = computed<Row[]>(() =>
-  result.value
-    ? [
-        { k: t('fair.hashCheck'), v: result.value.seedHash, mono: true },
-        { k: t('fair.hash'), v: result.value.hash, mono: true },
-        { k: t('fair.number'), v: spaced(result.value.number) },
-        { k: t('fair.ticket'), v: spaced(result.value.ticket), accent: true },
-        { k: t('fair.roll'), v: result.value.roll.toFixed(2), accent: true },
-      ]
-    : [],
-)
+const rows = computed<Row[]>(() => {
+  const r = result.value
+  return [
+    { k: t('fair.hashCheck'), v: r ? r.seedHash : null, mono: true },
+    { k: t('fair.hash'), v: r ? r.hash : null, mono: true },
+    { k: t('fair.number'), v: r ? spaced(r.number) : null },
+    { k: t('fair.ticket'), v: r ? spaced(r.ticket) : null, accent: true },
+    { k: t('fair.roll'), v: r ? r.roll.toFixed(2) : null, accent: true },
+  ]
+})
 
 const toast = useToast()
 async function copy(v: string) {
@@ -92,22 +92,31 @@ async function copy(v: string) {
       <UiButton type="submit" variant="fair" size="l" block>{{ $t('fair.calculate') }}</UiButton>
     </form>
 
-    <!-- the maths first, a line at a time, then the verdict -->
-    <dl v-if="result" :key="`r${run}`" class="grid gap-2 rounded-2xl bg-neutral-3 p-4 text-sm">
-      <div v-for="(row, i) in rows" :key="row.k" class="kd-rise grid grid-cols-[140px_1fr_auto] items-center gap-3" :style="{ '--d': `${i * 70}ms` }">
+    <!-- The maths and the verdict stand from the start (dashes, a hint), so Calculate fills them in place and the modal
+         never changes height: the values come in a line at a time, then the verdict lands -->
+    <dl class="grid gap-2 rounded-2xl bg-neutral-3 p-4 text-sm">
+      <div v-for="(row, i) in rows" :key="row.k" class="grid grid-cols-[140px_1fr_auto] items-center gap-3">
         <dt class="type-12-caps text-neutral-11">{{ row.k }}</dt>
-        <dd class="min-w-0 truncate tabular-nums" :class="[row.mono && 'font-mono text-xs text-neutral-13', row.accent && 'type-16-medium font-semibold text-success']">{{ row.v }}</dd>
-        <button type="button" class="kd-press text-neutral-11 hover:text-neutral-15" :aria-label="$t('fair.copy')" @click="copy(String(row.v))">
+        <dd class="min-w-0 truncate tabular-nums" :class="[row.mono && 'font-mono text-xs text-neutral-13', row.accent && 'type-16-medium font-semibold text-success']">
+          <span v-if="row.v != null" :key="`${run}-${i}`" class="kd-rise inline-block max-w-full truncate align-bottom" :style="{ '--d': `${i * 70}ms` }">{{ row.v }}</span>
+          <span v-else class="text-neutral-8">—</span>
+        </dd>
+        <button type="button" class="kd-press text-neutral-11 hover:text-neutral-15 disabled:opacity-0" :disabled="row.v == null" :aria-label="$t('fair.copy')" @click="copy(String(row.v))">
           <UiIcon name="copy" :size="16" />
         </button>
       </div>
     </dl>
-    <div v-if="result && verdict" :key="`v${run}`" class="kd-rise kd-verdict flex items-center gap-3 rounded-2xl p-4" :class="verdict.ok ? 'bg-success-24 text-success' : 'bg-danger-24 text-danger'" :style="{ '--d': `${rows.length * 70 + 120}ms` }">
+    <div v-if="result && verdict" :key="`v${run}`" class="kd-verdict flex h-[76px] items-center gap-3 rounded-2xl p-4" :class="verdict.ok ? 'bg-success-24 text-success' : 'bg-danger-24 text-danger'" :style="{ '--d': `${rows.length * 70 + 120}ms` }">
       <UiIcon :name="verdict.ok ? 'shield-check' : 'x-circle'" :size="24" class="shrink-0" />
       <span class="flex min-w-0 flex-col">
         <span class="type-14-caps">{{ verdict.ok ? $t('fair.match') : $t('fair.mismatch') }}</span>
         <span class="type-12-regular text-neutral-12">{{ $t('fair.yourResult', { v: verdict.v }) }}</span>
       </span>
+    </div>
+    <!-- before Calculate (or a manual check with nothing to compare): a quiet note in the verdict's place -->
+    <div v-else class="flex h-[76px] items-center gap-3 rounded-2xl bg-neutral-3 p-4 text-neutral-11">
+      <UiIcon name="shield" :size="24" class="shrink-0" />
+      <span class="type-12-regular">{{ result ? $t('fair.compareManual') : expect ? $t('fair.pendingCheck') : $t('fair.pendingManual') }}</span>
     </div>
   </UiModal>
 </template>
