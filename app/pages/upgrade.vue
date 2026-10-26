@@ -536,9 +536,10 @@ async function runUpgrade() {
           <!-- phones: the sheet's tab already names the panel, so the header keeps only its tools -->
           <UiIcon name="inventory" :size="isLg ? 24 : 20" class="text-neutral-13 max-lg:hidden" />
           <span class="type-14 lg:type-16-medium max-lg:hidden">{{ $t('upgrade.mySkins') }} ({{ inventory.length }})</span>
-          <UiPrice :amount="inventoryTotal" :size="isLg ? 'm' : 's'" tone="coin" class="opacity-64" />
+          <!-- nothing to count or sort with fewer than two skins: no "0", no sort arrows -->
+          <UiPrice v-if="inventory.length" :amount="inventoryTotal" :size="isLg ? 'm' : 's'" tone="coin" class="opacity-64" />
           <UiButton v-if="inventory.length" variant="ghost" size="s" class="ml-auto" :disabled="state === 'spinning'" @click="selected.length ? clearSkins() : allSkins()"><UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" /></UiButton>
-          <UiButton variant="ghost" :size="isLg ? 'm' : 's'" icon-only :class="!inventory.length && 'ml-auto'" :aria-label="$t(invSortDesc ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="invSortDesc = !invSortDesc">
+          <UiButton v-if="inventory.length > 1" variant="ghost" :size="isLg ? 'm' : 's'" icon-only :aria-label="$t(invSortDesc ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="invSortDesc = !invSortDesc">
             <UiSortArrows :desc="invSortDesc" />
           </UiButton>
         </div>

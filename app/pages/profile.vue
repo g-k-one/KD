@@ -218,7 +218,8 @@ async function saveTrade() {
             <UiButton v-if="inventory.length" variant="ghost" size="s" class="ml-auto" @click="selected.length ? (selected = []) : selectAll()">
               <UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" />
             </UiButton>
-            <UiButton variant="ghost" size="m" icon-only :class="!inventory.length && 'ml-auto'" :aria-label="$t(invSort === 'priceDesc' ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="invSort = invSort === 'priceDesc' ? 'priceAsc' : 'priceDesc'">
+            <!-- nothing to sort with fewer than two skins -->
+            <UiButton v-if="inventory.length > 1" variant="ghost" size="m" icon-only :aria-label="$t(invSort === 'priceDesc' ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="invSort = invSort === 'priceDesc' ? 'priceAsc' : 'priceDesc'">
               <UiSortArrows :desc="invSort === 'priceDesc'" />
             </UiButton>
           </div>
