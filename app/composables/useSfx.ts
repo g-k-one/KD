@@ -12,11 +12,15 @@ function audio() {
   }
 }
 
-// KURWADROP's chicken: recorded sounds in one sprite (public/sfx/hen.mp3, generated in Magnific), [start, length] s;
-// only the appearance and the pop are used (its boing, scream and stretch frightened rather than amused)
-const HEN: Record<'swap' | 'pop', [number, number]> = {
-  swap: [0, 1],
-  pop: [1.2, 1.48],
+// KURWADROP's chicken: recorded sounds in one sprite (public/sfx/hen.mp3, generated in KREA with Seed Audio: cartoonish
+// and soft, the scream is the chicken shouting KURWAAAA), [start, length] s; each trimmed with long fade-outs and the
+// same light room echo baked in, so one sound flows into the next
+const HEN: Record<'swap' | 'body' | 'scream' | 'inflate' | 'pop', [number, number]> = {
+  swap: [0, 0.705],
+  body: [0.905, 0.645],
+  scream: [1.75, 1.415],
+  inflate: [3.365, 0.628],
+  pop: [4.193, 2.475],
 }
 let henBuf: Promise<AudioBuffer | null> | null = null
 
@@ -178,19 +182,21 @@ export function useSfx() {
     henLoad,
     /** KURWADROP's chicken (henShow): the logo zooms in with a rising swish and turns into the head with a bright ting */
     henSwap: () => {
-      if (hen('swap')) return
+      if (hen('swap', undefined, 0.75)) return
       swish(500, 4200, 0.13, 0.12)
       setTimeout(() => blip(1760, 0.22, 0.07), 120)
     },
-    /** ...its body springs out of the head */
-    henBody: () => {},   // no sound for the body (the recorded boing scared rather than amused)
-    /** ...the scream: the site's own two squawks (the recorded scream frightened; a funnier one is to be recorded) */
-    henScream: (_fast = false) => squawkNow(),
-    /** ...the belly stretches: a rubbery squeak rising with a fast tremble */
-    henInflate: (_fast = false) => {},   // no sound for the stretch either
-    /** ...the pop: a noise burst, a low thump and a sparkle of coins */
+    /** ...its body springs out of the head: a soft bouncy bloop, a beat late so it flows out of the swap's ting */
+    henBody: () => void setTimeout(() => hen('body', undefined, 0.65), 160),
+    /** ...the scream: the chicken shouts KURWAAAA (Fast cuts it before the stretch starts); the synth squawks without the sprite */
+    henScream: (fast = false) => {
+      if (!hen('scream', fast ? 0.5 : undefined, 0.95)) squawkNow()
+    },
+    /** ...the belly stretches: a rising balloon squeak that runs into the pop */
+    henInflate: (fast = false) => void hen('inflate', fast ? 0.22 : undefined, 0.7),
+    /** ...the pop: a balloon burst and a long shower of coins */
     henPop: () => {
-      if (hen('pop')) return
+      if (hen('pop', undefined, 0.9)) return
       swish(5000, 260, 0.38, 0.22, 'lowpass')
       glide(140, 40, 0.28, 0.24, 'sine')
       ;[1320, 1760, 2350].forEach((f, i) => setTimeout(() => blip(f, 0.16, 0.05), 90 + i * 70))
