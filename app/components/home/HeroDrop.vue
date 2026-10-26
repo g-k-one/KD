@@ -51,15 +51,16 @@ const x = computed(() => {
 .kd-drop {
   perspective: 1200px;
 }
-/* a pool of the rarity's colour, brightest under the skin */
+/* a pool of the rarity's colour, brightest under the skin; screened, so it only ever lightens the warm light */
 .kd-drop-glow {
+  mix-blend-mode: screen;
   left: 50%;
   top: 46%;
   width: 640px;
   height: 460px;
   translate: -50% -50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 55%, transparent), transparent);
-  opacity: 0.7;
+  opacity: 0.9;
 }
 /* the multiplier, huge and quiet behind the skin: the brand gradient, faded */
 .kd-drop-x {
@@ -90,7 +91,7 @@ const x = computed(() => {
 .kd-drop-skin {
   width: 460px;
   max-width: none;
-  filter: drop-shadow(0 24px 32px rgb(0 0 0 / 0.55));
+  filter: drop-shadow(0 18px 20px rgb(0 0 0 / 0.35));
   transition: transform var(--dur-base) var(--ease-out);
 }
 @media (hover: hover) {
