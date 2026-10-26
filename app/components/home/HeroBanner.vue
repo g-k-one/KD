@@ -10,8 +10,9 @@ import type { StageLayer, StageLoot } from '~/components/banner/Stage.vue'
 // The art is a BannerStage: the chicken (drawn after the logo) bursts out of an open case — the case's back, the
 // chicken, the case's front wall — with real catalog skins and KD coins flying around. The fifth poke lays a golden
 // egg — an honest one: it offers the free demo spin every case has.
-// `bare`: no ground, no frame and no loot of its own — the full-width band around it (HomeHeroBleed) paints the ground
-// and orbits the loot; the words are bigger. Every poke goes up to it too.
+// `bare`: no ground, no frame, no side padding and no loot of its own — the full-width band around it (HomeHeroBleed)
+// paints the light and orbits the loot; the words line up with the page's column, the art is bigger and has rays
+// behind it. Every poke goes up to the band too.
 const session = useSessionStore()
 const ui = useUiStore()
 const { dailyReady, welcomeLeft } = useBonuses()
@@ -37,6 +38,8 @@ const BACK: StageLayer[] = [{ src: '/img/hero/case-back.webp', x: 200, y: 76, w:
 const CHICKEN: StageLayer = { src: '/img/hero/chicken.webp', x: 212, y: -6, w: 300, d: 0.6 }
 const FRONT: StageLayer[] = [{ src: '/img/hero/case-front.webp', x: 200, y: 76, w: 330, d: 0.3 }]
 // real catalog skins, so the hero shows what the site pays out; then KD coins
+// bare: light fans turning slowly out of the open case, behind the chicken
+const RAYS = { x: 365, y: 150, color: 'rgb(255 170 60 / 0.3)' }
 const LOOT: StageLoot[] = [
   { src: '/img/items/cs2/butterfly-knife-fade.webp', x: 70, y: 70, w: 150, r: -24, d: 1.4, bx: -28, by: -18 },
   { src: '/img/items/cs2/awp-dragon-lore.webp', x: 400, y: 26, w: 210, r: 16, d: 1.1, bx: 26, by: -22 },
@@ -70,8 +73,8 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
 
 <template>
   <section
-    class="kd-hero relative isolate flex flex-col p-4 sm:min-h-60 sm:flex-row sm:px-8 sm:py-6 lg:gap-6 lg:p-10"
-    :class="bare ? 'overflow-visible lg:h-[360px]' : 'overflow-hidden rounded-4xl sm:rounded-5xl lg:h-80 lg:overflow-visible lg:rounded-[32px]'"
+    class="kd-hero relative isolate flex flex-col p-4 sm:min-h-60 sm:flex-row sm:py-6 lg:gap-6 lg:py-10"
+    :class="bare ? 'overflow-visible sm:px-4 lg:h-[420px] lg:px-0' : 'overflow-hidden rounded-4xl sm:rounded-5xl sm:px-8 lg:h-80 lg:overflow-visible lg:rounded-[32px] lg:px-10'"
     :style="vars"
     @pointermove="onMove"
     @pointerleave="onLeave"
@@ -87,20 +90,22 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
         :mascot="CHICKEN"
         :front="FRONT"
         :loot="bare ? [] : LOOT"
+        :rays="bare ? RAYS : undefined"
+        :max-scale="bare ? 1.12 : 0.84"
         :bubble="bubble ? $t(bubble) : ''"
         :poke-label="$t('hero.pokeLabel')"
         @poke="onPoke"
       />
     </div>
 
-    <div class="relative z-10 flex flex-col justify-between gap-4 sm:max-w-[58%] sm:gap-6 lg:justify-center lg:gap-10 lg:h-full lg:max-w-none" :class="bare ? 'lg:w-[700px]' : 'lg:w-[709px]'">
+    <div class="relative z-10 flex flex-col justify-between gap-4 sm:max-w-[58%] sm:gap-6 lg:justify-center lg:gap-10 lg:h-full lg:max-w-none" :class="bare ? 'lg:w-[600px]' : 'lg:w-[709px]'">
       <div class="flex flex-col gap-1 sm:gap-2">
-        <p class="type-12-caps text-brand-light" :class="bare ? 'lg:type-20-caps' : 'lg:type-16-caps'">
+        <p class="type-12-caps lg:type-16-caps text-brand-light">
           {{ session.user ? $t('hero.back', { name: session.user.nickname }) : $t('hero.eyebrow') }}
         </p>
         <h1
           class="font-extrabold uppercase"
-          :class="bare ? 'text-[28px] leading-8 sm:text-[40px] sm:leading-10 lg:text-[64px] lg:leading-[62px] lg:tracking-[-0.01em]' : 'text-xl leading-6 sm:text-[32px] sm:leading-9 lg:type-48-caps'"
+          :class="bare ? 'text-[28px] leading-8 sm:text-[36px] sm:leading-10 lg:text-[54px] lg:leading-[56px] lg:tracking-[-0.01em]' : 'text-xl leading-6 sm:text-[32px] sm:leading-9 lg:type-48-caps'"
         >
           {{ offer ? $t(offer.title, { n: offer.n }, offer.n || 1) : $t('hero.title') }}
         </h1>

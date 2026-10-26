@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /*
- * Home banner, full width: one scene from edge to edge with no frame. The ground's light sits behind the case art and
- * fades into the page below; the words, bigger, stand on a soft half-oval plate that holds them whole. Right: the chicken bursting out of its case and a ring with three real catalog skins orbiting it — a planet
+ * Home banner, full width: one scene from edge to edge with no frame. The light pours from the top as a wide warm arc
+ * and dissolves into the page (the imigo final call's glow, turned upside down); the words line up with the page's
+ * column. Right, big: the chicken bursting out of its case and a ring with three real catalog skins orbiting it — a planet
  * with its ring, seen from a little above, so the ring passes behind the chicken at the top and in front at the
  * bottom. Few things, all alive: the ring turns faster while the pointer is over the band and kicks round on a poke.
  * The ring is drawn twice (its far half under the art, its near half over it), both halves on one clock.
@@ -11,9 +12,9 @@ const { onMove, onLeave, vars } = usePointerTilt()
 
 // on the ring, by angle (0° = right, clockwise on screen); w = width in px
 const ORBIT = [
-  { src: '/img/items/cs2/butterfly-knife-fade.webp', a: 200, w: 132 },
-  { src: '/img/items/cs2/awp-dragon-lore.webp', a: 330, w: 156 },
-  { src: '/img/items/cs2/sport-gloves-pandora-s-box.webp', a: 80, w: 116 },
+  { src: '/img/items/cs2/butterfly-knife-fade.webp', a: 200, w: 168 },
+  { src: '/img/items/cs2/awp-dragon-lore.webp', a: 330, w: 200 },
+  { src: '/img/items/cs2/sport-gloves-pandora-s-box.webp', a: 80, w: 150 },
 ]
 
 // one clock for both halves: the same animations on the far and near ring, started together, sped up together
@@ -75,10 +76,8 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
 
 <template>
   <section ref="band" class="kd-bleed relative isolate pt-4 pb-6 lg:pt-10 lg:pb-12" :style="vars" @pointermove="enter" @pointerleave="leave">
-    <span class="kd-bleed-ground pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
-
-    <!-- the words' plate: a soft half-oval rising from the band's foot -->
-    <span class="kd-plate pointer-events-none absolute -z-10" aria-hidden="true" />
+    <!-- the light: an arc of warm colour hanging from the top, brightest in the middle, gone before the page -->
+    <span class="kd-glow pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
 
     <!-- the ring's far half, under the art -->
     <div class="kd-ring is-far pointer-events-none absolute -z-[5]" aria-hidden="true">
@@ -112,44 +111,41 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
 
 <style scoped>
 .kd-bleed {
-  /* the content column, and the case art's centre in it (the board's middle, 255 px in from the column's right) */
+  /* the content column, and the case art's centre in it (the board's middle, 240 px in from the column's right) */
   --col: min(1232px, 100vw);
-  --art-x: calc(50% + var(--col) / 2 - 255px);
+  --art-x: calc(50% + var(--col) / 2 - 240px);
 }
 
-/* the ground: the case's warm light behind the art, the site's near-black at the screen's edges, fading into the page */
-.kd-bleed-ground {
+/* the light: brand red → orange → gold → orange → wine across the band, a white-hot middle, masked to an arc that hangs
+   from the top and fades out on an eased curve (no edge anywhere) */
+.kd-glow {
   background:
-    radial-gradient(640px 400px at var(--art-x) 64%, rgb(255 110 30 / 0.42), transparent 70%),
-    radial-gradient(460px 260px at var(--art-x) 100%, rgb(255 190 80 / 0.22), transparent 70%),
-    radial-gradient(1300px 560px at calc(50% + 160px) 55%, #2a1209, transparent 72%);
-  mask-image: linear-gradient(180deg, #000 72%, transparent);
-}
-
-/* the plate: a half-oval standing on the band's foot, big enough that its rim runs above and around the words (it
-   never cuts through a line), lit warm from below, its rim catching the case's light */
-.kd-plate {
-  bottom: 0;
-  left: calc(50% - var(--col) / 2 + 390px);
-  width: 1320px;
-  height: 440px;
-  transform: translateX(-50%);
-  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-  background:
-    radial-gradient(60% 90% at 50% 100%, rgb(255 120 40 / 0.16), transparent 75%),
-    linear-gradient(180deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.02));
-  box-shadow:
-    inset 0 2px 0 rgb(255 170 90 / 0.32),
-    0 -12px 48px rgb(255 120 40 / 0.08);
-  mask-image: linear-gradient(180deg, #000 60%, transparent);
+    radial-gradient(ellipse 36% 40% at 50% 8%, rgb(255 240 210 / 0.22), transparent 70%),
+    linear-gradient(100deg, #5e1307, #e5401a 26%, #ff8a1f 48%, #ffc04a 58%, #ff6a1a 74%, #6e1236);
+  opacity: 0.62;
+  mask-image: radial-gradient(
+    ellipse 80% 100% at 50% 0%,
+    #000 0%,
+    rgb(0 0 0 / 1) 20%,
+    rgb(0 0 0 / 0.966) 28%,
+    rgb(0 0 0 / 0.869) 36%,
+    rgb(0 0 0 / 0.724) 44%,
+    rgb(0 0 0 / 0.552) 52%,
+    rgb(0 0 0 / 0.379) 60%,
+    rgb(0 0 0 / 0.226) 68%,
+    rgb(0 0 0 / 0.11) 76%,
+    rgb(0 0 0 / 0.037) 84%,
+    rgb(0 0 0 / 0.006) 92%,
+    rgb(0 0 0 / 0) 100%
+  );
 }
 
 /* the ring: a flat circle laid back 64° (an ellipse to the eye), centred on the art; the far half shows its top, the
    near half its bottom */
 .kd-ring {
-  --r: 290px;
+  --r: 340px;
   left: var(--art-x);
-  top: 236px;
+  top: 242px;
   width: calc(var(--r) * 2);
   height: calc(var(--r) * 2);
   margin: calc(var(--r) * -1) 0 0 calc(var(--r) * -1);
@@ -203,10 +199,15 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
   filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.5));
 }
 
-/* below 1600 px the column's right edge is near the screen's: a tighter ring */
+/* the nearer the column's right edge is to the screen's, the tighter the ring */
+@media (max-width: 1799px) {
+  .kd-ring {
+    --r: 290px;
+  }
+}
 @media (max-width: 1599px) {
   .kd-ring {
-    --r: 215px;
+    --r: 240px;
   }
 }
 /* small laptops: no room for the ring beside the column's edge */
@@ -215,17 +216,12 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
     display: none;
   }
 }
-/* phones and tablets: the art is a band on top, the light with it; the plate sits out too */
-@media (max-width: 1023px) {
-  .kd-plate {
-    display: none;
-  }
-}
+/* phones: a narrow screen needs a wider arc to reach its sides */
 @media (max-width: 639px) {
-  .kd-bleed-ground {
-    background:
-      radial-gradient(90% 200px at 50% 130px, rgb(255 110 30 / 0.4), transparent 72%),
-      radial-gradient(140% 360px at 50% 120px, #2a1209, transparent 75%);
+  .kd-glow {
+    mask-size: 190% 100%;
+    mask-position: 50% 0;
+    mask-repeat: no-repeat;
   }
 }
 </style>
