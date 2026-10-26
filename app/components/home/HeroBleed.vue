@@ -203,7 +203,8 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
   filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.5));
 }
 
-@media (max-width: 1439px) {
+/* below 1600 px the column's right edge is near the screen's: a tighter ring */
+@media (max-width: 1599px) {
   .kd-ring {
     --r: 215px;
   }
