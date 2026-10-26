@@ -58,7 +58,9 @@ const LOOK = { face: GOLD.face, side: GOLD.side, metal: GOLD.metal, gloss: GOLD.
 onMounted(async () => {
   if (!box.value) return
   const narrow = box.value.clientWidth < 480
-  label = await ex.mount(box.value, { ...GOLD, ...(narrow && { depth: 14, glow: { ...GOLD.glow, size: 8 } }), text: ' ', charset: props.text, fit: props.text })
+  // built in the shout's style from the start: the chicken's scream then only types letters (a style change rebuilds
+  // the glyphs in the worker, and that landed on the scream itself as a hitch); the plain label restyles on its rare path
+  label = await ex.mount(box.value, { ...GOLD, ...SHOUT, ...(narrow && { depth: 11 }), text: ' ', charset: props.text, fit: props.text })
 })
 onBeforeUnmount(() => {
   stop()
@@ -117,7 +119,7 @@ function shout(word: string, fast = false) {
   active.value = true
   t.ready.then(() => {
     if (run !== my) return
-    t.set({ ...SHOUT, text: word[0] })
+    t.set({ text: word[0] })
     t.play('pop')
     t.play('flash')
     let ms = 0

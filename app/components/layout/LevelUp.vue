@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /*
  * Level-up moment (player audit D6). When the level goes up a plate drops in at the top centre, built around its
- * middle: the level badge (same art as the header) standing half over the plate's top edge, its number rolling from
- * the old level to the new one; under it the kicker, the new level in big letters, and what it means in one line — the only thing levels give is a better daily case, so
+ * middle: the level badge (same art as the header) standing half over the plate's top edge — a pseudo-3D plate that
+ * turns over horizontally from the old level (front face) to the new one (back face); under it the kicker, the new level in big letters, and what it means in one line — the only thing levels give is a better daily case, so
  *   on a new tier: "Daily case → Tier III: skins up to …" with a button to Bonuses; otherwise how many levels to
  *   the next tier (or that the daily case is at the top). Levels pay no coins (cut on 2026-10-23).
  *   A thin bar runs down the time left; hovering holds it. Light: our kdReveal in gold behind the badge.
@@ -15,6 +15,9 @@ const { data: bonuses, refresh } = useBonuses()
 
 const shown = ref<number | null>(null)
 const from = ref<number | null>(null)
+/** The plate has turned over to the new level */
+const turned = ref(false)
+const EDGES = 6
 const badge = useTemplateRef<HTMLElement>('badge')
 const DURATION = 5000
 const paused = ref(false)
@@ -43,13 +46,14 @@ watch(
   (lv, before) => {
     if (!import.meta.client || lv == null || before == null || lv <= before) return
     from.value = before
-    shown.value = before
+    shown.value = lv
+    turned.value = false
     refresh()
     sfx.levelUp()
     haptics.rare()
     // the number rolls up a beat after the plate lands, then the light
     setTimeout(() => {
-      shown.value = lv
+      turned.value = true
       fx.at('kdReveal', badge.value, 1.4).then((h) => {
         h?.set('tint', [1, 0.8, 0.32])
         h?.set('level', 2)
@@ -74,10 +78,10 @@ const earned = computed(() => program.value?.levelCases.find((c) => c.level === 
       @pointerleave="release"
     >
       <!-- the badge stands half over the top edge -->
+      <!-- the badge stands half over the top edge: a pseudo-3D plate (the face, its back and a stack of edge slices give
+           it thickness) that turns over horizontally from the old level to the new one, its number on each face -->
       <span ref="badge" class="kd-lvl-badge absolute -top-9 left-1/2 grid size-[72px] -translate-x-1/2 place-items-center">
-        <!-- the badge drawn here as one clean vector (no mask, no blurred shadow: they made its edges noisy), with a
-             shine sweeping across it now and then -->
-        <svg viewBox="0 0 24 24" class="absolute inset-0 size-full overflow-visible" aria-hidden="true">
+        <svg width="0" height="0" class="absolute" aria-hidden="true">
           <defs>
             <linearGradient id="kd-lvl-fill" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
               <stop stop-color="#FFB547" />
@@ -85,13 +89,22 @@ const earned = computed(() => program.value?.levelCases.find((c) => c.level === 
             </linearGradient>
             <clipPath id="kd-lvl-clip"><path d="M5.24156 2.96325C6.87757 0.129591 10.501 -0.841287 13.3346 0.794728L21.0367 5.24156C23.8704 6.87757 24.8413 10.501 23.2053 13.3346L18.7584 21.0367C17.1224 23.8704 13.499 24.8413 10.6654 23.2053L2.96325 18.7584C0.129591 17.1224 -0.841287 13.499 0.794728 10.6654L5.24156 2.96325Z" /></clipPath>
           </defs>
-          <path d="M5.24156 2.96325C6.87757 0.129591 10.501 -0.841287 13.3346 0.794728L21.0367 5.24156C23.8704 6.87757 24.8413 10.501 23.2053 13.3346L18.7584 21.0367C17.1224 23.8704 13.499 24.8413 10.6654 23.2053L2.96325 18.7584C0.129591 17.1224 -0.841287 13.499 0.794728 10.6654L5.24156 2.96325Z" fill="url(#kd-lvl-fill)" />
-          <g clip-path="url(#kd-lvl-clip)">
-            <g transform="rotate(22 12 12)"><rect class="kd-lvl-shine" x="-10" y="-6" width="5" height="36" fill="#fff" opacity="0.5" /></g>
-          </g>
-          <path d="M5.24156 2.96325C6.87757 0.129591 10.501 -0.841287 13.3346 0.794728L21.0367 5.24156C23.8704 6.87757 24.8413 10.501 23.2053 13.3346L18.7584 21.0367C17.1224 23.8704 13.499 24.8413 10.6654 23.2053L2.96325 18.7584C0.129591 17.1224 -0.841287 13.499 0.794728 10.6654L5.24156 2.96325Z" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="0.6" />
         </svg>
-        <UiTextSwap :text="String(shown)" class="relative text-[28px] leading-none font-extrabold text-neutral-1 tabular-nums" />
+        <span class="kd-lvl-coin absolute inset-0" :class="turned && 'is-turned'">
+          <svg v-for="n in EDGES" :key="n" viewBox="0 0 24 24" class="kd-lvl-edge absolute inset-0 size-full overflow-visible" :style="{ transform: `translateZ(${(n - (EDGES + 1) / 2) * 1.3}px)` }" aria-hidden="true">
+            <path d="M5.24156 2.96325C6.87757 0.129591 10.501 -0.841287 13.3346 0.794728L21.0367 5.24156C23.8704 6.87757 24.8413 10.501 23.2053 13.3346L18.7584 21.0367C17.1224 23.8704 13.499 24.8413 10.6654 23.2053L2.96325 18.7584C0.129591 17.1224 -0.841287 13.499 0.794728 10.6654L5.24156 2.96325Z" fill="#b8460f" />
+          </svg>
+          <span v-for="face in ['front', 'back']" :key="face" class="kd-lvl-face absolute inset-0 grid place-items-center" :class="`is-${face}`">
+            <svg viewBox="0 0 24 24" class="absolute inset-0 size-full overflow-visible" aria-hidden="true">
+              <path d="M5.24156 2.96325C6.87757 0.129591 10.501 -0.841287 13.3346 0.794728L21.0367 5.24156C23.8704 6.87757 24.8413 10.501 23.2053 13.3346L18.7584 21.0367C17.1224 23.8704 13.499 24.8413 10.6654 23.2053L2.96325 18.7584C0.129591 17.1224 -0.841287 13.499 0.794728 10.6654L5.24156 2.96325Z" fill="url(#kd-lvl-fill)" />
+              <g clip-path="url(#kd-lvl-clip)">
+                <g transform="rotate(22 12 12)"><rect class="kd-lvl-shine" x="-10" y="-6" width="5" height="36" fill="#fff" opacity="0.5" /></g>
+              </g>
+              <path d="M5.24156 2.96325C6.87757 0.129591 10.501 -0.841287 13.3346 0.794728L21.0367 5.24156C23.8704 6.87757 24.8413 10.501 23.2053 13.3346L18.7584 21.0367C17.1224 23.8704 13.499 24.8413 10.6654 23.2053L2.96325 18.7584C0.129591 17.1224 -0.841287 13.499 0.794728 10.6654L5.24156 2.96325Z" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="0.6" />
+            </svg>
+            <span class="relative text-[28px] leading-none font-extrabold text-neutral-1 tabular-nums">{{ face === 'front' ? from : shown }}</span>
+          </span>
+        </span>
       </span>
       <span class="type-12-caps kd-lvl-kicker">{{ $t('bonus.levelUp') }}</span>
       <span class="type-28 mt-1 uppercase">{{ $t('bonus.levelTitle', { n: shown }) }}</span>
@@ -145,10 +158,34 @@ const earned = computed(() => program.value?.levelCases.find((c) => c.level === 
     transform: translateX(40px);
   }
 }
+/* the plate: faces and edge slices in 3D; it turns over (rotateY) a beat after the plate lands, with a little overshoot */
+.kd-lvl-badge {
+  perspective: 420px;
+}
+.kd-lvl-coin {
+  transform-style: preserve-3d;
+  transform: rotateY(-14deg);
+  transition: transform 720ms var(--ease-spring);
+}
+.kd-lvl-coin.is-turned {
+  transform: rotateY(194deg);
+}
+.kd-lvl-face {
+  backface-visibility: hidden;
+}
+.kd-lvl-face.is-front {
+  transform: translateZ(4.5px);
+}
+.kd-lvl-face.is-back {
+  transform: rotateY(180deg) translateZ(4.5px);
+}
 @media (prefers-reduced-motion: reduce) {
   .kd-lvl-badge,
   .kd-lvl-shine {
     animation: none;
+  }
+  .kd-lvl-coin {
+    transition: none;
   }
 }
 /* the pop grows the badge up to its own size, never past it, and the bob only moves it: a raster scaled up or

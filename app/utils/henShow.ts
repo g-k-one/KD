@@ -9,6 +9,9 @@
  * Events: swap (0.12 s, the logo becomes the head), body (0.13 s), scream (0.82 s), inflate (1.75 s), boom (0.15 s
  * before the pop: Forge's gold burst draws in first), pop (2.15 s). scale < 1 makes the whole chicken smaller (phones):
  * the logo then zooms to 1.55 x scale, so the head still takes its place at the same size.
+ *
+ * henWarm() gets everything ready ahead of the moment (the runtime, the rig, a GL context with the atlas uploaded and
+ * the shaders compiled by a first draw), so the hit itself only attaches a ready canvas: no hitch when the chicken lands.
  */
 type Spine = typeof import('@esotericsoftware/spine-webgl')
 
@@ -39,6 +42,14 @@ export interface HenShowOptions {
   pop?: () => void
 }
 
+interface Player {
+  spine: Spine
+  canvas: HTMLCanvasElement
+  ctx: InstanceType<Spine['ManagedWebGLRenderingContext']>
+  renderer: InstanceType<Spine['SceneRenderer']>
+  data: InstanceType<Spine['SkeletonData']>
+}
+
 let rig: Promise<{ spine: Spine; json: unknown; dir: string }> | null = null
 function load(base: string) {
   const dir = `${base.endsWith('/') ? base : `${base}/`}rig/hen/`
@@ -48,34 +59,71 @@ function load(base: string) {
   return rig
 }
 
+/** A canvas with its own GL context, the atlas uploaded and the skeleton read; one first draw compiles the shaders */
+async function make(base: string): Promise<Player> {
+  const { spine, json, dir } = await load(base)
+  const canvas = document.createElement('canvas')
+  canvas.setAttribute('aria-hidden', 'true')
+  canvas.style.cssText = 'position:fixed;left:0;top:0;pointer-events:none;z-index:60'
+  canvas.width = canvas.height = 2
+  const ctx = new spine.ManagedWebGLRenderingContext(canvas, { alpha: true, premultipliedAlpha: true, antialias: true })
+  const renderer = new spine.SceneRenderer(canvas, ctx)
+  // the atlas is uploaded per canvas (its own GL context); the browser caches the file
+  const atlas = (await new spine.AssetManager(ctx).loadTextureAtlasAsync(`${dir}hen.atlas`)) as InstanceType<Spine['TextureAtlas']>
+  const data = new spine.SkeletonJson(new spine.AtlasAttachmentLoader(atlas)).readSkeletonData(json)
+  const sk = new spine.Skeleton(data)
+  sk.setupPose()
+  sk.updateWorldTransform(spine.Physics.reset)
+  renderer.begin()
+  renderer.drawSkeleton(sk)
+  renderer.end()
+  return { spine, canvas, ctx, renderer, data }
+}
+
+// one ready player waits for the next chicken; a second chicken at once (multi-open) makes its own
+let ready: Promise<Player> | null = null
+/** Prepares the chicken while the page is idle (call when KURWADROP is switched on) */
+export function henWarm(base: string) {
+  if (ready || !import.meta.client) return
+  const go = () => {
+    ready ??= make(base)
+    ready.catch(() => (ready = null))
+  }
+  if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 2000 })
+  else setTimeout(go, 300)
+}
+function take(base: string) {
+  const p = ready ?? make(base)
+  ready = null
+  return p
+}
+
 /** Plays the chicken out of `logo` (the gold logo picture on the winning tile); `tile` gets the logo's swap classes */
 export function henShow(logo: HTMLElement, tile: HTMLElement, o: HenShowOptions): HenShow {
   let stopped = false
   let raf = 0
-  let canvas: HTMLCanvasElement | null = null
+  let player: Player | null = null
   let finish: (v: boolean) => void = () => {}
   const done = new Promise<boolean>((r) => (finish = r))
   const clean = () => {
     cancelAnimationFrame(raf)
-    canvas?.remove()
-    canvas = null
     tile.classList.remove('is-hen-out', 'is-hen-back')
     tile.style.removeProperty('--hen-zoom')
+    if (!player) return
+    // back to the pool for the next chicken (the GL context, the texture and the shaders stay ready)
+    player.canvas.remove()
+    ready ??= Promise.resolve(player)
+    player = null
   }
 
-  load(o.base)
-    .then(async ({ spine, json, dir }) => {
-      if (stopped) return
-      canvas = document.createElement('canvas')
-      canvas.setAttribute('aria-hidden', 'true')
-      canvas.style.cssText = 'position:fixed;left:0;top:0;pointer-events:none;z-index:60'
-      document.body.appendChild(canvas)
-      const ctx = new spine.ManagedWebGLRenderingContext(canvas, { alpha: true, premultipliedAlpha: true, antialias: true })
-      const renderer = new spine.SceneRenderer(canvas, ctx)
-      // the atlas is uploaded per canvas (its own GL context); the browser caches the file
-      const atlas = (await new spine.AssetManager(ctx).loadTextureAtlasAsync(`${dir}hen.atlas`)) as InstanceType<Spine['TextureAtlas']>
-      if (stopped || !canvas) return
-      const data = new spine.SkeletonJson(new spine.AtlasAttachmentLoader(atlas)).readSkeletonData(json)
+  take(o.base)
+    .then((p) => {
+      if (stopped) {
+        ready ??= Promise.resolve(p)
+        return
+      }
+      player = p
+      const { spine, canvas, ctx, renderer, data } = p
       const sk = new spine.Skeleton(data)
       const state = new spine.AnimationState(new spine.AnimationStateData(data))
       state.timeScale = o.fast ? 2 : 1
@@ -105,9 +153,11 @@ export function henShow(logo: HTMLElement, tile: HTMLElement, o: HenShowOptions)
       tile.style.setProperty('--hen-k', o.fast ? '0.5' : '1')
       tile.style.setProperty('--hen-zoom', String(1.55 * k))
       tile.classList.add('is-hen-out')
+      document.body.appendChild(canvas)
       let last = 0
+      let cssSize = 0
       const frame = (now: number) => {
-        if (stopped || !canvas) return
+        if (stopped || player !== p) return
         raf = requestAnimationFrame(frame)
         const dt = last ? Math.min(0.05, (now - last) / 1000) : 0
         last = now
@@ -116,7 +166,7 @@ export function henShow(logo: HTMLElement, tile: HTMLElement, o: HenShowOptions)
         const size = (r.height / LOGO_H) * VIEW * k
         const px = Math.round(Math.min(size * Math.min(2, devicePixelRatio || 1), MAX_PX))
         if (canvas.width !== px) canvas.width = canvas.height = px
-        canvas.style.width = canvas.style.height = `${size}px`
+        if (size !== cssSize) canvas.style.width = canvas.style.height = `${(cssSize = size)}px`
         canvas.style.transform = `translate(${r.left + r.width / 2 - size / 2}px, ${r.top + r.height / 2 - size / 2}px)`
         state.update(dt)
         state.apply(sk)
@@ -127,6 +177,7 @@ export function henShow(logo: HTMLElement, tile: HTMLElement, o: HenShowOptions)
           told = true
           finish(true)
         }
+        if (player !== p) return
         renderer.camera.setViewport(VIEW, VIEW)
         renderer.camera.position.set(0, LOGO_Y, 0)
         const gl = ctx.gl

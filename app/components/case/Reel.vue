@@ -224,6 +224,10 @@ const burst = ref<{ play(fast?: boolean): Promise<boolean>; shout(word: string, 
 /** KURWADROP's chicken (henShow): the logo on the tile turns into the Spine chicken, which screams and pops */
 const hens: HenShow[] = []
 const henOn = ref(false)
+/** The chicken screams: the reel trembles under it */
+const screaming = ref(false)
+// the chicken gets ready while the page is idle whenever KURWADROP is on, so the hit itself does not hitch
+watch(() => props.kurwadrop, (on) => on && henWarm(appBase), { immediate: true })
 const { t } = useI18n()
 
 // Gold drops shake the frame once
@@ -426,6 +430,8 @@ async function spin(winners: Item[], fast: boolean, kurwa: boolean[] = []) {
             body: () => n || sfx.henBody(),
             scream: () => {
               if (n) return
+              screaming.value = true
+              setTimeout(() => (screaming.value = false), fast ? 520 : 1050)
               sfx.henScream(fast)
               burst.value?.shout(t('case.kurwaShout'), fast)
             },
@@ -486,7 +492,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     class="kd-reel relative rounded-5xl"
     :title="phase === 'spinning' ? $t('case.skipHint') : undefined"
     @click="phase === 'spinning' && skip()"
-    :class="[shaking && 'is-shaking', punch && 'is-punch', tense.some(Boolean) && 'is-tense', (respinning || chickenHit.some(Boolean)) && 'is-kurwa', henOn && 'is-hen', phase, horizontal ? 'is-h h-68 sm:h-[278px]' : 'is-v', grid ? 'is-grid' : !horizontal && 'h-[278px]']"
+    :class="[shaking && 'is-shaking', punch && 'is-punch', tense.some(Boolean) && 'is-tense', (respinning || chickenHit.some(Boolean)) && 'is-kurwa', henOn && 'is-hen', screaming && 'is-screaming', phase, horizontal ? 'is-h h-68 sm:h-[278px]' : 'is-v', grid ? 'is-grid' : !horizontal && 'h-[278px]']"
     :style="{ ...(grid ? { height: `${MOBILE_H}px` } : {}) }"
   >
     <!-- Forge layer: behind the cards, and not clipped by the frame — it reaches 128px past the top and the bottom
@@ -520,7 +526,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
         :data-win="(phase === 'result' && i === WIN) || undefined"
         :class="[Math.abs(i - WIN) <= 3 && 'is-near', phase === 'result' && i === WIN && results[0] && soldUids.includes(results[0].uid) && 'is-sold']"
       >
-        <ItemArt :image="it.image" :rarity="it.rarity" :size="96" eager :reveal="phase === 'result' && i === WIN && it.id !== 'kurwa-chicken' ? RARITY_TIER[it.rarity] || 1 : 0" class="relative w-full" :class="chickenHit[0] && i === WIN && 'kd-chicken-hit'" />
+        <ItemArt :image="it.image" :rarity="it.rarity" :size="96" eager :data-gold-chicken="it.id === KURWA_CHICKEN_ID || undefined" :reveal="phase === 'result' && i === WIN && it.id !== 'kurwa-chicken' ? RARITY_TIER[it.rarity] || 1 : 0" class="relative w-full" :class="chickenHit[0] && i === WIN && 'kd-chicken-hit'" />
       </div>
     </div>
     </div>
@@ -553,14 +559,9 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
             :class="[Math.abs(i - WIN) <= 2 && 'is-near', landed[col] && i === WIN && results[col] && soldUids.includes(results[col]!.uid) && 'is-sold']"
           >
             <ItemArt
-              :class="chickenHit[col] && i === WIN && 'kd-chicken-hit'" eager :reveal="landed[col] && i === WIN && !chickenHit[col] && it.id !== 'kurwa-chicken' ? RARITY_TIER[it.rarity] || 1 : 0" :image="it.image" :rarity="it.rarity" :size="compact ? 52 : grid && cols === 3 ? 60 : isMobile ? 72 : 88" class="relative w-full" />
+              :class="chickenHit[col] && i === WIN && 'kd-chicken-hit'" eager :data-gold-chicken="it.id === KURWA_CHICKEN_ID || undefined" :reveal="landed[col] && i === WIN && !chickenHit[col] && it.id !== 'kurwa-chicken' ? RARITY_TIER[it.rarity] || 1 : 0" :image="it.image" :rarity="it.rarity" :size="compact ? 52 : grid && cols === 3 ? 60 : isMobile ? 72 : 88" class="relative w-full" />
           </div>
         </div>
-        <Transition name="kd-kurwa">
-          <div v-if="kurwaCols.includes(col) && (respinning || !burst?.active)" class="pointer-events-none absolute inset-x-0 top-2 z-20 flex justify-center px-1">
-            <span class="kd-kurwa-banner rounded-md px-2 py-0.5 text-neutral-1" :class="grid ? 'type-10-caps' : 'type-12-caps'">{{ respinning ? $t('case.kurwaRespin') : $t('case.kurwaHit') }}</span>
-          </div>
-        </Transition>
 
         <!-- Result inside its own reel -->
         <div class="pointer-events-none absolute inset-x-0 flex justify-center px-1 sm:bottom-5" :class="compact ? 'bottom-1.5' : 'bottom-3'">
@@ -635,15 +636,9 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
       <div v-if="!grid && (horizontal || phase !== 'result')" class="kd-depth pointer-events-none absolute inset-0 rounded-4xl" :class="horizontal ? 'is-h' : 'is-v'" />
     </Transition>
 
-    <!-- KURWADROP: the chicken screams, then the respin among the expensive items. One reel: centred over it;
-         several: the banner sits in the column where the chicken landed (see the column loop). -->
-    <!-- the gold 3D "KURWADROP!" over the top of the reel; while it plays it replaces the banner -->
+    <!-- KURWADROP: the chicken comes out of its logo, screams and pops, then the respin among the expensive items
+         (no banner: the chicken and its 3D shout are the moment). The 3D label over the top of the reel -->
     <CaseKurwaBurst v-if="kurwadrop" ref="burst" :text="$t('case.kurwaHit')" class="absolute inset-x-0 top-0 z-30 h-[60%]" />
-    <Transition name="kd-kurwa">
-      <div v-if="horizontal && ((chickenHit.some(Boolean) && !burst?.active) || respinning)" class="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center">
-        <span class="kd-kurwa-banner type-16-caps rounded-lg px-3 py-1 text-neutral-1">{{ respinning ? $t('case.kurwaRespin') : $t('case.kurwaHit') }}</span>
-      </div>
-    </Transition>
 
     <!-- x1 result -->
     <div v-if="horizontal && phase === 'result' && results[0]" class="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center sm:bottom-5">
@@ -1003,6 +998,11 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 .kd-reel.is-hen .kd-chicken-hit {
   animation: none;
 }
+/* the Golden Chicken's logo sits a size smaller on the reel than the skins (the chicken grows from it, so it follows) */
+.kd-art[data-gold-chicken] .kd-art-img {
+  width: calc(120px * var(--s));
+  height: calc(120px * var(--s));
+}
 .kd-chicken-hit.is-hen-out .kd-art-img {
   opacity: 0;
   transform: translate(-50%, -50%) scale(var(--hen-zoom, 1.55));
@@ -1074,25 +1074,6 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 .kd-reel.is-kurwa .kd-marker-gold {
   opacity: 1;
 }
-.kd-kurwa-banner {
-  background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light), var(--color-item-gold));
-  box-shadow: 0 6px 24px rgb(228 174 57 / 0.55);
-}
-.kd-kurwa-enter-active {
-  transition:
-    opacity var(--dur-base) var(--ease-out),
-    transform var(--dur-slow) var(--ease-spring);
-}
-.kd-kurwa-leave-active {
-  transition: opacity var(--dur-fast) var(--ease-in);
-}
-.kd-kurwa-enter-from {
-  opacity: 0;
-  transform: translateY(-10px) scale(0.8);
-}
-.kd-kurwa-leave-to {
-  opacity: 0;
-}
 .kd-reel.is-shaking {
   animation: kd-shake 520ms var(--ease-out);
 }
@@ -1104,6 +1085,21 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   35%,
   75% {
     translate: 5px -2px;
+  }
+}
+/* the chicken's scream: a fast small tremble of the whole reel while it lasts (the chicken rides with its logo) */
+.kd-reel.is-screaming {
+  animation: kd-scream-shake 90ms linear infinite;
+}
+@keyframes kd-scream-shake {
+  25% {
+    translate: -2px 1px;
+  }
+  50% {
+    translate: 2px -1px;
+  }
+  75% {
+    translate: -1px -1px;
   }
 }
 
