@@ -4,8 +4,9 @@
  * it screams, swells and pops (docs/motion.md → Reel → KURWADROP). One shot, 3 s (Fast — twice as fast).
  *
  * The rig is authored around the logo: at 0.12 s the head is exactly the logo's size and place (150 units tall,
- * centred on (0, LOGO_Y)), so the canvas is scaled from the logo picture and centred on it. Its own WebGL canvas,
- * fixed over the page and riding with the logo every frame, so nothing clips it (the reel's frame, the dock).
+ * centred on (0, LOGO_Y)), so the canvas is scaled from the logo picture and centred on it — measured once, before the
+ * logo starts zooming (its box grows with the zoom). Its own WebGL canvas inside `host` (the reel), placed once: it
+ * rides the reel's own moves (the scream's tremble) on the compositor, with no per-frame layout reads.
  * Events: swap (0.12 s, the logo becomes the head), body (0.13 s), scream (0.82 s), inflate (1.75 s), boom (0.15 s
  * before the pop: Forge's gold burst draws in first), pop (2.15 s). scale < 1 makes the whole chicken smaller (phones):
  * the logo then zooms to 1.55 x scale, so the head still takes its place at the same size.
@@ -34,6 +35,8 @@ export interface HenShowOptions {
   base: string
   fast?: boolean
   scale?: number
+  /** where the canvas lives (positioned, not clipping); the logo's place is measured against it */
+  host: HTMLElement
   swap?: () => void
   body?: () => void
   scream?: () => void
@@ -64,7 +67,7 @@ async function make(base: string): Promise<Player> {
   const { spine, json, dir } = await load(base)
   const canvas = document.createElement('canvas')
   canvas.setAttribute('aria-hidden', 'true')
-  canvas.style.cssText = 'position:fixed;left:0;top:0;pointer-events:none;z-index:60'
+  canvas.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;z-index:40'
   canvas.width = canvas.height = 2
   const ctx = new spine.ManagedWebGLRenderingContext(canvas, { alpha: true, premultipliedAlpha: true, antialias: true })
   const renderer = new spine.SceneRenderer(canvas, ctx)
@@ -104,10 +107,12 @@ export function henShow(logo: HTMLElement, tile: HTMLElement, o: HenShowOptions)
   let stopped = false
   let raf = 0
   let player: Player | null = null
+  let unplace = () => {}
   let finish: (v: boolean) => void = () => {}
   const done = new Promise<boolean>((r) => (finish = r))
   const clean = () => {
     cancelAnimationFrame(raf)
+    unplace()
     tile.classList.remove('is-hen-out', 'is-hen-back')
     tile.style.removeProperty('--hen-zoom')
     if (!player) return
@@ -151,24 +156,32 @@ export function henShow(logo: HTMLElement, tile: HTMLElement, o: HenShowOptions)
       sk.updateWorldTransform(spine.Physics.reset)
       // the logo breathes in and is gone at the flash's peak, where the rig's head appears at that same size
       const k = o.scale ?? 1
+      // place the canvas once, from the logo's box before its zoom starts: VIEW units across, LOGO_H units = the logo
+      let px = 0
+      const place = () => {
+        const hr = o.host.getBoundingClientRect(), lr = logo.getBoundingClientRect()
+        // the host may be mid-transform (the reel's punch): measure in its own unscaled pixels
+        const f = o.host.offsetWidth ? hr.width / o.host.offsetWidth : 1
+        const size = (lr.height / f / LOGO_H) * VIEW * k
+        px = Math.round(Math.min(size * Math.min(2, devicePixelRatio || 1), MAX_PX))
+        if (canvas.width !== px) canvas.width = canvas.height = px
+        canvas.style.width = canvas.style.height = `${size}px`
+        canvas.style.left = `${(lr.left - hr.left + lr.width / 2) / f - size / 2}px`
+        canvas.style.top = `${(lr.top - hr.top + lr.height / 2) / f - size / 2}px`
+      }
+      place()
+      addEventListener('resize', place)
+      unplace = () => removeEventListener('resize', place)
       tile.style.setProperty('--hen-k', o.fast ? '0.5' : '1')
       tile.style.setProperty('--hen-zoom', String(1.55 * k))
       tile.classList.add('is-hen-out')
-      document.body.appendChild(canvas)
+      o.host.appendChild(canvas)
       let last = 0
-      let cssSize = 0
       const frame = (now: number) => {
         if (stopped || player !== p) return
         raf = requestAnimationFrame(frame)
         const dt = last ? Math.min(0.05, (now - last) / 1000) : 0
         last = now
-        // ride with the logo: a canvas of VIEW units where LOGO_H units = the logo picture's height
-        const r = logo.getBoundingClientRect()
-        const size = (r.height / LOGO_H) * VIEW * k
-        const px = Math.round(Math.min(size * Math.min(2, devicePixelRatio || 1), MAX_PX))
-        if (canvas.width !== px) canvas.width = canvas.height = px
-        if (size !== cssSize) canvas.style.width = canvas.style.height = `${(cssSize = size)}px`
-        canvas.style.transform = `translate(${r.left + r.width / 2 - size / 2}px, ${r.top + r.height / 2 - size / 2}px)`
         state.update(dt)
         state.apply(sk)
         sk.updateWorldTransform(spine.Physics.update)
