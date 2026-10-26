@@ -205,7 +205,8 @@ async function saveTrade() {
       </section>
 
       <!-- The skins | the trade link and the player's numbers; the history full width below -->
-      <section class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start lg:gap-5">
+      <!-- the two columns end on one line: the trade link card stretches to the skins panel's height -->
+      <section class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-5">
         <!-- My skins: the upgrade page's panel, tiles to pick; picked ones get the bar below -->
         <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2 lg:pb-4">
           <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
@@ -230,7 +231,6 @@ async function saveTrade() {
             <UiButton v-if="sortedInventory.length > skinsCap" variant="ghost" size="s" :icon="showAllSkins ? 'chevron-up' : 'chevron-down'" class="mx-auto -mt-1 mb-2" @click="showAllSkins = !showAllSkins">
               {{ showAllSkins ? $t('account.skinsLess') : $t('account.skinsAll', { n: sortedInventory.length }) }}
             </UiButton>
-            <p v-if="!selected.length" class="type-12-regular px-4 pb-3 text-neutral-11 lg:px-6 lg:pb-0">{{ $t('account.pickHint') }}</p>
           </template>
           <UiEmptyState v-else :text="$t('account.emptyInventory')" class="m-3 lg:m-4">
             <UiButton to="/" icon="cases">{{ $t('account.openCases') }}</UiButton>
@@ -239,18 +239,21 @@ async function saveTrade() {
 
         <!-- The right column: where withdrawals go, then the player's numbers -->
         <div class="flex min-w-0 flex-col gap-4 lg:gap-5">
-          <form class="flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4 lg:p-6" @submit.prevent="saveTrade">
-            <div class="flex items-center gap-3">
+          <!-- the same panel as My skins: a header row over a hairline, then the field, where to find it, Save · Open in Steam -->
+          <form class="flex flex-col rounded-5xl bg-neutral-2 lg:flex-1" @submit.prevent="saveTrade">
+            <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:px-6">
               <UiIcon name="steam" :size="24" class="text-neutral-13" />
               <span class="type-14 lg:type-16-medium">{{ $t('withdraw.tradeLink') }}</span>
               <UiIcon v-if="session.user.tradeUrl && tradeValid" name="check-circle" :size="18" class="ml-auto text-success" />
             </div>
-            <UiInput id="profile-trade" v-model="tradeLink" size="l" icon="steam" inputmode="url" clearable :error="!!tradeLink && !tradeValid" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…" />
-            <span class="type-12-regular text-neutral-11">
-              {{ $t('withdraw.whereLink') }}
-              <a href="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" target="_blank" rel="noopener" class="text-brand-light hover:underline">{{ $t('withdraw.openSteam') }}</a>
-            </span>
-            <UiButton type="submit" size="m" class="self-start" :loading="tradeSaving" :disabled="!tradeValid || tradeLink.trim() === session.user?.tradeUrl">{{ $t('common.save') }}</UiButton>
+            <div class="flex flex-1 flex-col gap-3 p-4 lg:px-6 lg:pb-6">
+              <UiInput id="profile-trade" v-model="tradeLink" size="l" inputmode="url" clearable :error="!!tradeLink && !tradeValid" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…" />
+              <span class="type-12-regular text-neutral-11">{{ $t('withdraw.whereLink') }}</span>
+              <div class="mt-auto grid grid-cols-2 gap-2 pt-1">
+                <UiButton type="submit" size="m" :loading="tradeSaving" :disabled="!tradeValid || tradeLink.trim() === session.user?.tradeUrl">{{ $t('common.save') }}</UiButton>
+                <UiButton variant="secondary" size="m" icon="arrow-square-out" to="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" target="_blank">{{ $t('withdraw.openSteam') }}</UiButton>
+              </div>
+            </div>
           </form>
           <dl class="grid grid-cols-3 gap-2 rounded-5xl bg-neutral-2 p-3 lg:p-4">
             <div v-for="s in statCards.slice(1, 4)" :key="s.key" class="flex min-w-0 flex-col gap-1 rounded-2xl bg-neutral-3 px-3 py-2.5">
