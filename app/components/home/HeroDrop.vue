@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /*
- * The home banner's art: today's top drop, one thing, big. "UNREAL DROP" over its multiplier as a giant burning
- * number, the skin in front over a fire in its rarity's colour (kdFlame, the big wins' calm flame); `part="tag"` is
+ * The home banner's art: today's top drop, one thing, big. Its multiplier as a giant burning number, the skin in
+ * front over a fire in its rarity's colour (kdFlame, the big wins' calm flame); `part="tag"` is
  * who won it, from which case, for how much — the banner puts it on its buttons' line. It is the live feed's
  * highlight (the one the strip pins), so it is always a real drop; when a bigger one lands, the new skin drops in. The
  * skin floats and leans toward the pointer (the band sets --px / --py); a tap opens the case it came from.
@@ -25,14 +25,11 @@ if (props.part === 'art') provideForge(fxHost)
     v-if="drop && part === 'art'"
     :to="sourceLink(drop.caseSlug)"
     class="kd-drop absolute inset-0 block"
-    :aria-label="`${$t('hero.unrealDrop')}: ${drop.itemName} | ${drop.skinName}, ${x}`"
+    :aria-label="`${drop.itemName} | ${drop.skinName}, ${x}`"
   >
     <span ref="fxHost" class="pointer-events-none absolute inset-0" aria-hidden="true" />
-    <!-- the words over the number, the number a giant behind everything -->
-    <span class="kd-drop-head pointer-events-none absolute flex flex-col items-center" aria-hidden="true">
-      <span class="kd-drop-title">{{ $t('hero.unrealDrop') }}</span>
-      <span class="kd-drop-x">{{ x }}</span>
-    </span>
+    <!-- the number, a giant behind everything -->
+    <span class="kd-drop-x pointer-events-none absolute" aria-hidden="true">{{ x }}</span>
     <!-- the fire rises from under the skin, in its rarity's colour -->
     <span v-if="isLg" class="kd-drop-fire pointer-events-none absolute" aria-hidden="true">
       <FxFire :key="drop.id" effect="kdFlame" :color="RARITY_HEX[drop.rarity]" :spread="1.6" class="w-full"><span class="block h-2 w-full" /></FxFire>
@@ -63,25 +60,11 @@ if (props.part === 'art') provideForge(fxHost)
 .kd-drop {
   perspective: 1200px;
 }
-.kd-drop-head {
-  left: 50%;
-  top: 2%;
-  translate: -50% 0;
-}
-/* "UNREAL DROP": loud caps over the number, white-hot like the band's light */
-.kd-drop-title {
-  font-size: 28px;
-  line-height: 32px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: #fff3df;
-  text-shadow: 0 2px 16px rgb(255 120 40 / 0.6);
-}
 /* the multiplier: big, the burning gold-to-orange of the big wins' numbers, fading toward its foot */
 .kd-drop-x {
-  margin-top: -10px;
+  left: 50%;
+  top: 0;
+  translate: -50% 0;
   font-size: 220px;
   line-height: 1;
   font-weight: 800;
@@ -125,8 +108,8 @@ if (props.part === 'art') provideForge(fxHost)
 }
 .kd-drop-tag {
   max-width: 100%;
-  background: rgb(12 13 16 / 0.72);
-  box-shadow: inset 0 0 0 1px var(--color-neutral-5);
+  background: rgb(12 13 16 / 0.36);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
   backdrop-filter: blur(8px);
 }
 @keyframes kd-drop-float {
@@ -159,15 +142,7 @@ if (props.part === 'art') provideForge(fxHost)
 
 /* phones: the band above the words — a smaller skin, the words and number behind it */
 @media (max-width: 639px) {
-  .kd-drop-head {
-    top: 0;
-  }
-  .kd-drop-title {
-    font-size: 16px;
-    line-height: 20px;
-  }
   .kd-drop-x {
-    margin-top: -6px;
     font-size: 110px;
   }
   .kd-drop-stage {
