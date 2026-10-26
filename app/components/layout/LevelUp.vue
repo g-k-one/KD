@@ -58,12 +58,11 @@ watch(
     arm(DURATION)
   },
 )
-const tierNames = ['I', 'II', 'III', 'IV']
-const ladder = computed(() => bonuses.value?.daily.ladder ?? [])
-/** The tier this level just reached (it starts at this level), else null */
-const newTier = computed(() => ladder.value.find((s) => s.fromLevel === shown.value && s.tier > 0) ?? null)
-/** The next tier still ahead, for "N more levels to Tier …" */
-const nextTier = computed(() => ladder.value.find((s) => shown.value != null && s.fromLevel > shown.value) ?? null)
+const program = computed(() => bonuses.value?.level ?? null)
+/** The rank this level just reached (it starts at this level), else null */
+const newRank = computed(() => program.value?.ranks.find((r) => r.fromLevel === shown.value && r.rank > 0) ?? null)
+/** The level case this level earned */
+const earned = computed(() => program.value?.levelCases.find((c) => c.level === shown.value) ?? null)
 </script>
 
 <template>
@@ -98,11 +97,10 @@ const nextTier = computed(() => ladder.value.find((s) => shown.value != null && 
       <span class="type-28 mt-1 uppercase">{{ $t('bonus.levelTitle', { n: shown }) }}</span>
       <!-- what it means, in one line -->
       <span class="type-14-regular mt-2 text-neutral-14">
-        <template v-if="newTier">{{ $t('bonus.levelNewTier', { tier: tierNames[newTier.tier], amount: formatCoins(newTier.value) }) }}</template>
-        <template v-else-if="nextTier">{{ $t('bonus.levelToTier', { n: nextTier.fromLevel - shown, tier: tierNames[nextTier.tier] }) }}</template>
-        <template v-else-if="ladder.length">{{ $t('bonus.levelTopTier') }}</template>
+        <template v-if="newRank">{{ $t('bonus.levelNewRank', { rank: newRank.name, pct: `${+(newRank.rakebackBp / 100).toFixed(1)}%` }) }}</template>
+        <template v-else-if="earned">{{ $t('bonus.levelCaseEarned', { amount: formatCoins(earned.price) }) }}</template>
       </span>
-      <UiButton v-if="newTier" size="m" block to="/bonuses" class="mt-4" @click.capture="shown = null">{{ $t('bonus.openBonuses') }}</UiButton>
+      <UiButton v-if="earned" size="m" block to="/bonuses" class="mt-4" @click.capture="shown = null">{{ $t('bonus.openLevelCase') }}</UiButton>
       <!-- time left before it goes away by itself: a thin bar along the bottom edge -->
       <span class="absolute inset-x-5 bottom-0 h-0.5 overflow-hidden rounded-full bg-white/10">
         <span :key="String(from) + String(shown)" class="kd-lvl-time block h-full" :class="paused && 'is-paused'" :style="{ animationDuration: `${DURATION}ms` }" />

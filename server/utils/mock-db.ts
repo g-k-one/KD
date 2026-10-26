@@ -70,13 +70,16 @@ export const adminSettings: {
   bonuses: {
     daily: {
       cooldownHours: 24,
-      levelsPerTier: 5,
-      // worth 150 · tier² cents, each tier's skins a step up
+      // one tier per rank (RANKS), a rank every 10 levels
+      levelsPerTier: 10,
+      // worth 150 · tier² cents up to IV, then 40 and 60 coins; each tier's skins a step up
       tiers: [
         { price: 150, itemIds: ['mp9-wild-lily', 'p250-asiimov', 'glock-water-elemental', 'm4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed'] },
         { price: 600, itemIds: ['p250-asiimov', 'glock-water-elemental', 'm4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed', 'awp-asiimov'] },
         { price: 1350, itemIds: ['glock-water-elemental', 'm4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed', 'awp-asiimov', 'awp-wildfire', 'ak-vulcan'] },
         { price: 2400, itemIds: ['m4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed', 'awp-asiimov', 'awp-wildfire', 'ak-vulcan', 'sport-omega'] },
+        { price: 4000, itemIds: ['ak-redline', 'usp-kill-confirmed', 'awp-asiimov', 'awp-wildfire', 'ak-vulcan', 'sport-omega', 'specialist-crimson'] },
+        { price: 6000, itemIds: ['usp-kill-confirmed', 'awp-asiimov', 'awp-wildfire', 'ak-vulcan', 'sport-omega', 'specialist-crimson', 'm4a4-howl'] },
       ],
     },
     welcome: { total: 3, price: 150, itemIds: ['mp9-wild-lily', 'p250-asiimov', 'glock-water-elemental', 'm4a1-hyper-beast', 'ak-redline', 'usp-kill-confirmed'] },
@@ -508,6 +511,10 @@ interface MockState {
   /** Free welcome cases still to open */
   welcomeLeft: number
   promoUsed: string[]
+  /** Rakeback earned and not claimed yet (coin cents, fractional) */
+  rakeback: number
+  /** Level cases earned and not opened yet: the levels they were earned at, oldest first */
+  levelCases: number[]
 }
 
 
@@ -526,6 +533,9 @@ const state: MockState = {
   dailyAt: 0,
   welcomeLeft: adminSettings.bonuses.welcome.total,
   promoUsed: [],
+  // the demo player has some of both waiting, so the page shows them
+  rakeback: 312,
+  levelCases: [DEFAULT_USER.level],
 }
 
 // --- Debug: forced outcomes (prototype only; breaks provable fairness on purpose) -----------
@@ -647,6 +657,8 @@ export function resetMockUser() {
   state.xp = Math.round((DEFAULT_USER.levelProgress / 100) * xpFor(DEFAULT_USER.level))
   state.dailyAt = 0
   state.welcomeLeft = adminSettings.bonuses.welcome.total
+  state.rakeback = 312
+  state.levelCases = [DEFAULT_USER.level]
   state.inventory = STARTER_INVENTORY.map((id) => toInventory(byId(id), 'case'))
   syncSkinsValue()
 }
@@ -655,6 +667,7 @@ export function spend(amount: number) {
   if (state.user.balance < amount) throw new MockError(402, 'Not enough balance')
   state.user.balance -= amount
   addXp(amount)
+  earnRakeback(amount)
 }
 
 // --- Promo codes ------------------------------------------------------------------
@@ -677,6 +690,8 @@ export function addXp(amount: number) {
   while (state.xp >= xpFor(state.user.level)) {
     state.xp -= xpFor(state.user.level)
     state.user.level += 1
+    // every new level earns a level case
+    state.levelCases.push(state.user.level)
   }
   state.user.levelProgress = Math.floor((state.xp / xpFor(state.user.level)) * 100)
 }
@@ -827,24 +842,87 @@ export function getInventory() {
 // --- Bonuses: the daily case and the welcome cases --------------------------------------------
 
 export const DAILY_SLUG = 'daily'
-const dailyTier = () => {
-  const { tiers, levelsPerTier } = adminSettings.bonuses.daily
-  return Math.min(tiers.length - 1, Math.max(0, Math.floor(state.user.level / levelsPerTier) - 1))
+
+/*
+ * The level program, in three rewards that all grow with the level and never run out:
+ *   the daily case (one tier per rank), a level case for every new level (worth 1% of what that level took to play,
+ *   ×5 on a new rank), and rakeback (a share of the house edge on every bet, higher every rank). A rank every
+ *   levelsPerTier levels; past the last rank the levels go on, and so do the level cases.
+ */
+export const RANKS = [
+  { name: 'Chick', rakebackBp: 500 },
+  { name: 'Hen', rakebackBp: 750 },
+  { name: 'Rooster', rakebackBp: 1000 },
+  { name: 'Fighter', rakebackBp: 1250 },
+  { name: 'Gold Rooster', rakebackBp: 1500 },
+  { name: 'Kurwa King', rakebackBp: 2000 },
+] as const
+/** The house edge rakeback is a share of (cases and upgrades pay back ~92% on average) */
+const HOUSE_EDGE_BP = 800
+/** The level a rank starts at: 1, then every levelsPerTier */
+const rankFrom = (rank: number) => (rank === 0 ? 1 : rank * adminSettings.bonuses.daily.levelsPerTier)
+const rankOf = (level: number) => Math.min(RANKS.length - 1, Math.floor(level / adminSettings.bonuses.daily.levelsPerTier))
+const dailyTier = () => Math.min(adminSettings.bonuses.daily.tiers.length - 1, rankOf(state.user.level))
+
+function earnRakeback(wager: number) {
+  state.rakeback += (wager * HOUSE_EDGE_BP * RANKS[rankOf(state.user.level)]!.rakebackBp) / 10_000 / 10_000
+}
+export function claimRakeback() {
+  const amount = Math.floor(state.rakeback)
+  if (amount < 1) throw new MockError(400, 'Nothing to claim yet')
+  state.rakeback -= amount
+  state.user.balance += amount
+  record({ game: 'deposit', title: 'Rakeback', bet: 0, payout: amount, status: 'done' })
+  return { claimed: amount, balance: state.user.balance }
+}
+
+/** A level case: 1% of what reaching that level took to play, ×5 when it starts a new rank; RTP 100% */
+const isRankUp = (level: number) => level % adminSettings.bonuses.daily.levelsPerTier === 0
+const levelCasePrice = (level: number) => Math.max(50, Math.round(xpFor(level - 1) * 0.01 * (isRankUp(level) ? 5 : 1)))
+const levelCache = new Map<number, CaseDetails>()
+function levelCase(level: number): CaseDetails {
+  let cs = levelCache.get(level)
+  if (!cs) {
+    cs = buildCase({ id: `level-${level}`, slug: `level-${level}`, name: `Level ${level} Case`, image: '/img/cases/kurwa-classic.webp', price: levelCasePrice(level), risk: 'medium', targetRtp: 10_000, createdAt: '2026-10-01' })
+    levelCache.set(level, cs)
+  }
+  return cs
+}
+export async function openLevelCase() {
+  const level = state.levelCases[0]
+  if (level == null) throw new MockError(409, 'No level case to open')
+  await ensureSeed()
+  const res = await roll(levelCase(level), 1, false, false, 0)
+  state.levelCases.shift()
+  return res
+}
+function levelInfo() {
+  const rank = rankOf(state.user.level)
+  const next = state.user.level + 1
+  return {
+    ranks: RANKS.map((r, i) => ({ rank: i, name: r.name, fromLevel: rankFrom(i), rakebackBp: r.rakebackBp })),
+    rank,
+    rakeback: { rateBp: RANKS[rank]!.rakebackBp, edgeBp: HOUSE_EDGE_BP, pending: Math.floor(state.rakeback) },
+    levelCases: state.levelCases.map((l) => ({ level: l, price: levelCasePrice(l), big: isRankUp(l) })),
+    levelCase: state.levelCases.length ? levelCase(state.levelCases[0]!) : null,
+    next: { level: next, price: levelCasePrice(next), big: isRankUp(next) },
+  }
 }
 const dailyCache = new Map<number, CaseDetails>()
 /** The bonus cases are built once; a change in the admin panel drops them */
 export function clearBonusCases() {
   dailyCache.clear()
+  levelCache.clear()
   welcomeCache = null
 }
 /** Free once a day; worth ~0.5 coin per level band and pays it all back on average (RTP 100%). */
-/** The daily case's tiers as the player reads them: tier I from level 1, then one every levelsPerTier from 2 × it */
+/** The daily case's tiers as the player reads them: one per rank, from the rank's first level */
 function dailyLadder() {
-  const { tiers, levelsPerTier } = adminSettings.bonuses.daily
+  const { tiers } = adminSettings.bonuses.daily
   return tiers.map((t, tier) => {
     const best = t.itemIds.map((id) => byId(id)).filter((i): i is Item => !!i).reduce((b, i) => (i.price > b.price ? i : b))
     // every tier's contents too, so the Bonuses page can show what the next tiers hold
-    return { tier, fromLevel: tier === 0 ? 1 : (tier + 1) * levelsPerTier, value: t.price, best: histItem(best), items: dailyCaseFor(tier).items }
+    return { tier, fromLevel: rankFrom(tier), value: t.price, best: histItem(best), items: dailyCaseFor(tier).items }
   })
 }
 
@@ -897,12 +975,13 @@ export async function openWelcome() {
 
 /** For guests: the daily case's ladder alone (no contents), so Bonuses can show what signing in starts */
 export function bonusPreview() {
-  return { ladder: dailyLadder().map(({ items: _items, ...st }) => st) }
+  return { ladder: dailyLadder().map(({ items: _items, ...st }) => st), ranks: levelInfo().ranks }
 }
 
 export function getBonuses() {
   return {
     daily: { case: dailyCase(), tier: dailyTier(), nextAt: state.dailyAt > Date.now() ? new Date(state.dailyAt).toISOString() : null, ladder: dailyLadder() },
+    level: levelInfo(),
     welcome: { case: welcomeCase(), left: state.welcomeLeft, total: adminSettings.bonuses.welcome.total },
   }
 }
@@ -952,6 +1031,7 @@ export async function upgrade(itemUids: string[], balanceAmount: number, targetI
 
   spend(extra)
   addXp(items.reduce((a, i) => a + i.price, 0))
+  earnRakeback(items.reduce((a, i) => a + i.price, 0))
   for (const i of items) i.status = 'used'
 
   // Debug: steer the outcome without making the roll up — the nonce steps on until the seeds themselves roll into

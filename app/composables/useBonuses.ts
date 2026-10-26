@@ -1,6 +1,6 @@
 import type { BonusesResponse } from '#shared/types/api'
 
-// Daily case + welcome cases, shared by the Bonuses page, the header timer, the tab-bar dot and the level-up plate.
+// Daily case + welcome cases + the level program (level cases, rakeback), shared by the Bonuses page, the header timer, the tab-bar dot and the level-up plate.
 export function useBonuses() {
   const session = useSessionStore()
   const { data, refresh } = useFetch<BonusesResponse>('/api/bonuses', {
@@ -23,5 +23,9 @@ export function useBonuses() {
   const dailyIn = computed(() => (data.value?.daily.nextAt ? countdown(data.value.daily.nextAt, now.value) : ''))
   /** Welcome cases still to open (free for signing up) */
   const welcomeLeft = computed(() => data.value?.welcome?.left ?? 0)
-  return { data, refresh, dailyReady, dailyIn, welcomeLeft, now }
+  /** Level cases earned and not opened yet */
+  const levelCount = computed(() => data.value?.level?.levelCases.length ?? 0)
+  /** Free cases waiting right now: the welcome ones and the level ones (the daily case has its own timer) */
+  const freeCount = computed(() => welcomeLeft.value + levelCount.value)
+  return { data, refresh, dailyReady, dailyIn, welcomeLeft, levelCount, freeCount, now }
 }

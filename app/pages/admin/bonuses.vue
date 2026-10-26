@@ -11,14 +11,14 @@ const { draft, dirty, saving, save, discard } = useAdminDraft<AdminBonuses>(
   () => refreshNuxtData('bonuses'),
 )
 
-/** Which levels land on a tier (tier = level / per − 1, at least the first, at most the last) */
+/** Which levels land on a tier: one tier per rank, a rank every `per` levels (the last one keeps the rest) */
 function tierLevels(k: number) {
   const d = draft.value!.daily
   const per = d.levelsPerTier
   const last = d.tiers.length - 1
-  const from = k === 0 ? 1 : (k + 1) * per
+  const from = k === 0 ? 1 : k * per
   if (k === last) return k === 0 ? 'Every level' : `Level ${from}+`
-  return `Levels ${from}–${(k + 2) * per - 1}`
+  return `Levels ${from}–${(k + 1) * per - 1}`
 }
 function addTier() {
   const tiers = draft.value!.daily.tiers
@@ -52,7 +52,7 @@ const addPromo = () => draft.value!.promos.push({ code: '', kind: 'coins', value
               <template #trailing><span class="type-14 shrink-0 text-neutral-11">h</span></template>
             </UiInput>
           </AdminField>
-          <AdminField label="Levels per tier"><UiInput v-model.number="draft.daily.levelsPerTier" lazy align="right" inputmode="numeric" /></AdminField>
+          <AdminField label="Levels per rank"><UiInput v-model.number="draft.daily.levelsPerTier" lazy align="right" inputmode="numeric" /></AdminField>
         </div>
         <div v-for="(t, k) in draft.daily.tiers" :key="k" class="flex flex-col gap-3 border-t border-neutral-4 pt-4">
           <div class="flex flex-wrap items-end gap-3">

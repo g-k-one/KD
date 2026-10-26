@@ -528,10 +528,40 @@ export interface WelcomeInfo {
   total: number
 }
 
+/** A rank of the level program: every levelsPerTier levels; it sets the daily case's tier and the rakeback rate */
+export interface RankStep {
+  rank: number
+  name: string
+  fromLevel: number
+  /** Share of the house edge given back on every bet, basis points */
+  rakebackBp: number
+}
+
+/** A level case: earned at a level, worth more the higher the level (and ×5 on a new rank) */
+export interface LevelCaseRef {
+  level: number
+  price: number
+  /** Starts a new rank: the big one */
+  big: boolean
+}
+
+/** The level program: ranks, the rakeback waiting to be claimed and the level cases waiting to be opened */
+export interface LevelInfo {
+  ranks: RankStep[]
+  rank: number
+  rakeback: { rateBp: number; edgeBp: number; pending: number }
+  levelCases: LevelCaseRef[]
+  /** The case of the oldest level case, to open on the reel */
+  levelCase: CaseDetails | null
+  /** What the next level brings */
+  next: LevelCaseRef
+}
+
 /** GET /api/bonuses: what the Bonuses page offers (the promo code is a form of its own) */
 export interface BonusesResponse {
   daily: DailyInfo
   welcome: WelcomeInfo
+  level: LevelInfo
 }
 
 /** POST /api/bonuses/promo. 400 for an unknown or already used code. */

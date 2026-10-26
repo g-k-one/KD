@@ -10,8 +10,8 @@ onClickOutside(profileRoot, () => ui.popover === 'profile' && (ui.popover = null
 onKeyStroke('Escape', () => (ui.popover = null))
 
 const desktopNav = MAIN_NAV
-const { data, dailyReady, dailyIn, welcomeLeft } = useBonuses()
-const freeReady = computed(() => welcomeLeft.value > 0 || dailyReady.value)
+const { data, dailyReady, dailyIn, freeCount } = useBonuses()
+const freeReady = computed(() => freeCount.value > 0 || dailyReady.value)
 
 const PROFILE_MENU = [
   { key: 'profile', label: 'profile.profile', icon: 'user', to: '/profile' },
@@ -63,8 +63,8 @@ async function logout() {
         :class="freeReady ? 'is-ready text-neutral-15' : 'text-neutral-12 hover:text-neutral-15'"
       >
         <UiIcon name="bonuses" :size="20" :class="freeReady ? 'text-coin' : ''" />
-        <UiTextSwap :text="welcomeLeft ? $t('bonus.freeReady') : dailyReady ? $t('bonus.dailyReady') : dailyIn" class="tabular-nums" />
-        <span v-if="welcomeLeft" class="type-10-caps grid h-4 min-w-4 place-items-center rounded-full bg-brand-base px-1 text-neutral-1">{{ welcomeLeft }}</span>
+        <UiTextSwap :text="freeCount ? $t('bonus.freeReady') : dailyReady ? $t('bonus.dailyReady') : dailyIn" class="tabular-nums" />
+        <span v-if="freeCount" class="type-10-caps grid h-4 min-w-4 place-items-center rounded-full bg-brand-base px-1 text-neutral-1">{{ freeCount }}</span>
       </NuxtLink>
     </Transition>
 

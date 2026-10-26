@@ -11,7 +11,7 @@ const TABS = [
 
 // The bonus tab doubles as the free case timer on phones (the desktop header has its own chip): the countdown
 // to the next daily case replaces the label until it is ready, then the dot says "come and take it"
-const { dailyReady, dailyIn, welcomeLeft } = useBonuses()
+const { dailyReady, dailyIn, freeCount } = useBonuses()
 const tabClass = (active: boolean) => (active ? 'text-brand-light' : 'text-neutral-13')
 
 // Centre: a raised Deposit (Casehug's "Add Funds"), one thumb away on every page; guests sign in first
@@ -38,7 +38,7 @@ function deposit() {
       >
         <span class="relative">
           <UiIcon :name="t.icon" :size="20" class="kd-icon" />
-          <span v-if="t.key === 'bonus' && (dailyReady || welcomeLeft)" class="kd-dot absolute -top-0.5 -right-1 size-2 rounded-full bg-brand-base" />
+          <span v-if="t.key === 'bonus' && (dailyReady || freeCount)" class="kd-dot absolute -top-0.5 -right-1 size-2 rounded-full bg-brand-base" />
         </span>
         <span v-if="t.key === 'bonus' && dailyIn" class="tabular-nums">{{ dailyIn }}</span>
         <template v-else>{{ $t(t.label) }}</template>
