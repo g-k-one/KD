@@ -10,8 +10,9 @@ const { onMove, onLeave, vars } = usePointerTilt()
 
 <template>
   <section class="kd-bleed relative isolate pt-4 pb-6 lg:pt-10 lg:pb-2" :style="vars" @pointermove="onMove" @pointerleave="onLeave">
-    <!-- the light: an arc of warm colour hanging from the top, brightest in the middle, gone before the page -->
-    <span class="kd-glow pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
+    <!-- the light: an arc of warm colour hanging from the top, brightest in the middle; it reaches past the band, down
+         behind the big wins, and is gone before the page -->
+    <span class="kd-glow pointer-events-none absolute inset-x-0 top-0 -bottom-40 -z-10 lg:-bottom-64" aria-hidden="true" />
 
     <div class="mx-auto max-w-content">
       <HomeHeroBanner bare @start="emit('start')">
