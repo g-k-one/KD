@@ -70,8 +70,8 @@ const onScreen = useElementVisibility(band)
       </div>
     </div>
 
-    <!-- a: loot in the side margins, wide screens only -->
-    <div class="kd-side pointer-events-none absolute inset-0 -z-10 hidden min-[1500px]:block" aria-hidden="true">
+    <!-- a: loot in the side margins, wide screens only (c fills them with the drift instead) -->
+    <div v-if="!live" class="kd-side pointer-events-none absolute inset-0 -z-10 hidden min-[1500px]:block" aria-hidden="true">
       <img
         v-for="(l, i) in SIDE"
         :key="i"
@@ -127,7 +127,7 @@ const onScreen = useElementVisibility(band)
 /* c: two rows drifting right to left at different speeds; strong in the margins, faint behind the words */
 .kd-drift {
   mask-image:
-    linear-gradient(90deg, #000, #000 calc(50% - 640px), rgb(0 0 0 / 0.28) calc(50% - 380px), rgb(0 0 0 / 0.28) calc(50% + 200px), #000 calc(50% + 640px)),
+    linear-gradient(90deg, #000, #000 calc(50% - 640px), rgb(0 0 0 / 0.14) calc(50% - 380px), rgb(0 0 0 / 0.14) calc(50% + 200px), #000 calc(50% + 640px)),
     linear-gradient(180deg, #000 70%, transparent);
   mask-composite: intersect;
 }

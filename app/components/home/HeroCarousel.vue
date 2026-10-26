@@ -96,19 +96,25 @@ function up() {
 /* one column wide: the content column on desktop, the screen less two peeks on phones; every slide in one grid cell,
    so the carousel is as tall as the tallest */
 .kd-track {
-  width: min(1232px, calc(100vw - 48px));
+  --gap: 12px;
+  width: min(1232px, calc(100vw - 56px));
   touch-action: pan-y;
+}
+@media (min-width: 1024px) {
+  .kd-track {
+    --gap: 24px;
+  }
 }
 .kd-slide {
   grid-area: 1 / 1;
-  transform: translate3d(calc(var(--o) * (100% + 24px) + var(--drag, 0px)), 0, 0) scale(1);
+  transform: translate3d(calc(var(--o) * (100% + var(--gap)) + var(--drag, 0px)), 0, 0) scale(1);
   transition:
     transform var(--dur-slow) var(--ease-out),
     opacity var(--dur-slow) var(--ease-out);
 }
 .kd-slide.is-side {
   opacity: 0.4;
-  transform: translate3d(calc(var(--o) * (100% + 24px) + var(--drag, 0px)), 0, 0) scale(0.94);
+  transform: translate3d(calc(var(--o) * (100% + var(--gap)) + var(--drag, 0px)), 0, 0) scale(0.94);
 }
 .kd-track.is-dragging .kd-slide,
 .kd-slide.is-jump {
