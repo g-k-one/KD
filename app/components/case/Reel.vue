@@ -431,8 +431,9 @@ async function spin(winners: Item[], fast: boolean, kurwa: boolean[] = []) {
           henShow(logo, el, {
             base: appBase,
             fast,
-            // phones: the whole chicken a size smaller (the logo zooms to match, so the swap still lines up)
-            scale: isMobile.value ? 0.78 : 1,
+            // the whole chicken about half its authored size (phones smaller still); the logo zooms to match, so the swap
+            // still lines up
+            scale: isMobile.value ? 0.45 : 0.55,
             // sounds, the shout and the shake once, from the first chicken; the gold burst on each
             swap: () => n || sfx.henSwap(),
             body: () => n || sfx.henBody(),
