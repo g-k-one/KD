@@ -998,10 +998,10 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 .kd-reel.is-hen .kd-chicken-hit {
   animation: none;
 }
-/* the Golden Chicken's logo sits a size smaller on the reel than the skins (the chicken grows from it, so it follows) */
+/* the Golden Chicken's logo sits well smaller on the reel than the skins (60%; the chicken grows from it, so it follows) */
 .kd-art[data-gold-chicken] .kd-art-img {
-  width: calc(120px * var(--s));
-  height: calc(120px * var(--s));
+  width: calc(96px * var(--s));
+  height: calc(96px * var(--s));
 }
 .kd-chicken-hit.is-hen-out .kd-art-img {
   opacity: 0;
