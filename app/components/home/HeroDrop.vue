@@ -51,16 +51,15 @@ const x = computed(() => {
 .kd-drop {
   perspective: 1200px;
 }
-/* a pool of the rarity's colour, brightest under the skin; screened, so it only ever lightens the warm light */
+/* a pool of the rarity's colour, lifted toward warm white so it lightens the band's light instead of muddying it */
 .kd-drop-glow {
-  mix-blend-mode: screen;
   left: 50%;
   top: 46%;
   width: 640px;
   height: 460px;
   translate: -50% -50%;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 55%, transparent), transparent);
-  opacity: 0.9;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 55%, #ffe2b0), transparent);
+  opacity: 0.42;
 }
 /* the multiplier, huge and quiet behind the skin: the brand gradient, faded */
 .kd-drop-x {
