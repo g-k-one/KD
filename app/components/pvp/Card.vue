@@ -48,7 +48,7 @@ const action = computed(() => ({ waiting: 'pvp.join', live: 'pvp.watch', finishe
         :alt="g.name"
         draggable="false"
         class="kd-bcard-case object-contain"
-        :class="compact ? 'size-20' : 'size-28 lg:size-32'"
+        :class="[compact ? 'size-20' : 'size-28 lg:size-32', i === Math.floor((fan.length - 1) / 2) && 'is-front']"
         :style="{ '--i': i - (fan.length - 1) / 2, zIndex: 3 - Math.abs(i - (fan.length - 1) / 2) * 2 }"
       />
       <!-- how many rounds (cases to open), one number: the fan above already shows what they are -->
@@ -93,8 +93,13 @@ const action = computed(() => ({ waiting: 'pvp.join', live: 'pvp.watch', finishe
     border-color var(--dur-base) var(--ease-out),
     transform var(--dur-base) var(--ease-spring);
 }
+/* a finished battle's cases step back by darkening, not by fading: faded pictures showed through each other where they
+   overlap. The middle one stays whole */
 .kd-bcard.is-finished .kd-bcard-case {
-  opacity: 0.55;
+  filter: brightness(0.55) saturate(0.6);
+}
+.kd-bcard.is-finished .kd-bcard-case.is-front {
+  filter: brightness(0.85) saturate(0.85);
 }
 /* the fan: the middle case in front, the others turned out to the sides */
 .kd-bcard-case {

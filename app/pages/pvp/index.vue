@@ -61,8 +61,11 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
         <span class="kd-dock-stat type-12-caps">{{ $t('pvp.inPlay') }} <UiPrice :amount="inPlay" size="m" tone="coin" /></span>
       </div>
     </div>
-      <div class="flex items-center justify-end gap-2">
-        <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="min-w-0 flex-1 lg:w-40 lg:flex-none" :active="mode !== 'all'" />
+      <!-- the filter bar spans the row: the modes as a switch on the left (one tap each), sort and budget on the right -->
+      <div class="flex items-center gap-2">
+        <UiSegmented v-model="mode" :options="modeOptions" size="s" class="max-lg:hidden" />
+        <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="min-w-0 flex-1 lg:hidden" :active="mode !== 'all'" />
+        <span class="flex-1 max-lg:hidden" />
         <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:w-48" :active="sort !== 'default'">
           <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
         </UiSelect>

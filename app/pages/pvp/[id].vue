@@ -54,6 +54,20 @@ const now = useClock(200)
 const clock = computed(() => battleClock(b.value, now.value))
 const done = computed(() => b.value.status === 'finished' || clock.value.round >= b.value.rounds.length)
 const roundIdx = computed(() => Math.min(b.value.rounds.length - 1, Math.max(0, clock.value.round)))
+// The round strip shows what fits (a 56 px tile + 8 px gap): a window that keeps the current round in view and ends
+// in a "+N" tile when more rounds follow
+const stripEl = useTemplateRef<HTMLElement>('stripEl')
+const { width: stripW } = useElementSize(() => stripEl.value?.parentElement ?? null)
+const strip = computed(() => {
+  const n = b.value.rounds.length
+  // the strip gets what the cost/pot and the viewers/rounds chips leave of the dock (desktop: its middle column)
+  const room = isMobile.value ? stripW.value - 8 : Math.max(0, stripW.value - 2 * 340)
+  const fit = Math.max(3, Math.floor((room + 8) / 64))
+  if (n <= fit) return { idx: Array.from({ length: n }, (_, i) => i), more: 0, from: 0 }
+  const shown = fit - 1
+  const from = Math.min(Math.max(0, roundIdx.value - 1), n - shown)
+  return { idx: Array.from({ length: shown }, (_, k) => from + k), more: n - (from + shown), from }
+})
 /** Rounds whose result is visible: the current one counts once its reel has stopped */
 const revealed = computed(() => {
   if (done.value) return b.value.rounds.length
@@ -158,13 +172,13 @@ async function bot(slot: number) {
   }
 }
 
+const verifyOpen = ref(false)
 const nameOf = (slot: number) => {
   const p = b.value.slots[slot]?.player
   return p ? (p.you ? t('pvp.you') : p.nickname) : ''
 }
 /** Who took the pot: one name, or "A & B" for a team */
 const winners = computed(() => b.value.winners ?? (b.value.winnerSlot != null ? [b.value.winnerSlot] : []))
-const winnerName = computed(() => (winners.value.length > 1 ? t('pvp.teamWon', { a: nameOf(winners.value[0]!), b: nameOf(winners.value[1]!) }) : t('pvp.wonBy', { name: nameOf(winners.value[0] ?? 0) })))
 /** The seats ahead right now by the mode's rule (most value · least value · the richer team) */
 const leaders = computed(() => {
   if (done.value || revealed.value < 1) return [] as number[]
@@ -241,6 +255,7 @@ const roundLine = computed(() => {
       :title="$t(`pvp.modeName.${b.mode}`)"
       :subtitle="`${$t(`pvp.modeRule.${b.mode}`)} · #${b.id}`"
       fixed-sides
+      :right="[{ label: $t('pvp.checkBattle'), icon: 'shield', onClick: () => (verifyOpen = true) }]"
       :left="[
         { label: $t('pvp.back'), icon: 'arrow-left', to: '/pvp' },
         { label: $t('case.share'), icon: 'share', onClick: shareBattle },
@@ -255,9 +270,11 @@ const roundLine = computed(() => {
         <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="m" /></span>
         <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" class="kd-pot tabular-nums" /></span>
       </div>
-      <!-- room on every side for the current round's tile, which grows a little: the scroll box must not cut it -->
-      <div class="scrollbar-none flex max-w-full items-center gap-2 overflow-x-auto px-1 py-2 max-lg:order-last max-lg:w-full">
-        <PvpCaseThumb v-for="(r, i) in b.rounds" :key="i" :image="r.image" :name="`${r.name} · ${formatCoins(r.price)}`" size="m" :state="roundState(i)" />
+      <!-- As many rounds as fit, none cut: a window that follows the current round, a "+N" tile for the ones after it,
+           and a soft fade on the side where earlier rounds went out of view -->
+      <div ref="stripEl" class="kd-rounds flex min-w-0 items-center gap-2 overflow-hidden px-1 py-2 max-lg:order-last max-lg:w-full lg:max-w-full" :class="strip.from > 0 && 'is-cut'">
+        <PvpCaseThumb v-for="i in strip.idx" :key="i" :image="b.rounds[i]!.image" :name="`${b.rounds[i]!.name} · ${formatCoins(b.rounds[i]!.price)}`" size="m" :state="roundState(i)" />
+        <span v-if="strip.more" class="type-14 grid size-14 shrink-0 place-items-center rounded-2xl bg-neutral-3 text-neutral-12 tabular-nums" :title="$t('pvp.roundsN', { n: b.rounds.length })">+{{ strip.more }}</span>
       </div>
       <div class="type-12-caps flex justify-end gap-2 tabular-nums max-lg:w-full">
         <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center"><UiIcon name="eye" :size="16" /><span class="text-neutral-15">{{ b.viewers }}</span></span>
@@ -301,16 +318,25 @@ const roundLine = computed(() => {
 
       <!-- The result, inside the arena: who took the pot, how much, and the same battle again -->
       <Transition name="kd-result">
-        <div v-if="done && b.winnerSlot != null" class="kd-arena-result absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-4 text-center">
-          <span class="type-12-caps text-neutral-11">{{ $t('pvp.statusFinished') }}</span>
-          <span class="kd-result-title type-20-caps">{{ winnerName }}</span>
-          <UiPrice :amount="pot" size="l" tone="success" class="kd-result-pot" />
-          <div class="flex flex-wrap justify-center gap-2">
+        <div v-if="done && b.winnerSlot != null" class="kd-arena-result absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 px-4 text-center">
+          <!-- who took it: their face(s) under a crown, the name, the pot -->
+          <div class="kd-result-title flex flex-col items-center gap-2">
+            <span class="flex -space-x-3">
+              <span v-for="w in winners" :key="w" class="kd-result-face relative block overflow-hidden rounded-full bg-neutral-7" :class="isMobile ? 'size-12' : 'size-16'">
+                <img :src="b.slots[w]?.player?.avatar" alt="" class="size-full object-cover" :class="b.slots[w]?.player?.bot && 'scale-75 object-contain'" />
+              </span>
+            </span>
+            <span class="type-12-caps text-success">{{ winners.length > 1 ? $t('pvp.battleWonTeam') : $t('pvp.battleWon') }}</span>
+            <span class="text-[22px] leading-7 font-extrabold uppercase lg:type-28">{{ winners.map(nameOf).join(' & ') }}</span>
+          </div>
+          <UiPrice :amount="pot" size="xl" tone="coin" class="kd-result-pot" />
+          <div class="kd-result-pot flex flex-wrap justify-center gap-2">
             <UiButton size="m" icon="refresh" :loading="recreating" @click="recreate">
               {{ $t('pvp.recreate') }}
               <span class="btn-value"><UiPrice :amount="b.cost" size="s" tone="inverse" /></span>
             </UiButton>
             <UiButton v-if="data!.battle.status === 'finished'" variant="secondary" size="m" icon="refresh" @click="replay">{{ $t('pvp.replay') }}</UiButton>
+            <UiButton variant="fair" size="m" icon="shield-check" @click="verifyOpen = true">{{ $t('pvp.checkBattle') }}</UiButton>
           </div>
         </div>
       </Transition>
@@ -346,10 +372,15 @@ const roundLine = computed(() => {
         </TransitionGroup>
       </div>
     </section>
+    <PvpVerifyModal v-model="verifyOpen" :battle="b" />
   </div>
 </template>
 
 <style scoped>
+/* earlier rounds went out of view on the left: the first tile fades in from the edge */
+.kd-rounds.is-cut {
+  mask-image: linear-gradient(90deg, transparent, #000 48px);
+}
 .kd-seat-drops {
   transition: opacity var(--dur-slow) var(--ease-out);
 }
@@ -362,9 +393,10 @@ const roundLine = computed(() => {
   background: var(--color-neutral-2);
   padding: 12px;
 }
+/* desktop: the round strip makes the row 72 px, so the 48 px chips sit 24 px from the top and bottom; the sides match */
 @media (min-width: 64rem) {
   .kd-dock {
-    padding-inline: 16px;
+    padding-inline: 24px;
   }
 }
 .kd-dock-stat {
@@ -473,6 +505,11 @@ const roundLine = computed(() => {
 }
 .kd-arena-seat.is-winner {
   background: radial-gradient(60% 50% at 50% 50%, rgb(18 183 106 / 0.18), transparent);
+}
+.kd-result-face {
+  box-shadow:
+    0 0 0 3px var(--color-success),
+    0 0 24px rgb(18 183 106 / 0.45);
 }
 .kd-arena-result {
   background: rgb(12 13 16 / 0.82);
