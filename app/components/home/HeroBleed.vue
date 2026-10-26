@@ -12,7 +12,7 @@ const { onMove, onLeave, vars } = usePointerTilt()
 // on the ring, by angle (0° = right, clockwise on screen); w = width in px
 const ORBIT = [
   { src: '/img/items/cs2/butterfly-knife-fade.webp', a: 200, w: 132 },
-  { src: '/img/items/cs2/awp-dragon-lore.webp', a: 330, w: 168 },
+  { src: '/img/items/cs2/awp-dragon-lore.webp', a: 330, w: 156 },
   { src: '/img/items/cs2/sport-gloves-pandora-s-box.webp', a: 80, w: 116 },
 ]
 
@@ -205,7 +205,7 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
 
 @media (max-width: 1439px) {
   .kd-ring {
-    --r: 245px;
+    --r: 215px;
   }
 }
 /* phones and tablets: the art is a band on top, the light with it; the plate and the ring sit out */
