@@ -57,16 +57,13 @@ const hiddenBefore = computed(() => {
 })
 
 const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-// the banner: the card in the column, or one of the full-width variants above it (prototype, useHeroVariant)
-const hero = useHeroVariant()
 </script>
 
 <template>
   <div>
-    <HomeHeroBleed v-if="hero === 'a' || hero === 'c'" :live="hero === 'c'" @start="scrollToCases" />
-    <HomeHeroCarousel v-else-if="hero === 'b'" @start="scrollToCases" />
-    <div class="mx-auto flex max-w-content flex-col gap-6 px-4 lg:gap-10 lg:px-0" :class="hero === 'card' && 'pt-4 lg:pt-10'">
-      <HomeHeroBanner v-if="hero === 'card'" @start="scrollToCases" />
+    <!-- the banner runs edge to edge above the column -->
+    <HomeHeroBleed @start="scrollToCases" />
+    <div class="mx-auto flex max-w-content flex-col gap-6 px-4 lg:gap-10 lg:px-0">
 
       <!-- One Forge canvas for the big wins and the cases (a phone keeps one WebGL context per page, not one per block).
            Cases right after the big wins; the cases to continue and the live battles break up the grid further down -->

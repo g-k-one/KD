@@ -10,12 +10,13 @@ import type { StageLayer, StageLoot } from '~/components/banner/Stage.vue'
 // The art is a BannerStage: the chicken (drawn after the logo) bursts out of an open case — the case's back, the
 // chicken, the case's front wall — with real catalog skins and KD coins flying around. The fifth poke lays a golden
 // egg — an honest one: it offers the free demo spin every case has.
-// `bare`: no ground and no frame of its own — a full-width band around it paints the ground (home banner variants).
+// `bare`: no ground, no frame and no loot of its own — the full-width band around it (HomeHeroBleed) paints the ground
+// and orbits the loot; the words are bigger. Every poke goes up to it too.
 const session = useSessionStore()
 const ui = useUiStore()
 const { dailyReady, welcomeLeft } = useBonuses()
 defineProps<{ bare?: boolean }>()
-const emit = defineEmits<{ start: [] }>()
+const emit = defineEmits<{ start: []; poke: [] }>()
 
 // what the signed-in player is offered, most valuable first
 const offer = computed(() => {
@@ -52,6 +53,7 @@ const PECKS = 5
 const pecks = ref(0)
 const egg = ref(false)
 function onPoke() {
+  emit('poke')
   if (egg.value) return
   pecks.value += 1
   if (pecks.value >= PECKS) {
@@ -68,8 +70,8 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
 
 <template>
   <section
-    class="kd-hero relative isolate flex flex-col p-4 sm:min-h-60 sm:flex-row sm:px-8 sm:py-6 lg:h-80 lg:gap-6 lg:p-10"
-    :class="bare ? 'overflow-visible' : 'overflow-hidden rounded-4xl sm:rounded-5xl lg:overflow-visible lg:rounded-[32px]'"
+    class="kd-hero relative isolate flex flex-col p-4 sm:min-h-60 sm:flex-row sm:px-8 sm:py-6 lg:gap-6 lg:p-10"
+    :class="bare ? 'overflow-visible lg:h-[360px]' : 'overflow-hidden rounded-4xl sm:rounded-5xl lg:h-80 lg:overflow-visible lg:rounded-[32px]'"
     :style="vars"
     @pointermove="onMove"
     @pointerleave="onLeave"
@@ -84,19 +86,22 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
         :back="BACK"
         :mascot="CHICKEN"
         :front="FRONT"
-        :loot="LOOT"
+        :loot="bare ? [] : LOOT"
         :bubble="bubble ? $t(bubble) : ''"
         :poke-label="$t('hero.pokeLabel')"
         @poke="onPoke"
       />
     </div>
 
-    <div class="relative z-10 flex flex-col justify-between gap-4 sm:max-w-[58%] sm:gap-6 lg:justify-center lg:gap-10 lg:h-full lg:w-[709px] lg:max-w-none">
+    <div class="relative z-10 flex flex-col justify-between gap-4 sm:max-w-[58%] sm:gap-6 lg:justify-center lg:gap-10 lg:h-full lg:max-w-none" :class="bare ? 'lg:w-[700px]' : 'lg:w-[709px]'">
       <div class="flex flex-col gap-1 sm:gap-2">
-        <p class="type-12-caps lg:type-16-caps text-brand-light">
+        <p class="type-12-caps text-brand-light" :class="bare ? 'lg:type-20-caps' : 'lg:type-16-caps'">
           {{ session.user ? $t('hero.back', { name: session.user.nickname }) : $t('hero.eyebrow') }}
         </p>
-        <h1 class="text-xl leading-6 font-extrabold uppercase sm:text-[32px] sm:leading-9 lg:type-48-caps">
+        <h1
+          class="font-extrabold uppercase"
+          :class="bare ? 'text-[28px] leading-8 sm:text-[40px] sm:leading-10 lg:text-[64px] lg:leading-[62px] lg:tracking-[-0.01em]' : 'text-xl leading-6 sm:text-[32px] sm:leading-9 lg:type-48-caps'"
+        >
           {{ offer ? $t(offer.title, { n: offer.n }, offer.n || 1) : $t('hero.title') }}
         </h1>
       </div>

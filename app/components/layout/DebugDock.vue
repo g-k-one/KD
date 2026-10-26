@@ -19,13 +19,6 @@ const open = computed({ get: () => dock.value.open, set: (v: boolean) => (dock.v
 const session = useSessionStore()
 const toast = useToast()
 const force = ref<Force>({ cases: [], upgrade: null, battle: null })
-const hero = useHeroVariant()
-const HERO = [
-  { v: 'card', label: 'Card' },
-  { v: 'a', label: 'A · Full width' },
-  { v: 'b', label: 'B · Carousel' },
-  { v: 'c', label: 'C · Live wins' },
-] as const
 
 async function load() {
   force.value = await $fetch<Force>('/api/debug/force')
@@ -155,14 +148,6 @@ const resetDaily = async () => {
             <UiButton size="s" variant="secondary" icon="settings" to="/admin" @click="open = false">Admin panel</UiButton>
           </div>
           <p class="type-12-regular text-neutral-11">Home in place: rows, scenes, card kinds. The panel: every setting of the site.</p>
-        </section>
-
-        <section class="flex flex-col gap-2">
-          <span class="type-12-caps text-neutral-12">Home banner</span>
-          <div class="flex flex-wrap gap-1">
-            <UiChip v-for="h in HERO" :key="h.v" :active="hero === h.v" @click="hero = h.v">{{ h.label }}</UiChip>
-          </div>
-          <p class="type-12-regular text-neutral-11">The card as it is, or full width: one scene edge to edge, the three banners on a carousel, the scene with real drops drifting behind.</p>
         </section>
 
         <section class="flex flex-col gap-2">

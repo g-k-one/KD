@@ -1,174 +1,228 @@
 <script setup lang="ts">
-import type { FeedDrop } from '#shared/types/api'
-
 /*
- * Home banner, full width (variants a and c, useHeroVariant). One scene from edge to edge with no frame: the ground's
- * light sits behind the case art in the content column and fades into the page below; the words stay in the column.
- * Wide screens: more loot hangs in the side margins, dimmer and further away, moving with the pointer like the stage.
- * `live` (c): the latest real drops from the live feed drift right to left behind it all, strong in the margins and
- * faint behind the words. Only real drops, the same as the strip above.
+ * Home banner, full width: one scene from edge to edge with no frame. The ground's light sits behind the case art and
+ * fades into the page below; the words, bigger, stand on a soft half-oval plate (two arcs, like a stage seen from the
+ * front). Right: the chicken bursting out of its case and a ring with three real catalog skins orbiting it — a planet
+ * with its ring, seen from a little above, so the ring passes behind the chicken at the top and in front at the
+ * bottom. Few things, all alive: the ring turns faster while the pointer is over the band and kicks round on a poke.
+ * The ring is drawn twice (its far half under the art, its near half over it), both halves on one clock.
  */
-const props = defineProps<{ live?: boolean }>()
 const emit = defineEmits<{ start: [] }>()
 const { onMove, onLeave, vars } = usePointerTilt()
 
-// side loot: x from the content column's edge outward, y from the band's top; d = depth (how far the pointer moves it)
-const SIDE = [
-  { side: 'l', src: '/img/items/cs2/awp-asiimov.webp', x: 40, y: 40, w: 230, r: -18, d: 1.6 },
-  { side: 'l', src: '/img/coins/coin.webp', x: 150, y: 240, w: 46, r: 20, d: 2.2 },
-  { side: 'l', src: '/img/items/cs2/bayonet-doppler.webp', x: 10, y: 270, w: 150, r: 24, d: 1.2 },
-  { side: 'r', src: '/img/items/cs2/ak-47-fire-serpent.webp', x: 30, y: 60, w: 220, r: 14, d: 1.4 },
-  { side: 'r', src: '/img/coins/coin.webp', x: 30, y: 300, w: 38, r: -24, d: 2 },
-  { side: 'r', src: '/img/items/cs2/driver-gloves-crimson-weave.webp', x: 110, y: 250, w: 150, r: -12, d: 1.8 },
-] as const
+// on the ring, by angle (0° = right, clockwise on screen); w = width in px
+const ORBIT = [
+  { src: '/img/items/cs2/butterfly-knife-fade.webp', a: 200, w: 132 },
+  { src: '/img/items/cs2/awp-dragon-lore.webp', a: 330, w: 168 },
+  { src: '/img/items/cs2/sport-gloves-pandora-s-box.webp', a: 80, w: 116 },
+]
 
-// c: a snapshot of the feed, renewed each time the slow row comes round, so the band doesn't jump on every poll
-const { feed } = useLiveFeed()
-const drops = ref<FeedDrop[]>([])
-function snapshot() {
-  const seen = new Set<string>()
-  drops.value = (feed.value?.drops ?? []).filter((d) => !seen.has(d.image) && seen.add(d.image)).slice(0, 14)
+// one clock for both halves: the same animations on the far and near ring, started together, sped up together
+const band = useTemplateRef<HTMLElement>('band')
+const TURN = 36000
+let anims: Animation[] = []
+let rate = 1
+let target = 1
+let raf = 0
+function setRate(r: number) {
+  rate = r
+  for (const a of anims) a.playbackRate = r
 }
-watch(
-  () => feed.value?.drops.length,
-  () => props.live && !drops.value.length && snapshot(),
-  { immediate: true },
-)
-// each row repeated to at least 12 (≈ 2250 px), wider than any screen, so its loop never shows an empty end
-const rows = computed(() => {
-  const half = Math.ceil(drops.value.length / 2)
-  return [drops.value.slice(0, half), drops.value.slice(half)]
-    .filter((r) => r.length)
-    .map((r) => Array.from({ length: Math.max(r.length, 12) }, (_, i) => ({ ...r[i % r.length]!, key: `${i}-${r[i % r.length]!.id}` })))
+function ease() {
+  const next = rate + (target - rate) * 0.08
+  setRate(Math.abs(target - next) < 0.01 ? target : next)
+  raf = rate === target ? 0 : requestAnimationFrame(ease)
+}
+function speed(r: number) {
+  target = r
+  if (!raf) raf = requestAnimationFrame(ease)
+}
+onMounted(() => {
+  if (!band.value || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  const opts = { duration: TURN, iterations: Infinity }
+  const start = document.timeline.currentTime
+  anims = [
+    ...[...band.value.querySelectorAll<HTMLElement>('.kd-ring-spin')].map((el) => el.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], opts)),
+    // each skin turns back as the ring turns, so it stays upright, and leans out of the ring's plane to face us
+    ...[...band.value.querySelectorAll<HTMLElement>('.kd-ring-face')].map((el) =>
+      el.animate([{ transform: 'rotate(0deg) rotateX(-64deg)' }, { transform: 'rotate(-360deg) rotateX(-64deg)' }], opts),
+    ),
+  ]
+  for (const a of anims) a.startTime = start
+})
+onBeforeUnmount(() => {
+  cancelAnimationFrame(raf)
+  for (const a of anims) a.cancel()
 })
 
-// the drift only runs while the band is on screen
-const band = useTemplateRef<HTMLElement>('band')
+function enter(e: PointerEvent) {
+  onMove(e)
+  if (e.pointerType === 'mouse') speed(2.2)
+}
+function leave() {
+  onLeave()
+  speed(1)
+}
+// a poke at the chicken flings the ring round, then it settles back
+function kick() {
+  setRate(16)
+  speed(target)
+}
+
+// the clock runs only while the band is on screen
 const onScreen = useElementVisibility(band)
+watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
 </script>
 
 <template>
-  <section
-    ref="band"
-    class="kd-bleed relative isolate pt-4 pb-6 lg:pt-10 lg:pb-12"
-    :class="!onScreen && 'is-paused'"
-    :style="vars"
-    @pointermove="onMove"
-    @pointerleave="onLeave"
-  >
+  <section ref="band" class="kd-bleed relative isolate pt-4 pb-6 lg:pt-10 lg:pb-12" :style="vars" @pointermove="enter" @pointerleave="leave">
     <span class="kd-bleed-ground pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
 
-    <!-- c: the latest real drops, drifting -->
-    <div v-if="live && rows.length" class="kd-drift pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
-      <div v-for="(row, r) in rows" :key="r" class="kd-drift-row absolute flex" :class="`is-row-${r}`" @animationiteration="r === 0 && snapshot()">
-        <!-- twice, so the loop has no seam -->
-        <template v-for="copy in 2" :key="copy">
-          <span v-for="d in row" :key="`${copy}-${d.key}`" class="kd-drift-item relative grid shrink-0 place-items-center" :style="{ '--glow': RARITY_COLOR[d.rarity] }">
-            <img :src="d.image" alt="" class="relative w-full object-contain" loading="lazy" draggable="false" />
+    <!-- the words' plate: two soft arcs rising from the band's foot -->
+    <span class="kd-plate pointer-events-none absolute -z-10" aria-hidden="true">
+      <span class="kd-plate-arc is-outer" />
+      <span class="kd-plate-arc is-inner" />
+    </span>
+
+    <!-- the ring's far half, under the art -->
+    <div class="kd-ring is-far pointer-events-none absolute -z-[5]" aria-hidden="true">
+      <div class="kd-ring-plane">
+        <div class="kd-ring-spin">
+          <span class="kd-ring-line" />
+          <span v-for="o in ORBIT" :key="o.src" class="kd-ring-slot" :style="{ '--a': `${o.a}deg` }">
+            <img :src="o.src" alt="" class="kd-ring-face" :style="{ width: `${o.w}px` }" draggable="false" />
           </span>
-        </template>
+        </div>
       </div>
     </div>
 
-    <!-- a: loot in the side margins, wide screens only (c fills them with the drift instead) -->
-    <div v-if="!live" class="kd-side pointer-events-none absolute inset-0 -z-10 hidden min-[1500px]:block" aria-hidden="true">
-      <img
-        v-for="(l, i) in SIDE"
-        :key="i"
-        :src="l.src"
-        alt=""
-        class="kd-side-item absolute"
-        :class="l.side === 'l' ? 'is-l' : 'is-r'"
-        :style="{ '--x': `${l.x}px`, top: `${l.y}px`, width: `${l.w}px`, '--r': `${l.r}deg`, '--d': l.d, '--i': i }"
-        draggable="false"
-      />
+    <div class="mx-auto max-w-content">
+      <HomeHeroBanner bare @start="emit('start')" @poke="kick" />
     </div>
 
-    <div class="mx-auto max-w-content">
-      <HomeHeroBanner bare @start="emit('start')" />
+    <!-- the ring's near half, over the art -->
+    <div class="kd-ring is-near pointer-events-none absolute z-20" aria-hidden="true">
+      <div class="kd-ring-plane">
+        <div class="kd-ring-spin">
+          <span class="kd-ring-line" />
+          <span v-for="o in ORBIT" :key="o.src" class="kd-ring-slot" :style="{ '--a': `${o.a}deg` }">
+            <img :src="o.src" alt="" class="kd-ring-face" :style="{ width: `${o.w}px` }" draggable="false" />
+          </span>
+        </div>
+      </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-/* the ground: the case's warm light behind the art in the column (its right side), the site's near-black at the
-   screen's edges, fading into the page at the bottom */
+.kd-bleed {
+  /* the content column, and the case art's centre in it (the board's middle, 255 px in from the column's right) */
+  --col: min(1232px, 100vw);
+  --art-x: calc(50% + var(--col) / 2 - 255px);
+}
+
+/* the ground: the case's warm light behind the art, the site's near-black at the screen's edges, fading into the page */
 .kd-bleed-ground {
   background:
-    radial-gradient(760px 440px at calc(50% + 300px) 70%, rgb(255 110 30 / 0.42), transparent 70%),
-    radial-gradient(520px 280px at calc(50% + 280px) 100%, rgb(255 190 80 / 0.22), transparent 70%),
+    radial-gradient(640px 400px at var(--art-x) 64%, rgb(255 110 30 / 0.42), transparent 70%),
+    radial-gradient(460px 260px at var(--art-x) 100%, rgb(255 190 80 / 0.22), transparent 70%),
     radial-gradient(1300px 560px at calc(50% + 160px) 55%, #2a1209, transparent 72%);
   mask-image: linear-gradient(180deg, #000 72%, transparent);
 }
+
+/* the plate: a half-oval standing on the band's foot behind the words, its rim catching the case's light */
+.kd-plate {
+  bottom: 0;
+  left: calc(50% - var(--col) / 2 + 390px);
+  width: 1040px;
+  height: 400px;
+  transform: translateX(-50%);
+  mask-image: linear-gradient(180deg, #000 55%, transparent);
+}
+.kd-plate-arc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: radial-gradient(70% 100% at 50% 100%, rgb(255 120 40 / 0.1), rgb(255 255 255 / 0.03) 70%, rgb(255 255 255 / 0.02));
+  box-shadow: inset 0 1.5px 0 rgb(255 170 90 / 0.28);
+}
+.kd-plate-arc.is-inner {
+  inset: 22% 18% 0;
+  background: rgb(255 255 255 / 0.02);
+  box-shadow: inset 0 1px 0 rgb(255 170 90 / 0.14);
+}
+
+/* the ring: a flat circle laid back 64° (an ellipse to the eye), centred on the art; the far half shows its top, the
+   near half its bottom */
+.kd-ring {
+  --r: 290px;
+  left: var(--art-x);
+  top: 236px;
+  width: calc(var(--r) * 2);
+  height: calc(var(--r) * 2);
+  margin: calc(var(--r) * -1) 0 0 calc(var(--r) * -1);
+  perspective: 1400px;
+  transform: translate3d(calc(var(--px, 0) * -10px), calc(var(--py, 0) * -6px), 0);
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.kd-ring.is-far {
+  clip-path: inset(-200px -200px 50% -200px);
+}
+.kd-ring.is-near {
+  clip-path: inset(50% -200px -200px -200px);
+}
+.kd-ring-plane {
+  position: absolute;
+  inset: 0;
+  transform: rotateX(64deg);
+  transform-style: preserve-3d;
+}
+.kd-ring-spin {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+.kd-ring-line {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgb(255 160 80 / 0.38);
+  box-shadow:
+    0 0 24px rgb(255 120 40 / 0.25),
+    inset 0 0 24px rgb(255 120 40 / 0.18);
+}
+/* a slot sits on the circle at its angle; the skin in it turns back and stands up (the animations in the script) */
+.kd-ring-slot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform: rotate(var(--a)) translateX(var(--r)) rotate(calc(var(--a) * -1));
+  transform-style: preserve-3d;
+}
+.kd-ring-face {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: none;
+  translate: -50% -50%;
+  transform: rotateX(-64deg);
+  filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.5));
+}
+
+/* phones and tablets: the art is a band on top, the light with it; the plate and the ring sit out */
+@media (max-width: 1023px) {
+  .kd-plate,
+  .kd-ring {
+    display: none;
+  }
+}
 @media (max-width: 639px) {
-  /* phones: the art is a band on top, the light with it */
   .kd-bleed-ground {
     background:
       radial-gradient(90% 200px at 50% 130px, rgb(255 110 30 / 0.4), transparent 72%),
       radial-gradient(140% 360px at 50% 120px, #2a1209, transparent 75%);
-  }
-}
-
-/* a: margin loot sits outside the 1232 px column; the pointer moves near ones more, a slow bob keeps them alive */
-.kd-side-item {
-  --edge: calc(50% + 616px + var(--x));
-  filter: brightness(0.62) saturate(0.85);
-  opacity: 0.85;
-  transform: translate3d(calc(var(--px, 0) * var(--d) * 14px), calc(var(--py, 0) * var(--d) * 10px), 0) rotate(var(--r));
-  transition: transform 600ms var(--ease-out);
-}
-.kd-side-item.is-l {
-  right: var(--edge);
-}
-.kd-side-item.is-r {
-  left: var(--edge);
-}
-
-/* c: two rows drifting right to left at different speeds; strong in the margins, faint behind the words */
-.kd-drift {
-  mask-image:
-    linear-gradient(90deg, #000, #000 calc(50% - 720px), rgb(0 0 0 / 0.14) calc(50% - 560px), rgb(0 0 0 / 0.14) calc(50% + 200px), #000 calc(50% + 640px)),
-    linear-gradient(180deg, #000 70%, transparent);
-  mask-composite: intersect;
-}
-.kd-drift-row {
-  animation: kd-drift 90s linear infinite;
-  will-change: transform;
-}
-.kd-drift-row.is-row-0 {
-  top: 6%;
-}
-.kd-drift-row.is-row-1 {
-  top: 52%;
-  animation-duration: 120s;
-  animation-delay: -40s;
-}
-.kd-bleed.is-paused .kd-drift-row {
-  animation-play-state: paused;
-}
-.kd-drift-item {
-  width: 132px;
-  /* a margin, not a gap: the two copies are then exact halves and -50% loops without a seam */
-  margin-right: 56px;
-  opacity: 0.5;
-}
-/* the drop's rarity as a soft pool under it, like the strip's tiles */
-.kd-drift-item::before {
-  content: '';
-  position: absolute;
-  inset: 10%;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, var(--glow), transparent);
-  opacity: 0.45;
-}
-@keyframes kd-drift {
-  to {
-    transform: translate3d(-50%, 0, 0);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .kd-drift-row {
-    animation: none;
   }
 }
 </style>
