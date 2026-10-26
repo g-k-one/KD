@@ -74,10 +74,10 @@ const isLg = useMediaQuery('(min-width: 1024px)')
     </div>
 
     <!-- Risk. Desktop: one more odds column — the label on top, the peppers and the level on one line under it.
-         Phones: the same pieces in one line on the RTP row, right-aligned. -->
+         Phones: the same pieces in one line on the RTP row, right-aligned, a hairline away from the RTP's info. -->
     <button
       type="button"
-      class="kd-hit relative order-2 flex min-w-0 items-center justify-end gap-2 text-left lg:order-3 lg:w-44 lg:flex-col lg:items-start lg:justify-center lg:gap-1 lg:border-l lg:border-neutral-4 lg:pl-6"
+      class="kd-hit relative order-2 flex min-w-0 items-center justify-end gap-2 text-left max-lg:h-8 max-lg:border-l max-lg:border-neutral-4 max-lg:pl-3 lg:order-3 lg:w-44 lg:flex-col lg:items-start lg:justify-center lg:gap-1 lg:border-l lg:border-neutral-4 lg:pl-6"
       :style="{ '--oc': RISK_COLOR[data.risk] }"
       :aria-expanded="riskOpen"
       :aria-label="$t('case.riskInfo')"

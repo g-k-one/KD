@@ -27,9 +27,9 @@ const ui = useUiStore()
       v-if="!session.user"
       variant="ghost"
       size="s"
-      icon="globe"
+      icon="settings"
       icon-only
-      :aria-label="$t('settings.language')"
+      :aria-label="$t('settings.title')"
       @click="ui.mobileMenuOpen = true"
     />
 

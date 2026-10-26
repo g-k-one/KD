@@ -119,15 +119,14 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
           @poke="onPfPoke"
         />
       </div>
-      <div class="relative z-10 flex flex-col gap-6 sm:max-w-[52%] lg:h-full lg:w-[600px] lg:max-w-none lg:justify-between">
+      <!-- one plain line and the one thing to do here: the three steps below explain the rest -->
+      <div class="relative z-10 flex flex-col gap-6 sm:max-w-[52%] lg:h-full lg:w-[600px] lg:max-w-none lg:justify-center">
         <div class="flex flex-col gap-2">
           <p class="type-12-caps lg:type-16-caps text-success lg:font-bold">{{ $t('fair.eyebrow') }}</p>
           <h2 class="text-[28px] leading-8 font-extrabold uppercase lg:type-48-caps">{{ $t('fair.heroTitle') }}</h2>
+          <p class="type-14 mt-1 text-neutral-14 lg:type-16-medium lg:w-[520px] lg:text-neutral-13">{{ $t('fair.heroText1') }}</p>
         </div>
-        <div class="type-14 flex flex-col gap-4 text-neutral-14 lg:type-16-medium lg:w-[520px] lg:gap-6 lg:text-neutral-13">
-          <p>{{ $t('fair.heroText1') }}</p>
-          <p>{{ $t('fair.heroText2') }}</p>
-        </div>
+        <UiButton variant="fair" size="l" icon="shield-check" to="#rolls" class="w-max">{{ $t('fair.heroCta') }}</UiButton>
       </div>
     </section>
 

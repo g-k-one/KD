@@ -106,8 +106,9 @@ async function onWithdrawn() {
 const gameFilter = ref<HistoryGame | 'all'>('all')
 const filteredHistory = computed(() => history.value.filter((h) => gameFilter.value === 'all' || h.game === gameFilter.value))
 const GAME_ICON: Record<HistoryGame, string> = { case: 'cases', upgrade: 'upgrade', deposit: 'plus', sell: 'wallet', withdraw: 'steam' }
+// short, so a phone row never cuts it: "12m ago" within a day, then the date alone
 const when = (iso: string) =>
-  new Date(iso).toLocaleString(locale.value, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  Date.now() - Date.parse(iso) < 86_400_000 ? timeAgo(iso) : new Date(iso).toLocaleDateString(locale.value, { day: 'numeric', month: 'short' })
 const mult = (h: HistoryEntry) => (h.bet > 0 ? `${(h.payout / h.bet).toFixed(2)}x` : '—')
 
 // --- Stats (from the history the profile already loads) ------------------------------
@@ -193,8 +194,8 @@ async function saveTrade() {
             </div>
           </div>
         </div>
-        <!-- quiet here: the header and the tab bar already carry Deposit; the profile is about the skins -->
-        <UiButton variant="secondary" icon="plus" size="l" to="/deposit" class="w-full lg:h-14 lg:w-80">{{ $t('wallet.deposit') }}</UiButton>
+        <!-- Deposit looks the same everywhere: the main button -->
+        <UiButton icon="plus" size="l" to="/deposit" class="w-full lg:h-14 lg:w-80">{{ $t('wallet.deposit') }}</UiButton>
         <div class="flex gap-2 lg:justify-end">
           <span class="kd-dock-stat max-lg:flex-1">
             <span class="type-12-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
@@ -214,7 +215,6 @@ async function saveTrade() {
           <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
             <UiIcon name="inventory" :size="24" class="text-neutral-13" />
             <span class="type-14 lg:type-16-medium">{{ $t('upgrade.mySkins') }} ({{ inventory.length }})</span>
-            <UiPrice :amount="session.user.skinsValue" size="m" tone="coin" class="opacity-64 max-sm:hidden" />
             <UiButton v-if="inventory.length" variant="ghost" size="s" class="ml-auto" @click="selected.length ? (selected = []) : selectAll()">
               <UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" />
             </UiButton>

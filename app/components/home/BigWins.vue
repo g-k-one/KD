@@ -64,7 +64,7 @@ provideForge(fxHost)
             <span class="type-14 truncate" :style="{ color: 'var(--rc)' }">{{ p.win.item.skin }}</span>
           </span>
           <!-- who, where from, when: words only (the tiny case / upgrade icons read as noise at this size) -->
-          <span class="type-12-regular w-full truncate text-neutral-11">{{ p.win.nickname }} · {{ p.win.caseName }} · {{ timeAgo(p.win.at) }}</span>
+          <span class="type-12-regular w-full truncate text-neutral-11">{{ p.win.nickname }} · {{ timeAgo(p.win.at) }} · {{ p.win.caseName }}</span>
         </div>
       </NuxtLink>
     </div>

@@ -159,7 +159,7 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
           @poke="onPoke"
         />
       </div>
-      <div class="relative z-10 flex flex-col justify-between gap-5 sm:max-w-[52%] lg:h-full lg:w-[600px] lg:max-w-none">
+      <div class="relative z-10 flex flex-col justify-between gap-5 sm:max-w-[52%] lg:justify-center lg:gap-10 lg:h-full lg:w-[600px] lg:max-w-none">
         <div class="flex flex-col gap-2">
           <p class="type-12-caps lg:type-16-caps text-coin lg:font-bold">{{ $t('bonus.title') }}</p>
           <h1 class="text-[28px] leading-8 font-extrabold uppercase tabular-nums lg:type-48-caps">{{ offer.title }}</h1>
@@ -170,8 +170,8 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
           <UiButton v-else-if="freeReady" size="l" icon="bonuses" class="max-sm:h-10 max-sm:px-4" :loading="phase === 'spinning'" @click="openFromBanner">
             {{ welcome ? $t('welcome.openFree', { n: welcome.left }) : $t('bonus.openFree') }}
           </UiButton>
-          <!-- phones: the icon alone, the main button takes the width -->
-          <UiButton v-if="session.user" variant="ghost" size="l" icon="sparkle" class="max-sm:h-10 max-sm:px-3" :aria-label="$t('bonus.promo')" @click="toPromo"><span class="max-sm:hidden">{{ $t('bonus.promo') }}</span></UiButton>
+          <!-- phones: a short word, so the icon is never alone -->
+          <UiButton v-if="session.user" variant="ghost" size="l" icon="sparkle" class="max-sm:h-10 max-sm:px-3" @click="toPromo"><span class="sm:hidden">{{ $t('bonus.promoShort') }}</span><span class="max-sm:hidden">{{ $t('bonus.promo') }}</span></UiButton>
         </div>
       </div>
     </section>

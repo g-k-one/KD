@@ -51,7 +51,8 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
     <div class="kd-dock flex flex-col gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-3">
       <!-- phones: three even cells, the number over its word, so all three fit one line; desktop: one line each -->
       <div class="flex gap-2 max-lg:order-last">
-        <span class="kd-dock-stat kd-dock-cell type-12-caps"><span class="flex items-center gap-2"><span class="kd-stat-dot" /><span class="text-neutral-15 tabular-nums">{{ counts.live }}</span></span>{{ $t('pvp.live') }}</span>
+        <!-- no battle running: no "0 live" -->
+        <span v-if="counts.live" class="kd-dock-stat kd-dock-cell type-12-caps"><span class="flex items-center gap-2"><span class="kd-stat-dot" /><span class="text-neutral-15 tabular-nums">{{ counts.live }}</span></span>{{ $t('pvp.live') }}</span>
         <span class="kd-dock-stat kd-dock-cell type-12-caps"><span class="flex items-center gap-2"><UiIcon name="eye" :size="16" /><span class="text-neutral-15 tabular-nums">{{ watching }}</span></span>{{ $t('pvp.watching') }}</span>
         <span class="flex min-w-0 flex-1 lg:hidden"><span class="kd-dock-stat kd-dock-cell type-12-caps"><UiPrice :amount="inPlay" size="s" tone="coin" />{{ $t('pvp.inPlay') }}</span></span>
       </div>

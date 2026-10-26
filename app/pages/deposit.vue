@@ -126,7 +126,7 @@ async function pay() {
       <!-- Amount & summary -->
       <div class="flex flex-col gap-4 rounded-5xl bg-neutral-2 lg:sticky lg:top-24">
         <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
-          <UiIcon name="camera" :size="20" class="text-neutral-13 lg:!size-6" />
+          <UiIcon name="coins" :size="20" class="text-neutral-13 lg:!size-6" />
           <span class="type-14 lg:type-16-medium flex-1">{{ $t('deposit.amount') }}</span>
           <span class="type-12-caps text-neutral-11">{{ $t('deposit.currency') }}:</span>
           <UiSelect v-model="currency" :options="currencyOptions" class="kd-inline-select w-24" />
