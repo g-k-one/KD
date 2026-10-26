@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SeedsResponse } from '#shared/types/api'
+import type { HistoryEntry, SeedsResponse } from '#shared/types/api'
 import type { StageLoot } from '~/components/banner/Stage.vue'
 
 // Figma "Fairness", around one path: the player's own rolls, each with one action (Check, or Reveal and check).
@@ -41,7 +41,7 @@ const seedsOpen = ref(false)
 const route = useRoute()
 const hood = ref(route.hash === '#seeds')
 const verifierOpen = ref(false)
-const verifierInit = ref<{ serverSeed?: string; clientSeed?: string; nonce?: number; expect?: { ticket?: number; roll?: number } }>({})
+const verifierInit = ref<{ serverSeed?: string; clientSeed?: string; nonce?: number; expect?: { ticket?: number; roll?: number }; entry?: HistoryEntry }>({})
 
 function openVerifier(init?: typeof verifierInit.value) {
   verifierInit.value = init ?? { clientSeed: seeds.value?.active.clientSeed, nonce: Math.max(1, seeds.value?.active.nonce ?? 1) }
@@ -99,7 +99,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
     <!-- no page bar: the banner opens the page, like the home page's -->
     <!-- Hero -->
     <section
-      class="relative isolate flex min-h-80 flex-col overflow-hidden rounded-5xl px-5 pt-6 pb-6 lg:h-81 lg:overflow-visible lg:px-10 lg:pt-8 lg:pb-10"
+      class="relative isolate flex min-h-80 flex-col overflow-hidden rounded-5xl px-5 pt-6 pb-6 lg:min-h-0 lg:overflow-visible lg:p-10"
       :style="vars"
       @pointermove="onMove"
       @pointerleave="onLeave"

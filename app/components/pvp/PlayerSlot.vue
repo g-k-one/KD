@@ -3,7 +3,7 @@ import type { BattlePlayerRef } from '#shared/types/api'
 
 // Figma "BattlePlayer": Desktop = column header, Compact = mobile column header.
 // Empty shows Call bot; Winner = success tint + 1px success stroke.
-const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number }>()
+const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost' }>()
 defineEmits<{ bot: []; join: [] }>()
 
 // The running total rolls up to each new value like an odometer
@@ -46,6 +46,10 @@ const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22,
       <span v-if="chance != null" class="kd-chance flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end'">
         <span class="tabular-nums" :class="[compact ? 'type-12' : 'type-20-caps', chanceShown >= 50 ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15']">{{ Math.round(chanceShown) }}%</span>
         <span v-if="!compact" class="type-10-caps text-neutral-11">{{ $t('pvp.toWin') }}</span>
+      </span>
+      <!-- once it is over: what happened, not a 100% / 0% -->
+      <span v-else-if="result" class="flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end'">
+        <span :class="[compact ? 'type-12-caps' : 'type-20-caps', result === 'won' ? 'text-success' : 'text-neutral-11']">{{ result === 'won' ? $t('pvp.won') : $t('pvp.lost') }}</span>
       </span>
       <span v-if="chance != null" class="kd-chance-track absolute inset-x-3 bottom-1 h-1 overflow-hidden rounded-full">
         <span class="kd-chance-fill block h-full rounded-full" :style="{ width: `${Math.max(2, chanceShown)}%` }" />

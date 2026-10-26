@@ -11,7 +11,7 @@ import type { HistoryEntry, HistoryResponse, SeedsResponse } from '#shared/types
 // focusRoll: a history entry's id (any roll, from the profile's game history), focused and checked the same way
 const props = defineProps<{ seeds: SeedsResponse | null; focus?: number; focusRoll?: string; rotating?: boolean }>()
 const emit = defineEmits<{
-  verify: [{ serverSeed: string; clientSeed: string; nonce: number; expect: { ticket?: number; roll?: number } }]
+  verify: [{ serverSeed: string; clientSeed: string; nonce: number; expect: { ticket?: number; roll?: number }; entry: HistoryEntry }]
   rotate: []
 }>()
 
@@ -52,7 +52,7 @@ const value = (e: HistoryEntry) => (e.ticket != null ? spaced(e.ticket) : e.roll
 
 function verify(r: (typeof rows.value)[number]) {
   if (!r.pair) return
-  emit('verify', { serverSeed: r.pair.serverSeed, clientSeed: r.pair.clientSeed, nonce: r.e.nonce!, expect: r.e.ticket != null ? { ticket: r.e.ticket } : { roll: r.e.roll } })
+  emit('verify', { serverSeed: r.pair.serverSeed, clientSeed: r.pair.clientSeed, nonce: r.e.nonce!, expect: r.e.ticket != null ? { ticket: r.e.ticket } : { roll: r.e.roll }, entry: r.e })
 }
 
 // The roll the player came to check: as soon as its seed is revealed, check it (once)

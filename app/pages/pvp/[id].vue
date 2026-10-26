@@ -68,14 +68,6 @@ const mounted = useMounted()
 const phoneQuery = useMediaQuery('(max-width: 767px)')
 const isMobile = computed(() => mounted.value && phoneQuery.value)
 
-// The player's own result stays on screen after the toast is gone: won the pot, or who took it
-const outcome = computed(() => {
-  const youSlot = b.value.slots.find((s) => s.player?.you)?.slot
-  if (!done.value || youSlot == null || b.value.winnerSlot == null) return null
-  if (winners.value.includes(youSlot)) return { won: true, text: t('pvp.youWon', { amount: formatCoins(Math.round(pot.value / winners.value.length)) }) }
-  return { won: false, text: t('pvp.youLost', { name: b.value.slots[b.value.winnerSlot]?.player?.nickname ?? '' }) }
-})
-
 // The round's best drop rings its rarity once, when the first reel lands (they land together)
 let rungRound = -1
 function roundLanded() {
@@ -253,7 +245,8 @@ const roundLine = computed(() => {
         <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="m" /></span>
         <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" class="kd-pot tabular-nums" /></span>
       </div>
-      <div class="scrollbar-none flex max-w-full items-center gap-2 overflow-x-auto py-1 max-lg:order-last max-lg:w-full">
+      <!-- room on every side for the current round's tile, which grows a little: the scroll box must not cut it -->
+      <div class="scrollbar-none flex max-w-full items-center gap-2 overflow-x-auto px-1 py-2 max-lg:order-last max-lg:w-full">
         <PvpCaseThumb v-for="(r, i) in b.rounds" :key="i" :image="r.image" :name="`${r.name} · ${formatCoins(r.price)}`" size="m" :state="roundState(i)" />
       </div>
       <div class="type-12-caps flex justify-end gap-2 tabular-nums max-lg:w-full">
@@ -302,7 +295,6 @@ const roundLine = computed(() => {
           <span class="type-12-caps text-neutral-11">{{ $t('pvp.statusFinished') }}</span>
           <span class="kd-result-title type-20-caps">{{ winnerName }}</span>
           <UiPrice :amount="pot" size="l" tone="success" class="kd-result-pot" />
-          <span v-if="outcome" class="type-12-caps" :class="outcome.won ? 'text-success' : 'text-danger'">{{ outcome.text }}</span>
           <div class="flex flex-wrap justify-center gap-2">
             <UiButton size="m" icon="refresh" :loading="recreating" @click="recreate">
               {{ $t('pvp.recreate') }}
@@ -324,7 +316,8 @@ const roundLine = computed(() => {
         :total="totals[s.slot]"
         :winner="done && winners.includes(s.slot)"
         :lead="leaders.includes(s.slot)"
-        :chance="s.player ? chances[s.slot] : undefined"
+        :chance="s.player && !done ? chances[s.slot] : undefined"
+        :result="s.player && done ? (winners.includes(s.slot) ? 'won' : 'lost') : undefined"
         :compact="isMobile"
         :can-join="!s.player && b.status === 'waiting' && !youIn"
         :can-call-bot="!s.player && b.status === 'waiting' && isCreator"
@@ -336,7 +329,8 @@ const roundLine = computed(() => {
     <!-- Drops: each player's right under their bar, newest first -->
     <section v-if="revealed > 0" class="-mt-1">
       <div class="grid gap-2 md:gap-4" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
-        <TransitionGroup v-for="seat in b.slots" :key="seat.slot" tag="div" name="kd-drop" class="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(110px,1fr))] content-start gap-2">
+        <!-- once it is over, the losers' drops step back: they go to the winner -->
+        <TransitionGroup v-for="seat in b.slots" :key="seat.slot" tag="div" name="kd-drop" class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(110px,1fr))] content-start gap-2" :class="done && !winners.includes(seat.slot) && 'is-lost'">
           <ItemTile v-for="ri in Array.from({ length: revealed }, (_, k) => revealed - 1 - k)" :key="ri" :item="b.results![ri]!.drops[seat.slot]!" readonly />
         </TransitionGroup>
       </div>
@@ -345,6 +339,12 @@ const roundLine = computed(() => {
 </template>
 
 <style scoped>
+.kd-seat-drops {
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+.kd-seat-drops.is-lost {
+  opacity: 0.4;
+}
 /* the plate is the case page's dock: 24px radius, 12px padding; its chips are 48px high with a 12px radius (24 − 12) */
 .kd-dock {
   border-radius: 24px;

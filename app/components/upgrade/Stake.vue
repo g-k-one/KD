@@ -183,8 +183,8 @@ function removePiece(p: Piece) {
         </div>
       </Transition>
 
-      <div class="flex items-center justify-between gap-3 pr-4 pb-4 pl-6">
-        <span class="type-12-caps text-neutral-11">{{ $t('upgrade.stakeTotal') }}</span>
+      <!-- the total centred at the bottom, the same place as the target's price across the dial: the two read as a pair -->
+      <div class="flex items-center justify-center px-4 pb-6">
         <UiPrice :amount="Math.round(totalShown)" size="xxl" />
       </div>
     </div>

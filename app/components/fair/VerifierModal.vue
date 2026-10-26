@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import type { HistoryEntry } from '#shared/types/api'
+
 // Runs the exact PF maths from shared/utils/pf.ts in the browser — the same code the mock backend uses.
 // Opened from "Your rolls" it comes filled in with the roll's seeds and the result to expect; nothing shows below the
 // fields until Calculate — then the maths lines up step by step and the verdict lands last. Editing a field clears it.
 const open = defineModel<boolean>({ required: true })
-const props = defineProps<{ initial?: { serverSeed?: string; clientSeed?: string; nonce?: number; expect?: { ticket?: number; roll?: number } } }>()
+// entry: the roll being checked (from "Your rolls"), shown on top so it is clear what the numbers are about
+const props = defineProps<{ initial?: { serverSeed?: string; clientSeed?: string; nonce?: number; expect?: { ticket?: number; roll?: number }; entry?: HistoryEntry } }>()
 const { t } = useI18n()
 
 const serverSeed = ref('')
@@ -74,6 +77,19 @@ async function copy(v: string) {
 
 <template>
   <UiModal v-model="open" :title="$t('fair.verifier')" :description="$t('fair.verifierHint')" :width="640">
+    <!-- what is being checked: the case or the upgrade, what went in and what came out, the roll's number -->
+    <div v-if="initial?.entry" class="flex items-center gap-3 rounded-2xl bg-neutral-3 p-3">
+      <span class="grid size-12 shrink-0 place-items-center rounded-xl bg-neutral-4 text-neutral-13">
+        <img v-if="initial.entry.caseImage" :src="initial.entry.caseImage" alt="" class="size-10 object-contain" />
+        <UiIcon v-else name="upgrade" :size="20" />
+      </span>
+      <span class="flex min-w-0 flex-1 flex-col gap-1">
+        <span class="type-14 truncate">{{ $t(`account.games.${initial.entry.game}`) }} · <span class="text-neutral-12">{{ initial.entry.title }}</span></span>
+        <span class="type-12-regular truncate text-neutral-11">{{ $t('fair.nonce') }} {{ initial.entry.nonce }} · {{ timeAgo(initial.entry.at) }}</span>
+      </span>
+      <HistoryItems :entry="initial.entry" class="shrink-0" />
+      <UiPrice :amount="initial.entry.payout" :tone="initial.entry.status === 'lost' ? 'muted' : 'success'" class="shrink-0 max-sm:hidden" />
+    </div>
     <form class="flex flex-col gap-3" @submit.prevent="calculate">
       <label class="flex flex-col gap-2">
         <span class="type-12-caps text-neutral-12">{{ $t('fair.serverSeed') }}</span>

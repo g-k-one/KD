@@ -525,6 +525,8 @@
     "withdrawOne": "Withdraw one skin at a time"
   },
   "pvp": {
+    "won": "Won",
+    "lost": "Lost",
     "title": "PvP",
     "recreate": "Recreate",
     "create": "Create PvP",

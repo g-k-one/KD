@@ -215,7 +215,8 @@ async function saveTrade() {
           <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
             <UiIcon name="inventory" :size="24" class="text-neutral-13" />
             <span class="type-14 lg:type-16-medium">{{ $t('upgrade.mySkins') }} ({{ inventory.length }})</span>
-            <UiButton v-if="inventory.length" variant="ghost" size="s" class="ml-auto" @click="selected.length ? (selected = []) : selectAll()">
+            <!-- Select all and the sort arrows: one height, side by side -->
+            <UiButton v-if="inventory.length" variant="ghost" size="m" class="ml-auto" @click="selected.length ? (selected = []) : selectAll()">
               <UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" />
             </UiButton>
             <!-- nothing to sort with fewer than two skins -->
