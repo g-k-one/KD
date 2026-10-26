@@ -57,82 +57,88 @@ const hiddenBefore = computed(() => {
 })
 
 const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+// the banner: the card in the column, or one of the full-width variants above it (prototype, useHeroVariant)
+const hero = useHeroVariant()
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
-    <HomeHeroBanner @start="scrollToCases" />
+  <div>
+    <HomeHeroBleed v-if="hero === 'a' || hero === 'c'" :live="hero === 'c'" @start="scrollToCases" />
+    <HomeHeroCarousel v-else-if="hero === 'b'" @start="scrollToCases" />
+    <div class="mx-auto flex max-w-content flex-col gap-6 px-4 lg:gap-10 lg:px-0" :class="hero === 'card' && 'pt-4 lg:pt-10'">
+      <HomeHeroBanner v-if="hero === 'card'" @start="scrollToCases" />
 
-    <!-- One Forge canvas for the big wins and the cases (a phone keeps one WebGL context per page, not one per block).
-         Cases right after the big wins; the cases to continue and the live battles break up the grid further down -->
-    <div ref="fxHost" class="relative flex flex-col gap-6 lg:gap-10">
-    <HomeBigWins />
+      <!-- One Forge canvas for the big wins and the cases (a phone keeps one WebGL context per page, not one per block).
+           Cases right after the big wins; the cases to continue and the live battles break up the grid further down -->
+      <div ref="fxHost" class="relative flex flex-col gap-6 lg:gap-10">
+      <HomeBigWins />
 
-    <div ref="casesEl" class="flex scroll-mt-40 flex-col gap-4 lg:gap-10">
-      <span ref="filtersSentinel" class="-mb-4 h-px lg:-mb-10" aria-hidden="true" />
-      <div class="kd-filters-wrap lg:sticky lg:top-18 lg:z-20" :class="filtersStuck && 'is-stuck'">
-      <HomeCaseFilters
-        v-model:price="filters.price.value"
-        v-model:risks="filters.risks.value"
-        v-model:affordable="filters.affordable.value"
-        v-model:sort="filters.sort.value"
-        v-model:query="filters.query.value"
-      />
-      </div>
-
-      <template v-for="(s, i) in sections" :key="s.id">
-      <HomeHiddenRow v-for="r in hiddenBefore[s.id]" :key="r.id" :row="r" />
-      <!-- sections after the first are skipped by the renderer until they come near the screen -->
-      <!-- a themed row draws its scene edge to edge, so it is never skipped by the renderer (that would clip the scene) -->
-      <!-- collapsed, a themed row drops its scene and its air: just the header, like any other -->
-      <section class="relative flex flex-col gap-4" :class="[s.theme && !collapsed[s.id] && `kd-themed is-${s.theme}`, i > 0 && !s.theme && 'kd-offscreen']">
-        <div v-if="s.theme && !collapsed[s.id]" class="kd-row-scene" aria-hidden="true"><img :src="`/img/coop/${s.theme}.webp`" alt="" draggable="false" loading="lazy" /></div>
-        <UiSectionHeader
-          :title="s.title"
-          collapsible
-          :collapsed="collapsed[s.id]"
-          @toggle="collapsed[s.id] = !collapsed[s.id]"
-        >
-          <template v-if="homeLayout.editing.value" #actions>
-            <HomeRowControls :id="s.id" class="max-lg:hidden" />
-          </template>
-          <!-- the weekly picks say when they change -->
-          <template v-else-if="s.endsAt" #actions>
-            <span class="type-12-caps flex shrink-0 items-center gap-1.5 text-neutral-11">
-              <UiIcon name="refresh" :size="14" /><span class="max-sm:hidden">{{ $t('home.newPicks') }}</span><span class="tabular-nums text-neutral-13">{{ countdownLong(s.endsAt, clock) }}</span>
-            </span>
-          </template>
-        </UiSectionHeader>
-        <!-- phones: the row's tools get their own line, the title keeps the header -->
-        <HomeRowControls v-if="homeLayout.editing.value" :id="s.id" class="lg:hidden" />
-        <div
-          v-show="!collapsed[s.id]"
-          class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-flow-dense xl:grid-cols-5"
-          :class="isRail(s) && RAIL"
-        >
-          <HomeCaseCard
-            v-for="c in s.cases"
-            :key="c.id"
-            :item="c"
-            :shape="shapeOf(c, s)"
-            :look="s.theme"
-            :class="shapeOf(c, s) && SHAPE_CELL[shapeOf(c, s)!]"
-          >
-            <HomeCardKindPicker v-if="homeLayout.editing.value" :item="c" :themed="!!s.theme" />
-          </HomeCaseCard>
+      <div ref="casesEl" class="flex scroll-mt-40 flex-col gap-4 lg:gap-10">
+        <span ref="filtersSentinel" class="-mb-4 h-px lg:-mb-10" aria-hidden="true" />
+        <div class="kd-filters-wrap lg:sticky lg:top-18 lg:z-20" :class="filtersStuck && 'is-stuck'">
+        <HomeCaseFilters
+          v-model:price="filters.price.value"
+          v-model:risks="filters.risks.value"
+          v-model:affordable="filters.affordable.value"
+          v-model:sort="filters.sort.value"
+          v-model:query="filters.query.value"
+        />
         </div>
-      </section>
-      <HomeContinue v-if="i === 0" :cases="allCases" />
-      <HomeLiveBattles v-if="i === Math.min(2, sections.length - 1)" />
-      </template>
 
-      <HomeHiddenRow v-for="r in hiddenBefore.end" :key="r.id" :row="r" />
-      <ClientOnly><HomeLayoutBar v-if="homeLayout.editing.value" /></ClientOnly>
+        <template v-for="(s, i) in sections" :key="s.id">
+        <HomeHiddenRow v-for="r in hiddenBefore[s.id]" :key="r.id" :row="r" />
+        <!-- sections after the first are skipped by the renderer until they come near the screen -->
+        <!-- a themed row draws its scene edge to edge, so it is never skipped by the renderer (that would clip the scene) -->
+        <!-- collapsed, a themed row drops its scene and its air: just the header, like any other -->
+        <section class="relative flex flex-col gap-4" :class="[s.theme && !collapsed[s.id] && `kd-themed is-${s.theme}`, i > 0 && !s.theme && 'kd-offscreen']">
+          <div v-if="s.theme && !collapsed[s.id]" class="kd-row-scene" aria-hidden="true"><img :src="`/img/coop/${s.theme}.webp`" alt="" draggable="false" loading="lazy" /></div>
+          <UiSectionHeader
+            :title="s.title"
+            collapsible
+            :collapsed="collapsed[s.id]"
+            @toggle="collapsed[s.id] = !collapsed[s.id]"
+          >
+            <template v-if="homeLayout.editing.value" #actions>
+              <HomeRowControls :id="s.id" class="max-lg:hidden" />
+            </template>
+            <!-- the weekly picks say when they change -->
+            <template v-else-if="s.endsAt" #actions>
+              <span class="type-12-caps flex shrink-0 items-center gap-1.5 text-neutral-11">
+                <UiIcon name="refresh" :size="14" /><span class="max-sm:hidden">{{ $t('home.newPicks') }}</span><span class="tabular-nums text-neutral-13">{{ countdownLong(s.endsAt, clock) }}</span>
+              </span>
+            </template>
+          </UiSectionHeader>
+          <!-- phones: the row's tools get their own line, the title keeps the header -->
+          <HomeRowControls v-if="homeLayout.editing.value" :id="s.id" class="lg:hidden" />
+          <div
+            v-show="!collapsed[s.id]"
+            class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-flow-dense xl:grid-cols-5"
+            :class="isRail(s) && RAIL"
+          >
+            <HomeCaseCard
+              v-for="c in s.cases"
+              :key="c.id"
+              :item="c"
+              :shape="shapeOf(c, s)"
+              :look="s.theme"
+              :class="shapeOf(c, s) && SHAPE_CELL[shapeOf(c, s)!]"
+            >
+              <HomeCardKindPicker v-if="homeLayout.editing.value" :item="c" :themed="!!s.theme" />
+            </HomeCaseCard>
+          </div>
+        </section>
+        <HomeContinue v-if="i === 0" :cases="allCases" />
+        <HomeLiveBattles v-if="i === Math.min(2, sections.length - 1)" />
+        </template>
 
-      <UiEmptyState v-if="!sections.length" :text="$t('cases.empty')">
-        <UiButton variant="secondary" @click="filters.reset()">{{ $t('filters.reset') }}</UiButton>
-      </UiEmptyState>
-    </div>
+        <HomeHiddenRow v-for="r in hiddenBefore.end" :key="r.id" :row="r" />
+        <ClientOnly><HomeLayoutBar v-if="homeLayout.editing.value" /></ClientOnly>
+
+        <UiEmptyState v-if="!sections.length" :text="$t('cases.empty')">
+          <UiButton variant="secondary" @click="filters.reset()">{{ $t('filters.reset') }}</UiButton>
+        </UiEmptyState>
+      </div>
+      </div>
     </div>
   </div>
 </template>
