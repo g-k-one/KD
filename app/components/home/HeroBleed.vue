@@ -1,8 +1,7 @@
 <script setup lang="ts">
 /*
  * Home banner, full width: one scene from edge to edge with no frame. The ground's light sits behind the case art and
- * fades into the page below; the words, bigger, stand on a soft half-oval plate (two arcs, like a stage seen from the
- * front). Right: the chicken bursting out of its case and a ring with three real catalog skins orbiting it — a planet
+ * fades into the page below; the words, bigger, stand on a soft half-oval plate that holds them whole. Right: the chicken bursting out of its case and a ring with three real catalog skins orbiting it — a planet
  * with its ring, seen from a little above, so the ring passes behind the chicken at the top and in front at the
  * bottom. Few things, all alive: the ring turns faster while the pointer is over the band and kicks round on a poke.
  * The ring is drawn twice (its far half under the art, its near half over it), both halves on one clock.
@@ -78,11 +77,8 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
   <section ref="band" class="kd-bleed relative isolate pt-4 pb-6 lg:pt-10 lg:pb-12" :style="vars" @pointermove="enter" @pointerleave="leave">
     <span class="kd-bleed-ground pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
 
-    <!-- the words' plate: two soft arcs rising from the band's foot -->
-    <span class="kd-plate pointer-events-none absolute -z-10" aria-hidden="true">
-      <span class="kd-plate-arc is-outer" />
-      <span class="kd-plate-arc is-inner" />
-    </span>
+    <!-- the words' plate: a soft half-oval rising from the band's foot -->
+    <span class="kd-plate pointer-events-none absolute -z-10" aria-hidden="true" />
 
     <!-- the ring's far half, under the art -->
     <div class="kd-ring is-far pointer-events-none absolute -z-[5]" aria-hidden="true">
@@ -130,26 +126,22 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
   mask-image: linear-gradient(180deg, #000 72%, transparent);
 }
 
-/* the plate: a half-oval standing on the band's foot behind the words, its rim catching the case's light */
+/* the plate: a half-oval standing on the band's foot, big enough that its rim runs above and around the words (it
+   never cuts through a line), lit warm from below, its rim catching the case's light */
 .kd-plate {
   bottom: 0;
   left: calc(50% - var(--col) / 2 + 390px);
-  width: 1040px;
-  height: 400px;
+  width: 1320px;
+  height: 440px;
   transform: translateX(-50%);
-  mask-image: linear-gradient(180deg, #000 55%, transparent);
-}
-.kd-plate-arc {
-  position: absolute;
-  inset: 0;
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-  background: radial-gradient(70% 100% at 50% 100%, rgb(255 120 40 / 0.1), rgb(255 255 255 / 0.03) 70%, rgb(255 255 255 / 0.02));
-  box-shadow: inset 0 1.5px 0 rgb(255 170 90 / 0.28);
-}
-.kd-plate-arc.is-inner {
-  inset: 22% 18% 0;
-  background: rgb(255 255 255 / 0.02);
-  box-shadow: inset 0 1px 0 rgb(255 170 90 / 0.14);
+  background:
+    radial-gradient(60% 90% at 50% 100%, rgb(255 120 40 / 0.16), transparent 75%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.02));
+  box-shadow:
+    inset 0 2px 0 rgb(255 170 90 / 0.32),
+    0 -12px 48px rgb(255 120 40 / 0.08);
+  mask-image: linear-gradient(180deg, #000 60%, transparent);
 }
 
 /* the ring: a flat circle laid back 64° (an ellipse to the eye), centred on the art; the far half shows its top, the
@@ -211,6 +203,11 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
   filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.5));
 }
 
+@media (max-width: 1439px) {
+  .kd-ring {
+    --r: 245px;
+  }
+}
 /* phones and tablets: the art is a band on top, the light with it; the plate and the ring sit out */
 @media (max-width: 1023px) {
   .kd-plate,
