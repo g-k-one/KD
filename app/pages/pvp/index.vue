@@ -81,6 +81,8 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
           </UiSectionHeader>
           <TransitionGroup tag="div" name="kd-list" class="relative grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
             <PvpCard v-for="b in shown(sec.key, sec.list)" :key="b.id" :battle="b" :compact="isPhone" />
+            <!-- open seats that don't fill the row: the free spot invites to start one -->
+            <PvpCreateTile v-if="sec.key === 'waiting' && shown(sec.key, sec.list).length % 4" key="create" />
           </TransitionGroup>
         </section>
       </template>

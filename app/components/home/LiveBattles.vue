@@ -30,6 +30,8 @@ const liveCount = computed(() => (data.value?.battles ?? []).filter((b) => b.sta
     </UiSectionHeader>
     <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
       <PvpCard v-for="b in list" :key="b.id" :battle="b" :compact="isPhone" />
+      <!-- fewer than four open: the free spot invites to start one -->
+      <PvpCreateTile v-if="data && list.length < 4" />
     </div>
   </section>
 </template>

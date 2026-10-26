@@ -44,7 +44,7 @@ const isLg = useMediaQuery('(min-width: 1024px)')
     <div class="relative order-1 flex items-center gap-2 lg:gap-3">
       <span class="text-xl leading-7 font-bold text-neutral-11 lg:type-28">{{ $t('case.rtp') }}</span>
       <span class="bg-brand-gradient bg-clip-text text-xl leading-7 font-bold text-transparent tabular-nums lg:type-28">{{ pct(data.rtp) }}</span>
-      <UiButton variant="ghost" :size="isLg ? 'l' : 'm'" icon="info" icon-only :aria-label="$t('case.rtpInfo')" :aria-expanded="infoOpen" @click="infoOpen = !infoOpen" />
+      <UiButton variant="ghost" :size="isLg ? 'l' : 's'" icon="info" icon-only :aria-label="$t('case.rtpInfo')" :aria-expanded="infoOpen" @click="infoOpen = !infoOpen" />
       <Transition name="kd-tip">
         <p
           v-if="infoOpen"
@@ -90,7 +90,8 @@ const isLg = useMediaQuery('(min-width: 1024px)')
       <span class="type-12-caps text-neutral-12 max-sm:hidden lg:translate-y-1.5">{{ $t('case.risk') }}</span>
       <span class="flex items-center gap-2">
         <UiRiskPeppers :level="data.risk" :size="isLg ? 18 : 16" />
-        <span class="type-14 lg:type-16-medium kd-odds-value leading-none">{{ $t(`risk.${data.risk}`) }}</span>
+        <!-- phones: the peppers alone, as on the case cards (the word is in the tip), so the row never overflows -->
+        <span class="type-14 lg:type-16-medium kd-odds-value leading-none max-sm:hidden">{{ $t(`risk.${data.risk}`) }}</span>
       </span>
       <Transition name="kd-tip">
         <p

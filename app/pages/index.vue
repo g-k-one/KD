@@ -11,7 +11,8 @@ const sections = computed(() =>
   (data.value?.sections ?? []).map((s) => ({ ...s, cases: filters.apply(s.cases) })).filter((s) => s.cases.length),
 )
 
-// One Forge canvas for the page body: badge flames and the promo coins draw here, under the sticky header
+// One Forge canvas for the page body: the big wins' flames, badge flames and the promo coins draw here, under the
+// sticky header
 const fxHost = useTemplateRef<HTMLElement>('fxHost')
 provideForge(fxHost)
 
@@ -33,7 +34,8 @@ const SHAPE_CELL = { wide: 'lg:order-first lg:col-span-2', tall: 'lg:order-first
 // A short row (one desktop row or less) is a rail on phones: two cards and the edge of the next, swiped sideways —
 // no lone card on a line of its own, and the row costs one card's height. The big catalog keeps the grid.
 const RAIL = 'max-sm:-mx-4 max-sm:flex max-sm:snap-x max-sm:overflow-x-auto max-sm:px-4 max-sm:scroll-px-4 max-sm:scrollbar-none max-sm:[&>*]:w-[44%] max-sm:[&>*]:shrink-0 max-sm:[&>*]:snap-start'
-const isRail = (s: CaseSection) => !s.theme && s.cases.length <= 5
+// a short row is a swipe rail on phones, themed ones too (a 2×3 grid left the fifth case alone)
+const isRail = (s: CaseSection) => s.cases.length <= 5
 
 // The home layout editor (prototype, opened from the debug dock): rows and cards are edited where they stand
 const homeLayout = useHomeLayout()
@@ -60,11 +62,11 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
     <HomeHeroBanner @start="scrollToCases" />
-    <HomeBigWins />
 
-    <!-- Cases right after the hero and the big wins; the cases to continue and the live battles break up the grid
-         further down -->
+    <!-- One Forge canvas for the big wins and the cases (a phone keeps one WebGL context per page, not one per block).
+         Cases right after the big wins; the cases to continue and the live battles break up the grid further down -->
     <div ref="fxHost" class="relative flex flex-col gap-6 lg:gap-10">
+    <HomeBigWins />
 
     <div ref="casesEl" class="flex scroll-mt-40 flex-col gap-4 lg:gap-10">
       <span ref="filtersSentinel" class="-mb-4 h-px lg:-mb-10" aria-hidden="true" />

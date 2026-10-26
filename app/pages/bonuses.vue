@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { InventoryItem, OpenCaseResponse, SellResponse } from '#shared/types/api'
+import type { DailyStep, InventoryItem, OpenCaseResponse, SellResponse } from '#shared/types/api'
 import type { StageLayer, StageLoot } from '~/components/banner/Stage.vue'
 
 /*
@@ -21,6 +21,8 @@ const toast = useToast()
 const { data, refresh, dailyReady, dailyIn, welcomeLeft } = useBonuses()
 
 const daily = computed(() => data.value?.daily ?? null)
+// guests get the ladder only
+const { data: preview } = useLazyFetch<{ ladder: Array<Omit<DailyStep, 'items'>> }>('/api/bonuses/preview', { key: 'bonus-preview', server: false })
 // Welcome cases come first on the same reel; once they are used up the daily case takes the spot
 const welcome = computed(() => (welcomeLeft.value > 0 ? (data.value?.welcome ?? null) : null))
 const nextFree = computed(() => welcome.value?.case ?? daily.value?.case ?? null)
@@ -176,9 +178,16 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
       </div>
     </section>
 
-    <!-- The level and the promo code, side by side -->
-    <section v-if="session.user && daily" class="grid gap-4 lg:grid-cols-2 lg:gap-6">
-      <div class="flex flex-col gap-4 rounded-5xl bg-neutral-2 p-5">
+    <!-- Guests: what signing in starts — the daily case's ladder, standing on its first step -->
+    <section v-if="!session.user && preview?.ladder?.length" class="flex flex-col gap-4 rounded-5xl bg-neutral-2 p-5">
+      <span class="type-16-caps">{{ $t('bonus.levelsGive') }}</span>
+      <BonusLadder :ladder="preview.ladder" :tier="0" @pick="ui.openSignIn()" />
+      <p class="type-12-regular text-neutral-11">{{ $t('bonus.guestLadder') }}</p>
+    </section>
+
+    <!-- The level (who you are on the left, what levels give on the right), then the promo code under it -->
+    <section v-if="session.user && daily" class="grid gap-4">
+      <div class="flex flex-col gap-4 rounded-5xl bg-neutral-2 p-5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] lg:items-center lg:gap-10 lg:p-6">
         <div class="flex items-center gap-3">
           <UiAvatar :src="session.user.avatar" :size="44" />
           <div class="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -196,35 +205,19 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
         <!-- what levels give, said once and plainly: a better free case every day, step by step -->
         <div class="flex flex-col gap-2">
           <span class="type-14">{{ $t('bonus.levelsGive') }}</span>
-          <ol class="grid grid-cols-4 gap-2">
-            <li v-for="st in daily.ladder ?? []" :key="st.tier" class="flex min-w-0">
-            <!-- a step opens its tier's contents below -->
-            <button
-              type="button"
-              class="kd-step kd-press relative flex w-full min-w-0 flex-col items-center gap-1 rounded-2xl px-1.5 pt-1.5 pb-2 text-center"
-              :class="st.tier === daily.tier ? 'is-now' : st.tier < daily.tier ? 'is-done' : 'is-locked'"
-              :style="{ '--rc': RARITY_COLOR[st.best.rarity] }"
-              @click="peekTier(st.tier)"
-            >
-              <ItemArt :image="st.best.image" :rarity="st.best.rarity" :size="40" class="w-full" :dim="st.tier > daily.tier" />
-              <span class="type-12-caps">{{ $t('bonus.tier', { tier: tierNames[st.tier] }) }}</span>
-              <span class="type-10-caps text-neutral-11">{{ $t('bonus.fromLvl', { n: st.fromLevel }) }}</span>
-              <!-- the tier's worth: it grows step by step (the best skins don't, tier to tier) -->
-              <UiPrice :amount="st.value" size="xs" />
-              <UiIcon v-if="st.tier < daily.tier" name="check-circle" :size="14" class="absolute top-1.5 right-1.5 text-success" />
-              <UiIcon v-else-if="st.tier > daily.tier" name="lock" :size="14" class="absolute top-1.5 right-1.5 text-neutral-11" />
-            </button>
-            </li>
-          </ol>
+          <BonusLadder :ladder="daily.ladder ?? []" :tier="daily.tier" @pick="peekTier" />
           <p class="type-12-regular text-neutral-11">
             {{ $t('bonus.levelHow') }}{{ session.user.levelLeft != null ? ` ${$t('bonus.toNextLeft', { amount: formatCoins(session.user.levelLeft), n: session.user.level + 1 })}` : '' }}
           </p>
         </div>
       </div>
-      <div ref="promoEl" class="scroll-mt-24 flex flex-col gap-3 rounded-5xl bg-neutral-2 p-5">
-        <span class="type-16-caps">{{ $t('bonus.promo') }}</span>
-        <p class="type-12-regular text-neutral-11">{{ $t('bonus.promoText') }}</p>
-        <BonusPromo bare class="mt-auto" />
+      <!-- the promo code sits as tall as it needs: its words and the field side by side on desktop, no empty middle -->
+      <div ref="promoEl" class="scroll-mt-24 flex flex-col gap-3 rounded-5xl bg-neutral-2 p-5 lg:flex-row lg:items-center lg:gap-6">
+        <div class="flex min-w-0 flex-1 flex-col gap-1">
+          <span class="type-16-caps">{{ $t('bonus.promo') }}</span>
+          <p class="type-12-regular text-neutral-11">{{ $t('bonus.promoText') }}</p>
+        </div>
+        <BonusPromo bare class="lg:w-[460px]" />
       </div>
     </section>
 
@@ -295,17 +288,6 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
 }
 .kd-tier-leave-active {
   display: none;
-}
-/* the ladder: done steps quiet with a check, the player's step lit in the brand colour, the next ones dimmed */
-.kd-step {
-  background: var(--color-neutral-3);
-}
-.kd-step.is-now {
-  background: color-mix(in srgb, var(--color-brand-base) 14%, var(--color-neutral-3));
-  box-shadow: inset 0 0 0 1.5px var(--color-brand-base);
-}
-.kd-step.is-locked {
-  opacity: 0.6;
 }
 .kd-bonus-ground {
   background:

@@ -427,9 +427,11 @@ export function getCaseSections(): CaseSection[] {
     return card && card !== 'standard' ? { ...c, card } : c
   })
   const pick = (slugs: string[]) => slugs.map((s) => all.find((c) => c.slug === s)!)
+  // Weekly picks choose from outside the hot five, so the two rows next to each other never share a case
+  const HOT = ['pieklo', 'mafia', 'wiosna', 'high-roller', 'krakow-knife']
   const rows: Record<string, () => CaseSection> = {
-    hot: () => ({ id: 'hot', title: 'Hot right now', cases: pick(['pieklo', 'mafia', 'wiosna', 'high-roller', 'krakow-knife']) }),
-    weekly: () => weeklyPicks(all),
+    hot: () => ({ id: 'hot', title: 'Hot right now', cases: pick(HOT) }),
+    weekly: () => weeklyPicks(all.filter((c) => !HOT.includes(c.slug))),
     featured: () => ({ id: 'featured', title: 'Featured cases', cases: all.filter((c) => !['pieklo', 'mafia', 'wiosna'].includes(c.slug)) }),
     'polish-classics': () => ({ id: 'polish-classics', title: 'Polish classics', cases: pick(['babcias-box', 'vodka-drop', 'golden-kielbasa', 'kurwa-classic', 'pierogi-pack']) }),
   }
@@ -891,6 +893,11 @@ export async function openWelcome() {
   await ensureSeed()
   state.welcomeLeft -= 1
   return roll(welcomeCase(), 1, false, false, 0)
+}
+
+/** For guests: the daily case's ladder alone (no contents), so Bonuses can show what signing in starts */
+export function bonusPreview() {
+  return { ladder: dailyLadder().map(({ items: _items, ...st }) => st) }
 }
 
 export function getBonuses() {

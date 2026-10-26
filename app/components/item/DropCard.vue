@@ -6,7 +6,8 @@ import type { Item } from '#shared/types/api'
 // (one random card every few seconds, like a flashlight passing over the grid): it takes the chance's place in the
 // top row with the same swap as the hover's ticket range, so nothing covers the art.
 const props = defineProps<{ item: Item; chance?: string; compact?: boolean; range?: [number, number]; drops?: number; flash?: boolean }>()
-const showDrops = computed(() => props.drops != null && props.drops > 0)
+// compact (phones): no ticket range and no "N today" — no hover there, and the wide hidden words would push the chance out
+const showDrops = computed(() => !props.compact && props.drops != null && props.drops > 0)
 const fmt = (n: number) => n.toLocaleString('en-US').replace(/,/g, ' ')
 const { onPointerMove } = useSpotlight()
 const rc = computed(() => RARITY_COLOR[props.item.rarity])
@@ -18,15 +19,15 @@ const rc = computed(() => RARITY_COLOR[props.item.rarity])
     :class="compact ? 'gap-1.5 p-2.5' : 'gap-2 p-3 lg:p-4'"
     @pointermove="onPointerMove"
   >
-    <div class="type-12 flex w-full items-center justify-between uppercase">
+    <div class="flex w-full items-center justify-between gap-1 uppercase" :class="compact ? 'type-10-caps' : 'type-12'">
       <span class="flex gap-2">
         <span v-if="item.statTrak" class="kd-drop-meta text-brand-light">ST</span>
         <span class="kd-drop-meta">{{ item.wear }}</span>
       </span>
       <!-- Chance by default; on hover the ticket range this item owns (Figma DropItemCard hover) -->
-      <span v-if="chance" class="relative grid justify-items-end" :class="[range && 'has-range', showDrops && flash && 'is-flash']">
+      <span v-if="chance" class="relative grid justify-items-end" :class="[range && !compact && 'has-range', showDrops && flash && 'is-flash']">
         <span class="kd-drop-meta kd-drop-chance col-start-1 row-start-1 normal-case tabular-nums">{{ chance }}</span>
-        <span v-if="range" class="kd-drop-meta kd-drop-range col-start-1 row-start-1 normal-case whitespace-nowrap tabular-nums">{{ fmt(range[0]) }}–{{ fmt(range[1]) }}</span>
+        <span v-if="range && !compact" class="kd-drop-meta kd-drop-range col-start-1 row-start-1 normal-case whitespace-nowrap tabular-nums">{{ fmt(range[0]) }}–{{ fmt(range[1]) }}</span>
         <span v-if="showDrops" class="kd-drop-today col-start-1 row-start-1 flex items-center gap-1 normal-case whitespace-nowrap tabular-nums">
           <UiIcon name="history" :size="12" />{{ $t('case.drops24h', { n: drops }) }}
         </span>

@@ -15,6 +15,7 @@ import {
   resetHomeLayout,
   setHomeLayout,
   getBigWins,
+  bonusPreview,
   getBonuses,
   openDaily,
   openWelcome,
@@ -120,6 +121,7 @@ export async function mockRoute(method: string, path: string, body: Body, query:
   if (m === 'GET' && path === '/api/feed') return getFeed()
   if (m === 'GET' && path === '/api/wins/today') return getBigWins()
 
+  if (m === 'GET' && path === '/api/bonuses/preview') return bonusPreview()
   if (m === 'GET' && path === '/api/bonuses') {
     authed()
     return getBonuses()

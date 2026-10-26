@@ -15,8 +15,6 @@ const isLg = useMediaQuery('(min-width: 1024px)')
 // big enough to fill the left half (the picture is 1⅔ × the size): it stands in the card on its shadow and breaks
 // out over the top edge by about a quarter
 const artSize = () => (isLg.value ? 106 : 62)
-const fxHost = useTemplateRef<HTMLElement>('fxHost')
-provideForge(fxHost)
 
 
 
@@ -31,8 +29,7 @@ provideForge(fxHost)
     </div>
     <!-- the room above is what the skins break out by, no more -->
     <div class="relative flex flex-col gap-3 pt-2 lg:grid lg:grid-cols-3 lg:gap-4 lg:pt-4">
-      <!-- the fire's canvas: over the cards' ground (z 1), under their skin and text (z 2) -->
-      <div ref="fxHost" class="pointer-events-none absolute -inset-x-4 -inset-y-10 z-[1]" aria-hidden="true" />
+      <!-- the fire draws on the home page's canvas: over the cards' ground (z 1), under their skin and text (z 2) -->
       <NuxtLink
         v-for="(p, i) in wins"
         :key="p.win.id"
