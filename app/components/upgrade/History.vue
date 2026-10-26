@@ -31,7 +31,7 @@ watch(() => [props.version, session.user?.id], load)
       <li v-for="e in entries" :key="e.id">
         <NuxtLink
           :to="e.nonce ? `/fairness?roll=${e.id}` : undefined"
-          class="kd-hrow kd-press grid grid-cols-[40px_minmax(0,1fr)_44px_76px_24px] items-center gap-2.5 rounded-2xl px-1.5 py-2 lg:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_160px_32px] lg:gap-4 lg:px-3 lg:py-3"
+          class="kd-hrow kd-press kd-press-wide grid grid-cols-[40px_minmax(0,1fr)_44px_76px_24px] items-center gap-2.5 rounded-2xl px-1.5 py-2 lg:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_160px_32px] lg:gap-4 lg:px-3 lg:py-3"
         >
           <span class="grid size-10 place-items-center rounded-xl bg-neutral-3 text-neutral-13 lg:size-12"><UiIcon name="upgrade" :size="18" /></span>
           <span class="flex min-w-0 flex-col gap-1">

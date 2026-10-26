@@ -18,7 +18,10 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
-  modules: ['@unocss/nuxt', '@pinia/nuxt', '@vueuse/nuxt', '@nuxtjs/i18n', '@nuxt/fonts', '@nuxt/image'],
+  modules: ['@unocss/nuxt', '@vueuse/nuxt', '@nuxtjs/i18n', '@nuxt/fonts', '@nuxt/image'],
+
+  // the shared stores (useSessionStore, useUiStore, useSettingsStore) are auto-imported like composables
+  imports: { dirs: ['stores'] },
 
   css: ['~/assets/css/main.css'],
 

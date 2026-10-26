@@ -48,7 +48,7 @@ const iconSize = computed(() => ({ s: 16, m: 18, l: 20 })[props.size])
     :aria-disabled="disabled || loading || undefined"
     :aria-busy="loading || undefined"
     class="kd-btn kd-press kd-icon-nudge inline-flex shrink-0 items-center justify-center whitespace-nowrap select-none"
-    :class="[sizeClass, `kd-btn-${variant}`, block && 'w-full']"
+    :class="[sizeClass, `kd-btn-${variant}`, block && 'kd-press-wide w-full']"
   >
     <span v-if="loading" class="kd-icon size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
     <UiIcon v-else-if="icon" :name="icon" :size="iconSize" class="kd-icon" />

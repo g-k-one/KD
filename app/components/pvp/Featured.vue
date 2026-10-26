@@ -24,7 +24,7 @@ const pot = computed(() => props.battle.cost * props.battle.size)
 <template>
   <!-- Desktop: a 220px side column (what is live and being opened on top, the pot and the way in at the
        bottom) next to the seats, which span its full height. Phones stack: info · seats · pot. -->
-  <NuxtLink :to="`/pvp/${battle.id}`" class="kd-feat kd-press group relative grid gap-4 overflow-hidden rounded-5xl p-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:grid-rows-[1fr_auto] lg:gap-x-6 lg:gap-y-4 lg:p-6">
+  <NuxtLink :to="`/pvp/${battle.id}`" class="kd-feat kd-press kd-press-wide group relative grid gap-4 overflow-hidden rounded-5xl p-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:grid-rows-[1fr_auto] lg:gap-x-6 lg:gap-y-4 lg:p-6">
     <div class="flex items-start justify-between gap-4 lg:flex-col lg:items-stretch lg:justify-start lg:gap-4">
       <div class="flex flex-col gap-1">
         <span class="kd-feat-live type-12-caps flex items-center gap-1.5"><span class="kd-live-dot" />{{ $t('pvp.liveNow') }}</span>
@@ -95,9 +95,6 @@ const pot = computed(() => props.battle.cost * props.battle.size)
   transition: translate var(--dur-base) var(--ease-spring);
 }
 @media (hover: hover) {
-  .kd-feat:hover {
-    translate: 0 -2px;
-  }
   .kd-feat:hover .kd-btn-primary {
     background-position: 100% 0;
   }

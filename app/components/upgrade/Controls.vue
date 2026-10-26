@@ -28,6 +28,8 @@ const props = defineProps<{
   part?: 'all' | 'cta' | 'chance' | 'balance'
   /** The skin just won: with an empty stake the CTA offers to upgrade it */
   again?: Item | null
+  /** the upgrade was sent and the server has not answered yet */
+  pending?: boolean
   /** The result is in, the spent stake still leaving: the CTA already reads as what comes next, taps wait */
   settling?: boolean
 }>()
@@ -168,7 +170,7 @@ const canReset = computed(() => !!(props.input || props.target))
   <section class="kd-controls grid grid-cols-[minmax(0,1fr)] gap-2" :class="busy && 'is-busy'">
     <!-- CTA, then Reset · Fast as two equal chips under it (the case page's dock has the same block) -->
     <div v-if="is('cta')" class="flex flex-wrap gap-2" :class="part !== 'cta' && 'kd-cta-dock max-lg:order-last'">
-      <UiButton size="l" class="kd-cta h-12 min-w-0 basis-full lg:h-14" :variant="busy || idle ? 'secondary' : 'primary'" @click="onCta">
+      <UiButton size="l" class="kd-cta h-12 min-w-0 basis-full lg:h-14" :variant="busy || idle ? 'secondary' : 'primary'" :loading="pending" @click="onCta">
         <template v-if="offerAgain && again">
           <UiIcon name="upgrade" :size="20" />
           <span>{{ $t('upgrade.upgradeWin') }}</span>
@@ -180,6 +182,8 @@ const canReset = computed(() => !!(props.input || props.target))
           <!-- the chance, not coins: an upgrade pays out a skin, never change -->
           <span class="btn-value type-14 tabular-nums">{{ real.toFixed(real < 10 ? 2 : 1) }}%</span>
         </template>
+        <!-- waiting for the server there is nothing to skip yet -->
+        <span v-else-if="pending">{{ $t('upgrade.upgrading') }}</span>
         <template v-else-if="busy">
           <span>{{ $t('case.skip') }}</span>
           <UiIcon name="chevron-right" :size="18" class="kd-skip-icon" />

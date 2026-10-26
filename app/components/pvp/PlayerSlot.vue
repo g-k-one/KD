@@ -3,7 +3,7 @@ import type { BattlePlayerRef } from '#shared/types/api'
 
 // Figma "BattlePlayer": Desktop = column header, Compact = mobile column header.
 // Empty shows Call bot; Winner = success tint + 1px success stroke.
-const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost' }>()
+const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost'; busy?: boolean }>()
 defineEmits<{ bot: []; join: [] }>()
 
 // The running total rolls up to each new value like an odometer
@@ -63,10 +63,10 @@ const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22,
         <span class="text-neutral-12" :class="compact ? 'type-12' : 'type-14'">{{ compact ? $t('pvp.free') : $t('pvp.freeSlot') }}</span>
         <span v-if="!compact" class="type-12-regular truncate text-neutral-11">{{ $t('pvp.waitingForPlayer') }}</span>
       </span>
-      <UiButton v-if="canJoin" :size="'s'" :icon-only="compact" icon="plus" :aria-label="$t('pvp.join')" @click="$emit('join')">
+      <UiButton v-if="canJoin" :size="'s'" :icon-only="compact" icon="plus" :loading="busy" :aria-label="$t('pvp.join')" @click="$emit('join')">
         <template v-if="!compact">{{ $t('pvp.join') }}</template>
       </UiButton>
-      <UiButton v-else-if="canCallBot" variant="secondary" size="s" :icon-only="compact" :icon="compact ? 'plus' : undefined" :aria-label="$t('pvp.callBot')" @click="$emit('bot')">
+      <UiButton v-else-if="canCallBot" variant="secondary" size="s" :icon-only="compact" :icon="compact ? 'plus' : undefined" :loading="busy" :aria-label="$t('pvp.callBot')" @click="$emit('bot')">
         <template v-if="!compact">{{ $t('pvp.callBot') }}</template>
       </UiButton>
     </template>

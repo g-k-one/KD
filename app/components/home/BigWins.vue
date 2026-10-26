@@ -34,7 +34,7 @@ const artSize = () => (isLg.value ? 106 : 62)
         v-for="(p, i) in wins"
         :key="p.win.id"
         :to="sourceLink(p.win.caseSlug)"
-        class="kd-win kd-press group relative grid min-w-0 grid-cols-[112px_minmax(0,1fr)] items-center gap-2 rounded-3xl py-2.5 pr-4 pl-1 lg:grid-cols-[50%_minmax(0,1fr)] lg:gap-2 lg:py-4 lg:pr-5 lg:pl-2"
+        class="kd-win kd-press kd-press-wide group relative grid min-w-0 grid-cols-[112px_minmax(0,1fr)] items-center gap-2 rounded-3xl py-2.5 pr-4 pl-1 lg:grid-cols-[50%_minmax(0,1fr)] lg:gap-2 lg:py-4 lg:pr-5 lg:pl-2"
         :class="p.rank === 1 ? 'is-first' : ''"
         :style="{ '--rc': RARITY_COLOR[p.win.item.rarity], '--i': i }"
         :data-rank="p.rank"

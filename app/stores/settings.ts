@@ -1,5 +1,3 @@
-import { defineStore } from 'pinia'
-
 export type DisplayCurrency = 'USD' | 'EUR' | 'PLN'
 
 interface Settings {
@@ -12,7 +10,8 @@ interface Settings {
 
 const DEFAULTS: Settings = { currency: 'USD', sound: true, volume: 70, streamerMode: false, haptics: true }
 
-export const useSettingsStore = defineStore('settings', () => {
+// the player's preferences, kept in a cookie (localStorage in the artifact), one shared copy for the whole app
+export const useSettingsStore = sharedStore('settings', () => {
   const source = usePersisted<Settings>('kd_settings', DEFAULTS)
 
   const settings = computed(() => ({ ...DEFAULTS, ...source.value }))

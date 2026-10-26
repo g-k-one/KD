@@ -239,6 +239,7 @@
     }
   },
   "upgrade": {
+    "upgrading": "Upgrading…",
     "history": "History",
     "howItWorks": "How it works",
     "howTitle": "How an upgrade works",

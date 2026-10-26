@@ -67,11 +67,17 @@ function burst() {
   fx.at('kdJackpot', mascotEl.value, 1)
 }
 defineExpose({ burst })
+// Desktop: the board scales with its slot's height (it was drawn for a 324 px banner at 0.84), so a banner that is
+// shorter (one line of title) keeps the art inside it instead of pushing it up into the live strip
+const board = useTemplateRef<HTMLElement>('board')
+const slotH = ref(0)
+useResizeObserver(() => board.value?.parentElement, ([e]) => (slotH.value = e!.contentRect.height))
+const k = computed(() => (slotH.value ? Math.min(0.84, (slotH.value / 324) * 0.84) : 0.84))
 const at = (l: { x: number; y: number; d: number; w?: number }) => ({ left: `${l.x}px`, top: `${l.y}px`, width: l.w ? `${l.w}px` : undefined, '--d': l.d })
 </script>
 
 <template>
-  <div class="kd-stage absolute">
+  <div ref="board" class="kd-stage absolute" :style="{ '--k': k }">
     <span v-if="rays" class="kd-stage-rays kd-depth absolute" :style="{ ...at({ x: rays.x - 260, y: rays.y - 260, d: -0.4 }), '--ray': rays.color }" aria-hidden="true" />
     <img v-for="(l, i) in back" :key="`b${i}`" :src="l.src" alt="" draggable="false" class="kd-depth pointer-events-none absolute" :style="at(l)" />
     <!-- the mascot: bob (idle) → depth (pointer) → jolt (tap), one wrapper each so they never fight -->
@@ -118,7 +124,7 @@ const at = (l: { x: number; y: number; d: number; w?: number }) => ({ left: `${l
 @media (min-width: 64rem) {
   .kd-stage {
     bottom: -2px;
-    transform: translateX(-50%) scale(0.84);
+    transform: translateX(-50%) scale(var(--k, 0.84));
   }
 }
 

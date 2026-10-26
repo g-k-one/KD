@@ -17,6 +17,9 @@ useHead({ title: () => `${cs.value.name} · KurwaDROP` })
 
 const count = ref<1 | 2 | 3 | 4 | 5>(1)
 const fast = ref(false)
+// the open (or a sell) was sent and the server has not answered yet: the button shows it is working
+const pending = ref(false)
+const selling = ref(false)
 const kurwadrop = ref(route.query.kurwa === '1')
 // KURWADROP is free and changes no odds: it only stages top drops (chicken + respin)
 const openPrice = computed(() => cs.value.price)
@@ -50,6 +53,8 @@ watch(count, () => {
 const total = computed(() => openPrice.value * count.value)
 const shortBy = computed(() => (session.user ? Math.max(0, total.value - session.user.balance) : 0))
 const cta = computed(() => {
+  // waiting for the server there is nothing to skip yet
+  if (pending.value) return { label: t('case.opening'), amount: total.value, short: false }
   if (phase.value === 'spinning') return { label: t('case.skip'), amount: total.value, short: false }
   if (!session.user) return { label: t('case.signInToOpen'), amount: total.value, short: false }
   if (shortBy.value > 0) return { label: t('case.topUp'), amount: shortBy.value, short: true }
@@ -89,11 +94,12 @@ async function open(asDemo = false) {
   demo.value = asDemo
   sold.value = []
   results.value = []
+  pending.value = true
   try {
     const res = await $fetch<OpenCaseResponse>(`/api/cases/${slug.value}/open`, {
       method: 'POST',
       body: { count: count.value, demo: asDemo, kurwadrop: kurwadrop.value },
-    })
+    }).finally(() => (pending.value = false))
     if (!asDemo && session.user) session.user.balance = res.balance
     if (!asDemo) recent.add(slug.value)
     results.value = res.drops
@@ -110,9 +116,10 @@ async function open(asDemo = false) {
 }
 
 async function sell(uids: string[]) {
-  if (demo.value || !uids.length) return
+  if (demo.value || !uids.length || selling.value) return
+  selling.value = true
   try {
-    const res = await $fetch<SellResponse>('/api/inventory/sell', { method: 'POST', body: { uids } })
+    const res = await $fetch<SellResponse>('/api/inventory/sell', { method: 'POST', body: { uids } }).finally(() => (selling.value = false))
     sold.value = [...sold.value, ...res.sold]
     if (session.user) session.user.balance = res.balance
   } catch (e) {
@@ -229,6 +236,8 @@ if (import.meta.client) {
         :short="cta.short"
         :phase="phase"
         :unsold-total="unsoldTotal"
+        :pending="pending"
+        :selling="selling"
         @open="open()"
         @skip="reel?.skip()"
         @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"

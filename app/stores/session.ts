@@ -1,8 +1,8 @@
-import { defineStore } from 'pinia'
 import type { MeResponse, User } from '#shared/types/api'
 
-export const useSessionStore = defineStore('session', () => {
-  const user = ref<User | null>(null)
+// who is signed in; the server render fetches it, useState carries it to the browser
+export const useSessionStore = sharedStore('session', () => {
+  const user = useState<User | null>('kd-session-user', () => null)
   const isLoggedIn = computed(() => !!user.value)
 
   async function fetchMe() {

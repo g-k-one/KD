@@ -148,7 +148,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
 
     <!-- Under the hood: folded; the formula, per mode, the seed log, a manual check and the seeds -->
     <section id="seeds" class="flex scroll-mt-24 flex-col gap-4 lg:gap-6">
-      <button type="button" class="kd-press flex min-h-16 items-center gap-3 rounded-3xl bg-neutral-2 px-5 text-left hover:text-neutral-15" :aria-expanded="hood" @click="hood = !hood">
+      <button type="button" class="kd-press kd-press-wide flex min-h-16 items-center gap-3 rounded-3xl bg-neutral-2 px-5 text-left hover:text-neutral-15" :aria-expanded="hood" @click="hood = !hood">
         <UiIcon name="function" :size="22" class="shrink-0 text-neutral-12" />
         <span class="flex min-w-0 flex-1 flex-col">
           <span class="type-16-caps">{{ $t('fair.hood') }}</span>
@@ -311,9 +311,9 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
   transition: transform var(--dur-slow) var(--ease-spring);
 }
 @media (hover: hover) {
+  /* the card stays put on hover (only its picture moves) */
   .kd-step:hover {
     border-color: var(--color-neutral-6);
-    transform: translateY(-2px);
   }
   .kd-step:hover .kd-step-art {
     transform: translateX(4px) scale(1.04);

@@ -200,6 +200,11 @@ html body {
     transition-duration: var(--dur-press);
     transition-timing-function: var(--ease-out);
   }
+  /* wide surfaces (list rows, full-width cards and bars): 0.96 of a 1200 px row is a 48 px jump, so they barely
+     shrink — the press reads from the dimming */
+  .kd-press.kd-press-wide:active:not(:disabled) {
+    transform: scale(0.995);
+  }
 
   /* ── Button (Figma: Type × Size × State) ── */
   .kd-btn {

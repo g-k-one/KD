@@ -128,8 +128,12 @@ async function recreate() {
 const isCreator = computed(() => !!b.value.slots[0]?.player?.you)
 const youIn = computed(() => b.value.slots.some((s) => s.player?.you))
 
+// the seat a join or a bot call was sent for, until the server answers
+const busySlot = ref<number | null>(null)
 async function join(slot: number) {
   if (!session.user) return ui.openSignIn()
+  if (busySlot.value != null) return
+  busySlot.value = slot
   try {
     const res = await $fetch<BattleResponse>(`/api/battles/${id.value}/join`, { method: 'POST', body: { slot } })
     data.value = res
@@ -137,14 +141,20 @@ async function join(slot: number) {
   } catch (e) {
     if ((e as { statusCode?: number }).statusCode === 402) ui.openDeposit()
     else toast.error(e, t('common.error'))
+  } finally {
+    busySlot.value = null
   }
 }
 async function bot(slot: number) {
+  if (busySlot.value != null) return
+  busySlot.value = slot
   try {
     data.value = await $fetch<BattleResponse>(`/api/battles/${id.value}/bot`, { method: 'POST', body: { slot } })
   } catch (e) {
     if ((e as { statusCode?: number }).statusCode === 402) ui.openDeposit()
     else toast.error(e, t('common.error'))
+  } finally {
+    busySlot.value = null
   }
 }
 
@@ -321,6 +331,7 @@ const roundLine = computed(() => {
         :compact="isMobile"
         :can-join="!s.player && b.status === 'waiting' && !youIn"
         :can-call-bot="!s.player && b.status === 'waiting' && isCreator"
+        :busy="busySlot === s.slot"
         @join="join(s.slot)"
         @bot="bot(s.slot)"
       />

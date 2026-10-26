@@ -1,16 +1,15 @@
-import { defineStore } from 'pinia'
-
 type Popover = 'settings' | 'profile' | null
 
-export const useUiStore = defineStore('ui', () => {
-  const popover = ref<Popover>(null)
-  const mobileMenuOpen = ref(false)
-  const signInOpen = ref(false)
+// what is open: popovers, the phone menu, the sign-in / deposit modals, the inventory drawer
+export const useUiStore = sharedStore('ui', () => {
+  const popover = useState<Popover>('kd-ui-popover', () => null)
+  const mobileMenuOpen = useState('kd-ui-menu', () => false)
+  const signInOpen = useState('kd-ui-signin', () => false)
   /** Quick top-up modal; need = missing coin cents, pre-filled as the amount */
-  const depositOpen = ref(false)
-  const depositNeed = ref<number | null>(null)
+  const depositOpen = useState('kd-ui-deposit', () => false)
+  const depositNeed = useState<number | null>('kd-ui-deposit-need', () => null)
   /** Inventory drawer, from the balance chip */
-  const inventoryOpen = ref(false)
+  const inventoryOpen = useState('kd-ui-inventory', () => false)
 
   function togglePopover(p: Exclude<Popover, null>) {
     popover.value = popover.value === p ? null : p

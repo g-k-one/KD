@@ -48,7 +48,7 @@ async function logout() {
         </div>
 
         <template v-if="session.user">
-          <NuxtLink to="/profile" class="kd-press block rounded-3xl" :aria-label="$t('profile.profile')">
+          <NuxtLink to="/profile" class="kd-press kd-press-wide block rounded-3xl" :aria-label="$t('profile.profile')">
             <LayoutProfileCard :user="session.user" compact :actions="false" class="pointer-events-none rounded-3xl bg-neutral-3/40 p-3" />
           </NuxtLink>
           <div class="grid grid-cols-2 gap-2">
@@ -74,7 +74,7 @@ async function logout() {
             v-for="item in MAIN_NAV"
             :key="item.key"
             :to="item.to"
-            class="kd-press type-14-caps flex h-12 items-center gap-3 rounded-md px-3"
+            class="kd-press kd-press-wide type-14-caps flex h-12 items-center gap-3 rounded-md px-3"
             :class="isNavActive(route, item.to) ? 'bg-neutral-3 text-neutral-15' : 'text-neutral-12'"
           >
             <UiIcon :name="item.mobileIcon" :size="20" :class="isNavActive(route, item.to) && 'text-brand-light'" />
@@ -90,7 +90,7 @@ async function logout() {
             v-for="item in INFO_NAV"
             :key="item.key"
             :to="item.to"
-            class="kd-press type-14-caps flex h-12 items-center gap-3 rounded-md px-3 text-neutral-12"
+            class="kd-press kd-press-wide type-14-caps flex h-12 items-center gap-3 rounded-md px-3 text-neutral-12"
           >
             <UiIcon :name="item.mobileIcon" :size="20" />
             {{ $t(`nav.${item.key}`) }}
@@ -98,7 +98,7 @@ async function logout() {
           <button
             v-if="session.user"
             type="button"
-            class="kd-press type-14-caps flex h-12 items-center gap-3 rounded-md px-3 text-neutral-12"
+            class="kd-press kd-press-wide type-14-caps flex h-12 items-center gap-3 rounded-md px-3 text-neutral-12"
             @click="logout"
           >
             <UiIcon name="logout" :size="20" />

@@ -22,6 +22,10 @@ const props = defineProps<{
   short?: boolean
   phase: 'idle' | 'spinning' | 'result'
   unsoldTotal: number
+  /** waiting for the server: the open was sent, the result is not back yet (the reel has nothing to spin to) */
+  pending?: boolean
+  /** selling the drops, the server has not answered yet */
+  selling?: boolean
 }>()
 const emit = defineEmits<{ open: []; skip: []; sellAll: [] }>()
 const main = () => (props.phase === 'spinning' ? emit('skip') : emit('open'))
@@ -38,19 +42,19 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
     <UiSegmented v-model="count" :options="COUNT_OPTIONS" :disabled="phase === 'spinning'" block class="mb-1 lg:mb-0 lg:w-60" />
 
     <div class="flex flex-col">
-      <UiButton size="l" class="kd-main w-full lg:h-14 lg:w-80" :variant="phase === 'spinning' ? 'secondary' : 'primary'" @click="main">
+      <UiButton size="l" class="kd-main w-full lg:h-14 lg:w-80" :variant="phase === 'spinning' ? 'secondary' : 'primary'" :loading="pending" @click="main">
         <span>{{ label }}</span>
         <span v-if="phase !== 'spinning'" class="btn-value">
           <span v-if="short" class="type-14">+</span>
           <UiPrice :amount="amount" size="m" tone="inverse" />
         </span>
-        <UiIcon v-else name="chevron-right" :size="18" class="kd-skip-icon" />
+        <UiIcon v-else-if="!pending" name="chevron-right" :size="18" class="kd-skip-icon" />
         <span v-if="phase === 'idle'" class="kd-shine" />
       </UiButton>
       <!-- Phones: Sell all unfolds under the main button instead of squeezing it -->
       <div class="kd-unfold lg:hidden" :class="showSell && 'is-open'">
         <div class="min-h-0">
-          <UiButton variant="secondary" size="l" class="mt-2 w-full" :tabindex="showSell ? 0 : -1" @click="sellAll">
+          <UiButton variant="secondary" size="l" class="mt-2 w-full" :tabindex="showSell ? 0 : -1" :loading="selling" @click="sellAll">
             <span>{{ $t('wallet.sellAll') }}</span>
             <span class="btn-value"><UiPrice :amount="unsoldTotal" size="m" /></span>
           </UiButton>

@@ -274,6 +274,8 @@ function resetResult() {
   }
 }
 
+// the upgrade was sent and the server has not answered yet: the button shows it is working
+const pending = ref(false)
 async function runUpgrade() {
   if (!session.user) return ui.openSignIn()
   if (!target.value) return toast.show(t('upgrade.chooseTarget'))
@@ -289,11 +291,12 @@ async function runUpgrade() {
     if (state.value !== 'spinning') return h?.kill()
     aura = h
   })
+  pending.value = true
   try {
     const res = await $fetch<UpgradeResponse>('/api/upgrade', {
       method: 'POST',
       body: { itemUids: selected.value, balanceAmount: extra.value, targetItemId: target.value.id },
-    })
+    }).finally(() => (pending.value = false))
     session.user.balance = res.balance
     lastNonce.value = res.nonce
     await gauge.value?.spin(res.roll, fast.value)
@@ -402,6 +405,7 @@ async function runUpgrade() {
         @clear-coins="(extra = 0), resetResult()"
       />
         <UpgradeControls
+          :pending="pending"
           class="lg:col-start-1 lg:row-start-2"
           part="balance"
           v-model:extra="extraModel"
@@ -431,6 +435,7 @@ async function runUpgrade() {
         <!-- -mt-3 (was -6) and 320px (was 352): the logo above gets air from the "100", the button below keeps its gap -->
         <UpgradeGauge ref="gauge" :chance="shownChance" :state="state" :nonce="lastNonce" class="relative z-[2] max-lg:max-w-[216px] lg:-mt-3" />
         <UpgradeControls
+          :pending="pending"
           class="relative z-[3] mt-5 w-full max-w-80 max-lg:hidden lg:mt-auto"
           part="cta"
           v-model:extra="extraModel"
@@ -469,6 +474,7 @@ async function runUpgrade() {
       <div class="max-lg:hidden lg:contents">
         <UpgradeTarget ref="targetCard" class="lg:col-start-3 lg:row-start-1" :item="target" :state="state" @clear="(target = null), resetResult()" />
         <UpgradeControls
+          :pending="pending"
           class="lg:col-start-3 lg:row-start-2"
           part="chance"
           v-model:extra="extraModel"
@@ -494,6 +500,7 @@ async function runUpgrade() {
     </section>
 
     <UpgradeControls
+      :pending="pending"
       class="lg:hidden"
       v-model:extra="extraModel"
       v-model:fast="fast"

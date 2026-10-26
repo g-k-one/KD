@@ -16,7 +16,9 @@ const ui = useUiStore()
 const toast = useToast()
 
 // Settings open in a modal from the page bar; an old ?tab=settings link still opens them
-const settingsOpen = ref(route.query.tab === 'settings')
+// ?tab=settings opens it once the page is up (a modal open in the server render would not match the client's)
+const settingsOpen = ref(false)
+onMounted(() => route.query.tab === 'settings' && (settingsOpen.value = true))
 
 const inventory = ref<InventoryItem[]>([])
 const history = ref<HistoryEntry[]>([])
@@ -284,7 +286,7 @@ async function saveTrade() {
                 :is="h.nonce ? NuxtLink : 'div'"
                 :to="h.nonce ? `/fairness?roll=${h.id}` : undefined"
                 class="kd-hrow grid grid-cols-[40px_minmax(0,1fr)_44px_76px_24px] items-center gap-2.5 rounded-2xl px-1.5 py-2 lg:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_160px_32px] lg:gap-4 lg:px-3 lg:py-3"
-                :class="h.nonce && 'kd-press is-roll'"
+                :class="h.nonce && 'kd-press kd-press-wide is-roll'"
               >
                 <!-- what it was: the case itself, else the game's sign -->
                 <span class="grid size-10 place-items-center rounded-xl bg-neutral-3 text-neutral-13 lg:size-12">

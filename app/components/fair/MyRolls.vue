@@ -110,7 +110,7 @@ watch(
             :is="r.pair ? 'button' : 'div'"
             :type="r.pair ? 'button' : undefined"
             class="kd-roll grid w-full grid-cols-[40px_minmax(0,1fr)_28px] items-center gap-2.5 rounded-2xl px-1.5 py-2 text-left lg:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_160px_32px] lg:gap-4 lg:px-3 lg:py-3"
-            :class="{ 'is-focus': r.focus, 'kd-press is-roll': r.pair }"
+            :class="{ 'is-focus': r.focus, 'kd-press kd-press-wide is-roll': r.pair }"
             :aria-label="r.pair ? `${$t('fair.check')}: ${r.e.drop ?? r.e.title}` : undefined"
             @click="verify(r)"
           >
