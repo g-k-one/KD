@@ -209,10 +209,15 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
     --r: 215px;
   }
 }
-/* phones and tablets: the art is a band on top, the light with it; the plate and the ring sit out */
-@media (max-width: 1023px) {
-  .kd-plate,
+/* small laptops: no room for the ring beside the column's edge */
+@media (max-width: 1279px) {
   .kd-ring {
+    display: none;
+  }
+}
+/* phones and tablets: the art is a band on top, the light with it; the plate sits out too */
+@media (max-width: 1023px) {
+  .kd-plate {
     display: none;
   }
 }
