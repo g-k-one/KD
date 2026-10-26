@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { HistoryEntry } from '#shared/types/api'
+import { NuxtLink } from '#components'
 
 /*
  * The game history as a table (the bet history on Stake): one line per game, real columns under headers —
@@ -35,11 +36,13 @@ const profit = (e: HistoryEntry) => e.payout - e.bet
 const spaced = (n: number) => n.toLocaleString('en-US').replace(/,/g, ' ')
 const rollValue = (e: HistoryEntry) => (e.ticket != null ? spaced(e.ticket) : e.roll != null ? e.roll.toFixed(2) : '')
 
+/** A roll (its seeds) or a battle (its own seed and EOS block) can be checked; a payment has nothing to check */
+const checkable = (e: HistoryEntry) => e.nonce != null || !!e.battleId
 const kind = (e: HistoryEntry) => (props.link?.(e) ? 'link' : props.clickable?.(e) ? 'button' : 'row')
 const cols = computed(() =>
   props.roll
-    ? 'lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.5fr)_104px_104px_104px_120px_64px_32px]'
-    : 'lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.6fr)_112px_112px_112px_72px_32px]',
+    ? 'lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.5fr)_96px_96px_96px_112px_56px_92px]'
+    : 'lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.6fr)_104px_104px_104px_64px_92px]',
 )
 </script>
 
@@ -59,10 +62,10 @@ const cols = computed(() =>
     <ul class="flex flex-col">
       <li v-for="e in entries" :key="e.id" class="kd-tr border-b border-neutral-3 last:border-0" :class="focusId === e.id && 'is-focus'">
         <component
-          :is="kind(e) === 'link' ? resolveComponent('NuxtLink') : kind(e) === 'button' ? 'button' : 'div'"
+          :is="kind(e) === 'link' ? NuxtLink : kind(e) === 'button' ? 'button' : 'div'"
           :to="kind(e) === 'link' ? link!(e) : undefined"
           :type="kind(e) === 'button' ? 'button' : undefined"
-          class="grid w-full grid-cols-[44px_minmax(0,1fr)_auto_28px] items-center gap-3 px-2 py-2.5 text-left lg:gap-4 lg:px-3 lg:py-0 lg:h-[62px]"
+          class="grid w-full grid-cols-[44px_minmax(0,1fr)_auto_32px] items-center gap-3 px-2 py-2.5 text-left lg:gap-4 lg:px-3 lg:py-0 lg:h-[62px]"
           :class="[cols, kind(e) !== 'row' && 'kd-tr-hit']"
           @click="kind(e) === 'button' && emit('pick', e)"
         >
@@ -110,10 +113,12 @@ const cols = computed(() =>
             <span class="type-10-caps text-neutral-11">{{ e.ticket != null ? $t('fair.ticket') : e.chance != null ? $t('history.ofChance', { pct: (e.chance / 100).toFixed(2) }) : '' }}</span>
           </span>
           <span class="type-14-regular text-right text-neutral-11 tabular-nums max-lg:hidden">{{ timeAgo(e.at) }}</span>
-          <!-- the check -->
-          <span class="kd-check grid size-7 place-items-center justify-self-end rounded-lg lg:size-8" :class="sealed?.(e) && 'is-sealed'" :title="e.nonce ? (sealed?.(e) ? $t('fair.sealed') : $t('fair.check')) : undefined">
-            <UiIcon v-if="e.nonce" :name="sealed?.(e) ? 'shield' : 'shield-check'" :size="18" />
+          <!-- the check: a clear green chip on every roll and battle (the icon alone on phones) -->
+          <span v-if="checkable(e)" class="kd-check type-12-caps flex h-8 items-center justify-center gap-1.5 justify-self-end rounded-lg max-lg:w-8 lg:px-2.5" :class="sealed?.(e) && 'is-sealed'" :title="sealed?.(e) ? $t('fair.sealedHintShort') : $t('fair.check')">
+            <UiIcon :name="sealed?.(e) ? 'shield' : 'shield-check'" :size="16" class="shrink-0" />
+            <span class="max-lg:hidden">{{ $t('fair.check') }}</span>
           </span>
+          <span v-else />
         </component>
       </li>
     </ul>
@@ -139,21 +144,21 @@ const cols = computed(() =>
   transition: background-color var(--dur-base) var(--ease-out);
 }
 .kd-check {
-  color: var(--color-neutral-10);
-  transition:
-    color var(--dur-base) var(--ease-out),
-    background-color var(--dur-base) var(--ease-out);
+  color: var(--color-success);
+  background: rgb(18 183 106 / 0.12);
+  transition: background-color var(--dur-base) var(--ease-out);
 }
+/* its seed is still secret: the chip waits, grey */
 .kd-check.is-sealed {
-  opacity: 0.6;
+  color: var(--color-neutral-11);
+  background: var(--color-neutral-3);
 }
 @media (hover: hover) {
   .kd-tr-hit:hover {
     background: var(--color-neutral-3);
   }
   .kd-tr-hit:hover .kd-check:not(.is-sealed) {
-    color: var(--color-success);
-    background: rgb(18 183 106 / 0.12);
+    background: rgb(18 183 106 / 0.24);
   }
 }
 .kd-tr.is-focus {

@@ -172,7 +172,9 @@ async function bot(slot: number) {
   }
 }
 
+// ?check=1 (a PvP row of the game history): the battle's check opens with the page
 const verifyOpen = ref(false)
+onMounted(() => route.query.check && (verifyOpen.value = true))
 const nameOf = (slot: number) => {
   const p = b.value.slots[slot]?.player
   return p ? (p.you ? t('pvp.you') : p.nickname) : ''

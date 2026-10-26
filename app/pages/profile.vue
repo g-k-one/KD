@@ -275,7 +275,7 @@ async function saveTrade() {
           <UiEmptyState v-if="!filteredHistory.length" :text="$t('account.emptyHistory')" class="m-3 mt-0 lg:m-4 lg:mt-0" />
           <!-- the table: game · drop · stake · payout · profit · time · check; a roll opens its check -->
           <div v-else class="kd-history overflow-y-auto px-1 pb-2 lg:px-3">
-            <HistoryTable :entries="filteredHistory" :link="(h) => (h.nonce ? `/fairness?roll=${h.id}` : undefined)" />
+            <HistoryTable :entries="filteredHistory" :link="(h) => (h.battleId ? `/pvp/${h.battleId}?check=1` : h.nonce ? `/fairness?roll=${h.id}` : undefined)" />
           </div>
         </div>
       </section>

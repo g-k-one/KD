@@ -388,6 +388,8 @@ export interface HistoryEntry {
   stakeCoins?: number
   /** What came out or left: the case's drop, the upgrade's target (won or not), the skin sold or withdrawn */
   result?: HistoryItem
+  /** PvP: the battle, checked on its own page (its own seed and EOS block) */
+  battleId?: string
 }
 
 export interface HistoryResponse {

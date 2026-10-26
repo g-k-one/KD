@@ -455,6 +455,7 @@
     "revealed": "Server seed revealed. Every roll of that pair can be checked now.",
     "sealed": "Reveal first",
     "check": "Check",
+    "sealedHintShort": "Sealed: reveal your seed on the Provably Fair page to check it",
     "signInRolls": "Sign in to see your rolls and check each one.",
     "noRollsYet": "No rolls yet. Open a case or try an upgrade, then check it here.",
     "match": "Matches your result",

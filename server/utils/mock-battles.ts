@@ -112,7 +112,9 @@ async function start(b: StoredBattle) {
       for (const d of mine) st.inventory.unshift(toInventory(d, 'case'))
       syncSkinsValue()
     }
-    record({ game: 'case', title: `PvP #${b.id}`, bet: b.cost, payout: mine.reduce((a, d) => a + d.price, 0), status: won ? 'won' : 'lost' })
+    // the best skin of the battle stands for it in the history: the player's if they won, else the one that beat them
+    const best = (won ? mine : all)[0]
+    record({ game: 'case', title: `PvP #${b.id}`, bet: b.cost, payout: mine.reduce((a, d) => a + d.price, 0), status: won ? 'won' : 'lost', battleId: b.id, result: best ? { name: `${best.weapon} | ${best.skin}`, image: best.image, rarity: best.rarity, price: best.price } : undefined })
   }
 }
 
