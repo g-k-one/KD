@@ -131,11 +131,9 @@ watch(y, (v) => {
           @mouseleave="hover = null"
         >
           <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 56 : 40" class="w-full" />
-          <!-- not a case drop: the source's icon, small and grey on a dark corner plate over the skin, so a skin
-               never covers it and it never outshouts the skin; orange on hover -->
-          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute top-0.5 left-0.5 z-[2] grid size-4.5 place-items-center rounded-[5px] lg:size-5" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
-            <UiIcon :name="SOURCE_ICON[sourceOf(d.caseSlug) as 'upgrade' | 'pvp']" :size="12" />
-          </span>
+          <!-- not a case drop: a small full-colour picture of the source (an arrow up, crossed swords) in the corner, over
+               the skin, no plate; a dark edge lifts it off whatever is under it -->
+          <img v-if="sourceOf(d.caseSlug) !== 'case'" :src="SOURCE_ART[sourceOf(d.caseSlug) as 'upgrade' | 'pvp']" :alt="$t(`nav.${sourceOf(d.caseSlug)}`)" :title="$t(`nav.${sourceOf(d.caseSlug)}`)" class="kd-feed-src absolute top-1 left-1 z-[2] size-4 lg:size-5" />
           <span v-if="mode === 'top'" class="type-10-caps absolute top-1 right-1 rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
         </NuxtLink>
       </TransitionGroup>
@@ -154,8 +152,8 @@ watch(y, (v) => {
           class="kd-hovercard pointer-events-none fixed z-[70] flex w-76 -translate-x-1/2 flex-col gap-3 rounded-2xl bg-neutral-3 p-3"
           :style="{ left: `${hover.x}px`, top: `${hover.y}px` }"
         >
-          <!-- the drop, read like an item card: the skin on its rarity light, weapon over skin, then what it's worth
-               and how many times what was paid -->
+          <!-- the drop, read like an item card: the skin on its rarity light, weapon over skin, its price; on the right
+               where it came from — the case's picture and what it cost (an upgrade: its sign and the stake) -->
           <div class="flex items-center gap-3">
             <span class="grid h-16 w-20 shrink-0 place-items-center rounded-lg bg-neutral-4">
               <ItemArt :image="hover.d.image" :rarity="hover.d.rarity" :size="56" class="w-full" />
@@ -163,22 +161,20 @@ watch(y, (v) => {
             <span class="flex min-w-0 flex-1 flex-col gap-1">
               <span class="kd-hover-weapon type-12-caps truncate">{{ hover.d.itemName }}</span>
               <span class="type-14 truncate" :style="{ color: RARITY_COLOR[hover.d.rarity] }">{{ hover.d.skinName }}</span>
-              <span class="flex items-center justify-between gap-2">
-                <UiPrice :amount="hover.d.price" tone="coin" />
-                <span class="type-12-caps shrink-0 rounded-sm bg-neutral-5 px-1.5 py-0.5 text-coin">{{ xLabel(hover.d) }}</span>
-              </span>
+              <UiPrice :amount="hover.d.price" tone="coin" />
+            </span>
+            <span class="flex w-16 shrink-0 flex-col items-center gap-1">
+              <img v-if="hover.d.caseImage" :src="hover.d.caseImage" alt="" class="size-12 object-contain" />
+              <img v-else :src="SOURCE_ART[sourceOf(hover.d.caseSlug) as 'upgrade' | 'pvp']" alt="" class="size-12 object-contain" />
+              <UiPrice :amount="hover.d.casePrice" size="xs" tone="muted" />
             </span>
           </div>
-          <!-- who and where from, quiet, under a hairline -->
+          <!-- who, when and where from, quiet, under a hairline -->
           <div class="flex items-center gap-2 border-t border-neutral-4 pt-3">
             <img :src="hover.d.userAvatar" alt="" class="size-5 shrink-0 rounded-full object-cover" />
             <span class="type-12 min-w-0 truncate">{{ hover.d.userNickname }}</span>
             <span class="type-12-regular shrink-0 text-neutral-11">{{ timeAgo(hover.d.createdAt) }}</span>
-            <span class="type-12-regular ml-auto flex min-w-0 items-center gap-1 text-neutral-12">
-              <UiIcon v-if="sourceOf(hover.d.caseSlug) !== 'case'" :name="SOURCE_ICON[sourceOf(hover.d.caseSlug) as 'upgrade' | 'pvp']" :size="12" class="shrink-0 text-neutral-11" />
-              <span class="truncate">{{ hover.d.caseName }}</span>
-              <UiPrice :amount="hover.d.casePrice" size="s" tone="muted" class="shrink-0" />
-            </span>
+            <span class="type-12-regular ml-auto min-w-0 truncate text-neutral-12">{{ hover.d.caseName }}</span>
           </div>
         </div>
       </Transition>
@@ -264,16 +260,8 @@ watch(y, (v) => {
   opacity: 0;
   transform: translateY(-3px);
 }
-/* the tile's corner (radius 8) wraps the plate's (5) at 3px: the 1px border and a 2px inset */
 .kd-feed-src {
-  color: var(--color-neutral-12);
-  background: rgb(from var(--color-neutral-1) r g b / 0.82);
-  transition: color var(--dur-fast) var(--ease-out);
-}
-@media (hover: hover) {
-  .kd-feed-tile:hover .kd-feed-src {
-    color: var(--color-brand-light);
-  }
+  filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.8));
 }
 .kd-hovercard {
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.6);

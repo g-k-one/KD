@@ -66,7 +66,7 @@ function reset() {
       <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
     </div>
     <Transition name="kd-reset">
-      <UiButton v-if="dirty" variant="ghost" size="s" icon="refresh" class="max-lg:hidden lg:order-1" @click="reset">{{ $t('filters.reset') }}</UiButton>
+      <UiButton v-if="dirty" variant="ghost" size="m" icon="refresh" class="max-lg:hidden lg:order-1" @click="reset">{{ $t('filters.reset') }}</UiButton>
     </Transition>
     <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:order-3 lg:w-48">
       <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>

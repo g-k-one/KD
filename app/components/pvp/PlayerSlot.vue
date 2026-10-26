@@ -38,7 +38,7 @@ const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22,
         <span class="flex max-w-full items-center gap-1.5">
           <UiIcon v-if="winner && !compact" name="crown" :size="16" class="kd-crown shrink-0 text-coin" />
           <span class="truncate" :class="compact ? 'type-12' : 'type-16-medium'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
-          <span v-if="!compact" class="type-12 rounded-xs border border-white-12 bg-[#277cc1] px-1 leading-4">{{ player.level }}</span>
+          <UiLevelBadge :level="player.level" class="shrink-0" :class="compact && 'scale-90'" />
         </span>
         <UiPrice :amount="Math.round(totalShown)" :size="compact ? 'xs' : 'm'" :tone="winner ? 'success' : 'default'" class="tabular-nums" />
       </span>

@@ -144,7 +144,8 @@ watch([height, cell], () => {
           :style="{ height: `${cell}px` }"
           :data-win="(landed && i === WIN) || undefined"
         >
-          <ItemArt :image="it.image" :rarity="it.rarity" :size="compact ? 60 : 108" class="relative w-full" />
+          <!-- the drop lands as in a case: the rarity shape pops in and its waves spread (more the rarer), then it floats -->
+          <ItemArt :image="it.image" :rarity="it.rarity" :size="compact ? 60 : 108" eager :reveal="landed && i === WIN && !instant ? RARITY_TIER[it.rarity] || 1 : 0" class="relative w-full" />
         </div>
       </div>
       <div class="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-neutral-1 to-transparent" :class="compact ? 'h-12' : 'h-20'" />
@@ -171,11 +172,14 @@ watch([height, cell], () => {
 .kd-preel-card[data-win] {
   transform: scale(1.12);
   z-index: 1;
-  animation: kd-pwin 700ms var(--ease-out);
 }
-@keyframes kd-pwin {
-  0% {
-    filter: brightness(2.2) saturate(1.4);
+/* as the case reel's drop: the skin's picture alone floats once the reveal is over */
+.kd-preel-card[data-win] > .kd-art :deep(.kd-art-img) {
+  animation: kd-drop-float 3.2s cubic-bezier(0.45, 0, 0.55, 1) 1500ms infinite;
+}
+@keyframes kd-drop-float {
+  50% {
+    translate: 0 -6px;
   }
 }
 /* Same frame language as the case reel: it warms up towards the markers, so they sit on it */

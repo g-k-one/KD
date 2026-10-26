@@ -400,6 +400,13 @@ const roundLine = computed(() => {
   translate: 0 -50%;
   z-index: 2;
 }
+/* the arrows sit on the frame's line, base flush with it (the rotated picture leaves a side gap of its own) */
+.kd-amark.left-0 {
+  translate: calc(-1 * var(--mark-in, 5px)) -50%;
+}
+.kd-amark.right-0 {
+  translate: var(--mark-in, 5px) -50%;
+}
 .kd-arena-seat + .kd-arena-seat {
   border-left: 1px solid var(--color-neutral-4);
 }
@@ -408,9 +415,6 @@ const roundLine = computed(() => {
   border-left: 2px solid rgb(255 95 31 / 0.5);
 }
 /* the seat ahead gets a warm floor while it leads */
-.kd-arena-seat.is-lead {
-  background: radial-gradient(70% 45% at 50% 100%, rgb(255 95 31 / 0.14), transparent);
-}
 /* every landing flashes the seats once (keyed on the round) */
 .kd-seat-flash {
   background: radial-gradient(50% 40% at 50% 50%, rgb(255 255 255 / 0.12), transparent);

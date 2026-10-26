@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd36a"/><stop offset=".45" stop-color="#ff9721"/><stop offset="1" stop-color="#e2470f"/></linearGradient>
+    <linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  </defs>
+  <!-- a chunky up arrow: dark rim, warm body, a glossy top -->
+  <path d="M32 4 58 32H42v26H22V32H6Z" fill="#3a1606" stroke="#3a1606" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M32 4 58 32H42v26H22V32H6Z" fill="url(#b)" stroke="#ffb44a" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M32 9 50 28H38v6H26v-6H14Z" fill="url(#s)"/>
+  <path d="M25 40h14v14H25z" fill="#000" opacity=".14"/>
+</svg>

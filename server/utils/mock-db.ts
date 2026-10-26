@@ -1067,6 +1067,9 @@ export function makeDrop(overrides: Partial<FeedDrop> & Partial<Item> = {}): Fee
     userAvatar: '',
     ...overrides,
   }
+  // the case it came from, for the hover card (a PvP drop names its case after "PvP · ")
+  const caseName = drop.caseSlug === 'pvp' ? drop.caseName.replace(/^PvP · /, '') : null
+  drop.caseImage ??= drop.caseSlug === 'upgrade' ? undefined : CASES.find((c) => (caseName ? c.name === caseName : c.slug === drop.caseSlug))?.image
   // the player's own picture on their own drops, a stand-in for everyone else
   drop.userAvatar = overrides.userAvatar ?? (drop.userNickname === state.user.nickname ? state.user.avatar : avatarFor(drop.userNickname))
   return drop

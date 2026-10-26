@@ -110,6 +110,8 @@ export interface FeedDrop {
   caseName: string
   /** What the player paid: the case price, or the stake for an upgrade. Multiplier = price / casePrice. */
   casePrice: number
+  /** The case's picture (a PvP drop: the round's case); none for an upgrade */
+  caseImage?: string
   userNickname: string
   userAvatar: string
   createdAt: string

@@ -9,9 +9,8 @@ const now = useClock(1000)
 const { onPointerMove } = useSpotlight()
 
 const groups = computed(() => groupRounds(props.battle.rounds))
-// up to three cases fan out; the rest are a +N
+// up to three cases fan out; the badge counts the rounds
 const fan = computed(() => groups.value.slice(0, 3))
-const more = computed(() => groups.value.length - fan.value.length)
 const pot = computed(() => props.battle.cost * props.battle.size)
 const clock = computed(() => battleClock(props.battle, now.value))
 const round = computed(() => Math.min(props.battle.rounds.length, Math.max(1, clock.value.round + 1)))
@@ -52,8 +51,9 @@ const action = computed(() => ({ waiting: 'pvp.join', live: 'pvp.watch', finishe
         :class="compact ? 'size-20' : 'size-28 lg:size-32'"
         :style="{ '--i': i - (fan.length - 1) / 2, zIndex: 3 - Math.abs(i - (fan.length - 1) / 2) * 2 }"
       />
-      <span class="type-12 absolute right-0 bottom-0 flex items-center gap-1 rounded-md bg-neutral-3 px-2 py-1 text-neutral-12 tabular-nums">
-        <UiIcon name="cases" :size="12" class="text-neutral-10" />{{ battle.rounds.length }}<template v-if="more > 0"> · +{{ more }}</template>
+      <!-- how many rounds (cases to open), one number: the fan above already shows what they are -->
+      <span class="absolute right-0 bottom-0 flex items-center gap-1.5 rounded-lg bg-neutral-3 text-neutral-13 tabular-nums" :class="compact ? 'type-12 px-2 py-1' : 'type-14 px-2.5 py-1'" :title="$t('pvp.roundsN', { n: battle.rounds.length })">
+        <UiIcon name="cases" :size="compact ? 14 : 16" class="text-neutral-11" />{{ battle.rounds.length }}
       </span>
     </div>
 

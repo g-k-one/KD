@@ -184,7 +184,8 @@ function removePiece(p: Piece) {
       </Transition>
 
       <!-- the total centred at the bottom, the same place as the target's price across the dial: the two read as a pair -->
-      <div class="flex items-center justify-center px-4 pb-6">
+      <!-- empty: no "0" — the card reads exactly like the empty target card across the dial -->
+      <div v-if="layout !== 'empty'" class="flex items-center justify-center px-4 pb-6">
         <UiPrice :amount="Math.round(totalShown)" size="xxl" />
       </div>
     </div>
