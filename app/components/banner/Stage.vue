@@ -43,10 +43,8 @@ const props = withDefaults(
     bubble?: string
     bubbleAt?: { x: number; y: number }
     pokeLabel: string
-    /** the most the board grows on desktop (a taller slot grows it up to this) */
-    maxScale?: number
   }>(),
-  { back: () => [], front: () => [], loot: () => [], bubbleAt: () => ({ x: 420, y: 2 }), maxScale: 0.84 },
+  { back: () => [], front: () => [], loot: () => [], bubbleAt: () => ({ x: 420, y: 2 }) },
 )
 const emit = defineEmits<{ poke: [count: number] }>()
 
@@ -74,7 +72,7 @@ defineExpose({ burst })
 const board = useTemplateRef<HTMLElement>('board')
 const slotH = ref(0)
 useResizeObserver(() => board.value?.parentElement, ([e]) => (slotH.value = e!.contentRect.height))
-const k = computed(() => (slotH.value ? Math.min(props.maxScale, (slotH.value / 324) * 0.84) : 0.84))
+const k = computed(() => (slotH.value ? Math.min(0.84, (slotH.value / 324) * 0.84) : 0.84))
 const at = (l: { x: number; y: number; d: number; w?: number }) => ({ left: `${l.x}px`, top: `${l.y}px`, width: l.w ? `${l.w}px` : undefined, '--d': l.d })
 </script>
 

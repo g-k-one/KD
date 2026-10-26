@@ -10,14 +10,13 @@ import type { StageLayer, StageLoot } from '~/components/banner/Stage.vue'
 // The art is a BannerStage: the chicken (drawn after the logo) bursts out of an open case — the case's back, the
 // chicken, the case's front wall — with real catalog skins and KD coins flying around. The fifth poke lays a golden
 // egg — an honest one: it offers the free demo spin every case has.
-// `bare`: no ground, no frame, no side padding and no loot of its own — the full-width band around it (HomeHeroBleed)
-// paints the light and orbits the loot; the words line up with the page's column, the art is bigger and has rays
-// behind it. Every poke goes up to the band too.
+// `bare`: no ground, no frame and no side padding — the full-width band around it (HomeHeroBleed) paints the light;
+// the words line up with the page's column and sit high. The `art` slot replaces the chicken's stage.
 const session = useSessionStore()
 const ui = useUiStore()
 const { dailyReady, welcomeLeft } = useBonuses()
 defineProps<{ bare?: boolean }>()
-const emit = defineEmits<{ start: []; poke: [] }>()
+const emit = defineEmits<{ start: [] }>()
 
 // what the signed-in player is offered, most valuable first
 const offer = computed(() => {
@@ -38,8 +37,6 @@ const BACK: StageLayer[] = [{ src: '/img/hero/case-back.webp', x: 200, y: 76, w:
 const CHICKEN: StageLayer = { src: '/img/hero/chicken.webp', x: 212, y: -6, w: 300, d: 0.6 }
 const FRONT: StageLayer[] = [{ src: '/img/hero/case-front.webp', x: 200, y: 76, w: 330, d: 0.3 }]
 // real catalog skins, so the hero shows what the site pays out; then KD coins
-// bare: light fans turning slowly out of the open case, behind the chicken
-const RAYS = { x: 365, y: 150, color: 'rgb(255 170 60 / 0.3)' }
 const LOOT: StageLoot[] = [
   { src: '/img/items/cs2/butterfly-knife-fade.webp', x: 70, y: 70, w: 150, r: -24, d: 1.4, bx: -28, by: -18 },
   { src: '/img/items/cs2/awp-dragon-lore.webp', x: 400, y: 26, w: 210, r: 16, d: 1.1, bx: 26, by: -22 },
@@ -56,7 +53,6 @@ const PECKS = 5
 const pecks = ref(0)
 const egg = ref(false)
 function onPoke() {
-  emit('poke')
   if (egg.value) return
   pecks.value += 1
   if (pecks.value >= PECKS) {
@@ -84,14 +80,14 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
 
     <!-- The stage. Phones: a band above the text; wider: the right side, rising over the banner's top -->
     <div class="relative -mx-4 -mt-4 mb-2 h-44 sm:absolute sm:inset-y-0 sm:right-0 sm:m-0 sm:h-auto sm:w-[52%] lg:w-[620px]">
+      <slot name="art" />
       <BannerStage
+        v-if="!$slots.art"
         ref="stage"
         :back="BACK"
         :mascot="CHICKEN"
         :front="FRONT"
-        :loot="bare ? [] : LOOT"
-        :rays="bare ? RAYS : undefined"
-        :max-scale="bare ? 1.12 : 0.84"
+        :loot="LOOT"
         :bubble="bubble ? $t(bubble) : ''"
         :poke-label="$t('hero.pokeLabel')"
         @poke="onPoke"
