@@ -474,13 +474,18 @@ function kdCoin(base: string) {
   return coinUrl
 }
 /** Gold drop and the Golden Chicken: gold is drawn in, flash and rays, KD coins with an edge tumble, fall and bounce,
- *  gold feathers burst out, glide and burn away. base — the app's baseURL (useRuntimeConfig().app.baseURL) */
-export async function goldBurst(layer: Layer, el: HTMLElement | null | undefined, scale: number, base: string) {
+ *  gold feathers burst out, glide and burn away. base — the app's baseURL (useRuntimeConfig().app.baseURL).
+ *  o.feathersIn — the feathers come this many ms later (the chicken's pop lands after the burst's draw-in);
+ *  o.feathers — their size against the burst (1 — as on the reel) */
+export async function goldBurst(layer: Layer, el: HTMLElement | null | undefined, scale: number, base: string, o: { feathersIn?: number; feathers?: number } = {}) {
   if (!el) return
   const img = await kdCoin(base.endsWith('/') ? base : `${base}/`)
   // big targets (the 3D chicken) would blow the burst up past the reel: cap it at ~440 px
   const r = el.getBoundingClientRect(), k = Math.min(scale, 440 / Math.max(r.width, r.height, 1))
   // coins fly out and away rather than piling up over the controls under the reel
-  layer.at('goldboom', el, k, false, { floor: false, ...(img ? { img } : {}) })
-  layer.at('feathers:gold', el, k * 0.9)
+  // smooth orange coin rims (Forge rim: 'smooth') instead of the reeded metal edge
+  layer.at('goldboom', el, k, false, { floor: false, rim: 'smooth', ...(img ? { img } : {}) })
+  const feathers = () => layer.at('feathers:gold', el, k * 0.9 * (o.feathers ?? 1))
+  if (o.feathersIn) setTimeout(feathers, o.feathersIn)
+  else feathers()
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CaseDetails, CaseItem, InventoryItem, Item } from '#shared/types/api'
 import { goldenChicken, KURWA_CHICKEN_ID } from '#shared/kurwadrop'
+import type { HenShow } from '~/utils/henShow'
 
 /*
  * Figma "CaseReel". x1 = one horizontal reel under the top/bottom markers,
@@ -216,9 +217,14 @@ function skip() {
   skipping = true
   active.forEach((a) => a.finish())
   burst.value?.stop()
+  hens.splice(0).forEach((h) => h.stop())
 }
 /** The gold 3D "KURWADROP!" over the reel (CaseKurwaBurst); mounted only while KURWADROP is on */
-const burst = ref<{ play(fast?: boolean): Promise<boolean>; stop(): void; active: boolean } | null>(null)
+const burst = ref<{ play(fast?: boolean): Promise<boolean>; shout(word: string, fast?: boolean): void; blast(): void; stop(): void; active: boolean } | null>(null)
+/** KURWADROP's chicken (henShow): the logo on the tile turns into the Spine chicken, which screams and pops */
+const hens: HenShow[] = []
+const henOn = ref(false)
+const { t } = useI18n()
 
 // Gold drops shake the frame once
 const shaking = ref(false)
@@ -397,20 +403,65 @@ async function spin(winners: Item[], fast: boolean, kurwa: boolean[] = []) {
   await run(winners.map((w, i) => (kurwa[i] ? chicken.value : w)), fast, all)
 
   if (hits.length) {
-    // The chicken grows, screams, and the respin starts among the expensive items only
+    // The chicken comes out of the gold logo, screams and pops (henShow), then the respin starts among the expensive items
     chickenHit.value = all.map((i) => kurwa[i]!)
     kurwaCols.value = hits
-    sfx.squawk()
     haptics.jackpot()
-    // one burst per chicken: skip a hit element nested in another one
-    nextTick(() => root.value?.querySelectorAll<HTMLElement>('.kd-chicken-hit').forEach((el) => el.parentElement?.closest('.kd-chicken-hit') || goldBurst(fxTop, el, 2, appBase)))
-    shaking.value = true
-    setTimeout(() => (shaking.value = false), 600)
-    // the 3D label fits the same pause; without 3D (no WebGL, reduced motion) — the plain banner and the pause
-    const shown = !skipping && burst.value ? burst.value.play(fast) : Promise.resolve(false)
-    await Promise.all([wait(fast ? 900 : 1700), shown])
+    await nextTick()
+    // one per chicken: skip a hit element nested in another one
+    const els = [...(root.value?.querySelectorAll<HTMLElement>('.kd-chicken-hit') ?? [])].filter((el) => !el.parentElement?.closest('.kd-chicken-hit'))
+    let played = false
+    if (!skipping && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      for (const [n, el] of els.entries()) {
+        const logo = el.querySelector<HTMLElement>('.kd-art-img')
+        if (!logo) continue
+        hens.push(
+          henShow(logo, el, {
+            base: appBase,
+            fast,
+            // phones: the whole chicken a size smaller (the logo zooms to match, so the swap still lines up)
+            scale: isMobile.value ? 0.78 : 1,
+            // sounds, the shout and the shake once, from the first chicken; the gold burst on each
+            swap: () => n || sfx.henSwap(),
+            body: () => n || sfx.henBody(),
+            scream: () => {
+              if (n) return
+              sfx.henScream(fast)
+              burst.value?.shout(t('case.kurwaShout'), fast)
+            },
+            inflate: () => n || sfx.henInflate(fast),
+            boom: () => goldBurst(fxTop, el, 2, appBase, { feathersIn: fast ? 75 : 150, feathers: 1.6 }),
+            pop: () => {
+              if (n) return
+              sfx.henPop()
+              haptics.jackpot()
+              burst.value?.blast()
+              shaking.value = true
+              setTimeout(() => (shaking.value = false), 600)
+            },
+          }),
+        )
+      }
+      if (hens.length) {
+        henOn.value = true
+        played = (await Promise.all(hens.map((h) => h.done))).some(Boolean)
+        hens.length = 0
+      }
+    }
+    if (!played) {
+      // no chicken (reduced motion, no WebGL, a skip): the card grows and squawks under the gold burst and the label
+      henOn.value = false
+      sfx.squawk()
+      els.forEach((el) => goldBurst(fxTop, el, 2, appBase))
+      shaking.value = true
+      setTimeout(() => (shaking.value = false), 600)
+      // the 3D label fits the same pause; without 3D (no WebGL, reduced motion) — the plain banner and the pause
+      const shown = !skipping && burst.value ? burst.value.play(fast) : Promise.resolve(false)
+      await Promise.all([wait(fast ? 900 : 1700), shown])
+    }
     respinning.value = true
     chickenHit.value = []
+    henOn.value = false
     await run(winners, fast, hits, kurwaPool.value)
     respinning.value = false
     kurwaCols.value = []
@@ -435,7 +486,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     class="kd-reel relative rounded-5xl"
     :title="phase === 'spinning' ? $t('case.skipHint') : undefined"
     @click="phase === 'spinning' && skip()"
-    :class="[shaking && 'is-shaking', punch && 'is-punch', tense.some(Boolean) && 'is-tense', (respinning || chickenHit.some(Boolean)) && 'is-kurwa', phase, horizontal ? 'is-h h-68 sm:h-[278px]' : 'is-v', grid ? 'is-grid' : !horizontal && 'h-[278px]']"
+    :class="[shaking && 'is-shaking', punch && 'is-punch', tense.some(Boolean) && 'is-tense', (respinning || chickenHit.some(Boolean)) && 'is-kurwa', henOn && 'is-hen', phase, horizontal ? 'is-h h-68 sm:h-[278px]' : 'is-v', grid ? 'is-grid' : !horizontal && 'h-[278px]']"
     :style="{ ...(grid ? { height: `${MOBILE_H}px` } : {}) }"
   >
     <!-- Forge layer: behind the cards, and not clipped by the frame — it reaches 128px past the top and the bottom
@@ -572,6 +623,8 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
         <div v-if="grid" class="kd-markers-v pointer-events-none absolute inset-0">
           <img src="/img/fx/marker-top.svg" alt="" class="kd-marker-a absolute" />
           <img src="/img/fx/marker-top.svg" alt="" class="kd-marker-b absolute" />
+          <img src="/img/fx/marker-top-gold.svg" alt="" class="kd-marker-a kd-marker-gold absolute" />
+          <img src="/img/fx/marker-top-gold.svg" alt="" class="kd-marker-b kd-marker-gold absolute" />
         </div>
       </div>
     </div>
@@ -661,6 +714,8 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     <div v-if="!grid" class="pointer-events-none absolute inset-0 overflow-hidden" :class="markerClass">
       <img src="/img/fx/marker-top.svg" alt="" class="kd-marker-a absolute" />
       <img src="/img/fx/marker-top.svg" alt="" class="kd-marker-b absolute" />
+      <img src="/img/fx/marker-top-gold.svg" alt="" class="kd-marker-a kd-marker-gold absolute" />
+      <img src="/img/fx/marker-top-gold.svg" alt="" class="kd-marker-b kd-marker-gold absolute" />
     </div>
   </div>
 </template>
@@ -943,6 +998,34 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   z-index: 2;
   animation: kd-chicken 1.6s var(--ease-spring) both;
 }
+/* KURWADROP's chicken (henShow): the card stays put; the logo breathes in (x1.55 in 0.12 s, Fast 0.06 s) and is gone at
+   the flash's peak, where the Spine chicken's head appears at that same size; at the pop the logo springs back */
+.kd-reel.is-hen .kd-chicken-hit {
+  animation: none;
+}
+.kd-chicken-hit.is-hen-out .kd-art-img {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(var(--hen-zoom, 1.55));
+  transition:
+    opacity 0s calc(0.12s * var(--hen-k, 1)),
+    transform calc(0.12s * var(--hen-k, 1)) cubic-bezier(0.55, 0, 1, 0.45);
+}
+.kd-chicken-hit.is-hen-back .kd-art-img {
+  animation: kd-hen-back 0.6s var(--ease-spring) both;
+}
+@keyframes kd-hen-back {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
 @keyframes kd-chicken {
   0% {
     transform: scale(1);
@@ -968,6 +1051,9 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   }
 }
 /* KURWADROP: the whole frame goes gold — a thicker rim, the edge gradient and the markers */
+.kd-reel {
+  transition: box-shadow var(--dur-slow) var(--ease-out);
+}
 .kd-reel.is-kurwa {
   box-shadow: 0 0 0 3px var(--color-item-gold), 0 0 56px -6px var(--color-item-gold);
   background:
@@ -979,10 +1065,14 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
     linear-gradient(180deg, var(--color-neutral-4) 10%, var(--color-item-gold) 50%, var(--color-neutral-4) 90%) border-box;
 }
-/* the marker art is an orange gradient: shift it to gold and give it a gold glow */
-.kd-reel.is-kurwa .kd-marker-a,
-.kd-reel.is-kurwa .kd-marker-b {
-  filter: hue-rotate(26deg) saturate(1.15) brightness(1.2) drop-shadow(0 0 6px rgb(228 174 57 / 0.85));
+/* the markers' gold twin (the frame's gold at the base, light gold at the tip) fades in over the orange ones with the
+   gold frame, so the arrows flow out of the rim instead of an orange shape tinted by a filter */
+.kd-marker-gold {
+  opacity: 0;
+  filter: drop-shadow(0 0 6px rgb(228 174 57 / 0.85));
+}
+.kd-reel.is-kurwa .kd-marker-gold {
+  opacity: 1;
 }
 .kd-kurwa-banner {
   background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light), var(--color-item-gold));

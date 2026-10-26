@@ -40,6 +40,21 @@ const GOLD = {
   drag: false,
 }
 
+// KURWADROP's chicken screams: the shout is matte gold turned sideways (K nearest), no outline and no halo
+const SHOUT = {
+  face: ['#ffe9a8', '#f5c649', '#d0921c'],
+  side: ['#c98a1a', '#3a1c00'],
+  metal: 0,
+  gloss: 0.12,
+  strokes: [],
+  glow: { ...GOLD.glow, strength: 0 },
+  depth: 16,
+  yaw: 22,
+  pitch: 5,
+  persp: 800,
+}
+const LOOK = { face: GOLD.face, side: GOLD.side, metal: GOLD.metal, gloss: GOLD.gloss, strokes: GOLD.strokes, glow: GOLD.glow, depth: GOLD.depth, yaw: GOLD.yaw, pitch: GOLD.pitch, persp: GOLD.persp }
+
 onMounted(async () => {
   if (!box.value) return
   const narrow = box.value.clientWidth < 480
@@ -65,7 +80,7 @@ function play(fast = false): Promise<boolean> {
   return new Promise((resolve) => {
     t.ready.then(() => {
       if (run !== my) return resolve(true)
-      t.set({ text: props.text })
+      t.set({ ...LOOK, text: props.text })
       // in: letters pop from the centre, a flash on top
       t.play('pop', { speed, from: 'center' })
       t.play('flash', { speed })
@@ -89,6 +104,40 @@ function play(fast = false): Promise<boolean> {
   })
 }
 
+/**
+ * The chicken's shout (henShow's scream): `word` typed out — the first letters quickly, then one more letter every
+ * 140 ms (only the new one pops) — then a shake; blast() blows it apart at the pop. Fast — twice as fast.
+ */
+function shout(word: string, fast = false) {
+  const t = label
+  if (!t) return
+  stop()
+  const my = ++run
+  const k = fast ? 0.5 : 1
+  active.value = true
+  t.ready.then(() => {
+    if (run !== my) return
+    t.set({ ...SHOUT, text: word[0] })
+    t.play('pop')
+    t.play('flash')
+    let ms = 0
+    for (let i = 1; i < word.length; i++) {
+      ms += (i < 5 ? 75 : i < word.length - 1 ? 140 : 120) * k
+      later(ms, () => run === my && t.swap(word.slice(0, i + 1), { style: 'pop' }))
+    }
+    later(ms + 100 * k, () => run === my && t.play('shake', { time: 0.5 * k }))
+  })
+}
+function blast() {
+  const t = label
+  if (!t) return
+  const my = run
+  t.play('blast')
+  later(700, () => {
+    if (run === my) active.value = false
+  })
+}
+
 /** Skip: gone at once */
 function stop() {
   run++
@@ -98,7 +147,7 @@ function stop() {
   label?.set({ text: ' ' })
 }
 
-defineExpose({ play, stop, active })
+defineExpose({ play, shout, blast, stop, active })
 </script>
 
 <template>

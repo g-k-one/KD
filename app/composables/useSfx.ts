@@ -52,6 +52,71 @@ export function useSfx() {
     osc.stop(a.currentTime + duration)
   }
 
+  /** One voice for the chicken's sounds: an oscillator (or noise) through an optional filter, shaped by an envelope */
+  function voice(
+    dur: number,
+    gain: number,
+    build: (a: AudioContext, t: number) => { src: AudioScheduledSourceNode; out: AudioNode },
+  ) {
+    const s = settings.settings
+    if (!s.sound || s.volume <= 0) return
+    const a = audio()
+    if (!a) return
+    const t = a.currentTime
+    const { src, out } = build(a, t)
+    const g = a.createGain()
+    g.gain.setValueAtTime(0.0001, t)
+    g.gain.exponentialRampToValueAtTime(gain * (s.volume / 100), t + Math.min(0.02, dur * 0.2))
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur)
+    out.connect(g).connect(a.destination)
+    src.start(t)
+    src.stop(t + dur + 0.02)
+  }
+  let noiseBuf: AudioBuffer | null = null
+  function noise(a: AudioContext) {
+    if (!noiseBuf) {
+      noiseBuf = a.createBuffer(1, a.sampleRate, a.sampleRate)
+      const d = noiseBuf.getChannelData(0)
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
+    }
+    const n = a.createBufferSource()
+    n.buffer = noiseBuf
+    n.loop = true
+    return n
+  }
+  /** Noise through a band/low-pass whose cutoff sweeps f0 → f1 */
+  function swish(f0: number, f1: number, dur: number, gain: number, type: BiquadFilterType = 'bandpass') {
+    voice(dur, gain, (a, t) => {
+      const n = noise(a)
+      const f = a.createBiquadFilter()
+      f.type = type
+      f.Q.value = type === 'bandpass' ? 2.2 : 0.7
+      f.frequency.setValueAtTime(f0, t)
+      f.frequency.exponentialRampToValueAtTime(f1, t + dur)
+      n.connect(f)
+      return { src: n, out: f }
+    })
+  }
+  /** A tone that glides f0 → f1, optionally wobbling (vibrato rate/depth in Hz) */
+  function glide(f0: number, f1: number, dur: number, gain: number, type: OscillatorType, wob = 0, wobDepth = 0, glideFor = dur) {
+    voice(dur, gain, (a, t) => {
+      const o = a.createOscillator()
+      o.type = type
+      o.frequency.setValueAtTime(f0, t)
+      o.frequency.exponentialRampToValueAtTime(f1, t + glideFor)
+      if (wob) {
+        const lfo = a.createOscillator()
+        const lg = a.createGain()
+        lfo.frequency.value = wob
+        lg.gain.value = wobDepth
+        lfo.connect(lg).connect(o.frequency)
+        lfo.start(t)
+        lfo.stop(t + dur + 0.02)
+      }
+      return { src: o, out: o }
+    })
+  }
+
   /** Result revealed: a longer, brighter arpeggio the rarer the drop (tier 0–4, or true for "rare") */
   function reveal(tier: number | boolean) {
     const t = tier === true ? 3 : tier === false ? 0 : tier
@@ -64,6 +129,46 @@ export function useSfx() {
     squawk: () => {
       sweep(700, 1500, 0.32, 0.12)
       setTimeout(() => sweep(800, 1700, 0.42, 0.12), 260)
+    },
+    /** KURWADROP's chicken (henShow): the logo zooms in with a rising swish and turns into the head with a bright ting */
+    henSwap: () => {
+      swish(500, 4200, 0.13, 0.12)
+      setTimeout(() => blip(1760, 0.22, 0.07), 120)
+    },
+    /** ...its body springs out of the head */
+    henBody: () => glide(220, 560, 0.26, 0.1, 'sine', 14, 40),
+    /** ...the scream: a sawtooth "AAAA" through a vowel-like band, rising then shaking (Fast: half as long) */
+    henScream: (fast = false) => {
+      const dur = fast ? 0.6 : 1.15
+      voice(dur, 0.1, (a, t) => {
+        const o = a.createOscillator()
+        o.type = 'sawtooth'
+        o.frequency.setValueAtTime(480, t)
+        o.frequency.exponentialRampToValueAtTime(940, t + 0.12)
+        o.frequency.exponentialRampToValueAtTime(820, t + dur)
+        const lfo = a.createOscillator()
+        const lg = a.createGain()
+        lfo.frequency.value = 8
+        lg.gain.value = 55
+        lfo.connect(lg).connect(o.frequency)
+        lfo.start(t)
+        lfo.stop(t + dur + 0.02)
+        const f = a.createBiquadFilter()
+        f.type = 'bandpass'
+        f.frequency.value = 1150
+        f.Q.value = 1.4
+        o.connect(f)
+        return { src: o, out: f }
+      })
+      setTimeout(() => sweep(900, 1800, 0.3, 0.06), 60)
+    },
+    /** ...the belly stretches: a rubbery squeak rising with a fast tremble */
+    henInflate: (fast = false) => glide(300, 1150, fast ? 0.2 : 0.4, 0.07, 'triangle', 18, 60),
+    /** ...the pop: a noise burst, a low thump and a sparkle of coins */
+    henPop: () => {
+      swish(5000, 260, 0.38, 0.22, 'lowpass')
+      glide(140, 40, 0.28, 0.24, 'sine')
+      ;[1320, 1760, 2350].forEach((f, i) => setTimeout(() => blip(f, 0.16, 0.05), 90 + i * 70))
     },
     /** Reel passes a card */
     tick: () => blip(1400, 0.035, 0.05, 'square'),
