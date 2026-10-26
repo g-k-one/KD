@@ -16,6 +16,7 @@ const { onMove, onLeave, vars } = usePointerTilt()
     <div class="mx-auto max-w-content">
       <HomeHeroBanner bare @start="emit('start')">
         <template #art><HomeHeroDrop /></template>
+        <template #aside><HomeHeroDrop part="tag" /></template>
       </HomeHeroBanner>
     </div>
   </section>
