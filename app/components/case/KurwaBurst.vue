@@ -55,13 +55,38 @@ const SHOUT = {
 }
 const LOOK = { face: GOLD.face, side: GOLD.side, metal: GOLD.metal, gloss: GOLD.gloss, strokes: GOLD.strokes, glow: GOLD.glow, depth: GOLD.depth, yaw: GOLD.yaw, pitch: GOLD.pitch, persp: GOLD.persp }
 
+let depth = SHOUT.depth
 onMounted(async () => {
   if (!box.value) return
   const narrow = box.value.clientWidth < 480
+  if (narrow) depth = 11
   // built in the shout's style from the start: the chicken's scream then only types letters (a style change rebuilds
   // the glyphs in the worker, and that landed on the scream itself as a hitch); the plain label restyles on its rare path
-  label = await ex.mount(box.value, { ...GOLD, ...SHOUT, ...(narrow && { depth: 11 }), text: ' ', charset: props.text, fit: props.text })
+  label = await ex.mount(box.value, { ...GOLD, ...SHOUT, depth, text: ' ', charset: props.text, fit: props.text })
 })
+
+/**
+ * Moves the box so `word` stands centred on `at` (a viewport x: the screaming chicken), as far as it still fits inside
+ * the box's own width. The engine's font size is fitted the same way (the fit line across, the box's height), so the
+ * word's width is known before it is typed; a word as wide as the box stays put.
+ */
+function aim(word: string, at?: number) {
+  const el = box.value
+  if (!el) return
+  el.style.translate = ''
+  if (at == null) return
+  const room = depth * GOLD.pad * 2 + 8 + GOLD.glow.size * 2
+  const x = (aim.ctx ??= document.createElement('canvas').getContext('2d')!)
+  x.font = GOLD.font.replace('{s}', '100')
+  const fs = Math.min((el.clientWidth - room) / x.measureText(props.text).width * 100, (el.clientHeight - room) / 1.05)
+  // the turned word's near end (K) comes out bigger than its flat width: a margin keeps it off the reel's frame
+  const w = (x.measureText(word).width * fs) / 100
+  const free = Math.max(0, (el.clientWidth - w * 1.12 - room) / 2)
+  const r = el.getBoundingClientRect()
+  const dx = Math.max(-free, Math.min(free, at - (r.left + r.width / 2)))
+  el.style.translate = `${Math.round(dx)}px 0`
+}
+aim.ctx = null as CanvasRenderingContext2D | null
 onBeforeUnmount(() => {
   stop()
   label?.destroy()
@@ -75,6 +100,7 @@ function play(fast = false): Promise<boolean> {
   const t = label
   if (!t) return Promise.resolve(false)
   stop()
+  aim(props.text)
   const my = ++run
   const k = fast ? 0.5 : 1
   const speed = 1 / k
@@ -108,12 +134,14 @@ function play(fast = false): Promise<boolean> {
 
 /**
  * The chicken's shout (henShow's scream): `word` typed out — the first letters quickly, then one more letter every
- * 140 ms (only the new one pops) — then a shake; blast() blows it apart at the pop. Fast — twice as fast.
+ * 140 ms (only the new one pops) — then a shake; blast() blows it apart at the pop. Fast — twice as fast. `at`: the
+ * chicken's centre (viewport x) — a chicken off the reel's middle (multi-open) shouts from its own place.
  */
-function shout(word: string, fast = false) {
+function shout(word: string, fast = false, at?: number) {
   const t = label
   if (!t) return
   stop()
+  aim(word, at)
   const my = ++run
   const k = fast ? 0.5 : 1
   active.value = true

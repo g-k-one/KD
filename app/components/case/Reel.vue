@@ -220,7 +220,7 @@ function skip() {
   hens.splice(0).forEach((h) => h.stop())
 }
 /** The gold 3D "KURWADROP!" over the reel (CaseKurwaBurst); mounted only while KURWADROP is on */
-const burst = ref<{ play(fast?: boolean): Promise<boolean>; shout(word: string, fast?: boolean): void; blast(): void; stop(): void; active: boolean } | null>(null)
+const burst = ref<{ play(fast?: boolean): Promise<boolean>; shout(word: string, fast?: boolean, at?: number): void; blast(): void; stop(): void; active: boolean } | null>(null)
 /** KURWADROP's chicken (henShow): the logo on the tile turns into the Spine chicken, which screams and pops */
 const hens: HenShow[] = []
 const henOn = ref(false)
@@ -443,7 +443,8 @@ async function spin(winners: Item[], fast: boolean, kurwa: boolean[] = []) {
               screaming.value = true
               setTimeout(() => (screaming.value = false), fast ? 520 : 1050)
               sfx.henScream(fast)
-              burst.value?.shout(t('case.kurwaShout'), fast)
+              const r = el.getBoundingClientRect()
+              burst.value?.shout(t('case.kurwaShout'), fast, r.left + r.width / 2)
             },
             inflate: () => n || sfx.henInflate(fast),
             boom: () => goldBurst(fxTop, el, 2, appBase, { feathersIn: fast ? 75 : 150, feathers: 1.6 }),
