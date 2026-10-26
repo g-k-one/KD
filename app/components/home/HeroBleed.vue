@@ -2,21 +2,21 @@
 /*
  * Home banner, full width: one scene from edge to edge with no frame. The light pours from the top as a wide warm arc
  * and dissolves into the page (the imigo final call's glow, turned upside down); the words line up with the page's
- * column and sit high. Right: today's top drop, big (HomeHeroDrop), leaning toward the pointer anywhere on the band.
+ * column, the same air above and below them. Right: the chicken, big, rising out of the band's foot (HomeHeroChicken),
+ * leaning toward the pointer anywhere on the band; it fades out at the waist.
  */
 const emit = defineEmits<{ start: [] }>()
 const { onMove, onLeave, vars } = usePointerTilt()
 </script>
 
 <template>
-  <section class="kd-bleed relative isolate pt-4 pb-6 lg:pt-10 lg:pb-2" :style="vars" @pointermove="onMove" @pointerleave="onLeave">
+  <section class="kd-bleed relative isolate pt-4 pb-6 lg:py-10" :style="vars" @pointermove="onMove" @pointerleave="onLeave">
     <!-- the light: an arc of warm colour hanging from the top, brightest in the middle, gone before the page -->
     <span class="kd-glow pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
 
     <div class="mx-auto max-w-content">
       <HomeHeroBanner bare @start="emit('start')">
-        <template #art><HomeHeroDrop /></template>
-        <template #aside><HomeHeroDrop part="tag" /></template>
+        <template #art="{ poke, bubble, pokes }"><HomeHeroChicken :bubble="bubble" :pokes="pokes" @poke="poke" /></template>
       </HomeHeroBanner>
     </div>
   </section>
