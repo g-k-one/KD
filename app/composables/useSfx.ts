@@ -14,13 +14,14 @@ function audio() {
 
 // KURWADROP's chicken: recorded sounds in one sprite (public/sfx/hen.mp3, generated in KREA with Seed Audio: cartoonish
 // and soft, the scream is the chicken shouting KURWAAAA), [start, length] s; each trimmed with long fade-outs and the
-// same light room echo baked in, so one sound flows into the next
+// same light room echo baked in, so one sound flows into the next. The stretch starts where its squeak gets loud and the
+// pop just before its bang, so neither lags the picture
 const HEN: Record<'swap' | 'body' | 'scream' | 'inflate' | 'pop', [number, number]> = {
   swap: [0, 0.705],
   body: [0.905, 0.645],
   scream: [1.75, 1.415],
-  inflate: [3.365, 0.628],
-  pop: [4.193, 2.475],
+  inflate: [3.575, 0.418],
+  pop: [4.35, 2.318],
 }
 let henBuf: Promise<AudioBuffer | null> | null = null
 
@@ -51,8 +52,10 @@ export function useSfx() {
       const g = a.createGain()
       src.buffer = buf
       const l = Math.min(len ?? d, d)
-      g.gain.setValueAtTime(gain * (s.volume / 100), a.currentTime)
-      g.gain.setValueAtTime(gain * (s.volume / 100), a.currentTime + Math.max(0, l - 0.08))
+      // a 5 ms fade-in: a cut may start mid-wave (the pop starts right at its bang), which would click
+      g.gain.setValueAtTime(0.0001, a.currentTime)
+      g.gain.linearRampToValueAtTime(gain * (s.volume / 100), a.currentTime + 0.005)
+      g.gain.setValueAtTime(gain * (s.volume / 100), a.currentTime + Math.max(0.005, l - 0.08))
       g.gain.linearRampToValueAtTime(0.0001, a.currentTime + l)
       src.connect(g).connect(a.destination)
       src.start(0, t0, l)
@@ -186,8 +189,8 @@ export function useSfx() {
       swish(500, 4200, 0.13, 0.12)
       setTimeout(() => blip(1760, 0.22, 0.07), 120)
     },
-    /** ...its body springs out of the head: a soft bouncy bloop, a beat late so it flows out of the swap's ting */
-    henBody: () => void setTimeout(() => hen('body', undefined, 0.65), 160),
+    /** ...its body springs out of the head: a soft bouncy bloop, a hair after the swap's ting so they don't land as one */
+    henBody: () => void setTimeout(() => hen('body', undefined, 0.65), 50),
     /** ...the scream: the chicken shouts KURWAAAA (Fast cuts it before the stretch starts); the synth squawks without the sprite */
     henScream: (fast = false) => {
       if (!hen('scream', fast ? 0.5 : undefined, 0.95)) squawkNow()
