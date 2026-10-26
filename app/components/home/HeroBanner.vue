@@ -74,7 +74,7 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
 <template>
   <section
     class="kd-hero relative isolate flex flex-col p-4 sm:min-h-60 sm:flex-row sm:py-6 lg:gap-6 lg:py-10"
-    :class="bare ? 'overflow-visible sm:px-4 lg:h-[420px] lg:px-0' : 'overflow-hidden rounded-4xl sm:rounded-5xl sm:px-8 lg:h-80 lg:overflow-visible lg:rounded-[32px] lg:px-10'"
+    :class="bare ? 'overflow-visible sm:px-4 lg:h-[420px] xl:px-0' : 'overflow-hidden rounded-4xl sm:rounded-5xl sm:px-8 lg:h-80 lg:overflow-visible lg:rounded-[32px] lg:px-10'"
     :style="vars"
     @pointermove="onMove"
     @pointerleave="onLeave"

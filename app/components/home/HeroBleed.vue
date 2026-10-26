@@ -75,7 +75,7 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
 </script>
 
 <template>
-  <section ref="band" class="kd-bleed relative isolate pt-4 pb-6 lg:pt-10 lg:pb-12" :style="vars" @pointermove="enter" @pointerleave="leave">
+  <section ref="band" class="kd-bleed relative isolate pt-4 pb-6 lg:pt-10 lg:pb-2" :style="vars" @pointermove="enter" @pointerleave="leave">
     <!-- the light: an arc of warm colour hanging from the top, brightest in the middle, gone before the page -->
     <span class="kd-glow pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
 
@@ -85,7 +85,7 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
         <div class="kd-ring-spin">
           <span class="kd-ring-line" />
           <span v-for="o in ORBIT" :key="o.src" class="kd-ring-slot" :style="{ '--a': `${o.a}deg` }">
-            <img :src="o.src" alt="" class="kd-ring-face" :style="{ width: `${o.w}px` }" draggable="false" />
+            <img :src="o.src" alt="" class="kd-ring-face" :style="{ '--w': `${o.w}px` }" draggable="false" />
           </span>
         </div>
       </div>
@@ -101,7 +101,7 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
         <div class="kd-ring-spin">
           <span class="kd-ring-line" />
           <span v-for="o in ORBIT" :key="o.src" class="kd-ring-slot" :style="{ '--a': `${o.a}deg` }">
-            <img :src="o.src" alt="" class="kd-ring-face" :style="{ width: `${o.w}px` }" draggable="false" />
+            <img :src="o.src" alt="" class="kd-ring-face" :style="{ '--w': `${o.w}px` }" draggable="false" />
           </span>
         </div>
       </div>
@@ -193,6 +193,7 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
   position: absolute;
   left: 0;
   top: 0;
+  width: calc(var(--w) * var(--s, 1));
   max-width: none;
   translate: -50% -50%;
   transform: rotateX(-64deg);
@@ -208,6 +209,7 @@ watch(onScreen, (v) => anims.forEach((a) => (v ? a.play() : a.pause())))
 @media (max-width: 1599px) {
   .kd-ring {
     --r: 240px;
+    --s: 0.75;
   }
 }
 /* small laptops: no room for the ring beside the column's edge */
