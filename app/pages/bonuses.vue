@@ -190,7 +190,7 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
     <!-- no page bar: the banner opens the page, like the home page's and Provably Fair's -->
     <section
-      class="relative isolate flex min-h-80 flex-col overflow-hidden rounded-5xl px-5 pt-6 pb-6 lg:min-h-0 lg:overflow-visible lg:p-10"
+      class="relative isolate flex min-h-80 flex-col overflow-hidden rounded-5xl px-5 pt-6 pb-6 lg:h-80 lg:min-h-0 lg:overflow-visible lg:rounded-[32px] lg:p-10"
       :style="vars"
       @pointermove="onMove"
       @pointerleave="onLeave"

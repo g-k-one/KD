@@ -66,7 +66,7 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
 
 <template>
   <section
-    class="kd-hero relative isolate flex flex-col overflow-hidden rounded-4xl lg:overflow-visible p-4 sm:min-h-60 sm:flex-row sm:rounded-5xl sm:px-8 sm:py-6 lg:gap-6 lg:p-10"
+    class="kd-hero relative isolate flex flex-col overflow-hidden rounded-4xl lg:overflow-visible p-4 sm:min-h-60 sm:flex-row sm:rounded-5xl sm:px-8 sm:py-6 lg:h-80 lg:gap-6 lg:rounded-[32px] lg:p-10"
     :style="vars"
     @pointermove="onMove"
     @pointerleave="onLeave"
@@ -107,14 +107,14 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
 
     <!-- the fifth poke: a golden egg, and the free demo spin it stands for -->
     <Transition name="kd-egg">
-      <div v-if="egg" class="kd-hero-egg absolute top-3 right-3 z-20 flex max-w-[290px] items-center gap-3 rounded-2xl p-3 sm:top-auto sm:right-6 sm:bottom-6 lg:right-10 lg:bottom-10">
-        <span class="kd-hero-egg-icon grid size-11 shrink-0 place-items-center rounded-xl"><UiIcon name="egg" :size="24" /></span>
-        <div class="flex min-w-0 flex-col gap-1">
-          <span class="type-14-caps text-gold-light">{{ $t('hero.eggTitle') }}</span>
+      <div v-if="egg" class="kd-hero-egg absolute top-3 right-3 z-20 grid w-[280px] grid-cols-[56px_minmax(0,1fr)] items-center gap-x-3 gap-y-3 rounded-3xl p-4 sm:top-auto sm:right-6 sm:bottom-6 lg:right-10 lg:bottom-10">
+        <span class="kd-hero-egg-icon grid size-14 place-items-center rounded-2xl"><UiIcon name="egg" :size="30" /></span>
+        <div class="flex min-w-0 flex-col gap-0.5 pr-5">
+          <span class="type-16-caps text-gold-light">{{ $t('hero.eggTitle') }}</span>
           <span class="type-12-regular text-neutral-13">{{ $t('hero.eggText') }}</span>
-          <UiButton variant="gold" size="s" icon="demo" to="/case/kurwa-classic?demo=1" class="mt-1 self-start">{{ $t('hero.eggCta') }}</UiButton>
         </div>
-        <button type="button" class="kd-hit absolute top-2 right-2 text-neutral-11 hover:text-neutral-15" :aria-label="$t('hero.eggClose')" @click="closeEgg">
+        <UiButton size="m" icon="demo" to="/case/kurwa-classic?demo=1" class="col-span-2 w-full">{{ $t('hero.eggCta') }}</UiButton>
+        <button type="button" class="kd-hit absolute top-3 right-3 text-neutral-11 hover:text-neutral-15" :aria-label="$t('hero.eggClose')" @click="closeEgg">
           <UiIcon name="close" :size="16" />
         </button>
       </div>
@@ -131,7 +131,9 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
     linear-gradient(110deg, var(--color-neutral-2) 30%, #2a1209 100%);
 }
 .kd-hero-egg {
-  background: rgb(12 13 16 / 0.9);
+  background:
+    radial-gradient(70% 90% at 15% 30%, rgb(245 198 73 / 0.22), transparent 70%),
+    rgb(12 13 16 / 0.92);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 55%, transparent),
     0 12px 32px rgb(0 0 0 / 0.5);
@@ -140,7 +142,9 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
 .kd-hero-egg-icon {
   color: #3a2400;
   background: linear-gradient(180deg, #ffe58a, #f5b82e 55%, var(--color-gold-dark));
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    0 0 24px rgb(245 198 73 / 0.45);
 }
 .kd-egg-enter-active {
   transition:

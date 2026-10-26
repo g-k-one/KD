@@ -52,7 +52,7 @@ const streamer = computed({ get: () => s.value.streamerMode, set: (v) => setting
 
     <div class="flex flex-col gap-1.5 rounded-[10px] bg-neutral-3 p-3">
       <div class="flex items-center gap-2">
-        <UiIcon name="streamer" :size="20" class="text-neutral-15" />
+        <UiIcon name="streamer" :size="20" class="transition-colors" :class="streamer ? 'text-brand-light' : 'text-neutral-12'" />
         <span class="type-14-caps flex-1">{{ $t('settings.streamerMode') }}</span>
         <UiToggle v-model="streamer" :label="$t('settings.streamerMode')" />
       </div>

@@ -99,7 +99,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
     <!-- no page bar: the banner opens the page, like the home page's -->
     <!-- Hero -->
     <section
-      class="relative isolate flex min-h-80 flex-col overflow-hidden rounded-5xl px-5 pt-6 pb-6 lg:min-h-0 lg:overflow-visible lg:p-10"
+      class="relative isolate flex min-h-80 flex-col overflow-hidden rounded-5xl px-5 pt-6 pb-6 lg:h-80 lg:min-h-0 lg:overflow-visible lg:rounded-[32px] lg:p-10"
       :style="vars"
       @pointermove="onMove"
       @pointerleave="onLeave"
