@@ -113,7 +113,7 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
 .kd-unfold > div {
   overflow: hidden;
 }
-/* Phones only (a scoped display rule beats Tailwind's lg:hidden) */
+/* Phones only (a scoped display rule beats the lg:hidden utility) */
 @media (min-width: 64rem) {
   .kd-unfold {
     display: none;

@@ -808,7 +808,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     opacity: 0;
   }
 }
-/* Centring comes from Tailwind's `translate` property, so the float only touches `transform` */
+/* Centring comes from the utilities' `translate` property, so the float only touches `transform` */
 @keyframes kd-case-float {
   50% {
     transform: translateY(-8px);

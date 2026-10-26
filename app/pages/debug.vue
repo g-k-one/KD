@@ -322,7 +322,6 @@ const motionKey = ref(0)
 </template>
 
 <style>
-@reference '~/assets/css/main.css';
 
 /* Shared by the debug/* components (unscoped on purpose) */
 .dbg-card {

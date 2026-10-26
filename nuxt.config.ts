@@ -1,5 +1,3 @@
-import tailwindcss from '@tailwindcss/vite'
-
 // KD_ARTIFACT=1 → static SPA for the claude.ai artifact: no server, hash routes,
 // relative asset paths, in-browser mock API (app/plugins/00.client-mock.client.ts).
 const artifact = !!process.env.KD_ARTIFACT
@@ -20,12 +18,11 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
-  modules: ['@pinia/nuxt', '@vueuse/nuxt', '@nuxtjs/i18n', '@nuxt/fonts', '@nuxt/image'],
+  modules: ['@unocss/nuxt', '@pinia/nuxt', '@vueuse/nuxt', '@nuxtjs/i18n', '@nuxt/fonts', '@nuxt/image'],
 
   css: ['~/assets/css/main.css'],
 
   vite: {
-    plugins: [tailwindcss()],
     // The artifact host caps a version at 511 files: one stylesheet instead of one per component
     ...(artifact && { build: { cssCodeSplit: false } }),
     // and small client JS chunks merged into their neighbours (the skin pictures alone take ~360 of the files)

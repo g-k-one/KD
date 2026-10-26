@@ -1,15 +1,12 @@
-@import 'tailwindcss';
+/* UnoCSS (uno.config.ts) writes into these layers, in Tailwind's order: utilities beat base and components */
+@layer properties, theme, base, components, utilities;
 
 /*
  * Design tokens mirrored from Figma (KurwaDROP → Variables).
- * Figma is the source of truth: when a variable changes there, change it here.
- * Default Tailwind palette is cleared so only project tokens are available.
+ * Figma is the source of truth: when a variable changes there, change it here. uno.config.ts points the utility
+ * classes at these (bg-neutral-3, rounded-5xl…); only project colours exist there.
  */
-@theme {
-  --color-*: initial;
-
-  --color-transparent: transparent;
-  --color-current: currentColor;
+:root {
 
   /* neutral */
   --color-neutral-1: #0c0d10;
@@ -116,105 +113,7 @@
   initial-value: 0;
 }
 
-/* Text styles from Figma (size/weight[ caps]). Figma letter-spacing is in %, so 3 → 0.03em. */
-/* the smallest step: 11px (10px was hard to read on phones), still on a 12px line so tight rows keep their height */
-@utility type-10-caps {
-  font-size: 11px;
-  line-height: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-@utility type-12 {
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 600;
-}
-@utility type-12-regular {
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 400;
-}
-@utility type-12-caps {
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-@utility type-14 {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 600;
-}
-@utility type-14-regular {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 400;
-}
-@utility type-14-caps {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-@utility type-16-medium {
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 500;
-}
-@utility type-16-caps {
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-@utility type-20-caps {
-  font-size: 20px;
-  line-height: 24px;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-}
-@utility type-28 {
-  font-size: 28px;
-  line-height: 36px;
-  font-weight: 700;
-}
-@utility type-48-caps {
-  font-size: 48px;
-  line-height: 52px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
-}
-
-/* The amount inside a button (price, shortfall, chance): one pill tinted by the button's own text colour, so
-   Open, Sell all, Upgrade and the sticky bar all read "label · [value]" the same way on any button colour */
-@utility btn-value {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  height: 28px;
-  margin-left: 4px;
-  padding: 0 8px;
-  border-radius: 8px;
-  background: color-mix(in srgb, currentColor 14%, transparent);
-  line-height: 1;
-}
-
-@utility bg-brand-gradient {
-  background-image: linear-gradient(90deg, var(--color-brand-base), var(--color-brand-bright));
-}
-
-@utility scrollbar-none {
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
+/* Text styles (type-*), btn-value, bg-brand-gradient and scrollbar-none are rules in uno.config.ts */
 
 /*
  * Scrollbars: a slim floating pill on a clear track, brighter under the cursor and brand-tinted while dragged.

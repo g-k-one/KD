@@ -670,7 +670,7 @@ async function runUpgrade() {
     opacity var(--dur-slow) var(--ease-out),
     filter var(--dur-slow) var(--ease-out);
 }
-/* Phones only: a scoped display rule would beat Tailwind's lg:hidden, so hide them here */
+/* Phones only: a scoped display rule would beat the lg:hidden utility, so hide them here */
 @media (min-width: 64rem) {
   .kd-mini {
     display: none;
