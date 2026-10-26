@@ -7,7 +7,10 @@ import type { StageLoot } from '~/components/banner/Stage.vue'
 // log, a manual check and the seeds), FAQ. The page bar holds no shortcuts: they duplicated the rolls and the log.
 useHead({ title: 'Provably Fair · KurwaDROP' })
 
-const { data: seedsData } = await useFetch<SeedsResponse>('/api/seeds', { key: 'seeds' })
+// lazy on a tap from elsewhere: the page shows at once, the rolls keep a skeleton until the seeds come in
+const seedsReq = useFetch<SeedsResponse>('/api/seeds', { key: 'seeds', lazy: true })
+if (import.meta.server) await seedsReq
+const { data: seedsData } = seedsReq
 const seeds = ref<SeedsResponse | null>(seedsData.value ?? null)
 watch(seedsData, (v) => (seeds.value = v ?? null))
 

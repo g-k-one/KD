@@ -10,6 +10,7 @@ import type { BigWinsResponse } from '#shared/types/api'
 // Behind each skin a calm fire in its rarity's colour (kdFlame): licks and embers rise slowly from under the skin. Its own Forge layer between the cards' ground and their skin and text; it burns only on screen.
 // The room above the cards is only what the skins break out by. Each card links to where the drop came from.
 const { data } = useFetch<BigWinsResponse>('/api/wins/today', { key: 'wins-today', lazy: true, server: false })
+// on its way the block keeps its place, so the cases below don't jump down when the wins arrive
 const wins = computed(() => (data.value?.wins ?? []).slice(0, 3).map((win, k) => ({ win, rank: k + 1 })))
 const isLg = useMediaQuery('(min-width: 1024px)')
 // big enough to fill the left half (the picture is 1⅔ × the size): it stands in the card on its shadow and breaks
@@ -21,7 +22,13 @@ const artSize = () => (isLg.value ? 106 : 62)
 </script>
 
 <template>
-  <section v-if="wins.length" class="flex flex-col gap-2 lg:gap-3">
+  <section v-if="!data" class="flex flex-col gap-2 lg:gap-3" aria-hidden="true">
+    <div class="flex h-6 items-center gap-2"><span class="kd-skeleton h-5 w-40 rounded-md lg:h-6" /></div>
+    <div class="flex flex-col gap-3 pt-2 lg:grid lg:grid-cols-3 lg:gap-4 lg:pt-4">
+      <span v-for="n in 3" :key="n" class="kd-skeleton h-[122px] rounded-3xl lg:h-44" />
+    </div>
+  </section>
+  <section v-else-if="wins.length" class="flex flex-col gap-2 lg:gap-3">
     <div class="flex items-center gap-2">
       <UiIcon name="fire" :size="20" class="text-brand-light" />
       <h2 class="type-16-caps lg:type-20-caps">{{ $t('wins.title') }}</h2>

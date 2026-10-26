@@ -8,7 +8,10 @@ const session = useSessionStore()
 const ui = useUiStore()
 const toast = useToast()
 
-const { data: methodsData } = await useFetch<{ methods: PaymentMethod[] }>('/api/deposit/methods', { key: 'deposit-methods' })
+// lazy on a tap from elsewhere: the page shows at once, the methods and the summary keep skeletons until they come in
+const methodsReq = useFetch<{ methods: PaymentMethod[] }>('/api/deposit/methods', { key: 'deposit-methods', lazy: true })
+if (import.meta.server) await methodsReq
+const { data: methodsData } = methodsReq
 const methods = computed(() => methodsData.value?.methods ?? [])
 
 const CURRENCY_SIGN: Record<FiatCurrency, string> = { PLN: 'zł', EUR: '€', USD: '$' }
@@ -34,11 +37,14 @@ const paying = ref(false)
 const method = computed(() => methods.value.find((m) => m.id === methodId.value))
 
 const quoteKey = computed(() => `${amount.value}-${currency.value}-${methodId.value}-${promo.value?.code ?? ''}`)
-const { data: quote } = await useFetch<DepositQuote>('/api/deposit/quote', {
+const quoteReq = useFetch<DepositQuote>('/api/deposit/quote', {
   key: 'deposit-quote',
+  lazy: true,
   query: computed(() => ({ amount: amount.value || 0, currency: currency.value, methodId: methodId.value, promoCode: promo.value?.code })),
   watch: [quoteKey],
 })
+if (import.meta.server) await quoteReq
+const { data: quote } = quoteReq
 
 async function applyPromo() {
   promoError.value = false
@@ -95,6 +101,7 @@ async function pay() {
             </UiSelect>
           </div>
           <div class="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 lg:gap-3 lg:p-4" role="radiogroup" :aria-label="$t('deposit.paymentMethod')">
+            <span v-for="n in methodsData ? 0 : 6" :key="`s${n}`" class="kd-skeleton h-[130px] rounded-xl lg:h-34 lg:rounded-lg" aria-hidden="true" />
             <button
               v-for="m in methods"
               :key="m.id"
@@ -148,7 +155,8 @@ async function pay() {
             <span v-if="promoError" class="type-12-regular text-danger">{{ $t('deposit.promoInvalid') }}</span>
           </div>
 
-          <div v-if="quote" class="flex flex-col gap-3 rounded-2xl bg-neutral-3 p-4">
+          <span v-if="!quote" class="kd-skeleton h-[150px] rounded-2xl" aria-hidden="true" />
+          <div v-else class="flex flex-col gap-3 rounded-2xl bg-neutral-3 p-4">
             <div class="type-14-regular flex justify-between text-neutral-13">
               <span>{{ $t('deposit.deposit') }}</span>
               <UiPrice :amount="quote.coins" />

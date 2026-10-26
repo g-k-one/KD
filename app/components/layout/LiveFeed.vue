@@ -9,7 +9,7 @@ import type { FeedDrop } from '#shared/types/api'
  *   highlight shows the same card.
  *   Phones — sticks under the header, slides away while scrolling down and comes back on the way up.
  */
-const { feed } = useLiveFeed()
+const { feed, loading } = useLiveFeed()
 const isLg = useMediaQuery('(min-width: 1024px)')
 const mode = ref<'live' | 'top'>('live')
 
@@ -114,8 +114,16 @@ watch(y, (v) => {
       </div>
     </NuxtLink>
 
+    <!-- the first drops on their way: the highlight's card and a row of tiles in their sizes -->
+    <template v-if="loading">
+      <span class="kd-skeleton h-13 w-30 shrink-0 rounded-xl lg:h-18 lg:w-62.5" aria-hidden="true" />
+      <div class="flex min-w-0 flex-1 gap-0.5 overflow-hidden mask-r-from-90% lg:mask-none" aria-hidden="true">
+        <span v-for="n in 16" :key="n" class="kd-skeleton h-13 w-16 shrink-0 rounded-lg lg:h-18 lg:w-24" />
+      </div>
+    </template>
+
     <!-- Drops strip -->
-    <div class="scrollbar-none relative flex min-w-0 flex-1 gap-0.5 overflow-x-auto mask-r-from-90% lg:mask-none" @mouseenter="pause" @mouseleave="resume">
+    <div v-else class="scrollbar-none relative flex min-w-0 flex-1 gap-0.5 overflow-x-auto mask-r-from-90% lg:mask-none" @mouseenter="pause" @mouseleave="resume">
       <TransitionGroup
         enter-from-class="opacity-0 -translate-x-4"
         enter-active-class="transition duration-300"

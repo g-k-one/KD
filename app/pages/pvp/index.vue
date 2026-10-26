@@ -3,7 +3,11 @@ import type { Battle, BattleMode, BattlesResponse, BattleStatus } from '#shared/
 
 useHead({ title: 'PvP · KurwaDROP' })
 const { t } = useI18n()
-const { data, refresh } = await useFetch<BattlesResponse>('/api/battles', { key: 'battles' })
+// The page shows at once on a tap from elsewhere: card skeletons hold the rows until the battles come in (the
+// first load, rendered on the server, comes complete)
+const req = useFetch<BattlesResponse>('/api/battles', { key: 'battles', lazy: true })
+if (import.meta.server) await req
+const { data, refresh } = req
 useIntervalFn(() => document.visibilityState === 'visible' && refresh(), 3000)
 
 const counts = computed(() => {
@@ -51,14 +55,21 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
     <div class="kd-dock flex flex-col gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-3">
       <!-- phones: three even cells, the number over its word, so all three fit one line; desktop: one line each -->
       <div class="flex gap-2 max-lg:order-last">
+        <!-- the numbers on their way: their cells, not zeros -->
+        <template v-if="!data">
+          <span v-for="n in 2" :key="n" class="kd-skeleton h-12 flex-1 rounded-2xl lg:w-32 lg:flex-none" aria-hidden="true" />
+        </template>
+        <template v-else>
         <!-- no battle running: no "0 live" -->
         <span v-if="counts.live" class="kd-dock-stat kd-dock-cell type-12-caps"><span class="flex items-center gap-2"><span class="kd-stat-dot" /><span class="text-neutral-15 tabular-nums">{{ counts.live }}</span></span>{{ $t('pvp.live') }}</span>
         <span class="kd-dock-stat kd-dock-cell type-12-caps"><span class="flex items-center gap-2"><UiIcon name="eye" :size="16" /><span class="text-neutral-15 tabular-nums">{{ watching }}</span></span>{{ $t('pvp.watching') }}</span>
         <span class="flex min-w-0 flex-1 lg:hidden"><span class="kd-dock-stat kd-dock-cell type-12-caps"><UiPrice :amount="inPlay" size="s" tone="coin" />{{ $t('pvp.inPlay') }}</span></span>
+        </template>
       </div>
       <UiButton icon="plus" size="l" class="w-full lg:h-14 lg:w-80" to="/pvp/create">{{ $t('pvp.create') }}</UiButton>
       <div class="flex justify-end max-lg:hidden">
-        <span class="kd-dock-stat type-12-caps">{{ $t('pvp.inPlay') }} <UiPrice :amount="inPlay" size="m" tone="coin" /></span>
+        <span v-if="!data" class="kd-skeleton h-12 w-44 rounded-2xl" aria-hidden="true" />
+        <span v-else class="kd-dock-stat type-12-caps">{{ $t('pvp.inPlay') }} <UiPrice :amount="inPlay" size="m" tone="coin" /></span>
       </div>
     </div>
       <!-- the filter bar spans the row: the modes as a switch on the left (one tap each), sort and budget on the right -->
@@ -71,6 +82,13 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
         </UiSelect>
         <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" class="shrink-0" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
       </div>
+      <!-- the battles on their way: a row of card skeletons in the grid's columns -->
+      <section v-if="!data" class="flex flex-col gap-4" aria-hidden="true">
+        <div class="flex h-8 items-center"><span class="kd-skeleton h-6 w-40 rounded-md" /></div>
+        <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
+          <span v-for="n in 8" :key="n" class="kd-skeleton h-[266px] rounded-5xl lg:h-[342px]" />
+        </div>
+      </section>
       <template v-for="sec in sections" :key="sec.key">
         <section v-if="sec.list.length" class="flex flex-col gap-4">
           <UiSectionHeader :title="sec.title">
@@ -89,7 +107,7 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
           </TransitionGroup>
         </section>
       </template>
-      <UiEmptyState v-if="!filtered.length" :text="$t('pvp.empty')">
+      <UiEmptyState v-if="data && !filtered.length" :text="$t('pvp.empty')">
         <UiButton icon="plus" to="/pvp/create">{{ $t('pvp.create') }}</UiButton>
       </UiEmptyState>
 

@@ -91,7 +91,9 @@ watch(
     <UiEmptyState v-if="!session.user" :text="$t('fair.signInRolls')">
       <UiButton icon="sign-in" @click="ui.openSignIn()">{{ $t('auth.signIn') }}</UiButton>
     </UiEmptyState>
-    <UiEmptyState v-else-if="loaded && !rows.length" :text="$t('fair.noRollsYet')">
+    <!-- the rolls on their way: the table's place -->
+    <span v-else-if="!loaded" class="kd-skeleton h-[198px] rounded-5xl lg:h-60" aria-hidden="true" />
+    <UiEmptyState v-else-if="!rows.length" :text="$t('fair.noRollsYet')">
       <UiButton to="/" icon="cases">{{ $t('account.openCases') }}</UiButton>
     </UiEmptyState>
     <template v-else-if="rows.length">

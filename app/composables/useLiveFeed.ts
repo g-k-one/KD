@@ -9,7 +9,7 @@ let stop: (() => void) | null = null
 
 // Polls the mock feed. The Go backend will push over WebSocket — swap the transport here only.
 export function useLiveFeed() {
-  const { data, refresh } = useFetch<FeedResponse>('/api/feed', {
+  const { data, refresh, status } = useFetch<FeedResponse>('/api/feed', {
     key: 'live-feed',
     default: () => ({ drops: [], highlight: null }),
   })
@@ -33,5 +33,7 @@ export function useLiveFeed() {
     })
   }
 
-  return { feed: data, refresh }
+  // `loading`: the first answer hasn't come yet (later polls keep what is shown)
+  const loading = computed(() => status.value !== 'success' && status.value !== 'error' && !data.value.drops.length)
+  return { feed: data, refresh, loading }
 }

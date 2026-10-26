@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import type { CaseSection, CaseSummary, CasesResponse, HomeLayout } from '#shared/types/api'
 
-const { data } = await useFetch<CasesResponse>('/api/cases', { key: 'cases' })
+// The page shows at once on a tap from elsewhere: card skeletons hold the grid until the catalog comes in (the first
+// load, rendered on the server, comes complete)
+const req = useFetch<CasesResponse>('/api/cases', { key: 'cases', lazy: true })
+if (import.meta.server) await req
+const { data } = req
 const filters = useCaseFilters()
 
 const collapsed = ref<Record<string, boolean>>({})
@@ -82,6 +86,16 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
         />
         </div>
 
+        <!-- the catalog on its way: two rows of card skeletons in the grid's own columns -->
+        <template v-if="!data">
+          <section v-for="n in 2" :key="n" class="flex flex-col gap-4" aria-hidden="true">
+            <div class="flex h-8 items-center"><span class="kd-skeleton h-6 w-44 rounded-md" /></div>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+              <HomeCaseCardSkeleton v-for="k in 5" :key="k" />
+            </div>
+          </section>
+        </template>
+
         <template v-for="(s, i) in sections" :key="s.id">
         <HomeHiddenRow v-for="r in hiddenBefore[s.id]" :key="r.id" :row="r" />
         <!-- sections after the first are skipped by the renderer until they come near the screen -->
@@ -131,7 +145,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
         <HomeHiddenRow v-for="r in hiddenBefore.end" :key="r.id" :row="r" />
         <ClientOnly><HomeLayoutBar v-if="homeLayout.editing.value" /></ClientOnly>
 
-        <UiEmptyState v-if="!sections.length" :text="$t('cases.empty')">
+        <UiEmptyState v-if="data && !sections.length" :text="$t('cases.empty')">
           <UiButton variant="secondary" @click="filters.reset()">{{ $t('filters.reset') }}</UiButton>
         </UiEmptyState>
       </div>

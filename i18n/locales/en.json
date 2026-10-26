@@ -194,7 +194,8 @@
     "prev": "Previous page",
     "next": "Next page",
     "lvl": "LVL",
-    "coins": "Coins"
+    "coins": "Coins",
+    "loading": "Loading"
   },
   "case": {
     "skipHint": "Click to skip",

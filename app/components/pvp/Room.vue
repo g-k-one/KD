@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BattleResponse, CaseItem, CaseResponse } from '#shared/types/api'
 
-// Battle room (after csgogem): the mode as the title; one meta line (cost and pot · the case strip · viewers and
+// Battle room (after csgogem; the page app/pages/pvp/[id].vue shows it inside a Suspense with its skeleton): the mode as the title; one meta line (cost and pot · the case strip · viewers and
 // rounds); a short stage so the players and their drops stay on screen; every action once — join / call a bot in
 // the seat's bar, recreate and replay in the result
 // holding every seat's reel, the markers on its edges and, at the end, the result; the player bars under it, each
@@ -16,7 +16,13 @@ const toast = useToast()
 const sfx = useSfx()
 
 const { data, refresh, error } = await useFetch<BattleResponse>(() => `/api/battles/${id.value}`, { key: `battle-${id.value}` })
-if (error.value) throw createError({ statusCode: 404, statusMessage: 'Battle not found', fatal: true })
+if (error.value) {
+  const notFound = createError({ statusCode: 404, statusMessage: 'Battle not found', fatal: true })
+  if (import.meta.server) throw notFound
+  // on a tap the room sits in the page's Suspense: show the 404 and never resolve, so the room is never drawn empty
+  showError(notFound)
+  await new Promise(() => {})
+}
 // Replay (#7): a finished battle plays again from the countdown — on a tap, or for anyone opening a shared
 // ?replay=1 link. The room just runs its own clock from now.
 const replayAt = ref<number | null>(route.query.replay ? Date.now() : null)
