@@ -106,9 +106,11 @@ const modeTip = computed(() => t(`pvp.modeTip.${props.battle.mode}`))
 .kd-bcard.is-finished .kd-bcard-wash {
   opacity: 0.4;
 }
+/* the mode chip stands on the same light it sits in: a dark base tinted by the mode, and a thin ring of it */
 .kd-mode {
   color: var(--mc);
-  background: color-mix(in srgb, var(--mc) 24%, var(--color-neutral-2));
+  background: color-mix(in srgb, var(--mc) 40%, var(--color-neutral-1));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mc) 45%, transparent);
 }
 .kd-mode-name {
   color: var(--mc);
