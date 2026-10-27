@@ -71,7 +71,8 @@ const cols = computed(() =>
         >
           <!-- game (desktop column; on phones its picture sits on the drop) -->
           <span class="flex min-w-0 items-center gap-2.5 max-lg:hidden">
-            <img v-if="gameArt(e)" :src="gameArt(e)" alt="" class="size-9 shrink-0 object-contain" loading="lazy" />
+            <!-- an upgrade's arrow or a battle's sword is drawn edge to edge: a 4 px inset so it sits as small as a case -->
+            <img v-if="gameArt(e)" :src="gameArt(e)" alt="" class="size-9 shrink-0 object-contain" :class="e.game === 'upgrade' || isPvp(e) ? 'p-1' : ''" loading="lazy" />
             <span v-else class="grid size-9 shrink-0 place-items-center rounded-xl bg-neutral-3 text-neutral-12"><UiIcon :name="GAME_ICON[e.game as keyof typeof GAME_ICON] ?? 'cases'" :size="18" /></span>
             <span class="type-14 truncate">{{ gameName(e) }}</span>
           </span>
