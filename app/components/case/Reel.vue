@@ -601,9 +601,10 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
                 <span class="max-sm:hidden">{{ $t('wallet.sell') }}</span>
                 <UiPrice :amount="results[col]!.price" size="s" tone="inverse" count-up />
               </UiButton>
-              <!-- the best drop of the opening can be shared (an icon on phones), if it paid at least the case -->
+              <!-- the best drop of the opening can be shared, if it paid at least the case (phones: an icon in the
+                   cell's corner, below, so the price button keeps the row) -->
               <UiButton
-                v-if="phase === 'result' && !demo && col === bestCol && results[col]!.price >= data.price"
+                v-if="phase === 'result' && !demo && !(compact || isMobile) && col === bestCol && results[col]!.price >= data.price"
                 variant="secondary"
                 size="s"
                 icon="share"
@@ -642,6 +643,19 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
           <img src="/img/fx/marker-top-gold.svg" alt="" class="kd-marker-a kd-marker-gold absolute" />
           <img src="/img/fx/marker-top-gold.svg" alt="" class="kd-marker-b kd-marker-gold absolute" />
         </div>
+        <!-- phones: Share as an icon in the best cell's top corner (the cell's 16 px corner − 2 border − 6 inset = 8) -->
+        <Transition name="kd-result">
+          <UiButton
+            v-if="(compact || isMobile) && phase === 'result' && !demo && landed[col] && col === bestCol && results[col] && results[col]!.price >= data.price && !kurwaCols.includes(col)"
+            variant="secondary"
+            size="s"
+            icon="share"
+            icon-only
+            :aria-label="$t('share.share')"
+            class="absolute top-1.5 right-1.5 z-[2] size-7 rounded-lg"
+            @click="emit('share', results[col]!)"
+          />
+        </Transition>
       </div>
     </div>
 
@@ -784,6 +798,13 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   background:
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
     linear-gradient(180deg, var(--color-neutral-4) 15%, rgb(255 95 31 / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
+}
+/* the drop screen: the frames go plain grey — the orange that leads the eye to the markers is for picking and the spin */
+.kd-reel.result:not(.is-grid, .is-kurwa),
+.kd-reel.result:not(.is-kurwa) .kd-cell.is-framed {
+  background:
+    linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
+    linear-gradient(var(--color-neutral-4), var(--color-neutral-4)) border-box;
 }
 .kd-reel.is-grid.spinning .kd-cell {
   box-shadow: 0 0 24px -8px rgb(255 95 31 / 0.45);
