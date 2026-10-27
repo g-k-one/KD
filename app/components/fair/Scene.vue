@@ -119,6 +119,37 @@ const columns = computed(() =>
   transform: translate3d(calc(var(--px, 0) * 0.8 * 14px), calc(var(--py, 0) * 0.8 * 9px), 0);
   transition: transform var(--dur-slow) var(--ease-out);
 }
+/* the props drift too, as the home cases do: each rises and sways a little on its own beat (--iy how far, --ir how much,
+   --id how long, --idl where it starts), out of step with the others and the floating shield */
+.kd-pf-layer.is-board,
+.kd-pf-layer.is-blueprint,
+.kd-pf-layer.is-laptop {
+  animation: kd-pf-idle var(--id) var(--ease-in-out) infinite var(--idl);
+}
+.kd-pf-layer.is-board {
+  --iy: -6px;
+  --ir: 1.2deg;
+  --id: 5.6s;
+  --idl: -2.4s;
+}
+.kd-pf-layer.is-blueprint {
+  --iy: -5px;
+  --ir: -1deg;
+  --id: 4.2s;
+  --idl: -1.3s;
+}
+.kd-pf-layer.is-laptop {
+  --iy: -4px;
+  --ir: 0.6deg;
+  --id: 4.8s;
+  --idl: -3.1s;
+}
+@keyframes kd-pf-idle {
+  50% {
+    translate: 0 var(--iy);
+    rotate: var(--ir);
+  }
+}
 @keyframes kd-pf-float {
   50% {
     translate: 0 -12px;
