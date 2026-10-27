@@ -2,8 +2,8 @@
 import type { SeedsResponse } from '#shared/types/api'
 
 /*
- * Provably Fair banner (BannerBleed, green): the shield, the check and a laptop typing out the player's own check
- * (FairScene); a guest sees an example pair.
+ * Provably Fair banner (BannerBleed, green): a big shield and check, the laptop, the board and the blueprint, and a
+ * faint rain of the player's own code (FairScene); a guest sees an example pair.
  */
 const props = defineProps<{ seeds: SeedsResponse | null }>()
 // the banner's one action: your seeds (the pair behind your rolls, to change or reveal); a guest signs in first
