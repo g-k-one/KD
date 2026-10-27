@@ -70,8 +70,9 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
     <div class="mx-auto flex max-w-content flex-col gap-6 px-4 lg:gap-10 lg:px-0">
 
       <!-- One Forge canvas for the big wins and the cases (a phone keeps one WebGL context per page, not one per block).
-           Cases right after the big wins; the cases to continue and the live battles break up the grid further down -->
-      <div ref="fxHost" class="relative flex flex-col gap-6 lg:gap-10">
+           Cases right after the big wins; the cases to continue and the live battles break up the grid further down.
+           Phones: the canvas runs edge to edge like the running lines in it, so their fire isn't cut at the side gutters -->
+      <div ref="fxHost" class="relative flex flex-col gap-6 max-lg:-mx-4 max-lg:px-4 lg:gap-10">
       <HomeBigWins />
 
       <div ref="casesEl" class="flex scroll-mt-40 flex-col gap-4 lg:gap-10">
