@@ -477,10 +477,7 @@
     "pendingCheck": "Press Calculate: we recompute this roll from the seeds and compare it with the result you got.",
     "pendingManual": "Press Calculate to recompute the roll from these seeds.",
     "compareManual": "Compare the ticket or roll above with the result you got.",
-    "yourResult": "You got: {v}",
-    "hood": "Under the hood",
-    "hoodHint": "The formula, how each mode rolls, your seed log, a manual check and your seeds",
-    "lensLabel": "Look through the magnifier: your seeds and the formula behind every roll"
+    "yourResult": "You got: {v}"
   },
   "account": {
     "title": "Profile",

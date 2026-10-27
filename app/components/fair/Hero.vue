@@ -2,8 +2,8 @@
 import type { SeedsResponse } from '#shared/types/api'
 
 /*
- * Provably Fair banner (BannerBleed, green): the glass case and the magnifying glass that shows it as code — the player's
- * own seeds (FairLens); a guest sees an example pair.
+ * Provably Fair banner (BannerBleed, green): the shield, the check and a laptop typing out the player's own check
+ * (FairScene); a guest sees an example pair.
  */
 const props = defineProps<{ seeds: SeedsResponse | null }>()
 // the banner's one action: your seeds (the pair behind your rolls, to change or reveal); a guest signs in first
@@ -16,7 +16,7 @@ const pair = computed(() => props.seeds?.active ?? EXAMPLE)
 
 <template>
   <BannerBleed glow="green" :eyebrow="$t('fair.eyebrow')" :title="$t('fair.heroTitle')" :text="$t('fair.heroText1')" art-class="h-44 lg:-top-6 lg:-bottom-6">
-    <template #art><FairLens :hash="pair.serverSeedHash" :client="pair.clientSeed" :nonce="pair.nonce" /></template>
+    <template #art><FairScene :hash="pair.serverSeedHash" :client="pair.clientSeed" :nonce="pair.nonce" /></template>
     <template #actions>
       <UiButton variant="fair" size="l" icon="seeds" class="max-sm:h-10 max-sm:px-4" @click="session.user ? emit('seeds') : ui.openSignIn()">{{ $t('fair.mySeeds') }}</UiButton>
     </template>
