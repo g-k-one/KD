@@ -49,7 +49,7 @@ watch(
 
 const gameOptions = computed(() => [
   { value: 'all' as const, label: t('account.allGames') },
-  ...(['case', 'upgrade', 'deposit', 'sell', 'withdraw'] as const).map((g) => ({ value: g, label: t(`account.games.${g}`) })),
+  ...(['case', 'upgrade', 'pvp', 'deposit', 'sell', 'withdraw'] as const).map((g) => ({ value: g, label: t(`account.games.${g}`) })),
 ])
 
 // --- Inventory ---------------------------------------------------------------
@@ -108,8 +108,18 @@ async function onWithdrawn() {
 }
 
 // --- History -----------------------------------------------------------------
-const gameFilter = ref<HistoryGame | 'all'>('all')
-const filteredHistory = computed(() => history.value.filter((h) => gameFilter.value === 'all' || h.game === gameFilter.value))
+// PvP battles are case rows with a battle: their own filter, and Case keeps the plain openings. ?game= picks one (the
+// upgrade and PvP bars link to their own history)
+type GameFilter = HistoryGame | 'pvp' | 'all'
+const FILTERS: GameFilter[] = ['all', 'case', 'upgrade', 'pvp', 'deposit', 'sell', 'withdraw']
+const gameFilter = ref<GameFilter>(FILTERS.includes(route.query.game as GameFilter) ? (route.query.game as GameFilter) : 'all')
+const filteredHistory = computed(() =>
+  history.value.filter((h) => {
+    if (gameFilter.value === 'all') return true
+    if (gameFilter.value === 'pvp') return !!h.battleId
+    return h.game === gameFilter.value && !(gameFilter.value === 'case' && h.battleId)
+  }),
+)
 
 // --- Stats (from the history the profile already loads) ------------------------------
 const stats = computed(() => {

@@ -15,8 +15,9 @@ const backCase = computed(() => {
   return { slug, name: c?.name }
 })
 const barLeft = computed(() => [
-  ...(backCase.value ? [{ label: backCase.value.name ?? t('upgrade.backToCase'), icon: 'arrow-left', to: `/case/${backCase.value.slug}` }] : []),
-  { label: t('upgrade.history'), icon: 'history', to: '/history' },
+  // the same bar as PvP's: back (to the case it came from, else all cases) and its own history
+  backCase.value ? { label: backCase.value.name ?? t('upgrade.backToCase'), icon: 'arrow-left', to: `/case/${backCase.value.slug}` } : { label: t('case.allCases'), icon: 'arrow-left', to: '/' },
+  { label: t('upgrade.history'), icon: 'history', to: '/profile?tab=history&game=upgrade' },
 ])
 // the right side: what an upgrade is (a modal, in four steps), then the fairness page
 const howOpen = ref(false)

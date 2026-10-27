@@ -504,6 +504,7 @@
     "games": {
       "case": "Case",
       "upgrade": "Upgrade",
+      "pvp": "PvP",
       "deposit": "Deposit",
       "sell": "Sold",
       "withdraw": "Withdrawn"
@@ -628,6 +629,16 @@
       "crazy": "Crazy",
       "team": "Team 2v2"
     },
+    "howTitle": "How a battle works",
+    "how1t": "Pick the cases",
+    "how1": "The creator picks the cases and the mode. Everyone pays the same, the sum of the cases.",
+    "how2t": "Everyone opens the same cases",
+    "how2": "Round by round, every seat opens the same case at the same time.",
+    "how3t": "The mode decides",
+    "how3": "Classic: the most value takes every drop. Crazy: the least. 2 vs 2: the team with more.",
+    "how4t": "Checked by a public block",
+    "how4": "An EOS block named when the last seat fills salts every roll, so nobody knows it in advance, us included.",
+    "howFair": "Every battle can be checked once it ends.",
     "modeRule": {
       "classic": "Most value wins it all",
       "crazy": "Least value wins it all",
