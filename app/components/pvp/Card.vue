@@ -27,11 +27,11 @@ const modeTip = computed(() => t(`pvp.modeTip.${props.battle.mode}`))
   <NuxtLink
     :to="`/pvp/${battle.id}`"
     class="kd-bcard kd-spotlight group relative flex min-w-0 flex-col rounded-5xl border"
-    :class="[`is-${battle.mode}`, battle.status === 'finished' && 'is-finished', compact ? 'gap-2 p-2' : 'gap-3 p-4']"
+    :class="[`is-${battle.mode}`, battle.status === 'finished' && 'is-finished', compact ? 'gap-2 p-2' : 'gap-2 p-4']"
     @pointermove="onPointerMove"
   >
-    <!-- the mode's light across the top -->
-    <span class="kd-bcard-wash pointer-events-none absolute inset-x-0 top-0 h-28 rounded-t-5xl" aria-hidden="true" />
+    <!-- the mode's light, out of the top left corner -->
+    <span class="kd-bcard-wash pointer-events-none absolute inset-0 rounded-5xl" aria-hidden="true" />
 
     <!-- top: the mode, and the cases -->
     <div class="relative flex items-center justify-between gap-2">
@@ -56,7 +56,7 @@ const modeTip = computed(() => t(`pvp.modeTip.${props.battle.mode}`))
           <img :src="c.image" :alt="c.name" draggable="false" class="kd-bcard-case size-[88%] object-contain" />
           <span v-if="more && i === SLOTS - 1" class="kd-bcard-more absolute inset-0 grid place-items-center text-neutral-15 tabular-nums" :class="compact ? 'type-14-caps rounded-lg' : 'type-16-caps rounded-xl'">+{{ more }}</span>
         </span>
-        <span v-for="n in SLOTS - tiles.length" :key="`e${n}`" class="kd-bcard-tile is-empty aspect-square" :class="compact ? 'rounded-lg' : 'rounded-xl'" />
+        <span v-for="n in SLOTS - tiles.length" :key="`e${n}`" class="kd-bcard-tile aspect-square" :class="compact ? 'rounded-lg' : 'rounded-xl'" />
       </div>
       <!-- the players, over the fade -->
       <div class="absolute inset-x-0 flex items-center justify-center" :class="compact ? 'bottom-1 gap-1' : 'bottom-3 gap-2'">
@@ -77,9 +77,9 @@ const modeTip = computed(() => t(`pvp.modeTip.${props.battle.mode}`))
     </div>
 
     <!-- the action, its 8 px corners concentric with the card's 24 -->
-    <span class="kd-btn type-12-caps relative mt-auto inline-flex h-10 w-full items-center justify-center gap-1 rounded-lg" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
+    <span class="kd-btn relative mt-auto inline-flex w-full items-center justify-center gap-1.5 rounded-lg" :class="[battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary', compact ? 'type-12-caps mt-1 h-10' : 'type-14-caps mt-2 h-12']">
       {{ $t(action) }}
-      <span v-if="battle.status === 'waiting'" class="btn-value"><UiPrice :amount="battle.cost" size="s" tone="inverse" /></span>
+      <span v-if="battle.status === 'waiting'" class="btn-value"><UiPrice :amount="battle.cost" :size="compact ? 's' : 'm'" tone="inverse" /></span>
     </span>
   </NuxtLink>
 </template>
@@ -101,7 +101,7 @@ const modeTip = computed(() => t(`pvp.modeTip.${props.battle.mode}`))
   --mc: var(--color-item-milspec);
 }
 .kd-bcard-wash {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--mc) 28%, transparent), transparent);
+  background: radial-gradient(120% 70% at 0% 0%, color-mix(in srgb, var(--mc) 32%, transparent), transparent 70%);
 }
 .kd-bcard.is-finished .kd-bcard-wash {
   opacity: 0.4;
@@ -117,18 +117,16 @@ const modeTip = computed(() => t(`pvp.modeTip.${props.battle.mode}`))
   background: rgb(12 13 16 / 0.6);
 }
 /* the tiles: tinted by the mode; the second row fades into the card */
+/* the tiles: white 4% on whatever is under them, empty or not */
 .kd-bcard-tile {
-  background: color-mix(in srgb, var(--mc) 8%, var(--color-neutral-3));
-}
-.kd-bcard-tile.is-empty {
-  background: color-mix(in srgb, var(--mc) 4%, var(--color-neutral-3));
-  opacity: 0.6;
+  background: rgb(255 255 255 / 0.04);
 }
 .kd-bcard-more {
   background: rgb(12 13 16 / 0.55);
 }
+/* the fade starts in the first row and eases out, so the players over it stand clear */
 .kd-bcard-grid {
-  mask-image: linear-gradient(180deg, #000 55%, transparent 96%);
+  mask-image: linear-gradient(180deg, #000 30%, rgb(0 0 0 / 0.7) 48%, rgb(0 0 0 / 0.35) 64%, rgb(0 0 0 / 0.12) 80%, transparent 96%);
 }
 .kd-bcard-case {
   filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.45));

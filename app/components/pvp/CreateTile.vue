@@ -17,7 +17,7 @@ defineProps<{ compact?: boolean }>()
       <span class="type-12-regular text-center text-neutral-11">{{ $t('pvp.createTileText') }}</span>
     </div>
     <div class="px-2 pb-2">
-      <span class="kd-btn kd-btn-primary type-12-caps flex h-10 w-full items-center justify-center rounded-lg">{{ $t('pvp.create') }}</span>
+      <span class="kd-btn kd-btn-primary flex w-full items-center justify-center rounded-lg" :class="compact ? 'type-12-caps h-10' : 'type-14-caps h-12'">{{ $t('pvp.create') }}</span>
     </div>
   </NuxtLink>
 </template>
