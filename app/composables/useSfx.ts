@@ -36,7 +36,8 @@ const POKE: Record<'gawk' | 'bukbuk' | 'kurwawk' | 'kurwa' | 'puff', [number, nu
 }
 let pokeBuf: Promise<AudioBuffer | null> | null = null
 // The launch of a reel or an upgrade (public/sfx/launch.mp3, KREA · Seed Audio): the first click of a pistol reload (the
-// magazine seated) alone, stretched ×1.35 without changing its pitch, 0.37 s with a short fade, peaks at -2 dB
+// magazine seated) alone, stretched ×1.35 without changing its pitch, 0.37 s, its attack and top softened (6 ms in,
+// low-pass 3.8 kHz) so it sits with the reel's ticks
 let launchBuf: Promise<AudioBuffer | null> | null = null
 let launchReady: AudioBuffer | null = null
 let launchSrc: AudioBufferSourceNode | null = null
@@ -315,7 +316,8 @@ export function useSfx() {
         launchSrc = src
         const g = a.createGain()
         src.buffer = launchReady
-        g.gain.value = 0.9 * (s.volume / 100)
+        // about three times a reel tick (0.05), so the launch leads into the ticks instead of drowning them
+        g.gain.value = 0.2 * (s.volume / 100)
         src.connect(g).connect(a.destination)
         src.start()
         return
