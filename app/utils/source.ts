@@ -10,4 +10,4 @@ export const sourceLink = (slug: string) => {
 }
 
 // little pictures for the same (feed tiles, the hover card): full colour, no plate, so they read over any skin
-export const SOURCE_ART = { upgrade: '/img/source/upgrade.svg', pvp: '/img/source/pvp.svg' } as const
+export const SOURCE_ART = { upgrade: '/img/source/upgrade.webp', pvp: '/img/source/pvp.webp' } as const
