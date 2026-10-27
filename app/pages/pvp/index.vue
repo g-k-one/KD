@@ -84,37 +84,32 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
         <UiButton variant="fair" size="s" icon="shield-check" to="/fairness" class="shrink-0" @click="howOpen = false">{{ $t('case.fairness') }}</UiButton>
       </div>
     </UiModal>
-    <!-- The plate, as the case page's dock: live and watching · Create PvP · in play -->
-    <div class="kd-dock flex flex-col gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-3">
-      <!-- phones: three even cells, the number over its word, so all three fit one line; desktop: one line each -->
-      <div class="flex gap-2 max-lg:order-last">
-        <!-- the numbers on their way: their cells, not zeros -->
-        <template v-if="!data">
-          <span v-for="n in 2" :key="n" class="kd-skeleton h-12 flex-1 rounded-2xl lg:w-32 lg:flex-none" aria-hidden="true" />
-        </template>
-        <template v-else>
-        <!-- no battle running: no "0 live" -->
-        <span v-if="counts.live" class="kd-dock-stat kd-dock-cell type-12-caps"><span class="flex items-center gap-2"><span class="kd-stat-dot" /><span class="text-neutral-15 tabular-nums">{{ counts.live }}</span></span>{{ $t('pvp.live') }}</span>
-        <span class="kd-dock-stat kd-dock-cell type-12-caps"><span class="flex items-center gap-2"><UiIcon name="eye" :size="16" /><span class="text-neutral-15 tabular-nums">{{ watching }}</span></span>{{ $t('pvp.watching') }}</span>
-        <span class="flex min-w-0 flex-1 lg:hidden"><span class="kd-dock-stat kd-dock-cell type-12-caps"><UiPrice :amount="inPlay" size="s" tone="coin" />{{ $t('pvp.inPlay') }}</span></span>
-        </template>
-      </div>
-      <UiButton icon="plus" size="l" class="w-full lg:h-14 lg:w-80" to="/pvp/create">{{ $t('pvp.create') }}</UiButton>
-      <div class="flex justify-end max-lg:hidden">
-        <span v-if="!data" class="kd-skeleton h-12 w-44 rounded-2xl" aria-hidden="true" />
-        <span v-else class="kd-dock-stat type-12-caps">{{ $t('pvp.inPlay') }} <UiPrice :amount="inPlay" size="m" tone="coin" /></span>
-      </div>
-    </div>
-      <!-- the filter bar spans the row: the modes as a switch on the left (one tap each), sort and budget on the right -->
-      <div class="flex items-center gap-2">
-        <UiSegmented v-model="mode" :options="modeOptions" size="s" class="max-lg:hidden" />
-        <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="min-w-0 flex-1 lg:hidden" :active="mode !== 'all'" />
-        <span class="flex-1 max-lg:hidden" />
+    <!-- One plate, as the home page's filters: the mode, the sort and the budget on the left; on the right what is going on —
+         battles live (when there are any), people watching, coins in play. Phones: the filters on one line, the numbers
+         under them. Starting a battle is the first tile of the open seats -->
+    <div class="kd-filters flex flex-wrap items-center gap-2 rounded-3xl bg-neutral-2 p-2">
+      <div class="flex min-w-0 flex-1 items-center gap-2">
+        <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="min-w-0 flex-1 lg:w-48 lg:flex-none" :active="mode !== 'all'">
+          <template #leading><UiIcon :name="mode === 'all' ? 'pvp' : PVP_MODE_ICON[mode]" :size="16" class="text-neutral-11" /></template>
+        </UiSelect>
         <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:w-48" :active="sort !== 'default'">
           <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
         </UiSelect>
-        <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" class="shrink-0" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
+        <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" class="shrink-0" @click="affordable = !affordable"><span class="max-sm:hidden">{{ $t('filters.affordableShort') }}</span></UiChip>
       </div>
+      <!-- the numbers on their way: their cells, not zeros -->
+      <div class="flex items-center gap-2 max-lg:w-full">
+        <template v-if="!data">
+          <span v-for="n in 2" :key="n" class="kd-skeleton h-10 w-28 rounded-lg max-lg:flex-1" aria-hidden="true" />
+        </template>
+        <template v-else>
+          <!-- no battle running: no "0 live" -->
+          <span v-if="counts.live" class="kd-stat type-12-caps"><span class="kd-stat-dot" /><span class="text-neutral-15 tabular-nums">{{ counts.live }}</span>{{ $t('pvp.live') }}</span>
+          <span class="kd-stat type-12-caps"><UiIcon name="eye" :size="16" /><span class="text-neutral-15 tabular-nums">{{ watching }}</span>{{ $t('pvp.watching') }}</span>
+          <span class="kd-stat type-12-caps">{{ $t('pvp.inPlay') }}<UiPrice :amount="inPlay" size="s" tone="coin" /></span>
+        </template>
+      </div>
+    </div>
       <!-- the battles on their way: a row of card skeletons in the grid's columns -->
       <section v-if="!data" class="flex flex-col gap-4" aria-hidden="true">
         <div class="flex h-8 items-center"><span class="kd-skeleton h-6 w-40 rounded-md" /></div>
@@ -123,7 +118,7 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
         </div>
       </section>
       <template v-for="sec in sections" :key="sec.key">
-        <section v-if="sec.list.length" class="flex flex-col gap-4">
+        <section v-if="data && (sec.list.length || sec.key === 'waiting')" class="flex flex-col gap-4">
           <UiSectionHeader :title="sec.title">
             <template #actions>
               <button v-if="sec.key === 'finished' && sec.list.length > ROW" type="button" class="type-12-caps flex h-8 items-center gap-0.5 text-neutral-12 hover:text-neutral-15" @click="allFinished = !allFinished">
@@ -134,15 +129,12 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
             </template>
           </UiSectionHeader>
           <TransitionGroup tag="div" name="kd-list" class="relative grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
+            <!-- the open seats start with your own battle, always in the first slot -->
+            <PvpCreateTile v-if="sec.key === 'waiting'" key="create" :compact="isPhone" />
             <PvpCard v-for="b in shown(sec.key, sec.list)" :key="b.id" :battle="b" :compact="isPhone" />
-            <!-- open seats that don't fill the row: the free spot invites to start one -->
-            <PvpCreateTile v-if="sec.key === 'waiting' && shown(sec.key, sec.list).length % 4" key="create" />
           </TransitionGroup>
         </section>
       </template>
-      <UiEmptyState v-if="data && !filtered.length" :text="$t('pvp.empty')">
-        <UiButton icon="plus" to="/pvp/create">{{ $t('pvp.create') }}</UiButton>
-      </UiEmptyState>
 
   </div>
 </template>
@@ -158,40 +150,24 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
     display: none;
   }
 }
-/* the plate is the case page's dock: 24px radius, 12px padding; its chips are 48px high with a 12px radius (24 − 12) */
-.kd-dock {
-  border-radius: 24px;
-  background: var(--color-neutral-2);
-  padding: 12px;
-}
-@media (min-width: 64rem) {
-  .kd-dock {
-    padding-inline: 16px;
-    /* its 12px chips stand 16px in: 12 + 16 */
-    border-radius: 28px;
-  }
-}
-/* phones: a dock cell is a column — the number, then its word */
-@media (max-width: 63.999rem) {
-  .kd-dock-cell {
-    flex: 1;
-    min-width: 0;
-    flex-direction: column;
-    justify-content: center;
-    gap: 2px;
-    padding-inline: 8px;
-  }
-}
-.kd-dock-stat {
+/* a number on the plate: the controls' 40 px height and 8 px corners (16 − 8) */
+.kd-stat {
   display: inline-flex;
-  height: 48px;
+  height: 40px;
   align-items: center;
-  gap: 8px;
-  border-radius: 12px;
-  background: var(--color-neutral-3);
-  padding: 0 16px;
+  gap: 6px;
+  border-radius: 8px;
+  background: var(--color-neutral-1);
+  padding: 0 12px;
   color: var(--color-neutral-11);
   white-space: nowrap;
+}
+@media (max-width: 63.999rem) {
+  .kd-stat {
+    flex: 1;
+    justify-content: center;
+    padding-inline: 8px;
+  }
 }
 .kd-stat-dot {
   width: 6px;

@@ -35,12 +35,6 @@ const { refresh: refreshFeed } = useLiveFeed()
 
 // --- Mock state ------------------------------------------------------------------------------
 const feedPaused = ref(false)
-const pvpCard = usePvpCardVariant()
-const PVP_CARDS = [
-  { value: 'a' as const, label: 'A · Stage' },
-  { value: 'b' as const, label: 'B · Open' },
-  { value: 'c' as const, label: 'C · Versus' },
-]
 // the strip's poll reads this (useLiveFeed); the mock adds a drop on every poll while it is on
 const feedFast = useState('kd_feed_fast', () => false)
 const balanceInput = ref('')
@@ -208,12 +202,6 @@ const motionKey = ref(0)
             <UiButton size="s" variant="danger" @click="refreshing({ inventory: 'empty' }, 'Inventory emptied')">Empty</UiButton>
             <UiButton size="s" variant="ghost" to="/inventory">Open inventory</UiButton>
           </div>
-        </section>
-
-        <section class="dbg-card">
-          <h2 class="dbg-h">PvP card layout <span class="dbg-note">while we pick one</span></h2>
-          <UiSegmented v-model="pvpCard" :options="PVP_CARDS" />
-          <UiButton size="s" variant="ghost" to="/pvp">Open PvP</UiButton>
         </section>
 
         <section class="dbg-card">
