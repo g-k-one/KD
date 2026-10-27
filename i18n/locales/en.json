@@ -538,7 +538,6 @@
     "create": "Create PvP",
     "createTileText": "Pick the cases, then play friends or bots.",
     "newBattle": "New battle",
-    "yourRules": "Your rules",
     "verifyTitle": "Check this battle",
     "verifyHint": "Each player's ticket in every case is HMAC-SHA256 of the server seed and the EOS block's ID, one nonce per seat and round. The block is named when the seats fill, so nobody knows its ID in advance. Here we recompute every ticket, the skin it gives, the totals and the winner.",
     "seedAfter": "Revealed when the battle ends",
@@ -642,6 +641,11 @@
     "how4t": "Checked by a public block",
     "how4": "An EOS block named when the last seat fills salts every roll, so nobody knows it in advance, us included.",
     "howFair": "Every battle can be checked once it ends.",
+    "modeTip": {
+      "classic": "Classic: the most value wins it all",
+      "crazy": "Crazy: the least value wins it all",
+      "team": "Team 2v2: the team with more value wins"
+    },
     "modeRule": {
       "classic": "Most value wins it all",
       "crazy": "Least value wins it all",
