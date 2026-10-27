@@ -71,8 +71,12 @@ const skinsCap = computed(() => (isSm.value ? 10 : 6))
 const showAllSkins = ref(false)
 const shownInventory = computed(() => (showAllSkins.value ? sortedInventory.value : sortedInventory.value.slice(0, skinsCap.value)))
 const selectAll = () => (selected.value = sortedInventory.value.map((i) => i.uid))
+const sfx = useSfx()
 function toggle(uid: string) {
-  selected.value = selected.value.includes(uid) ? selected.value.filter((u) => u !== uid) : [...selected.value, uid]
+  const on = selected.value.includes(uid)
+  selected.value = on ? selected.value.filter((u) => u !== uid) : [...selected.value, uid]
+  if (on) sfx.deselect()
+  else sfx.select(selected.value.length)
 }
 const selling = ref(false)
 // Selling goes through a preview (what leaves, what arrives) before anything happens

@@ -32,7 +32,13 @@ watch(open, (v) => {
   load()
 })
 
-const toggle = (uid: string) => (selected.value = selected.value.includes(uid) ? selected.value.filter((u) => u !== uid) : [...selected.value, uid])
+const sfx = useSfx()
+function toggle(uid: string) {
+  const on = selected.value.includes(uid)
+  selected.value = on ? selected.value.filter((u) => u !== uid) : [...selected.value, uid]
+  if (on) sfx.deselect()
+  else sfx.select(selected.value.length)
+}
 // The actions work on the selection, or on everything when nothing is picked
 const target = computed(() => (selected.value.length ? items.value.filter((i) => selected.value.includes(i.uid)) : items.value))
 const total = computed(() => items.value.reduce((a, i) => a + i.price, 0))

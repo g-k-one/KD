@@ -9,7 +9,11 @@ let seq = 0
 export function useToast() {
   const toasts = useState<Toast[]>('toasts', () => [])
 
+  // a refusal or an error knocks, a done thing tings; plain notes stay silent
+  const sfx = useSfx()
   function show(text: string, tone: Toast['tone'] = 'default', ms = 3200) {
+    if (tone === 'danger') sfx.denied()
+    else if (tone === 'success') sfx.ok()
     const id = ++seq
     toasts.value = [...toasts.value, { id, text, tone }]
     setTimeout(() => (toasts.value = toasts.value.filter((t) => t.id !== id)), ms)

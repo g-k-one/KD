@@ -22,6 +22,7 @@ const props = withDefaults(
   { menuWidth: 'trigger' },
 )
 
+const sfx = useSfx()
 const single = defineModel<T>()
 const many = defineModel<T[]>('values', { default: () => [] })
 
@@ -42,6 +43,7 @@ const display = computed(() => {
 })
 
 function pick(o: SelectOption<T>) {
+  sfx.tap()
   if (props.multiple) {
     many.value = many.value.includes(o.value) ? many.value.filter((v) => v !== o.value) : [...many.value, o.value]
   } else {

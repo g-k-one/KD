@@ -157,6 +157,8 @@ async function join(slot: number) {
   try {
     const res = await $fetch<BattleResponse>(`/api/battles/${id.value}/join`, { method: 'POST', body: { slot } })
     data.value = res
+    // a seat taken: the stake's pluck, a step up for every filled seat
+    sfx.select(res.battle.slots.filter((x) => x.player).length)
     if (session.user && res.balance != null) session.user.balance = res.balance
   } catch (e) {
     if ((e as { statusCode?: number }).statusCode === 402) ui.openDeposit()
@@ -169,7 +171,9 @@ async function bot(slot: number) {
   if (busySlot.value != null) return
   busySlot.value = slot
   try {
-    data.value = await $fetch<BattleResponse>(`/api/battles/${id.value}/bot`, { method: 'POST', body: { slot } })
+    const res = await $fetch<BattleResponse>(`/api/battles/${id.value}/bot`, { method: 'POST', body: { slot } })
+    data.value = res
+    sfx.select(res.battle.slots.filter((x) => x.player).length)
   } catch (e) {
     if ((e as { statusCode?: number }).statusCode === 402) ui.openDeposit()
     else toast.error(e, t('common.error'))

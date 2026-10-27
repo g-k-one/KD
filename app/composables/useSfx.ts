@@ -281,5 +281,38 @@ export function useSfx() {
     riser: () => sweep(220, 660, 0.42, 0.05, 'sine'),
     /** The reel hangs on a card edge: a low tense pulse */
     tense: () => blip(110, 0.22, 0.14, 'sine'),
+
+    // The interface, in the same voice as the games (triangle blips, short glides, quieter than any game sound):
+    /** A switch, a tab, a segment: one soft tick */
+    tap: () => blip(980, 0.04, 0.045, 'sine'),
+    /** A skin into the stake (or a seat filled): a quick rising pluck; `n` (how many are in now) lifts the pitch a step */
+    select: (n = 1) => {
+      const f = 660 * 2 ** (Math.min(Math.max(n, 1) - 1, 6) / 6) * (1 + (Math.random() - 0.5) * 0.02)
+      blip(f, 0.07, 0.07)
+      setTimeout(() => blip(f * 1.5, 0.1, 0.055), 45)
+    },
+    /** ...and back out: the same pluck falling */
+    deselect: () => {
+      blip(990, 0.06, 0.05)
+      setTimeout(() => blip(660, 0.09, 0.045), 45)
+    },
+    /** A target chosen (the upgrade's skin, a case to battle): a glide up into a bright ting */
+    pick: () => {
+      glide(520, 1040, 0.12, 0.06, 'triangle')
+      setTimeout(() => blip(1560, 0.16, 0.05), 100)
+    },
+    /** Not allowed (no free slot, too cheap, a server error): two low soft knocks, never harsh */
+    denied: () => {
+      blip(260, 0.08, 0.09)
+      setTimeout(() => blip(196, 0.12, 0.08), 90)
+    },
+    /** Something worked (copied, revealed, saved): a small two-note ting */
+    ok: () => {
+      blip(1175, 0.07, 0.045)
+      setTimeout(() => blip(1568, 0.12, 0.04), 60)
+    },
+    /** A sheet or a window slides in / out: a short airy swish */
+    open: () => swish(700, 2600, 0.14, 0.035),
+    close: () => swish(2200, 600, 0.12, 0.03),
   }
 }

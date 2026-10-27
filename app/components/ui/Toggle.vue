@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const model = defineModel<boolean>({ required: true })
+const sfx = useSfx()
 defineProps<{ label?: string; disabled?: boolean }>()
 </script>
 
@@ -12,7 +13,7 @@ defineProps<{ label?: string; disabled?: boolean }>()
     :disabled="disabled"
     class="kd-toggle group relative h-5 w-9 shrink-0 rounded-full disabled:opacity-40"
     :data-on="model || undefined"
-    @click.stop="model = !model"
+    @click.stop="(model = !model), sfx.tap()"
   >
     <span class="kd-toggle-knob absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-neutral-15 shadow-sm" />
   </button>

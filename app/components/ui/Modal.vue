@@ -18,7 +18,10 @@ useResizeObserver(body, () => {
   lastH = h
 })
 const lock = useScrollLock(import.meta.client ? document.body : null)
+const sfx = useSfx()
 watch(open, (v) => {
+  if (v) sfx.open()
+  else sfx.close()
   lock.value = v
   lastH = 0
   if (v) nextTick(() => panel.value?.focus())

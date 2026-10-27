@@ -1,6 +1,11 @@
 <script setup lang="ts" generic="T extends string">
 // Figma "Tab": caps label, active = white with a brand underline. The underline slides between tabs.
 const model = defineModel<T>({ required: true })
+const sfx = useSfx()
+function choose(v: T) {
+  if (v !== model.value) sfx.tap()
+  model.value = v
+}
 /** flush: no bottom rule of its own (the parent draws it, e.g. with controls on the same line) */
 defineProps<{ tabs: Array<{ value: T; label: string; count?: number }>; flush?: boolean }>()
 
@@ -29,7 +34,7 @@ useResizeObserver(root, measure)
       :aria-selected="model === t.value"
       class="type-14-caps flex h-12 shrink-0 items-center gap-2 transition-colors duration-200"
       :class="model === t.value ? 'text-neutral-15' : 'text-neutral-12 hover:text-neutral-15'"
-      @click="model = t.value"
+      @click="choose(t.value)"
     >
       {{ t.label }}
       <span v-if="t.count != null" class="type-12 rounded-md bg-neutral-6 px-1.5 py-0.5 text-neutral-13">{{ t.count }}</span>
