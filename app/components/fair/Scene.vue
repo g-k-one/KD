@@ -32,6 +32,9 @@ const columns = computed(() =>
 <template>
   <div class="kd-pf absolute inset-0 select-none" aria-hidden="true">
     <div class="kd-pf-stage absolute">
+      <!-- the shield's green light, a soft pool behind it whose box starts below the band's top: the shield may reach over
+           the live strip, its light does not -->
+      <span class="kd-pf-glow absolute block" />
       <img src="/img/hero/pf-board.webp" alt="" draggable="false" class="kd-pf-layer is-board" />
       <img src="/img/hero/pf-blueprint.webp" alt="" draggable="false" class="kd-pf-layer is-blueprint" />
       <img src="/img/hero/pf-laptop.webp" alt="" draggable="false" class="kd-pf-layer is-laptop" />
@@ -68,8 +71,8 @@ const columns = computed(() =>
 .kd-pf-layer.is-board {
   --d: 0.2;
   --r: 6deg;
-  left: 60.7%;
-  top: 6.6%;
+  left: 66%;
+  top: 12%;
   width: 24.5%;
   filter: brightness(0.5) saturate(0.8) blur(2px);
 }
@@ -93,17 +96,28 @@ const columns = computed(() =>
   left: 24.2%;
   top: -4.8%;
   width: 57.3%;
-  filter: drop-shadow(0 0 40px rgb(18 183 106 / 0.45)) drop-shadow(0 18px 26px rgb(0 0 0 / 0.5));
+  filter: drop-shadow(0 18px 26px rgb(0 0 0 / 0.5));
   animation: kd-pf-float 5.6s var(--ease-in-out) infinite;
 }
+/* the check is the nearest thing: it follows the pointer the most */
 .kd-pf-layer.is-check {
-  --d: 1.5;
+  --d: 2.6;
   --r: -4deg;
   left: 33%;
   top: 12.6%;
   width: 43.1%;
   filter: drop-shadow(0 18px 24px rgb(0 0 0 / 0.55));
   animation: kd-pf-float 4.4s var(--ease-in-out) infinite -1.6s;
+}
+/* the light: around the shield, its box from 3% of the stage down, past a pointer lift (the band's top sits above that on every width) */
+.kd-pf-glow {
+  left: 14%;
+  top: 3%;
+  width: 72%;
+  height: 94%;
+  background: radial-gradient(closest-side, rgb(18 183 106 / 0.5), rgb(18 183 106 / 0.16) 60%, transparent);
+  transform: translate3d(calc(var(--px, 0) * 0.8 * 14px), calc(var(--py, 0) * 0.8 * 9px), 0);
+  transition: transform var(--dur-slow) var(--ease-out);
 }
 @keyframes kd-pf-float {
   50% {
