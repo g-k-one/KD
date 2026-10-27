@@ -64,7 +64,7 @@ const isPhone = computed(() => mounted.value && phoneQuery.value)
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10">
+  <div class="mx-auto flex max-w-content flex-col gap-5 px-4 pt-4 lg:gap-8 lg:px-0 lg:pt-10">
     <UiPageBar logo :left="barLeft" :right="barRight" />
 
     <!-- How it works: a battle in four plain steps, as the upgrade explains itself -->

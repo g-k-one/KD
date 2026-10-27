@@ -25,10 +25,12 @@ const cases = computed(() => {
   }
   return [...by.values()]
 })
-// one row of three when that is all there is; past three, two rows of three (the room lists every case)
+// up to three cases share one tall row, as wide as they need (no empty tiles, bigger pictures); past three, two rows of
+// three that fade under the players (the room lists every case)
 const twoRows = computed(() => cases.value.length > 3)
-const tiles = computed(() => cases.value.slice(0, twoRows.value ? 6 : 3))
-const blanks = computed(() => (twoRows.value ? 6 : 3) - tiles.value.length)
+const tiles = computed(() => cases.value.slice(0, 6))
+const blanks = computed(() => (twoRows.value ? 6 - tiles.value.length : 0))
+const cols = computed(() => (twoRows.value ? 3 : tiles.value.length))
 
 const pot = computed(() => props.battle.cost * props.battle.size)
 const clock = computed(() => battleClock(props.battle, now.value))
@@ -88,9 +90,9 @@ function onClick(e: MouseEvent) {
 
     <!-- the cases, each once; two rows fade into the card under the players, one row keeps them below -->
     <div class="relative" :class="!twoRows && 'flex flex-col gap-2'">
-      <div class="kd-bcard-grid grid grid-cols-3" :class="[compact ? 'gap-1' : 'gap-2', twoRows && 'is-fading']">
-        <span v-for="c in tiles" :key="c.slug" class="kd-bcard-tile relative grid aspect-square place-items-center" :class="compact ? 'rounded-lg' : 'rounded-xl'" :title="c.qty > 1 ? `${c.name} ×${c.qty}` : c.name">
-          <img :src="c.image" :alt="c.name" draggable="false" class="kd-bcard-case size-[88%] object-contain" />
+      <div class="kd-bcard-grid grid" :class="[compact ? 'gap-1' : 'gap-2', twoRows && 'is-fading']" :style="{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }">
+        <span v-for="c in tiles" :key="c.slug" class="kd-bcard-tile relative grid place-items-center" :class="[twoRows ? 'aspect-square' : compact ? 'h-24' : 'h-36', compact ? 'rounded-lg' : 'rounded-xl']" :title="c.qty > 1 ? `${c.name} ×${c.qty}` : c.name">
+          <img :src="c.image" :alt="c.name" draggable="false" class="kd-bcard-case object-contain" :class="twoRows ? 'size-[88%]' : 'h-[88%] max-w-[92%]'" />
           <span v-if="c.qty > 1" class="kd-bcard-qty absolute tabular-nums" :class="compact ? 'type-10-caps top-0.5 right-0.5 rounded px-1' : 'type-12 top-1 right-1 rounded-md px-1.5 py-px'">×{{ c.qty }}</span>
         </span>
         <span v-for="n in blanks" :key="`e${n}`" class="kd-bcard-tile aspect-square" :class="compact ? 'rounded-lg' : 'rounded-xl'" />
@@ -145,7 +147,7 @@ function onClick(e: MouseEvent) {
   --mc: var(--color-item-milspec);
 }
 .kd-bcard-wash {
-  background: radial-gradient(120% 70% at 0% 0%, color-mix(in srgb, var(--mc) 32%, transparent), transparent 70%);
+  background: radial-gradient(110% 60% at 0% 0%, color-mix(in srgb, var(--mc) 16%, transparent), transparent 70%);
 }
 .kd-bcard.is-finished .kd-bcard-wash {
   opacity: 0.4;
@@ -156,7 +158,7 @@ function onClick(e: MouseEvent) {
   background: var(--mc);
 }
 .kd-mode-name {
-  color: var(--mc);
+  color: var(--color-neutral-14);
 }
 .kd-bcard-pill {
   background: rgb(12 13 16 / 0.6);
