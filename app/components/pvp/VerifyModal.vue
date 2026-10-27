@@ -2,8 +2,9 @@
 import type { Battle } from '#shared/types/api'
 
 /*
- * Check one battle: every ticket is HMAC-SHA256(server seed, EOS block : nonce), the nonce counting up round by round
- * and seat by seat. Once the battle is over the server seed is revealed: we recompute every round here, in the
+ * Check one battle: every ticket is HMAC-SHA256(server seed, EOS block ID : nonce), the nonce counting up round by
+ * round and seat by seat. The block is named when the last seat fills and its ID (the salt) is taken once the block is
+ * out, so nobody, us included, knows it when the server seed is committed; the block opens on a public explorer. Once the battle is over the server seed is revealed: we recompute every round here, in the
  * browser, and show that each round's tickets (and so its drops) are the ones the battle had. Before that the hash is
  * all there is, and the modal says when the seed comes.
  */
@@ -18,14 +19,15 @@ const spaced = (n: number) => n.toLocaleString('en-US').replace(/,/g, ' ')
 async function check() {
   const b = props.battle
   const seed = b.seed.serverSeed
-  if (!seed || b.seed.eosBlock == null || !b.results) return
+  const salt = b.seed.eosBlockId
+  if (!seed || !salt || !b.results) return
   busy.value = true
   hashOk.value = (await sha256Hex(seed)) === b.seed.serverSeedHash
   const out = []
   let nonce = 0
   for (const [r, round] of b.rounds.entries()) {
     const got: number[] = []
-    for (let s = 0; s < b.size; s++) got.push((await pfTicket(seed, String(b.seed.eosBlock), nonce++)).ticket)
+    for (let s = 0; s < b.size; s++) got.push((await pfTicket(seed, salt, nonce++)).ticket)
     // a round matches when it holds the same tickets (seats keep their own, in seat order)
     const had = b.results[r]!.tickets
     const ok = [...got].sort((x, y) => x - y).join() === [...had].sort((x, y) => x - y).join()
@@ -36,6 +38,8 @@ async function check() {
 }
 watch(open, (v) => v && check(), { immediate: true })
 const allOk = computed(() => hashOk.value && rows.value.length > 0 && rows.value.every((r) => r.ok))
+// the named block on a public EOS explorer, where its ID can be read
+const explorer = computed(() => (props.battle.seed.eosBlock == null ? null : `https://bloks.io/block/${props.battle.seed.eosBlock}`))
 </script>
 
 <template>
@@ -51,7 +55,19 @@ const allOk = computed(() => hashOk.value && rows.value.length > 0 && rows.value
       </div>
       <div class="grid grid-cols-[150px_minmax(0,1fr)] items-center gap-3">
         <dt class="type-12-caps text-neutral-11">{{ $t('pvp.eosBlock') }}</dt>
-        <dd class="font-mono text-xs text-neutral-13">{{ battle.seed.eosBlock ?? $t('pvp.eosAfter') }}</dd>
+        <dd v-if="explorer" class="min-w-0">
+          <a :href="explorer" target="_blank" rel="noopener" class="inline-flex items-center gap-1 font-mono text-xs text-neutral-13 underline decoration-neutral-7 underline-offset-2 hover:text-neutral-15">
+            #{{ spaced(battle.seed.eosBlock!) }}<UiIcon name="arrow-square-out" :size="12" />
+          </a>
+        </dd>
+        <dd v-else class="font-mono text-xs text-neutral-10">{{ $t('pvp.eosAfter') }}</dd>
+      </div>
+      <!-- the salt: the named block's ID, unknown to anyone until the block is out -->
+      <div class="grid grid-cols-[150px_minmax(0,1fr)] items-center gap-3">
+        <dt class="type-12-caps text-neutral-11">{{ $t('pvp.eosBlockId') }}</dt>
+        <dd class="min-w-0 truncate font-mono text-xs" :class="battle.seed.eosBlockId ? 'text-neutral-13' : 'text-neutral-10'" :title="battle.seed.eosBlockId ?? undefined">
+          {{ battle.seed.eosBlockId ?? (battle.seed.eosBlock == null ? $t('pvp.eosIdAfterFill') : $t('pvp.eosIdAfterBlock')) }}
+        </dd>
       </div>
     </dl>
 

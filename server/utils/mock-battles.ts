@@ -1,6 +1,8 @@
-// Mock PvP battles. When the last seat fills, every round is rolled at once (PF ticket per player
-// per round, a future "EOS block" as the client seed) and the battle goes live; the client replays
-// the rounds from startedAt + roundMs.
+// Mock PvP battles. When the last seat fills, a future EOS block is named; once it is produced its ID is the salt
+// (the client seed) and every round is rolled at once (a PF ticket per player per round); the battle goes live and the
+// client replays the rounds from startedAt + roundMs.
+// The real backend names a block a few ahead of the chain's head when the seats fill and rolls only after that block
+// exists, with the block ID read from the chain; the mock stands a random 64-hex ID in for it.
 import type { Battle, BattleCaseRef, BattleMode, BattlePlayerRef, BattleRoundResult, CreateBattleRequest } from '#shared/types/api'
 import { avatarFor } from '#shared/utils/avatar'
 import { pickByTicket, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
@@ -52,7 +54,7 @@ async function newBattle(size: number, rounds: BattleCaseRef[], mode: BattleMode
     winnerSlot: null,
     winners: [],
     viewers: 0,
-    seed: { serverSeedHash: await sha256Hex(serverSeed), eosBlock: null, serverSeed: null },
+    seed: { serverSeedHash: await sha256Hex(serverSeed), eosBlock: null, eosBlockId: null, serverSeed: null },
     serverSeed,
     clientSeed: '',
     createdAt: new Date().toISOString(),
@@ -60,9 +62,10 @@ async function newBattle(size: number, rounds: BattleCaseRef[], mode: BattleMode
 }
 
 async function start(b: StoredBattle) {
-  const eosBlock = 412_000_000 + Math.floor(Math.random() * 1_000_000)
-  b.seed.eosBlock = eosBlock
-  b.clientSeed = String(eosBlock)
+  // the block is named now; its ID (unknown to anyone until the block is produced) is the salt
+  b.seed.eosBlock = 412_000_000 + Math.floor(Math.random() * 1_000_000)
+  b.seed.eosBlockId = randomSeed(32)
+  b.clientSeed = b.seed.eosBlockId
   const results: BattleRoundResult[] = []
   let nonce = 0
   for (const r of b.rounds) {

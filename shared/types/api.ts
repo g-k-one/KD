@@ -459,7 +459,12 @@ export interface Battle {
   winners: number[]
   /** People watching the room right now (the Go backend counts WebSocket subscribers) */
   viewers: number
-  seed: { serverSeedHash: string; eosBlock: number | null; serverSeed: string | null }
+  /**
+   * The battle's fairness. serverSeedHash: committed when the battle is made. eosBlock: a future EOS block, named when the
+   * last seat fills (nobody can know its ID yet). eosBlockId: that block's ID once it is produced — the salt every ticket
+   * uses: HMAC_SHA256(server_seed, eos_block_id + ":" + nonce). serverSeed: revealed when the battle ends.
+   */
+  seed: { serverSeedHash: string; eosBlock: number | null; eosBlockId: string | null; serverSeed: string | null }
   createdAt: string
 }
 
