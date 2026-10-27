@@ -361,8 +361,8 @@ function poke(e: MouseEvent) {
 .kd-hen-prop.is-crate-back {
   --d: 0.2;
   --r: 12deg;
-  right: 70px;
-  top: 92px;
+  right: 150px;
+  top: 150px;
   width: 140px;
   filter: brightness(0.5) saturate(0.85) blur(2.5px);
 }
@@ -370,8 +370,8 @@ function poke(e: MouseEvent) {
 .kd-hen-prop.is-crate-side {
   --d: 0.35;
   --r: -8deg;
-  right: 20px;
-  bottom: 70px;
+  right: -16px;
+  bottom: 112px;
   width: 210px;
   filter: brightness(0.75) saturate(0.95) blur(1px);
 }
@@ -384,7 +384,7 @@ function poke(e: MouseEvent) {
   --f: -5px;
   --fd: 5s;
   left: -40px;
-  bottom: 26px;
+  bottom: -8px;
   width: 400px;
   filter: brightness(0.95) drop-shadow(0 10px 12px rgb(0 0 0 / 0.5));
 }
@@ -393,7 +393,7 @@ function poke(e: MouseEvent) {
   --d: 0.5;
   --r: -7deg;
   left: -24px;
-  bottom: 70px;
+  bottom: 100px;
   width: 390px;
   filter: brightness(0.98);
 }
