@@ -265,9 +265,6 @@ const playedChance = ref(0)
 const shownChance = computed(() => (state.value === 'win' || state.value === 'lose' ? playedChance.value : chance.value))
 const gauge = useTemplateRef<{ spin: (roll: number, fast: boolean) => Promise<void>; reset: () => void; skip: () => void }>('gauge')
 const sfx = useSfx()
-// the launch sound decodes now, so the first upgrade plays it, not the synth stand-in
-onMounted(() => sfx.launchLoad())
-onBeforeUnmount(() => sfx.launchStop())
 const haptics = useHaptics()
 
 // Suspense (docs/motion.md → Upgrade): the scene darkens, Forge draws light into the dial while it turns,

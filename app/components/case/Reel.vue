@@ -169,13 +169,7 @@ function resetPositions() {
     t.style.transform = horizontal.value ? `translateX(${off}px)` : `translateY(${off}px)`
   })
 }
-onMounted(() => {
-  nextTick(resetPositions)
-  // the launch sound decodes now, so the first spin plays it, not the synth stand-in
-  sfx.launchLoad()
-})
-// leaving the page cuts the launch short
-onBeforeUnmount(() => sfx.launchStop())
+onMounted(() => nextTick(resetPositions))
 watch([rootW, rootH, grid], () => {
   if (props.phase === 'idle') nextTick(resetPositions)
   // a settled result stays on its drop when the reel's size changes (window resize, a scrollbar)
@@ -196,7 +190,7 @@ watch(
   (p, old) => {
     // A new opening: forget the last skip. A skip pressed from here on (even during the breath) counts.
     if (p === 'spinning') skipping = false
-    // every opening launches with its push — the first, Open again, Fast
+    // every opening launches with its tick-and-coin — the first, Open again, Fast
     if (p === 'spinning' && old !== 'spinning') sfx.riser()
     if (old !== 'idle' || p !== 'spinning' || props.fast || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     breathing.value = true

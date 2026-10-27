@@ -35,20 +35,6 @@ const POKE: Record<'gawk' | 'bukbuk' | 'kurwawk' | 'kurwa' | 'puff', [number, nu
   puff: [4.365, 0.281],
 }
 let pokeBuf: Promise<AudioBuffer | null> | null = null
-// The launch of a reel or an upgrade (public/sfx/launch.mp3, KREA · Seed Audio): the first click of a pistol reload (the
-// magazine seated) alone, stretched ×1.35 without changing its pitch, 0.37 s, its attack and very top softened (3 ms
-// in, low-pass 6.5 kHz): still bright, without the sting
-let launchBuf: Promise<AudioBuffer | null> | null = null
-let launchReady: AudioBuffer | null = null
-let launchSrc: AudioBufferSourceNode | null = null
-function launchStop() {
-  try {
-    launchSrc?.stop()
-  } catch {}
-  launchSrc = null
-}
-// a launch never plays on in a hidden tab
-if (import.meta.client) document.addEventListener('visibilitychange', () => document.hidden && launchStop())
 
 export function useSfx() {
   const settings = useSettingsStore()
@@ -73,17 +59,6 @@ export function useSfx() {
       .then((b) => a.decodeAudioData(b))
       .catch(() => (pokeBuf = null))
     return pokeBuf
-  }
-  /** Loads and decodes the launch sound once (the case and upgrade pages ask when they mount) */
-  function launchLoad() {
-    const a = audio()
-    if (!a) return Promise.resolve(null)
-    launchBuf ??= fetch(`${base.endsWith('/') ? base : `${base}/`}sfx/launch.mp3`)
-      .then((r) => r.arrayBuffer())
-      .then((b) => a.decodeAudioData(b))
-      .then((buf) => (launchReady = buf))
-      .catch(() => (launchBuf = null))
-    return launchBuf
   }
   /** Plays one cut of the poke sprite at a playback rate (a quick run of pokes climbs in pitch); false when not loaded */
   function pokeCut(name: keyof typeof POKE, gain: number, rate = 1) {
@@ -302,30 +277,14 @@ export function useSfx() {
     claim: () => reveal(2),
     win: () => reveal(true),
     levelUp: () => reveal(4),
-    launchLoad,
-    launchStop,
-    /** The launch of a reel or an upgrade: the recorded lever pull and spin-up; a synth spin-up while it is still loading */
+    /** The launch of a reel or an upgrade: the reel's own tick, and on its heels the coin's two bright notes */
     riser: () => {
-      const s = settings.settings
-      if (!s.sound || s.volume <= 0) return
-      const a = audio()
-      if (document.hidden) return
-      if (a && launchReady) {
-        launchStop()
-        const src = a.createBufferSource()
-        launchSrc = src
-        const g = a.createGain()
-        src.buffer = launchReady
-        // clearly over the reel's ticks, well under a drop's reveal
-        g.gain.value = 0.45 * (s.volume / 100)
-        src.connect(g).connect(a.destination)
-        src.start()
-        return
-      }
-      launchLoad()
-      glide(150, 55, 0.16, 0.26, 'sine')
-      swish(320, 3600, 0.42, 0.13)
-      glide(196, 784, 0.44, 0.11, 'triangle', 7, 9, 0.38)
+      if (import.meta.client && document.hidden) return
+      blip(1400, 0.035, 0.06, 'square')
+      setTimeout(() => {
+        blip(1320, 0.08, 0.07)
+        setTimeout(() => blip(1760, 0.12, 0.06), 60)
+      }, 45)
     },
     /** The reel hangs on a card edge: a low tense pulse */
     tense: () => blip(110, 0.22, 0.14, 'sine'),
