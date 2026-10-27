@@ -215,7 +215,9 @@ const rarities = ref<Rarity[]>([])
 const sortDesc = ref(true)
 const invSortDesc = ref(true)
 const page = ref(0)
-const PAGE = 15
+// a page of skins: three rows of five on desktop, three rows of three on phones (the sheet shows its pager without a scroll)
+const PAGE = computed(() => (isLg.value ? 15 : 9))
+watch(PAGE, () => ((page.value = 0), (invPage.value = 0)))
 
 const filteredMarket = computed(() => {
   const from = Number.parseFloat(priceFrom.value) * 100 || 0
@@ -227,14 +229,14 @@ const filteredMarket = computed(() => {
     .filter((i) => !q || `${i.weapon} ${i.skin}`.toLowerCase().includes(q))
     .sort((a, b) => (sortDesc.value ? b.price - a.price : a.price - b.price))
 })
-const pages = computed(() => Math.max(1, Math.ceil(filteredMarket.value.length / PAGE)))
-const marketPage = computed(() => filteredMarket.value.slice(page.value * PAGE, page.value * PAGE + PAGE))
+const pages = computed(() => Math.max(1, Math.ceil(filteredMarket.value.length / PAGE.value)))
+const marketPage = computed(() => filteredMarket.value.slice(page.value * PAGE.value, page.value * PAGE.value + PAGE.value))
 watch([search, priceFrom, priceTo, rarities, sortDesc], () => (page.value = 0))
 // The target's own page: a skin aimed with the chance bar (or a multiplier) shows among its neighbours in price when
 // the list comes into view — on phones as the Desired sheet opens, on desktop at once
 function showTarget() {
   const i = target.value ? filteredMarket.value.findIndex((x) => x.id === target.value!.id) : -1
-  if (i >= 0) page.value = Math.floor(i / PAGE)
+  if (i >= 0) page.value = Math.floor(i / PAGE.value)
 }
 watch(() => target.value?.id, showTarget)
 watch([panelTab, sheetOpen], () => panelTab.value === 'desired' && sheetOpen.value && showTarget())
@@ -249,8 +251,8 @@ function resetMarketFilters() {
 const sortedInventory = computed(() => [...inventory.value].sort((a, b) => (invSortDesc.value ? b.price - a.price : a.price - b.price)))
 // My skins page by page too, like the market (15 a page; the empty slots fill the last page)
 const invPage = ref(0)
-const invPages = computed(() => Math.max(1, Math.ceil(sortedInventory.value.length / PAGE)))
-const inventoryPage = computed(() => sortedInventory.value.slice(invPage.value * PAGE, invPage.value * PAGE + PAGE))
+const invPages = computed(() => Math.max(1, Math.ceil(sortedInventory.value.length / PAGE.value)))
+const inventoryPage = computed(() => sortedInventory.value.slice(invPage.value * PAGE.value, invPage.value * PAGE.value + PAGE.value))
 watch([invPages, invSortDesc], () => (invPage.value = Math.min(invPage.value, invPages.value - 1)))
 const inventoryTotal = computed(() => inventory.value.reduce((a, i) => a + i.price, 0))
 
@@ -263,6 +265,8 @@ const playedChance = ref(0)
 const shownChance = computed(() => (state.value === 'win' || state.value === 'lose' ? playedChance.value : chance.value))
 const gauge = useTemplateRef<{ spin: (roll: number, fast: boolean) => Promise<void>; reset: () => void; skip: () => void }>('gauge')
 const sfx = useSfx()
+// the launch sound decodes now, so the first upgrade plays it, not the synth stand-in
+onMounted(() => sfx.launchLoad())
 const haptics = useHaptics()
 
 // Suspense (docs/motion.md → Upgrade): the scene darkens, Forge draws light into the dial while it turns,
@@ -592,7 +596,7 @@ async function runUpgrade() {
           </UiButton>
         </div>
         <div v-if="session.user && inventoryLoading" class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
-          <span v-for="n in 15" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-[4/5] lg:aspect-auto lg:h-[105px]" :style="{ animationDelay: `${n * 40}ms` }" />
+          <span v-for="n in PAGE" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-[4/5] lg:aspect-auto lg:h-[105px]" :style="{ animationDelay: `${n * 40}ms` }" />
         </div>
         <!-- nothing to stake yet: one big step, open a case (no second, small "open cases" line under it) -->
         <UiEmptyState v-else-if="session.user && !inventory.length" :text="$t('account.emptyInventory')" class="flex-1 justify-center">

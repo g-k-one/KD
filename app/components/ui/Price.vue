@@ -3,7 +3,7 @@
 type Size = 'xs' | 's' | 'm' | 'l' | 'xl' | 'xxl'
 type Tone = 'default' | 'coin' | 'success' | 'muted' | 'inverse'
 
-/** compact: from 1 000 coins on, the amount shortens to 12.9k / 1.2M (tight tiles).
+/** compact: from 100 coins on the cents go (986), from 1 000 the amount shortens to 12.9k / 1.2M (tight tiles).
  *  countUp: on mount the amount runs up from zero (a drop's price as it lands, CSGOGem) */
 const props = withDefaults(defineProps<{ amount: number; size?: Size; tone?: Tone; compact?: boolean; countUp?: boolean }>(), {
   size: 'm',
@@ -49,7 +49,9 @@ const spec = computed(
 /** Cents → "12.9k" (3 significant digits), "1.23M"; below 1 000 coins the full amount */
 function shortCoins(cents: number) {
   const c = cents / 100
-  if (c < 1000) return formatCoins(cents)
+  if (c < 100) return formatCoins(cents)
+  // 100–999 without the cents (986, not 985.59): a tight tile keeps its price and its chance side by side
+  if (c < 1000) return String(Math.round(c))
   const [v, unit] = c >= 1e6 ? [c / 1e6, 'M'] : [c / 1e3, 'k']
   return `${v.toFixed(v >= 100 ? 0 : v >= 10 ? 1 : 2).replace(/\.?0+$/, '')}${unit}`
 }
