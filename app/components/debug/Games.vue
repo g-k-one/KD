@@ -27,8 +27,11 @@ const mood = computed(() => (moodPick.value === 'none' ? null : moodPick.value))
 const sfx = useSfx()
 const haptics = useHaptics()
 // KURWADROP's chicken: its recorded sprite, one beat at a time and the whole show at henShow's timing
-onMounted(() => sfx.henLoad())
+// ...and the banner chicken's poke sprite
+onMounted(() => (sfx.henLoad(), sfx.pokeLoad()))
 const HEN_SHOW: [number, () => void][] = [[120, sfx.henSwap], [130, sfx.henBody], [820, () => sfx.henScream()], [1750, () => sfx.henInflate()], [2150, sfx.henPop]]
+// Grouped as the game uses them: the chicken (reel and banner), the games' own beats, the moments of play outside the
+// games (stake, target, refusals); plain presses are silent on purpose
 const SOUNDS: [string, () => void][] = [
   ['chicken show', () => HEN_SHOW.forEach(([ms, f]) => setTimeout(f, ms))],
   ['chicken swap', sfx.henSwap],
@@ -36,6 +39,9 @@ const SOUNDS: [string, () => void][] = [
   ['chicken KURWA', () => sfx.henScream()],
   ['chicken stretch', () => sfx.henInflate()],
   ['chicken pop', sfx.henPop],
+  ['banner poke', () => sfx.henPoke(1)],
+  ['banner poke ×3', () => sfx.henPoke(2, 3)],
+  ['banner fed up', () => sfx.henPoke(3)],
   ['squawk', sfx.squawk],
   ['tick', sfx.tick],
   ['coin', sfx.coin],
@@ -43,12 +49,17 @@ const SOUNDS: [string, () => void][] = [
   ['count', () => sfx.count()],
   ['count last', () => sfx.count(true)],
   ['lose', sfx.lose],
-  ['riser', sfx.riser],
+  ['launch (tick + coin)', sfx.riser],
   ['tense', sfx.tense],
   ['claim', sfx.claim],
   ['win', sfx.win],
   ['level up', sfx.levelUp],
   ...[0, 1, 2, 3, 4].map((t) => [`reveal ${t}`, () => sfx.reveal(t)] as [string, () => void]),
+  ...[1, 3, 6].map((n) => [`skin in (${n})`, () => sfx.select(n)] as [string, () => void]),
+  ['skin out', sfx.deselect],
+  ['target picked', sfx.pick],
+  ['refused', sfx.denied],
+  ['done', sfx.ok],
 ]
 const HAPTICS: [string, () => void][] = [
   ['tap', haptics.tap],
