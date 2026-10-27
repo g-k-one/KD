@@ -30,16 +30,48 @@ no UI, no frame. The subject fits inside the image with a clear margin on every 
 ### 1.3 Provably Fair: «курица-инспектор»
 - `hero/pf-chicken.webp` (640×670): `The mascot as an inspector, holding a big magnifying glass up to one eye (the eye hugely magnified behind the lens), serious-funny expression, full body, standing. Square 1:1.`
 - `hero/pf-case.webp` (720×620): `A transparent glass loot case with a handle, glowing soft green from inside, a CS2 rifle, a knife and a pile of gold coins visible inside through the glass. Three-quarter view. Square 1:1.`
+- `hero/pf-lens.webp` (1:1, прозрачный фон, **пустое стекло**): главный элемент нового баннера. Лупа ходит за курсором, а в её стекле я показываю код (хеш, сиды, номер броска), поэтому стекло должно быть сквозным: `A big magnifying glass, front view, tilted 25° with the handle going down to the bottom right: a thick glossy gold-and-orange metal ring with a dark inner bevel, a chunky black handle with orange grip bands. The lens itself is completely empty and fully transparent, nothing seen through it; only a thin soft white glare arc along the top-left edge of the glass. Square 1:1, the ring centred in the upper-left two thirds.`
 
 ---
 
-## 2. Эмоции курицы (пустые состояния и подсказки)
+## 2. Курица-эмоции: пустые состояния и подсказки (3 листа 2×2)
 
-Один спрайт на три эмоции: генерируй каждую отдельно, 1:1, бюст от груди. Заменят `items/chicken-moods.webp`.
+Сейчас на все пустые места одна картинка `items/chicken-moods.webp` (две мордочки, вырезаны грубо, с тёмной подложкой). Вместо неё у каждого места своя сценка: курица делает то, о чём говорит текст под ней. На сайте они стоят в 96–112 px, поэтому:
+- один жест и один предмет, крупно; никаких мелких деталей, которые пропадут в 96 px;
+- кадр у всех одинаковый: курица от груди до гребня, голова одного размера во всех клетках, взгляд и свет как у образца;
+- силуэт читается на тёмном фоне: светлая курица, яркий предмет, без тёмных пятен по краям.
 
-- **Смеётся** (гость в апгрейде, «почти проиграл»): `The mascot, bust from the chest up, laughing hard, beak wide open, eyes squeezed into happy arcs with tears of laughter, one wing pointing at the viewer — teasing but friendly.`
-- **Фух** («почти выиграл»): `The mascot, bust from the chest up, relieved "phew": wiping sweat off its forehead with one wing, a big sweat drop on the side of the head, eyes half-closed, beak slightly open, exhaling.`
-- **Пожимает плечами** (пустые списки): `The mascot, bust from the chest up, shrugging with both wings out to the sides, eyebrows raised, puzzled half-smile, looking at an empty space next to it.`
+Генерируй **листом 2×2** (квадрат 2048×2048, четыре клетки 1024×1024), прозрачный фон, PNG. Я режу лист скриптом на четыре файла и сжимаю в webp. В начало промпта листа, после общего блока, вставь:
+
+```
+A 2×2 sheet of four separate stickers of the same mascot, one per quarter of the image, each centred in its own quarter
+with a wide empty margin, nothing crossing into another quarter, no grid lines, no borders. All four at the same scale:
+the chicken from the chest up, its head the same size in every quarter, the same light from the top left and the same
+orange rim light. Each one has a single clear gesture and at most one prop, big and simple enough to read at 96 px.
+```
+
+Потом четыре строки: `Top left: …`, `Top right: …`, `Bottom left: …`, `Bottom right: …`.
+
+### Лист A: пустые списки (`moods/empty-*.webp`)
+- **Top left: `empty-inventory`** (пустой инвентарь: профиль, апгрейд, ящик кошелька): `the chicken holding an open loot case upside down and shaking it, nothing falls out, eyes wide in disbelief.`
+- **Top right: `empty-history`** (пустая история): `the chicken holding up a long blank paper scroll with nothing written on it, one eyebrow raised, a pencil behind its ear.`
+- **Bottom left: `empty-search`** (кейсы не нашлись по фильтрам, «ничего не подходит» в апгрейде): `the chicken peering through a big magnifying glass held in one wing, its eye hugely magnified, searching, puzzled.`
+- **Bottom right: `empty-pvp`** (нет битв в PvP): `the chicken holding a CS2 knife up in a challenge pose, looking around for an opponent, impatient, foot tapping.`
+
+### Лист B: гость и Provably Fair (`moods/*.webp`)
+- **Top left: `guest-rolls`** (гость на странице Provably Fair: «войди, чтобы увидеть свои броски»): `the chicken peeking out from behind a big green shield with a white check mark, waving the viewer in with one wing.`
+- **Top right: `no-rolls`** (бросков ещё нет): `the chicken holding a big glossy white dice with orange pips close to its face, eyes lit up with excitement, about to roll.`
+- **Bottom left: `guest-upgrade`** (гость в апгрейде, сейчас «смеётся»): `the chicken laughing hard, beak wide open, eyes squeezed into happy arcs with tears of laughter, one wing pointing at the viewer, teasing but friendly.`
+- **Bottom right: `signed-out`** (запасная для других «войди»): `the chicken holding up a glowing round grey-blue key badge (no logo), smiling, inviting.`
+
+### Лист C: апгрейд, «на волосок» (`moods/*.webp`)
+Они выглядывают из-под шкалы апгрейда, видна верхняя половина. Голову держи в верхней половине клетки.
+- **Top left: `near-win`** (выиграл на волосок): `the chicken relieved, "phew": wiping sweat off its forehead with one wing, a big sweat drop on the side of the head, eyes half-closed, exhaling.`
+- **Top right: `near-lose`** (проиграл на волосок): `the chicken laughing at the viewer, beak wide open, one wing slapping its own knee out of frame, tears of laughter.`
+- **Bottom left: `error`** (что-то сломалось, ошибка загрузки): `the chicken tangled in a black cable with a small spark, feathers ruffled, embarrassed grin.`
+- **Bottom right: `check-ok`** (проверка броска сошлась): `the chicken giving a proud thumbs-up with one wing, a green check mark badge pinned on its chest.`
+
+Последние две пока негде показать. Если кредитов жалко, вместо них поставь на лист любые две из листа A в другой позе: выберу лучшую.
 
 ---
 
