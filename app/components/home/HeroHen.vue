@@ -4,7 +4,7 @@
  * logo) hovering in mid-air in its setup pose — wings out, beak open — and watching the cursor. The rig has no idle
  * animation, so the life is procedural, on its own bones, every frame: the wings beat slowly, the legs dangle, the comb
  * jiggles, the jaw chatters a little, the head turns a few degrees toward the cursor and both pupils slide toward it
- * (each within its eye). The whole canvas bobs on CSS. With no mouse (phones) the eyes wander on their own.
+ * (each anywhere inside its own eye). The whole canvas bobs on CSS. With no mouse (phones) the eyes wander on their own.
  * A poke: a jolt, a squawk, feathers; the banner counts the pokes (its bubble and the golden egg), the fifth bursts gold.
  * Its own WebGL canvas, drawn only while on screen; if WebGL is missing the chicken stays out and nothing breaks.
  */
@@ -21,10 +21,11 @@ const box = useTemplateRef<HTMLElement>('box')
 const host = useTemplateRef<HTMLElement>('host')
 const ok = ref(false)
 
-const VIEW_H = 560 // skeleton units shown top to bottom (the hen is ~450 tall)
+const VIEW_H = 480 // skeleton units shown top to bottom (the hen is ~450 tall: it nearly fills its box)
 const CENTER_Y = 28 // the hen's middle in skeleton units
-// how far each pupil may slide from its rest, skeleton units: the near eye is big, the far one (eyeR) small
-const PUPIL = { eyeL: 13, eyeR: 5 }
+// how far each pupil may sit from its eye's centre, skeleton units (the white's radius less the pupil's and the rim):
+// the near eye is big (white 77, pupil 24), the far one (eyeR) small (white 40, pupil 12)
+const PUPIL = { eyeL: 20, eyeR: 10 }
 const MAX_PX = 1400
 
 let stop = () => {}
@@ -132,18 +133,16 @@ onMounted(async () => {
     // the head turns a little toward what it looks at
     B.head.pose.rotation += Math.max(-7, Math.min(7, -look.x / 60)) + Math.max(-5, Math.min(5, (look.y - CENTER_Y - 120) / 70))
     sk.updateWorldTransform(spine.Physics.update)
-    // each pupil slides from its rest toward the look point, never out of its eye
+    // each pupil sits on the line from its eye's centre toward the look point: the further the point, the nearer the
+    // white's edge, never past it — both eyes move the whole way their own size allows
     for (const [eye, pup] of B.eyes) {
       const max = PUPIL[eye.data.name as keyof typeof PUPIL]
-      const p = pup.appliedPose
-      const dx = look.x - p.worldX
-      const dy = look.y - p.worldY
-      const len = Math.hypot(dx, dy) || 1
-      const s = Math.min(max, len * 0.06) / len
-      v.set(p.worldX + dx * s, p.worldY + dy * s)
+      v.set(look.x, look.y)
       eye.appliedPose.worldToLocal(v)
-      pup.pose.x = v.x
-      pup.pose.y = v.y
+      const len = Math.hypot(v.x, v.y) || 1
+      const s = Math.min(max, len * 0.12) / len
+      pup.pose.x = v.x * s
+      pup.pose.y = v.y * s
     }
     sk.updateWorldTransform(spine.Physics.update)
 
@@ -200,7 +199,6 @@ watch(
 
 <template>
   <div class="kd-hen absolute inset-0">
-    <span class="kd-hen-rays pointer-events-none absolute" aria-hidden="true" />
     <button ref="box" type="button" class="kd-hen-poke absolute" :aria-label="$t('hero.pokeLabel')" @click="poke">
       <span class="kd-hen-lean block size-full">
         <span ref="host" class="kd-hen-bob relative block size-full" />
@@ -213,10 +211,10 @@ watch(
 <style scoped>
 /* the chicken's box: the art's right side on desktop, a little taller than the banner so the beat has room */
 .kd-hen-poke {
-  right: -20px;
-  top: -24px;
-  width: 520px;
-  height: calc(100% + 48px);
+  right: -40px;
+  top: -40px;
+  width: 600px;
+  height: calc(100% + 80px);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -240,23 +238,6 @@ watch(
     transform: translateY(-14px);
   }
 }
-/* light fans behind it, turning slowly */
-.kd-hen-rays {
-  right: -60px;
-  top: 50%;
-  width: 640px;
-  height: 640px;
-  translate: 0 -50%;
-  border-radius: 50%;
-  background: repeating-conic-gradient(from 0deg, rgb(255 190 90 / 0.24) 0deg 8deg, transparent 8deg 22deg);
-  mask-image: radial-gradient(closest-side, #000 16%, transparent 70%);
-  animation: kd-hen-rays 32s linear infinite;
-}
-@keyframes kd-hen-rays {
-  to {
-    rotate: 360deg;
-  }
-}
 .kd-hen-bubble {
   right: 60px;
   top: 0;
@@ -275,19 +256,12 @@ watch(
     height: calc(100% + 16px);
     translate: 50% 0;
   }
-  .kd-hen-rays {
-    right: 50%;
-    width: 420px;
-    height: 420px;
-    translate: 50% -50%;
-  }
   .kd-hen-bubble {
     right: 12%;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .kd-hen-bob,
-  .kd-hen-rays {
+  .kd-hen-bob {
     animation: none;
   }
 }
