@@ -6,7 +6,8 @@ import type { BigWinsResponse } from '#shared/types/api'
 // light spreading from behind it across the card; on the right the place (a gold, silver or bronze medal), the
 // multiplier as the headline, the price, the skin and who won it, each on its own line with air between.
 // Desktop: #1, #2, #3 in one row, the cards one height, the winner's golden, its multiplier burning.
-// Phones: a short leaderboard — #1, #2, #3 one under another, the same card at full width.
+// Phones: one line that runs by itself — #1, #2, #3 and again, a seamless loop (the three cards twice, the copies hidden
+// from screen readers); a finger on it holds it still. With reduced motion it is a plain swipe row.
 // Behind each skin a calm fire in its rarity's colour (kdFlame): licks and embers rise slowly from under the skin. Its own Forge layer between the cards' ground and their skin and text; it burns only on screen.
 // The room above the cards is only what the skins break out by. Each card links to where the drop came from.
 const { data } = useFetch<BigWinsResponse>('/api/wins/today', { key: 'wins-today', lazy: true, server: false })
@@ -16,6 +17,9 @@ const isLg = useMediaQuery('(min-width: 1024px)')
 // big enough to fill the left half (the picture is 1⅔ × the size): it stands in the card on its shadow and breaks
 // out over the top edge by about a quarter
 const artSize = () => (isLg.value ? 106 : 62)
+// the running line on phones: the three cards, then the same three again for the seamless loop
+const rail = computed(() => (isLg.value ? wins.value.map((p) => ({ ...p, copy: false })) : [...wins.value, ...wins.value].map((p, k) => ({ ...p, copy: k >= wins.value.length }))))
+const held = ref(false)
 
 
 
@@ -24,8 +28,8 @@ const artSize = () => (isLg.value ? 106 : 62)
 <template>
   <section v-if="!data" class="flex flex-col gap-2 lg:gap-3" aria-hidden="true">
     <div class="flex h-6 items-center gap-2"><span class="kd-skeleton h-5 w-40 rounded-md lg:h-6" /></div>
-    <div class="flex flex-col gap-3 pt-2 lg:grid lg:grid-cols-3 lg:gap-4 lg:pt-4">
-      <span v-for="n in 3" :key="n" class="kd-skeleton h-[122px] rounded-3xl lg:h-44" />
+    <div class="flex gap-3 pt-2 max-lg:-mx-4 max-lg:overflow-hidden max-lg:pl-4 lg:grid lg:grid-cols-3 lg:gap-4 lg:pt-4">
+      <span v-for="n in 3" :key="n" class="kd-skeleton h-[122px] rounded-3xl max-lg:w-[296px] max-lg:shrink-0 lg:h-44" />
     </div>
   </section>
   <section v-else-if="wins.length" class="flex flex-col gap-2 lg:gap-3">
@@ -35,15 +39,26 @@ const artSize = () => (isLg.value ? 106 : 62)
       <span class="type-12 ml-auto text-neutral-11">{{ $t('wins.window') }}</span>
     </div>
     <!-- the room above is what the skins break out by, no more -->
-    <div class="relative flex flex-col gap-3 pt-2 lg:grid lg:grid-cols-3 lg:gap-4 lg:pt-4">
+    <!-- phones: the line runs edge to edge; it clips sideways only, so the skins still break out over the top -->
+    <div
+      class="kd-wins-rail relative pt-2 max-lg:-mx-4 lg:pt-4"
+      :class="held && 'is-held'"
+      @pointerdown="held = true"
+      @pointerup="held = false"
+      @pointercancel="held = false"
+      @pointerleave="held = false"
+    >
+    <div class="kd-wins-track relative flex gap-3 max-lg:w-max max-lg:pr-3 lg:grid lg:grid-cols-3 lg:gap-4">
       <!-- the fire draws on the home page's canvas: over the cards' ground (z 1), under their skin and text (z 2) -->
       <NuxtLink
-        v-for="(p, i) in wins"
-        :key="p.win.id"
+        v-for="(p, i) in rail"
+        :key="`${p.win.id}-${p.copy}`"
         :to="sourceLink(p.win.caseSlug)"
-        class="kd-win kd-press kd-press-wide group relative grid min-w-0 grid-cols-[112px_minmax(0,1fr)] items-center gap-2 rounded-3xl py-2.5 pr-4 pl-1 lg:grid-cols-[50%_minmax(0,1fr)] lg:gap-2 lg:py-4 lg:pr-5 lg:pl-2"
+        :aria-hidden="p.copy || undefined"
+        :tabindex="p.copy ? -1 : undefined"
+        class="kd-win kd-press kd-press-wide group relative grid min-w-0 grid-cols-[112px_minmax(0,1fr)] items-center gap-2 rounded-3xl py-2.5 pr-4 pl-1 max-lg:w-[296px] max-lg:shrink-0 lg:grid-cols-[50%_minmax(0,1fr)] lg:gap-2 lg:py-4 lg:pr-5 lg:pl-2"
         :class="p.rank === 1 ? 'is-first' : ''"
-        :style="{ '--rc': RARITY_COLOR[p.win.item.rarity], '--i': i }"
+        :style="{ '--rc': RARITY_COLOR[p.win.item.rarity], '--i': i % 3 }"
         :data-rank="p.rank"
       >
         <!-- the skin stands on its shadow in the left half and breaks out over the card's top edge -->
@@ -71,6 +86,7 @@ const artSize = () => (isLg.value ? 106 : 62)
           <span class="type-12-regular w-full truncate text-neutral-11">{{ p.win.nickname }} · {{ timeAgo(p.win.at) }} · {{ p.win.caseName }}</span>
         </div>
       </NuxtLink>
+    </div>
     </div>
   </section>
 </template>
@@ -194,6 +210,34 @@ const artSize = () => (isLg.value ? 106 : 62)
   .kd-win-x.is-first {
     font-size: 44px;
     line-height: 48px;
+  }
+}
+/* phones: the running line — the track holds the cards twice and slides by half its width, so it loops without a seam
+   (the track's end padding is one gap, so both halves are the same width); a finger holds it */
+@media (max-width: 63.999rem) {
+  .kd-wins-rail {
+    overflow-x: clip;
+  }
+  .kd-wins-track {
+    animation: kd-wins-run 22s linear infinite;
+  }
+  .kd-wins-rail.is-held .kd-wins-track {
+    animation-play-state: paused;
+  }
+}
+@keyframes kd-wins-run {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (max-width: 63.999rem) and (prefers-reduced-motion: reduce) {
+  .kd-wins-rail {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .kd-wins-track {
+    animation: none;
+    padding-inline: 16px;
   }
 }
 @keyframes kd-win-in {

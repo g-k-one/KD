@@ -5,7 +5,10 @@
  * animation, so the life is procedural, on its own bones, every frame: the wings beat slowly, the legs dangle, the comb
  * jiggles, the jaw chatters a little, the head turns a few degrees toward the cursor and both pupils slide toward it
  * (each anywhere inside its own eye). The whole canvas bobs on CSS. With no mouse (phones) the eyes wander on their own.
- * A poke: a jolt, a squawk, feathers — as many times as you like.
+ * A poke, as many times as you like: the bird squashes, hops away from the finger and lands with a wobble (squash and
+ * stretch on its own wrapper), its eyes pop and its wings flap; feathers burst from the very spot that was poked, on the
+ * banner's own canvas (so they scroll with the page), and a cluck plays. Quick pokes in a row build up: a bigger hop,
+ * then a flustered flip with a cloud of feathers and a frantic squawk.
  * Behind it, two of the site's loot cases (the hero's open case, back and front) at two depths, dimmer and further
  * back, moving less with the pointer than the bird.
  * Its own WebGL canvas, drawn only while on screen; if WebGL is missing the chicken stays out and nothing breaks.
@@ -15,10 +18,12 @@ type Spine = typeof import('@esotericsoftware/spine-webgl')
 const base = useRuntimeConfig().app.baseURL
 const sfx = useSfx()
 const haptics = useHaptics()
-const fx = useForge()
-
 const box = useTemplateRef<HTMLElement>('box')
 const host = useTemplateRef<HTMLElement>('host')
+const hop = useTemplateRef<HTMLElement>('hop')
+// the feathers' own canvas, a wide area around the bird in the page: they fly and fall with the page, not the screen
+const fxLayer = useTemplateRef<HTMLElement>('fxLayer')
+const fx = useForge(fxLayer)
 
 const VIEW_H = 470 // skeleton units shown top to bottom (the hen is ~450 tall: it nearly fills its box)
 const CENTER_Y = 28 // the hen's middle in skeleton units
@@ -35,6 +40,8 @@ const look = { x: 0, y: CENTER_Y + 60 }
 const target = { x: 0, y: CENTER_Y + 60 }
 let lastMove = 0
 let jolt = 0
+// how hard the last poke was: 1, 2 (a few quick ones), 3 (flustered)
+let joltLevel = 1
 
 onMounted(async () => {
   if (!host.value || !box.value) return
@@ -121,15 +128,21 @@ onMounted(async () => {
 
     sk.setupPose()
     // the beat: slow wing strokes, dangling legs, a chattering jaw, a jiggling comb; a poke shakes it all for a moment
-    const kick = Math.max(0, 1 - (now - jolt) / 450)
+    const kick = Math.max(0, 1 - (now - jolt) / (joltLevel > 1 ? 650 : 480))
+    const k = kick * (0.8 + joltLevel * 0.35)
     const beat = Math.sin(t * Math.PI * 2 * 1.1)
-    B.wingL.pose.rotation += beat * 9 + kick * 18 * Math.sin(now / 30)
-    B.wingR.pose.rotation -= beat * 9 + kick * 18 * Math.sin(now / 30)
+    B.wingL.pose.rotation += beat * 9 + k * 22 * Math.sin(now / 26)
+    B.wingR.pose.rotation -= beat * 9 + k * 22 * Math.sin(now / 26)
     B.thighL.pose.rotation += Math.sin(t * 2.3) * 6
     B.thighR.pose.rotation += Math.sin(t * 2.3 + 1.3) * 6
     B.tail.pose.rotation += Math.sin(t * 1.7) * 4
-    B.jaw.pose.rotation += Math.sin(t * 9) * 2.5 + kick * 10
-    B.spk.forEach((b, i) => (b.pose.rotation += Math.sin(t * 3.1 + i) * 5 + kick * 12 * Math.sin(now / 40 + i)))
+    B.jaw.pose.rotation += Math.sin(t * 9) * 2.5 + k * 14
+    B.spk.forEach((b, i) => (b.pose.rotation += Math.sin(t * 3.1 + i) * 5 + k * 16 * Math.sin(now / 40 + i)))
+    // a poke pops the eyes: the whites swell, the pupils shrink to dots, easing back as the kick fades
+    for (const [eye, pup] of B.eyes) {
+      eye.pose.scaleX = eye.pose.scaleY = 1 + kick * 0.22
+      pup.pose.scaleX = pup.pose.scaleY = 1 - kick * 0.45
+    }
     // the head turns a little toward what it looks at
     B.head.pose.rotation += Math.max(-7, Math.min(7, -look.x / 60)) + Math.max(-5, Math.min(5, (look.y - CENTER_Y - 120) / 70))
     sk.updateWorldTransform(spine.Physics.update)
@@ -182,11 +195,60 @@ onMounted(async () => {
 })
 onBeforeUnmount(() => stop())
 
-function poke() {
-  jolt = performance.now()
-  haptics.tap()
-  sfx.squawk()
-  fx.at('feathers:white', box.value, 0.9)
+// the hop on the bird's own wrapper: a squash, a jump away from the finger with a stretch, a landing with a wobble;
+// the flustered one is a full flip. Transform only, so it runs on the compositor
+const HOPS = [
+  { up: 22, tilt: 6, ms: 520 },
+  { up: 40, tilt: 10, ms: 600 },
+  { up: 70, tilt: 360, ms: 760 },
+]
+let combo = 0
+let lastPoke = 0
+let flipUntil = 0
+function poke(e: MouseEvent) {
+  const now = performance.now()
+  combo = now - lastPoke < 900 ? combo + 1 : 1
+  lastPoke = now
+  const level = combo >= 6 ? 3 : combo >= 3 ? 2 : 1
+  jolt = now
+  joltLevel = level
+  if (level === 3) combo = 0
+  const b = box.value!.getBoundingClientRect()
+  // where the finger landed (a key press pokes the middle of the bird)
+  const x = e.detail ? e.clientX : b.left + b.width / 2
+  const y = e.detail ? e.clientY : b.top + b.height * 0.45
+  const dir = x < b.left + b.width / 2 ? 1 : -1
+  const h = HOPS[level - 1]!
+  // one hop at a time: a new poke takes over from the last one, but a flip always lands first
+  const el = hop.value
+  if (el && now >= flipUntil) {
+    el.getAnimations().forEach((a) => a.cancel())
+    // every frame lists the same functions, so each one tweens on its own (the flip turns, it doesn't snap)
+    const end = level === 3 ? dir * 360 : 0
+    const f = (ty: number, r: number, sx: number, sy: number) => ({ transform: `translateY(${ty}px) rotate(${r}deg) scale(${sx}, ${sy})` })
+    el.animate(
+      // each phase its own curve: a quick squash, a rise that slows at the top, a fall that speeds up, a soft settle
+      [
+        { ...f(0, 0, 1, 1), easing: 'cubic-bezier(0.33, 0, 0.67, 1)' },
+        { ...f(8, 0, 1.12, 0.86), offset: 0.12, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+        // mid-air: tilted away from the finger; flustered, upside down halfway through the flip
+        { ...f(-h.up, dir * (level === 3 ? 180 : h.tilt), 0.93, 1.09), offset: 0.45, easing: 'cubic-bezier(0.55, 0, 0.8, 0.5)' },
+        { ...f(3, level === 3 ? end : -dir * 2, 1.06, 0.95), offset: 0.74, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+        f(0, end, 1, 1),
+      ],
+      { duration: h.ms },
+    )
+    if (level === 3) flipUntil = now + h.ms
+  }
+  // the feathers burst from the poke itself, more of them the harder it gets; flustered, a cloud from the whole bird
+  const l = fxLayer.value?.getBoundingClientRect()
+  if (l) {
+    fx.play('feathers:white', { x: x - l.left, y: y - l.top, size: [200, 280, 320][level - 1] })
+    if (level === 3) fx.play('feathers:white', { x: b.left + b.width / 2 - l.left, y: b.top + b.height * 0.5 - l.top, size: 560 })
+  }
+  if (level === 3) haptics.rare()
+  else haptics.tap()
+  sfx.henPoke(level, combo)
 }
 </script>
 
@@ -199,11 +261,16 @@ function poke() {
         <img src="/img/hero/case-front.webp" alt="" draggable="false" class="absolute inset-0 w-full" />
       </span>
     </span>
-    <button ref="box" type="button" class="kd-hen-poke absolute" :aria-label="$t('hero.pokeLabel')" @click="poke">
+    <!-- the poke sounds load on the first hover or touch (an audio context wants a gesture first) -->
+    <button ref="box" type="button" class="kd-hen-poke absolute" :aria-label="$t('hero.pokeLabel')" @pointerenter.once="sfx.pokeLoad()" @pointerdown="sfx.pokeLoad()" @click="poke">
       <span class="kd-hen-lean block size-full">
-        <span ref="host" class="kd-hen-bob relative block size-full" />
+        <span ref="hop" class="kd-hen-hop block size-full">
+          <span ref="host" class="kd-hen-bob relative block size-full" />
+        </span>
       </span>
     </button>
+    <!-- the feathers' canvas: wide around the bird and down over the big wins, under nothing that takes a tap -->
+    <span ref="fxLayer" class="kd-hen-fx pointer-events-none absolute" aria-hidden="true" />
   </div>
 </template>
 
@@ -258,6 +325,18 @@ function poke() {
   transform: translate3d(calc(var(--px, 0) * 10px), calc(var(--py, 0) * 6px), 0);
   transition: transform var(--dur-slow) var(--ease-out);
 }
+/* the hop squashes from the feet */
+.kd-hen-hop {
+  transform-origin: 50% 82%;
+}
+/* the feathers' area: the bird's box and well around it, down past the band over the big wins' cards */
+.kd-hen-fx {
+  z-index: 3;
+  left: -320px;
+  right: -140px;
+  top: -140px;
+  bottom: -380px;
+}
 /* hovering: the whole bird rides up and down */
 .kd-hen-bob {
   animation: kd-hen-bob 3.2s var(--ease-in-out) infinite;
@@ -279,6 +358,12 @@ function poke() {
     width: 260px;
     height: calc(100% + 16px);
     translate: 50% 0;
+  }
+  .kd-hen-fx {
+    left: -16px;
+    right: -16px;
+    top: -60px;
+    bottom: -320px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

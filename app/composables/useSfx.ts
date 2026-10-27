@@ -24,6 +24,15 @@ const HEN: Record<'swap' | 'body' | 'scream' | 'inflate' | 'pop', [number, numbe
   pop: [4.35, 2.318],
 }
 let henBuf: Promise<AudioBuffer | null> | null = null
+// The home banner's chicken, poked: a second sprite (public/sfx/poke.mp3, KREA · Seed Audio): a surprised "bawk", an
+// indignant double cluck, a flustered frantic squawk and a soft feather puff; trimmed, levelled, short fades
+const POKE: Record<'bawk' | 'bukbuk' | 'fluster' | 'puff', [number, number]> = {
+  bawk: [0, 0.553],
+  bukbuk: [0.703, 0.604],
+  fluster: [1.457, 1.375],
+  puff: [2.982, 0.281],
+}
+let pokeBuf: Promise<AudioBuffer | null> | null = null
 
 export function useSfx() {
   const settings = useSettingsStore()
@@ -39,6 +48,36 @@ export function useSfx() {
       .catch(() => (henBuf = null))
     return henBuf
   }
+  /** Loads and decodes the poke sprite once (the banner asks when it mounts) */
+  function pokeLoad() {
+    const a = audio()
+    if (!a) return Promise.resolve(null)
+    pokeBuf ??= fetch(`${base.endsWith('/') ? base : `${base}/`}sfx/poke.mp3`)
+      .then((r) => r.arrayBuffer())
+      .then((b) => a.decodeAudioData(b))
+      .catch(() => (pokeBuf = null))
+    return pokeBuf
+  }
+  /** Plays one cut of the poke sprite at a playback rate (a quick run of pokes climbs in pitch); false when not loaded */
+  function pokeCut(name: keyof typeof POKE, gain: number, rate = 1) {
+    const s = settings.settings
+    if (!s.sound || s.volume <= 0) return true
+    const a = audio()
+    if (!a || !pokeBuf) return false
+    pokeBuf.then((buf) => {
+      if (!buf) return
+      const [t0, d] = POKE[name]
+      const src = a.createBufferSource()
+      const g = a.createGain()
+      src.buffer = buf
+      src.playbackRate.value = rate
+      g.gain.value = gain * (s.volume / 100)
+      src.connect(g).connect(a.destination)
+      src.start(0, t0, d)
+    })
+    return true
+  }
+
   /** Plays one cut of the sprite; false when it is not loaded yet (the caller falls back to the synth) */
   function hen(name: keyof typeof HEN, len?: number, gain = 1) {
     const s = settings.settings
@@ -183,6 +222,18 @@ export function useSfx() {
     squawk: squawkNow,
     /** Get the chicken's recorded sounds ready (with henWarm) */
     henLoad,
+    /** Get the banner chicken's poke sounds ready */
+    pokeLoad,
+    /**
+     * The banner chicken poked: level 1–2 a "bawk" or a double cluck (picked at random, a quick run climbs in pitch),
+     * level 3 the flustered squawk; a soft feather puff under each. The synth squawks until the sprite is in.
+     */
+    henPoke: (level: number, combo = 1) => {
+      const rate = level === 3 ? 1 : 1 + Math.min(combo - 1, 4) * 0.05 + (Math.random() - 0.5) * 0.06
+      const ok = level === 3 ? pokeCut('fluster', 0.85) : pokeCut(Math.random() < 0.5 ? 'bawk' : 'bukbuk', 0.8, rate)
+      if (!ok) return squawkNow()
+      pokeCut('puff', level === 3 ? 0.55 : 0.35)
+    },
     /** KURWADROP's chicken (henShow): the logo zooms in with a rising swish and turns into the head with a bright ting */
     henSwap: () => {
       if (hen('swap', undefined, 0.75)) return
