@@ -392,16 +392,17 @@ function poke(e: MouseEvent) {
   --d: 0.5;
   --r: -7deg;
   left: 0;
-  bottom: 112px;
+  bottom: 72px;
   width: 340px;
   filter: contrast(1.2) saturate(1.12);
 }
-/* the light out of the open case, up into the space over it; it breathes */
+/* the light out of the open case, up into the space over it, its top inside the band (never over the live strip); it
+   breathes */
 .kd-hen-glow {
   left: -90px;
-  bottom: 140px;
+  bottom: 100px;
   width: 460px;
-  height: 340px;
+  height: 260px;
   background: radial-gradient(closest-side, rgb(255 184 72 / 0.75), rgb(255 120 30 / 0.24) 60%, transparent);
   transform: translate3d(calc(var(--px, 0) * 4px), calc(var(--py, 0) * 3px), 0);
   animation: kd-hen-glow 4.2s var(--ease-in-out) infinite;
