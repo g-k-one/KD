@@ -4,8 +4,8 @@ import type { CaseDetails } from '#shared/types/api'
 // Figma "TransparencyBlock": RTP + chances to hit <x1, x2+, x3+, x5+, x10+ of the price, plus risk.
 const props = defineProps<{ data: CaseDetails }>()
 const infoOpen = ref(false)
-// phones: the odds fold under the RTP row so the reel and the Open button fit the first screen; a chevron unfolds them
-const oddsOpen = ref(false)
+// phones: the odds show under the RTP row from the start (the chances are the point of the block); a chevron folds them
+const oddsOpen = ref(true)
 // the risk explains itself too: hover on desktop, a tap anywhere
 const riskOpen = ref(false)
 const hoverRisk = (e: PointerEvent, v: boolean) => e.pointerType === 'mouse' && (riskOpen.value = v)
