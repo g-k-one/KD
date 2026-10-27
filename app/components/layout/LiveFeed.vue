@@ -77,16 +77,16 @@ watch(y, (v) => {
         type="button"
         role="radio"
         :aria-checked="mode === m"
-        class="kd-press type-10-caps sm:type-12-caps relative z-[1] flex min-w-9 items-center justify-start gap-1 px-2 transition-colors sm:gap-1.5 sm:px-2.5 lg:px-3"
+        class="kd-press type-10-caps sm:type-12-caps relative z-[1] flex min-w-9 items-center justify-center gap-1 px-2 sm:justify-start transition-colors sm:gap-1.5 sm:px-2.5 lg:px-3"
         :class="mode === m ? 'text-neutral-15' : 'text-neutral-11 hover:text-neutral-13'"
         :title="m === 'top' ? $t('feed.topHint') : undefined"
         @click="mode = m"
       >
-        <span v-if="m === 'live'" class="kd-live-dot size-2 rounded-full bg-success" />
+        <span v-if="m === 'live'" class="grid size-3 place-items-center"><span class="kd-live-dot size-2.5 rounded-full bg-success" /></span>
         <!-- the best multipliers: a crown, pulsing like the live dot -->
         <span v-else class="kd-best-crown relative grid size-3 place-items-center text-coin"><UiIcon name="crown-fill" :size="12" /></span>
-        <!-- the words stay on phones too: a dot and a cross alone don't say what they switch -->
-        <span>{{ m === 'live' ? $t('feed.live') : $t('feed.best') }}</span>
+        <!-- phones: the icons alone, one size (the words stay for screen readers) -->
+        <span class="max-sm:sr-only">{{ m === 'live' ? $t('feed.live') : $t('feed.best') }}</span>
       </button>
     </div>
 
