@@ -561,7 +561,7 @@
     "verifyOk": "The whole battle checks out",
     "verifyBad": "Something does not match",
     "verifyRounds": "{n} rounds recomputed from the seeds | {n} rounds recomputed from the seeds",
-    "checkBattle": "Check battle",
+    "checkBattle": "Check PvP",
     "battleWon": "Won the battle",
     "battleWonTeam": "Won the battle together",
     "all": "All",

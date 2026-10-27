@@ -275,12 +275,12 @@ const roundLine = computed(() => {
     />
 
 
-    <!-- Meta line: what a seat costs and what is in the pot · the battle's cases (the current one lit, spent ones dim)
-         · who is watching and the round -->
+    <!-- Meta line: who is watching and the round · the battle's cases (the current one lit, spent ones dim) · what a
+         seat costs and what is in the pot (the money on the right, as in the lobby's plate) -->
     <section class="kd-dock flex flex-wrap items-center justify-between gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
-      <div class="type-12-caps flex gap-2 max-lg:w-full">
-        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="m" /></span>
-        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" class="kd-pot tabular-nums" /></span>
+      <div class="type-12-caps flex gap-2 tabular-nums max-lg:w-full">
+        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center"><UiIcon name="eye" :size="16" /><span class="text-neutral-15">{{ b.viewers }}</span></span>
+        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.rounds') }} <span class="text-neutral-15">{{ Math.min(b.rounds.length, revealed) }}/{{ b.rounds.length }}</span></span>
       </div>
       <!-- As many rounds as fit, none cut: a window that follows the current round, a "+N" tile for the ones after it,
            and a soft fade on the side where earlier rounds went out of view -->
@@ -288,9 +288,9 @@ const roundLine = computed(() => {
         <PvpCaseThumb v-for="i in strip.idx" :key="i" :image="b.rounds[i]!.image" :name="`${b.rounds[i]!.name} · ${formatCoins(b.rounds[i]!.price)}`" size="m" :state="roundState(i)" />
         <span v-if="strip.more" class="type-14 grid size-14 shrink-0 place-items-center rounded-2xl bg-neutral-3 text-neutral-12 tabular-nums" :title="$t('pvp.roundsN', { n: b.rounds.length })">+{{ strip.more }}</span>
       </div>
-      <div class="type-12-caps flex justify-end gap-2 tabular-nums max-lg:w-full">
-        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center"><UiIcon name="eye" :size="16" /><span class="text-neutral-15">{{ b.viewers }}</span></span>
-        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.rounds') }} <span class="text-neutral-15">{{ Math.min(b.rounds.length, revealed) }}/{{ b.rounds.length }}</span></span>
+      <div class="type-12-caps flex justify-end gap-2 max-lg:w-full">
+        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="m" /></span>
+        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" class="kd-pot tabular-nums" /></span>
       </div>
     </section>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
