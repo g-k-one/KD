@@ -313,7 +313,7 @@ function poke(e: MouseEvent) {
       </span>
     </span>
     <!-- the poke sounds load on the first hover or touch (an audio context wants a gesture first) -->
-    <button ref="box" type="button" class="kd-hen-poke absolute" :aria-label="$t('hero.pokeLabel')" @pointerenter.once="sfx.pokeLoad()" @pointerdown="sfx.pokeLoad()" @click="poke">
+    <button ref="box" type="button" data-sfx="own" class="kd-hen-poke absolute" :aria-label="$t('hero.pokeLabel')" @pointerenter.once="sfx.pokeLoad()" @pointerdown="sfx.pokeLoad()" @click="poke">
       <span class="kd-hen-lean block size-full">
         <span ref="hop" class="kd-hen-hop block size-full">
           <span ref="host" class="kd-hen-bob relative block size-full" />

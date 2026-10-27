@@ -277,14 +277,23 @@ export function useSfx() {
     claim: () => reveal(2),
     win: () => reveal(true),
     levelUp: () => reveal(4),
-    /** Rising breath before the reel starts */
-    riser: () => sweep(220, 660, 0.42, 0.05, 'sine'),
+    /** The launch of a reel or an upgrade: a low thump, then a spin-up — air rushing up and a tone climbing two octaves */
+    riser: () => {
+      glide(150, 55, 0.16, 0.26, 'sine')
+      swish(320, 3600, 0.42, 0.13)
+      glide(196, 784, 0.44, 0.11, 'triangle', 7, 9, 0.38)
+    },
     /** The reel hangs on a card edge: a low tense pulse */
     tense: () => blip(110, 0.22, 0.14, 'sine'),
 
     // The interface, in the same voice as the games (triangle blips, short glides, quieter than any game sound):
-    /** A switch, a tab, a segment: one soft tick */
+    /** Any button, link, tab or menu item (app/plugins/ui-clicks): one soft tick */
     tap: () => blip(980, 0.04, 0.045, 'sine'),
+    /** ...a main button (orange, green, gold): a fuller two-step press */
+    press: () => {
+      blip(560, 0.06, 0.07)
+      setTimeout(() => blip(840, 0.07, 0.045), 35)
+    },
     /** A skin into the stake (or a seat filled): a quick rising pluck; `n` (how many are in now) lifts the pitch a step */
     select: (n = 1) => {
       const f = 660 * 2 ** (Math.min(Math.max(n, 1) - 1, 6) / 6) * (1 + (Math.random() - 0.5) * 0.02)

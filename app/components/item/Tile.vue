@@ -17,6 +17,7 @@ const rc = computed(() => (props.item ? RARITY_COLOR[props.item.rarity] : undefi
   </div>
   <component
     :is="readonly ? 'div' : 'button'"
+    data-sfx="own"
     v-else
     :type="readonly ? undefined : 'button'"
     class="kd-tile group relative aspect-[164/128] w-full max-sm:aspect-[4/5] lg:aspect-auto lg:h-[105px] overflow-hidden rounded-2xl border text-left"

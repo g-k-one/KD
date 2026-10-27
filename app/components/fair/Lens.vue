@@ -157,6 +157,7 @@ onBeforeUnmount(() => {
   <div
     ref="box"
     class="kd-lens-box absolute inset-0 cursor-pointer select-none"
+    data-sfx="own"
     role="button"
     tabindex="0"
     :aria-label="t('fair.lensLabel')"
