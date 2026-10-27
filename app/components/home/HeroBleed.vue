@@ -2,8 +2,8 @@
 /*
  * Home banner, full width: one scene from edge to edge with no frame. The light pours from the top as a wide warm arc
  * and dissolves into the page (the imigo final call's glow, turned upside down); the words line up with the page's
- * column, the same air above and below them. Right: the chicken, big, rising out of the band's foot (HomeHeroChicken),
- * leaning toward the pointer anywhere on the band; it fades out at the waist.
+ * column, the same air above and below them. Right: KURWADROP's Spine chicken hovering and watching the cursor
+ * (HomeHeroHen), leaning toward the pointer anywhere on the band.
  */
 const emit = defineEmits<{ start: [] }>()
 const { onMove, onLeave, vars } = usePointerTilt()
@@ -16,7 +16,7 @@ const { onMove, onLeave, vars } = usePointerTilt()
 
     <div class="mx-auto max-w-content">
       <HomeHeroBanner bare @start="emit('start')">
-        <template #art="{ poke, bubble, pokes }"><HomeHeroChicken :bubble="bubble" :pokes="pokes" @poke="poke" /></template>
+        <template #art="{ poke, bubble, pokes }"><HomeHeroHen :bubble="bubble" :pokes="pokes" @poke="poke" /></template>
       </HomeHeroBanner>
     </div>
   </section>
