@@ -103,6 +103,14 @@ function clearSkins() {
   selected.value = []
 }
 // The controls change the balance part through this, so a new stake clears the last result
+// the same coins as a typed amount, for the phone sheet's header (skins and coins picked in one place)
+const extraText = computed({
+  get: () => (extraModel.value ? (extraModel.value / 100).toFixed(2) : ''),
+  set: (v: string) => {
+    const n = Math.round(Number.parseFloat(v.replace(',', '.')) * 100)
+    extraModel.value = Number.isFinite(n) ? Math.min(Math.max(0, n), balance.value) : 0
+  },
+})
 const extraModel = computed({
   get: () => extra.value,
   set: (v: number) => {
@@ -499,9 +507,10 @@ async function runUpgrade() {
 
     </section>
 
+    <!-- -mt-4: the page's 24 px gap down to 8, the same air under the dial as over it -->
     <UpgradeControls
       :pending="pending"
-      class="lg:hidden"
+      class="-mt-4 lg:hidden"
       v-model:extra="extraModel"
       v-model:fast="fast"
       :chance="shownChance"
@@ -544,7 +553,22 @@ async function runUpgrade() {
           <UiIcon name="inventory" :size="isLg ? 24 : 20" class="text-neutral-13 max-lg:hidden" />
           <span class="type-14 lg:type-16-medium max-lg:hidden">{{ $t('upgrade.mySkins') }} ({{ inventory.length }})</span>
           <!-- nothing to count or sort with fewer than two skins: no "0", no sort arrows -->
-          <UiPrice v-if="inventory.length" :amount="inventoryTotal" :size="isLg ? 'm' : 's'" tone="coin" class="opacity-64" />
+          <UiPrice v-if="inventory.length" :amount="inventoryTotal" size="m" tone="coin" class="opacity-64 max-lg:hidden" />
+          <!-- phones: coins from the balance go into the stake here, next to the skins (the sheet's footer sums both) -->
+          <UiInput
+            v-if="session.user && !isLg"
+            id="sheet-extra"
+            v-model="extraText"
+            size="s"
+            coin
+            clearable
+            lazy
+            inputmode="decimal"
+            :placeholder="$t('upgrade.fromBalance')"
+            :disabled="state === 'spinning'"
+            class="min-w-0 flex-1"
+            @clear="extraModel = 0"
+          />
           <!-- Select all and the sort arrows: one height, side by side -->
           <UiButton v-if="inventory.length" variant="ghost" :size="isLg ? 'm' : 's'" class="ml-auto" :disabled="state === 'spinning'" @click="selected.length ? clearSkins() : allSkins()"><UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" /></UiButton>
           <UiButton v-if="inventory.length > 1" variant="ghost" :size="isLg ? 'm' : 's'" icon-only :aria-label="$t(invSortDesc ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="invSortDesc = !invSortDesc">
@@ -552,7 +576,7 @@ async function runUpgrade() {
           </UiButton>
         </div>
         <div v-if="session.user && inventoryLoading" class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
-          <span v-for="n in 15" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl lg:aspect-auto lg:h-[105px]" :style="{ animationDelay: `${n * 40}ms` }" />
+          <span v-for="n in 15" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-[4/5] lg:aspect-auto lg:h-[105px]" :style="{ animationDelay: `${n * 40}ms` }" />
         </div>
         <!-- nothing to stake yet: one big step, open a case (no second, small "open cases" line under it) -->
         <UiEmptyState v-else-if="session.user && !inventory.length" :text="$t('account.emptyInventory')" class="flex-1 justify-center">
