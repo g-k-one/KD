@@ -58,7 +58,9 @@ const right = computed<PageBarLink[]>(() => props.right ?? (route.path === '/fai
         >
           <img src="/img/brand/logo-tile-mark.svg" alt="" class="absolute top-[-16%] left-[-10%] h-[137%] w-[110%] max-w-none" draggable="false" />
         </span>
-        <img src="/img/brand/logo-word-wide.svg" alt="KurwaDROP" class="h-4 w-auto sm:h-5 md:h-7" draggable="false" />
+        <!-- phones: the two-line wordmark, as in the header, so the bar's side links keep their room -->
+        <img src="/img/brand/logo-word.svg" alt="KurwaDROP" class="h-7 w-auto sm:hidden" draggable="false" />
+        <img src="/img/brand/logo-word-wide.svg" alt="" class="h-5 w-auto max-sm:hidden md:h-7" draggable="false" />
       </NuxtLink>
       <span v-if="subtitle" class="type-10-caps text-neutral-11">{{ subtitle }}</span>
       </span>
