@@ -7,6 +7,9 @@ import type { SeedsResponse } from '#shared/types/api'
  * case and the magnifying glass that shows it as code — the player's own seeds (FairLens). A guest sees an example pair.
  */
 const props = defineProps<{ seeds: SeedsResponse | null }>()
+// the banner's actions do something the page below doesn't already show: check any roll by hand (anyone), see your seeds
+const emit = defineEmits<{ verify: []; seeds: [] }>()
+const session = useSessionStore()
 const EXAMPLE = { serverSeedHash: '04a5a0c3e19b7f2d6a8e41c05b93d7f1e2a6c84b09d3f75e1c2b8a4d6e0f197a', clientSeed: 'e74ea6b316', nonce: 104 }
 const pair = computed(() => props.seeds?.active ?? EXAMPLE)
 </script>
@@ -31,7 +34,10 @@ const pair = computed(() => props.seeds?.active ?? EXAMPLE)
             </h1>
             <p class="type-14 mt-1 text-neutral-14 lg:type-16-medium lg:w-[520px] lg:text-neutral-13">{{ $t('fair.heroText1') }}</p>
           </div>
-          <UiButton variant="fair" size="l" icon="shield-check" to="#rolls" class="w-max max-sm:h-10 max-sm:px-4">{{ $t('fair.heroCta') }}</UiButton>
+          <div class="flex flex-wrap items-center gap-2">
+            <UiButton variant="fair" size="l" icon="function" class="max-sm:h-10 max-sm:px-4" @click="emit('verify')">{{ $t('fair.heroVerify') }}</UiButton>
+            <UiButton v-if="session.user" variant="ghost" size="l" icon="seeds" class="max-sm:h-10 max-sm:px-3" @click="emit('seeds')">{{ $t('fair.mySeeds') }}</UiButton>
+          </div>
         </div>
       </div>
     </div>

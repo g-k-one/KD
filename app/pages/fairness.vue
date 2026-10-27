@@ -74,7 +74,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
 <template>
   <div>
     <!-- the banner opens the page, full width like the home page's -->
-    <FairHero :seeds="seeds" />
+    <FairHero :seeds="seeds" @verify="openVerifier()" @seeds="seedsOpen = true" />
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 lg:gap-10 lg:px-0">
     <FairMyRolls :seeds="seeds" :focus="focusNonce" :focus-roll="focusRoll" :rotating="rotating" @verify="openVerifier" @rotate="rotate" />
 

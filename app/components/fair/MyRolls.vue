@@ -80,12 +80,15 @@ watch(
 
 <template>
   <section id="rolls" class="flex scroll-mt-24 flex-col gap-3">
-    <div class="flex items-end justify-between gap-3">
-      <div class="flex flex-col gap-1">
+    <!-- the title and its link on one line, what to do here under them -->
+    <div class="flex flex-col gap-1">
+      <div class="flex items-center justify-between gap-3">
         <h2 class="type-20-caps">{{ $t('fair.myRolls') }}</h2>
-        <p class="type-14-regular text-neutral-12">{{ $t('fair.myRollsHint') }}</p>
+        <NuxtLink v-if="rows.length" to="/profile?tab=history" class="type-12-caps flex shrink-0 items-center gap-0.5 text-neutral-11 hover:text-neutral-15">
+          {{ $t('fair.allHistory') }}<UiIcon name="chevron-right" :size="14" />
+        </NuxtLink>
       </div>
-      <NuxtLink v-if="rows.length" to="/profile?tab=history" class="type-12-caps shrink-0 text-neutral-11 hover:text-neutral-15">{{ $t('fair.allHistory') }}</NuxtLink>
+      <p class="type-14-regular max-w-[65ch] text-neutral-12">{{ $t('fair.myRollsHint') }}</p>
     </div>
 
     <UiEmptyState v-if="!session.user" :text="$t('fair.signInRolls')">
@@ -98,9 +101,15 @@ watch(
     </UiEmptyState>
     <template v-else-if="rows.length">
       <!-- Rolls of the active pair can't be checked yet: say why and offer the rotation right here -->
-      <div v-if="sealed" class="flex flex-col gap-3 rounded-5xl bg-success-24 p-3.5 sm:flex-row sm:items-center">
-        <UiIcon name="shield" :size="24" class="shrink-0 text-success max-sm:hidden" />
-        <p class="type-14-regular flex-1 text-neutral-14">{{ $t('fair.sealedHint', { n: sealed }, sealed) }}</p>
+      <!-- how many and why in two lines, the way out on the right -->
+      <div v-if="sealed" class="flex flex-col gap-3 rounded-5xl bg-success-24 p-3.5 sm:flex-row sm:items-center sm:gap-4">
+        <span class="flex min-w-0 flex-1 items-center gap-3">
+          <span class="grid size-10 shrink-0 place-items-center rounded-full bg-success-24 text-success"><UiIcon name="lock" :size="20" /></span>
+          <span class="flex min-w-0 flex-col gap-0.5">
+            <span class="type-14-caps text-neutral-15">{{ $t('fair.sealedTitle', { n: sealed }, sealed) }}</span>
+            <span class="type-12-regular text-neutral-12">{{ $t('fair.sealedHint') }}</span>
+          </span>
+        </span>
         <UiButton variant="fair" size="l" icon="refresh" :loading="rotating" class="shrink-0" @click="emit('rotate')">{{ $t('fair.rotateReveal') }}</UiButton>
       </div>
       <!-- the profile's history table, with the roll's number; a revealed roll checks in place -->
