@@ -9,8 +9,9 @@
  * stretch on its own wrapper), its eyes pop and its wings flap; feathers burst from the very spot that was poked, on the
  * banner's own canvas (so they scroll with the page), and a cluck plays. Quick pokes in a row build up: a bigger hop,
  * then the bird puffs up and shakes with rage, in a cloud of feathers.
- * Behind it, two of the site's loot cases (the hero's open case, back and front) at two depths, dimmer and further
- * back, moving less with the pointer than the bird.
+ * Around it, the scene (desktop): the big open orange case it burst out of, low on the left; two closed cases further
+ * back on the right, dimmer and softer the further they are; an AWP Dragon Lore fallen out in front of the open case,
+ * its dragon stock in the free space on the left, and a bayonet flying up out of the case, its tip away from the bird. Each sits at its own depth (moves with the pointer by it, the near ones more) and the guns float.
  * Its own WebGL canvas, drawn only while on screen; if WebGL is missing the chicken stays out and nothing breaks.
  */
 type Spine = typeof import('@esotericsoftware/spine-webgl')
@@ -202,6 +203,10 @@ const HOPS = [
   { up: 40, tilt: 10, ms: 600 },
 ]
 const SHAKE_MS = 720
+
+// the scene around the bird, back to front: behind it (under the canvas) and in front of it (over the canvas)
+const BEHIND = ['crate-back', 'crate-side', 'crate-open', 'awp'] as const
+const FRONT = ['bayonet'] as const
 let combo = 0
 let lastPoke = 0
 let shakeUntil = 0
@@ -267,11 +272,10 @@ function poke(e: MouseEvent) {
 
 <template>
   <div class="kd-hen absolute inset-0">
-    <!-- the cases behind: a big one low on the left, a small far one high on the right -->
-    <span class="kd-hen-crates pointer-events-none absolute" aria-hidden="true">
-      <span v-for="c in ['a', 'b']" :key="c" class="kd-hen-crate absolute block" :class="`is-${c}`">
-        <img src="/img/hero/case-back.webp" alt="" draggable="false" class="absolute inset-0 w-full" />
-        <img src="/img/hero/case-front.webp" alt="" draggable="false" class="absolute inset-0 w-full" />
+    <!-- the scene behind the bird: far closed cases, the AWP, the open case it burst out of -->
+    <span class="kd-hen-props pointer-events-none absolute" aria-hidden="true">
+      <span v-for="k in BEHIND" :key="k" class="kd-hen-prop absolute block" :class="`is-${k}`">
+        <img :src="`/img/hero/${k}.webp`" alt="" draggable="false" class="block w-full" />
       </span>
     </span>
     <!-- the poke sounds load on the first hover or touch (an audio context wants a gesture first) -->
@@ -284,6 +288,12 @@ function poke(e: MouseEvent) {
       <!-- the only part that takes a tap: the bird inside the band, never the live strip above nor the big wins below -->
       <span class="kd-hen-hit absolute" aria-hidden="true" />
     </button>
+    <!-- the scene in front of the bird: the bayonet -->
+    <span class="kd-hen-props is-front pointer-events-none absolute" aria-hidden="true">
+      <span v-for="k in FRONT" :key="k" class="kd-hen-prop absolute block" :class="`is-${k}`">
+        <img :src="`/img/hero/${k}.webp`" alt="" draggable="false" class="block w-full" />
+      </span>
+    </span>
     <!-- the feathers' canvas: wide around the bird and down over the big wins, under nothing that takes a tap -->
     <span ref="fxLayer" class="kd-hen-fx pointer-events-none absolute" aria-hidden="true" />
   </div>
@@ -319,33 +329,84 @@ function poke(e: MouseEvent) {
   height: 100%;
   pointer-events: none;
 }
-/* the cases: the same box as the chicken; each moves with the pointer by its depth, less than the bird */
-.kd-hen-crates {
-  right: -40px;
-  top: -70px;
-  width: 640px;
-  height: calc(100% + 120px);
+/* the scene: the same box as the chicken. Each prop moves with the pointer by its depth (--d; the bird is 1), tilts by
+   --r, may be mirrored (--sx); the guns float (--f: how far, --fd: how long, out of step) on their picture, so the float and the pointer add up */
+.kd-hen-props {
+  right: -70px;
+  top: -100px;
+  width: 720px;
+  height: calc(100% + 190px);
 }
-.kd-hen-crate {
-  aspect-ratio: 720 / 691;
-  transform: translate3d(calc(var(--px, 0) * var(--d) * 10px), calc(var(--py, 0) * var(--d) * 6px), 0) rotate(var(--r));
+.kd-hen-props.is-front {
+  z-index: 2;
+}
+.kd-hen-prop {
+  transform: translate3d(calc(var(--px, 0) * var(--d) * 10px), calc(var(--py, 0) * var(--d) * 6px), 0) rotate(var(--r)) scaleX(var(--sx, 1));
   transition: transform var(--dur-slow) var(--ease-out);
 }
-.kd-hen-crate.is-a {
-  --d: 0.5;
-  --r: -10deg;
-  left: -50px;
-  bottom: 30px;
-  width: 300px;
-  filter: brightness(0.7) saturate(0.9);
+/* only the guns float; the cases rest */
+.kd-hen-prop.is-awp img,
+.kd-hen-prop.is-bayonet img {
+  animation: kd-hen-float var(--fd, 4s) var(--ease-in-out) infinite;
+  animation-delay: var(--fdl, 0s);
 }
-.kd-hen-crate.is-b {
-  --d: 0.25;
-  --r: 14deg;
-  right: 40px;
+@keyframes kd-hen-float {
+  50% {
+    transform: translateY(var(--f, 0px));
+  }
+}
+/* far back, high on the right: a closed case, small, dim and soft */
+.kd-hen-prop.is-crate-back {
+  --d: 0.2;
+  --r: 12deg;
+  right: 70px;
+  top: 92px;
+  width: 140px;
+  filter: brightness(0.5) saturate(0.85) blur(2.5px);
+}
+/* nearer, low on the right: a closed case side on */
+.kd-hen-prop.is-crate-side {
+  --d: 0.35;
+  --r: -8deg;
+  right: 20px;
+  bottom: 70px;
+  width: 210px;
+  filter: brightness(0.75) saturate(0.95) blur(1px);
+}
+/* the AWP fallen out of the open case: mirrored, its dragon stock on the left in front of the case, the barrel running
+   under the bird's feet; a slight float */
+.kd-hen-prop.is-awp {
+  --d: 0.65;
+  --r: 6deg;
+  --sx: -1;
+  --f: -5px;
+  --fd: 5s;
+  left: -40px;
+  bottom: 26px;
+  width: 400px;
+  filter: brightness(0.95) drop-shadow(0 10px 12px rgb(0 0 0 / 0.5));
+}
+/* the open case it burst out of: big, low on the left, lit from inside */
+.kd-hen-prop.is-crate-open {
+  --d: 0.5;
+  --r: -7deg;
+  left: 40px;
+  bottom: 40px;
+  width: 360px;
+  filter: brightness(0.98);
+}
+/* in front: the bayonet flying up out of the open case, mirrored so its tip points up and away to the left */
+.kd-hen-prop.is-bayonet {
+  --d: 1.6;
+  --r: 34deg;
+  --sx: -1;
+  --f: -14px;
+  --fd: 3.6s;
+  --fdl: -1.2s;
+  left: 10px;
   top: 150px;
   width: 170px;
-  filter: brightness(0.45) saturate(0.8) blur(2px);
+  filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.45));
 }
 .kd-hen-lean {
   transform: translate3d(calc(var(--px, 0) * 10px), calc(var(--py, 0) * 6px), 0);
@@ -375,7 +436,7 @@ function poke(e: MouseEvent) {
 
 /* tablets and phones: the band above the words — the chicken centred in it */
 @media (max-width: 1023px) {
-  .kd-hen-crates {
+  .kd-hen-props {
     display: none;
   }
   .kd-hen-poke {
@@ -396,7 +457,8 @@ function poke(e: MouseEvent) {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .kd-hen-bob {
+  .kd-hen-bob,
+  .kd-hen-prop img {
     animation: none;
   }
 }
