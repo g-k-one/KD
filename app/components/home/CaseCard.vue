@@ -166,10 +166,11 @@ function onArtLeave() {
     v-if="!session.user"
     :to="`/case/${item.slug}?demo=1`"
     :aria-label="$t('case.tryFreeHint', { name: item.name })"
-    class="kd-try kd-press type-10-caps absolute top-3 right-3 inline-flex h-6 items-center gap-1 rounded-sm px-1.5 lg:top-4 lg:right-4"
+    class="kd-try kd-press type-10-caps absolute top-3 right-3 inline-flex h-6 items-center gap-1 rounded-sm px-1.5 max-sm:w-6 max-sm:justify-center max-sm:px-0 lg:top-4 lg:right-4"
   >
     <UiIcon name="demo" :size="12" />
-    {{ $t('case.tryFree') }}
+    <!-- phones: the icon alone, so it clears the badge on the left (the label stays for screen readers) -->
+    <span class="max-sm:sr-only">{{ $t('case.tryFree') }}</span>
   </NuxtLink>
   <!-- tools laid over the card (the home layout editor) -->
   <slot />
@@ -315,6 +316,12 @@ function onArtLeave() {
 }
 .kd-case-risk-label.is-end {
   transform: translateX(6px);
+}
+/* phones: the card is too narrow for the words beside the peppers */
+@media (max-width: 639px) {
+  .kd-case-risk-label {
+    display: none;
+  }
 }
 
 @media (hover: hover) {
