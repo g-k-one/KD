@@ -96,7 +96,10 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
       />
     </div>
 
-    <div class="relative z-10 flex flex-col justify-between gap-4 sm:max-w-[58%] sm:gap-6 lg:gap-10 lg:h-full lg:max-w-none" :class="bare ? 'lg:w-[600px] lg:justify-center' : 'lg:w-[709px] lg:justify-center'">
+    <div
+      class="relative z-10 flex flex-col gap-4 sm:max-w-[58%] sm:gap-6 lg:gap-10 lg:max-w-none"
+      :class="bare ? 'justify-between lg:w-[600px] lg:justify-center lg:self-stretch' : 'justify-between lg:h-full lg:w-[709px] lg:justify-center'"
+    >
       <div class="flex flex-col gap-1 sm:gap-2">
         <p class="type-12-caps lg:type-16-caps text-brand-light">
           {{ session.user ? $t('hero.back', { name: session.user.nickname }) : $t('hero.eyebrow') }}
