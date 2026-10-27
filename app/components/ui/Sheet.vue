@@ -4,12 +4,7 @@ const open = defineModel<boolean>({ required: true })
 defineProps<{ title?: string }>()
 
 const lock = useScrollLock(import.meta.client ? document.body : null)
-const sfx = useSfx()
-watch(open, (v) => {
-  lock.value = v
-  if (v) sfx.open()
-  else sfx.close()
-})
+watch(open, (v) => (lock.value = v))
 onKeyStroke('Escape', () => open.value && (open.value = false))
 onBeforeUnmount(() => (lock.value = false))
 </script>

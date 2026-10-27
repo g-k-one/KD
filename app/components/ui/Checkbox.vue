@@ -1,11 +1,10 @@
 <script setup lang="ts">
 const model = defineModel<boolean>({ required: true })
-const sfx = useSfx()
 </script>
 
 <template>
   <label class="group type-14-regular flex min-h-11 cursor-pointer items-start gap-2.5 rounded-lg py-3 pr-6 pl-3 text-neutral-15 transition-colors hover:bg-white-4">
-    <input v-model="model" type="checkbox" class="peer sr-only" @change="sfx.tap()" />
+    <input v-model="model" type="checkbox" class="peer sr-only" />
     <span
       class="kd-check mt-px grid size-[18px] shrink-0 place-items-center rounded-sm border peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-light"
       :data-on="model || undefined"

@@ -35,6 +35,10 @@ const POKE: Record<'gawk' | 'bukbuk' | 'kurwawk' | 'kurwa' | 'puff', [number, nu
   puff: [4.365, 0.281],
 }
 let pokeBuf: Promise<AudioBuffer | null> | null = null
+// The launch of a reel or an upgrade (public/sfx/launch.mp3, KREA · Seed Audio): a slot lever pulled, the reels spinning
+// up with a rising hum, a bright ding; 2 s, levelled to about -14 LUFS
+let launchBuf: Promise<AudioBuffer | null> | null = null
+let launchReady: AudioBuffer | null = null
 
 export function useSfx() {
   const settings = useSettingsStore()
@@ -59,6 +63,17 @@ export function useSfx() {
       .then((b) => a.decodeAudioData(b))
       .catch(() => (pokeBuf = null))
     return pokeBuf
+  }
+  /** Loads and decodes the launch sound once (the case and upgrade pages ask when they mount) */
+  function launchLoad() {
+    const a = audio()
+    if (!a) return Promise.resolve(null)
+    launchBuf ??= fetch(`${base.endsWith('/') ? base : `${base}/`}sfx/launch.mp3`)
+      .then((r) => r.arrayBuffer())
+      .then((b) => a.decodeAudioData(b))
+      .then((buf) => (launchReady = buf))
+      .catch(() => (launchBuf = null))
+    return launchBuf
   }
   /** Plays one cut of the poke sprite at a playback rate (a quick run of pokes climbs in pitch); false when not loaded */
   function pokeCut(name: keyof typeof POKE, gain: number, rate = 1) {
@@ -277,8 +292,22 @@ export function useSfx() {
     claim: () => reveal(2),
     win: () => reveal(true),
     levelUp: () => reveal(4),
-    /** The launch of a reel or an upgrade: a low thump, then a spin-up — air rushing up and a tone climbing two octaves */
+    launchLoad,
+    /** The launch of a reel or an upgrade: the recorded lever pull and spin-up; a synth spin-up while it is still loading */
     riser: () => {
+      const s = settings.settings
+      if (!s.sound || s.volume <= 0) return
+      const a = audio()
+      if (a && launchReady) {
+        const src = a.createBufferSource()
+        const g = a.createGain()
+        src.buffer = launchReady
+        g.gain.value = 0.9 * (s.volume / 100)
+        src.connect(g).connect(a.destination)
+        src.start()
+        return
+      }
+      launchLoad()
       glide(150, 55, 0.16, 0.26, 'sine')
       swish(320, 3600, 0.42, 0.13)
       glide(196, 784, 0.44, 0.11, 'triangle', 7, 9, 0.38)
@@ -286,14 +315,8 @@ export function useSfx() {
     /** The reel hangs on a card edge: a low tense pulse */
     tense: () => blip(110, 0.22, 0.14, 'sine'),
 
-    // The interface, in the same voice as the games (triangle blips, short glides, quieter than any game sound):
-    /** Any button, link, tab or menu item (app/plugins/ui-clicks): one soft tick */
-    tap: () => blip(980, 0.04, 0.045, 'sine'),
-    /** ...a main button (orange, green, gold): a fuller two-step press */
-    press: () => {
-      blip(560, 0.06, 0.07)
-      setTimeout(() => blip(840, 0.07, 0.045), 35)
-    },
+    // Moments of play outside the games, in the same voice (triangle blips, short glides, quieter than any game sound);
+    // plain presses stay silent:
     /** A skin into the stake (or a seat filled): a quick rising pluck; `n` (how many are in now) lifts the pitch a step */
     select: (n = 1) => {
       const f = 660 * 2 ** (Math.min(Math.max(n, 1) - 1, 6) / 6) * (1 + (Math.random() - 0.5) * 0.02)
@@ -320,8 +343,5 @@ export function useSfx() {
       blip(1175, 0.07, 0.045)
       setTimeout(() => blip(1568, 0.12, 0.04), 60)
     },
-    /** A sheet or a window slides in / out: a short airy swish */
-    open: () => swish(700, 2600, 0.14, 0.035),
-    close: () => swish(2200, 600, 0.12, 0.03),
   }
 }

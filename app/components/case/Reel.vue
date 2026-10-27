@@ -169,7 +169,11 @@ function resetPositions() {
     t.style.transform = horizontal.value ? `translateX(${off}px)` : `translateY(${off}px)`
   })
 }
-onMounted(() => nextTick(resetPositions))
+onMounted(() => {
+  nextTick(resetPositions)
+  // the launch sound decodes now, so the first spin plays it, not the synth stand-in
+  sfx.launchLoad()
+})
 watch([rootW, rootH, grid], () => {
   if (props.phase === 'idle') nextTick(resetPositions)
   // a settled result stays on its drop when the reel's size changes (window resize, a scrollbar)
@@ -684,8 +688,13 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
               {{ $t('wallet.sell') }}
               <UiPrice :amount="results[0].price" size="s" tone="inverse" count-up />
             </UiButton>
-            <UiButton variant="secondary" size="s" icon="upgrade" :to="`/upgrade?item=${results[0].uid}&from=${data.slug}`">{{ $t('upgrade.upgrade') }}</UiButton>
-            <UiButton v-if="results[0].price >= data.price" variant="secondary" size="s" icon="share" @click="emit('share', results[0])">{{ $t('share.share') }}</UiButton>
+            <!-- phones: Upgrade and Share as icons, so Sell and its price keep the row inside the frame -->
+            <UiButton variant="secondary" size="s" icon="upgrade" :icon-only="isMobile" :aria-label="$t('upgrade.upgrade')" :to="`/upgrade?item=${results[0].uid}&from=${data.slug}`">
+              <template v-if="!isMobile">{{ $t('upgrade.upgrade') }}</template>
+            </UiButton>
+            <UiButton v-if="results[0].price >= data.price" variant="secondary" size="s" icon="share" :icon-only="isMobile" :aria-label="$t('share.share')" @click="emit('share', results[0])">
+              <template v-if="!isMobile">{{ $t('share.share') }}</template>
+            </UiButton>
           </div>
           <!-- a demo drop: nothing to sell, so another free go stands in its place -->
           <UiButton v-else-if="tryFree" variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
