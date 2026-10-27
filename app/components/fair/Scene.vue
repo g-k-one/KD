@@ -56,7 +56,9 @@ const columns = computed(() =>
   aspect-ratio: 620 / 380;
   translate: -50% 0;
 }
-/* each layer: placed in % of the stage, moved by the pointer by its depth (--d), tilted (--r); the near ones float */
+/* the build follows the home chicken: one mass, the hero in the middle and the props tucked behind it — the laptop big
+   and low on the left like the open case, the blueprint low on the right like the side case, the chalkboard dim behind
+   the upper right like the far case; the check stamped on the middle of the shield. Each layer: placed in % of the stage, moved by the pointer by its depth (--d), tilted (--r); the near ones float */
 .kd-pf-layer {
   position: absolute;
   transform: translate3d(calc(var(--px, 0) * var(--d) * 14px), calc(var(--py, 0) * var(--d) * 9px), 0) rotate(var(--r, 0deg));
@@ -66,40 +68,40 @@ const columns = computed(() =>
 .kd-pf-layer.is-board {
   --d: 0.2;
   --r: 6deg;
-  right: 0;
-  top: 8%;
-  width: 19%;
+  left: 60.7%;
+  top: 6.6%;
+  width: 24.5%;
   filter: brightness(0.5) saturate(0.8) blur(2px);
 }
 .kd-pf-layer.is-blueprint {
   --d: 0.35;
   --r: -6deg;
-  right: -8%;
-  top: 52%;
-  width: 30%;
+  left: 62.7%;
+  top: 35.1%;
+  width: 43.1%;
   filter: brightness(0.7) blur(0.5px);
 }
 .kd-pf-layer.is-laptop {
   --d: 0.5;
-  left: -8%;
-  top: 28%;
-  width: 50%;
+  left: -8.4%;
+  top: 17.2%;
+  width: 63.2%;
   filter: brightness(0.85) drop-shadow(0 18px 26px rgb(0 0 0 / 0.5));
 }
 .kd-pf-layer.is-shield {
   --d: 1;
-  left: 25%;
-  top: 0;
-  width: 56%;
+  left: 24.2%;
+  top: -4.8%;
+  width: 57.3%;
   filter: drop-shadow(0 0 40px rgb(18 183 106 / 0.45)) drop-shadow(0 18px 26px rgb(0 0 0 / 0.5));
   animation: kd-pf-float 5.6s var(--ease-in-out) infinite;
 }
 .kd-pf-layer.is-check {
   --d: 1.5;
   --r: -4deg;
-  left: 32%;
-  top: 40%;
-  width: 48%;
+  left: 33%;
+  top: 12.6%;
+  width: 43.1%;
   filter: drop-shadow(0 18px 24px rgb(0 0 0 / 0.55));
   animation: kd-pf-float 4.4s var(--ease-in-out) infinite -1.6s;
 }
@@ -134,6 +136,12 @@ const columns = computed(() =>
   }
 }
 @media (max-width: 639px) {
+  /* phones: a touch smaller and lower, so the mass sits inside the band as the home chicken does (clear of the live
+     strip above, inside the screen at the sides) */
+  .kd-pf-stage {
+    top: 2%;
+    height: 112%;
+  }
   .kd-pf-col {
     font-size: 11px;
     line-height: 13px;
