@@ -49,19 +49,21 @@ const filtered = computed(() =>
     .sort((a, b) => (sort.value === 'priceDesc' ? b.cost - a.cost : sort.value === 'priceAsc' ? a.cost - b.cost : 0)),
 )
 const byStatus = (st: BattleStatus) => filtered.value.filter((b) => b.status === st)
+// No list of finished battles (they are in each player's history): a battle that just ended stays in Live for a minute
+// with its result, then goes
+const JUST_ENDED_MS = 60_000
+const now = useClock(5000)
+const endedAt = (b: Battle) => (b.startedAt ? Date.parse(b.startedAt) + b.rounds.length * b.roundMs : 0)
 const sections = computed(() => [
   { key: 'waiting', title: t('pvp.openSeats'), list: byStatus('waiting') },
-  { key: 'live', title: t('pvp.liveNow'), list: byStatus('live') },
-  { key: 'finished', title: t('pvp.finished'), list: byStatus('finished') },
+  { key: 'live', title: t('pvp.liveNow'), list: [...byStatus('live'), ...byStatus('finished').filter((b) => now.value - endedAt(b) < JUST_ENDED_MS)] },
 ])
-/** Phones: two columns of compact cards. The finished ones show one row until Show all */
+/** Phones: two columns of compact cards */
 // false through hydration (the server renders desktop), then the real width — or hydrated cards keep desktop classes
 const mounted = useMounted()
 const phoneQuery = useMediaQuery('(max-width: 639.98px)')
 const isPhone = computed(() => mounted.value && phoneQuery.value)
-const allFinished = ref(false)
-const ROW = computed(() => (isPhone.value ? 2 : 4))
-const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinished.value ? list.slice(0, ROW.value) : list)
+const shown = (_key: string, list: Battle[]) => list
 </script>
 
 <template>
@@ -121,11 +123,7 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
         <section v-if="data && (sec.list.length || sec.key === 'waiting')" class="flex flex-col gap-4">
           <UiSectionHeader :title="sec.title">
             <template #actions>
-              <button v-if="sec.key === 'finished' && sec.list.length > ROW" type="button" class="type-12-caps flex h-8 items-center gap-0.5 text-neutral-12 hover:text-neutral-15" @click="allFinished = !allFinished">
-                {{ allFinished ? $t('pvp.showLess') : $t('pvp.showAll', { n: sec.list.length }) }}
-                <UiIcon :name="allFinished ? 'chevron-up' : 'chevron-down'" :size="14" />
-              </button>
-              <span v-else class="type-12-caps text-neutral-11 tabular-nums">{{ sec.list.length }}</span>
+              <span class="type-12-caps text-neutral-11 tabular-nums">{{ sec.list.length }}</span>
             </template>
           </UiSectionHeader>
           <TransitionGroup tag="div" name="kd-list" class="relative grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">

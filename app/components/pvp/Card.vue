@@ -10,11 +10,10 @@ const now = useClock(1000)
 const { onPointerMove } = useSpotlight()
 const { t } = useI18n()
 
-// always six places, two rows of three, so every card is the same height: the rounds in order, empty tiles after the
-// last one, and past six the last tile counts the rest (+N, its own case among them)
+// always six places, two rows of three, so every card is the same height: the first six rounds in order, empty tiles
+// after the last one (the count in the top corner says how many there are in all)
 const SLOTS = 6
 const tiles = computed(() => props.battle.rounds.slice(0, SLOTS))
-const more = computed(() => (props.battle.rounds.length > SLOTS ? props.battle.rounds.length - (SLOTS - 1) : 0))
 const clock = computed(() => battleClock(props.battle, now.value))
 const round = computed(() => Math.min(props.battle.rounds.length, Math.max(1, clock.value.round + 1)))
 // the seats as one stack, or two with VS between in team mode
@@ -54,7 +53,6 @@ const modeTip = computed(() => t(`pvp.modeTip.${props.battle.mode}`))
       <div class="kd-bcard-grid grid grid-cols-3" :class="compact ? 'gap-1' : 'gap-2'">
         <span v-for="(c, i) in tiles" :key="i" class="kd-bcard-tile relative grid aspect-square place-items-center" :class="compact ? 'rounded-lg' : 'rounded-xl'" :title="c.name">
           <img :src="c.image" :alt="c.name" draggable="false" class="kd-bcard-case size-[88%] object-contain" />
-          <span v-if="more && i === SLOTS - 1" class="kd-bcard-more absolute inset-0 grid place-items-center text-neutral-15 tabular-nums" :class="compact ? 'type-14-caps rounded-lg' : 'type-16-caps rounded-xl'">+{{ more }}</span>
         </span>
         <span v-for="n in SLOTS - tiles.length" :key="`e${n}`" class="kd-bcard-tile aspect-square" :class="compact ? 'rounded-lg' : 'rounded-xl'" />
       </div>
@@ -121,9 +119,6 @@ const modeTip = computed(() => t(`pvp.modeTip.${props.battle.mode}`))
 /* the tiles: white 4% on whatever is under them, empty or not */
 .kd-bcard-tile {
   background: rgb(255 255 255 / 0.04);
-}
-.kd-bcard-more {
-  background: rgb(12 13 16 / 0.55);
 }
 /* the fade starts in the first row and eases out, so the players over it stand clear */
 .kd-bcard-grid {

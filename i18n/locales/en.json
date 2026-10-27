@@ -658,9 +658,7 @@
     "teamWon": "{a} & {b} won",
     "toWin": "to win",
     "pot": "Pot",
-    "openSeats": "Open seats",
-    "showAll": "Show all {n}",
-    "showLess": "Show less"
+    "openSeats": "Open seats"
   },
   "quick": {
     "title": "Top up and keep playing",
