@@ -98,7 +98,7 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
 
     <div
       class="relative z-10 flex flex-col gap-4 sm:max-w-[58%] sm:gap-6 lg:gap-10 lg:max-w-none"
-      :class="bare ? 'justify-between lg:w-[600px] lg:justify-center lg:self-stretch' : 'justify-between lg:h-full lg:w-[709px] lg:justify-center'"
+      :class="bare ? 'justify-between lg:w-[680px] lg:justify-center lg:self-stretch' : 'justify-between lg:h-full lg:w-[709px] lg:justify-center'"
     >
       <div class="flex flex-col gap-1 sm:gap-2">
         <p class="type-12-caps lg:type-16-caps text-brand-light">
@@ -106,7 +106,7 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
         </p>
         <h1
           class="font-extrabold uppercase"
-          :class="bare ? 'text-[28px] leading-8 sm:text-[36px] sm:leading-10 lg:text-[54px] lg:leading-[56px] lg:tracking-[-0.01em]' : 'text-xl leading-6 sm:text-[32px] sm:leading-9 lg:type-48-caps'"
+          :class="bare ? 'text-[28px] leading-8 sm:text-[36px] sm:leading-10 lg:text-[50px] lg:leading-[54px] lg:tracking-[-0.01em]' : 'text-xl leading-6 sm:text-[32px] sm:leading-9 lg:type-48-caps'"
         >
           {{ offer ? $t(offer.title, { n: offer.n }, offer.n || 1) : $t('hero.title') }}
         </h1>

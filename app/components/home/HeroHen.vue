@@ -256,7 +256,7 @@ watch(
 .kd-hen-crate.is-a {
   --d: 0.5;
   --r: -10deg;
-  left: -10px;
+  left: 40px;
   bottom: 18px;
   width: 300px;
   filter: brightness(0.7) saturate(0.9);
