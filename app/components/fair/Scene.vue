@@ -78,7 +78,7 @@ const columns = computed(() =>
 }
 .kd-pf-layer.is-blueprint {
   --d: 0.35;
-  --r: 9deg;
+  --r: 15deg;
   left: 64.5%;
   top: 29%;
   width: 37%;
@@ -104,7 +104,7 @@ const columns = computed(() =>
   --d: 2.6;
   --r: -4deg;
   left: 33%;
-  top: 12.6%;
+  top: 8.5%;
   width: 43.1%;
   filter: drop-shadow(0 18px 24px rgb(0 0 0 / 0.55));
   animation: kd-pf-float 4.4s var(--ease-in-out) infinite -1.6s;
