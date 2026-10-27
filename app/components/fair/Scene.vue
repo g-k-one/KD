@@ -86,9 +86,9 @@ const columns = computed(() =>
 }
 .kd-pf-layer.is-laptop {
   --d: 0.5;
-  left: -8.4%;
-  top: 17.2%;
-  width: 63.2%;
+  left: -3%;
+  top: 15%;
+  width: 57%;
   filter: brightness(0.85) drop-shadow(0 18px 26px rgb(0 0 0 / 0.5));
 }
 .kd-pf-layer.is-shield {
