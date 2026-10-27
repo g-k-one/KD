@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const ui = useUiStore()
+const settings = useSettingsStore()
 const route = useRoute()
 // Debug dock: dev server and the prototype build; a production build sets NUXT_PUBLIC_DEBUG=false
 const debug = useRuntimeConfig().public.debug
@@ -14,7 +15,8 @@ watch(() => route.fullPath, () => (ui.popover = null))
       <LayoutDesktopHeader class="hidden lg:flex" />
       <LayoutMobileHeader class="lg:hidden" />
     </div>
-    <LayoutLiveFeed />
+    <!-- the live drops strip, unless the player turned it off in the settings -->
+    <LayoutLiveFeed v-if="settings.settings.liveFeed" />
 
     <main class="flex-1 pb-10 lg:pb-14">
       <slot />

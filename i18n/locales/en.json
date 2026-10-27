@@ -69,7 +69,9 @@
     "streamerMode": "Streamer mode",
     "streamerModeHint": "Shows coins instead of real currency and hides sensitive info on stream.",
     "haptics": "Vibration",
-    "hapticsHint": "A short buzz on drops and wins. Android only."
+    "hapticsHint": "A short buzz on drops and wins. Android only.",
+    "liveFeed": "Live drops",
+    "liveFeedHint": "The strip of everyone's latest drops under the header."
   },
   "feed": {
     "live": "Live",

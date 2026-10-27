@@ -16,6 +16,7 @@ const currency = computed({
 const sound = computed({ get: () => s.value.sound, set: (v) => settingsStore.update({ sound: v }) })
 const volume = computed({ get: () => s.value.volume, set: (v) => settingsStore.update({ volume: v }) })
 const haptics = computed({ get: () => s.value.haptics, set: (v) => settingsStore.update({ haptics: v }) })
+const liveFeed = computed({ get: () => s.value.liveFeed, set: (v) => settingsStore.update({ liveFeed: v }) })
 const streamer = computed({ get: () => s.value.streamerMode, set: (v) => settingsStore.update({ streamerMode: v }) })
 </script>
 
@@ -48,6 +49,15 @@ const streamer = computed({ get: () => s.value.streamerMode, set: (v) => setting
         <UiToggle v-model="haptics" :label="$t('settings.haptics')" />
       </div>
       <p class="type-12-regular text-neutral-12">{{ $t('settings.hapticsHint') }}</p>
+    </div>
+
+    <div class="flex flex-col gap-1.5 rounded-lg bg-neutral-3 p-3">
+      <div class="flex items-center gap-2">
+        <UiIcon name="live" :size="20" class="transition-colors" :class="liveFeed ? 'text-brand-light' : 'text-neutral-12'" />
+        <span class="type-14-caps flex-1">{{ $t('settings.liveFeed') }}</span>
+        <UiToggle v-model="liveFeed" :label="$t('settings.liveFeed')" />
+      </div>
+      <p class="type-12-regular text-neutral-12">{{ $t('settings.liveFeedHint') }}</p>
     </div>
 
     <div class="flex flex-col gap-1.5 rounded-lg bg-neutral-3 p-3">

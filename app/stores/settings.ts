@@ -6,9 +6,11 @@ interface Settings {
   volume: number
   streamerMode: boolean
   haptics: boolean
+  /** The live drops strip under the header */
+  liveFeed: boolean
 }
 
-const DEFAULTS: Settings = { currency: 'USD', sound: true, volume: 70, streamerMode: false, haptics: true }
+const DEFAULTS: Settings = { currency: 'USD', sound: true, volume: 70, streamerMode: false, haptics: true, liveFeed: true }
 
 // the player's preferences, kept in a cookie (localStorage in the artifact), one shared copy for the whole app
 export const useSettingsStore = sharedStore('settings', () => {
