@@ -44,7 +44,7 @@ async function logout() {
           :name="item.icon"
           :size="20"
           class="kd-icon transition-colors duration-200"
-          :class="isNavActive(route, item.to) ? 'text-brand-light' : 'text-neutral-12 group-hover:text-neutral-15'"
+          :class="isNavActive(route, item.to) ? (item.accent ?? 'text-brand-light') : 'text-neutral-12 group-hover:text-neutral-15'"
         />
         {{ $t(`nav.${item.key}`) }}
       </NuxtLink>

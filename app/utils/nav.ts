@@ -5,6 +5,8 @@ export interface NavItem {
   icon: string
   mobileIcon: string
   badge?: string
+  // the colour its icon lights up in while you are there (the brand orange when unset)
+  accent?: string
 }
 
 export const MAIN_NAV: NavItem[] = [
@@ -12,7 +14,7 @@ export const MAIN_NAV: NavItem[] = [
   { key: 'upgrade', to: '/upgrade', icon: 'upgrade', mobileIcon: 'm-upgrade' },
   { key: 'pvp', to: '/pvp', icon: 'pvp', mobileIcon: 'm-pvp', badge: 'nav.new' },
   { key: 'bonuses', to: '/bonuses', icon: 'bonuses', mobileIcon: 'm-bonus' },
-  { key: 'provablyFair', to: '/fairness', icon: 'shield', mobileIcon: 'm-fair' },
+  { key: 'provablyFair', to: '/fairness', icon: 'shield', mobileIcon: 'm-fair', accent: 'text-success' },
 ]
 
 export const INFO_NAV = [

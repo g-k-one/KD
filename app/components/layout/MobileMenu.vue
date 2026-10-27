@@ -77,7 +77,7 @@ async function logout() {
             class="kd-press kd-press-wide type-14-caps flex h-12 items-center gap-3 rounded-md px-3"
             :class="isNavActive(route, item.to) ? 'bg-neutral-3 text-neutral-15' : 'text-neutral-12'"
           >
-            <UiIcon :name="item.mobileIcon" :size="20" :class="isNavActive(route, item.to) && 'text-brand-light'" />
+            <UiIcon :name="item.mobileIcon" :size="20" :class="isNavActive(route, item.to) && (item.accent ?? 'text-brand-light')" />
             <span class="flex-1">{{ $t(`nav.${item.key}`) }}</span>
             <span v-if="item.badge" class="type-12 rounded-md bg-neutral-6 px-2 py-1 text-neutral-15 normal-case">{{ $t(item.badge) }}</span>
           </NuxtLink>
