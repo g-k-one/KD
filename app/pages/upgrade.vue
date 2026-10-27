@@ -267,6 +267,7 @@ const gauge = useTemplateRef<{ spin: (roll: number, fast: boolean) => Promise<vo
 const sfx = useSfx()
 // the launch sound decodes now, so the first upgrade plays it, not the synth stand-in
 onMounted(() => sfx.launchLoad())
+onBeforeUnmount(() => sfx.launchStop())
 const haptics = useHaptics()
 
 // Suspense (docs/motion.md → Upgrade): the scene darkens, Forge draws light into the dial while it turns,

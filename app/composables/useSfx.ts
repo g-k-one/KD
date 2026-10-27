@@ -35,10 +35,19 @@ const POKE: Record<'gawk' | 'bukbuk' | 'kurwawk' | 'kurwa' | 'puff', [number, nu
   puff: [4.365, 0.281],
 }
 let pokeBuf: Promise<AudioBuffer | null> | null = null
-// The launch of a reel or an upgrade (public/sfx/launch.mp3, KREA · Seed Audio): a slot lever pulled, the reels spinning
-// up with a rising hum, a bright ding; 2 s, levelled to about -14 LUFS
+// The launch of a reel or an upgrade (public/sfx/launch.mp3, KREA · Seed Audio): one short push, a tight thump with an
+// airy shove (a spring or a piston firing), under half a second, peaks at -3 dB
 let launchBuf: Promise<AudioBuffer | null> | null = null
 let launchReady: AudioBuffer | null = null
+let launchSrc: AudioBufferSourceNode | null = null
+function launchStop() {
+  try {
+    launchSrc?.stop()
+  } catch {}
+  launchSrc = null
+}
+// a launch never plays on in a hidden tab
+if (import.meta.client) document.addEventListener('visibilitychange', () => document.hidden && launchStop())
 
 export function useSfx() {
   const settings = useSettingsStore()
@@ -293,13 +302,17 @@ export function useSfx() {
     win: () => reveal(true),
     levelUp: () => reveal(4),
     launchLoad,
+    launchStop,
     /** The launch of a reel or an upgrade: the recorded lever pull and spin-up; a synth spin-up while it is still loading */
     riser: () => {
       const s = settings.settings
       if (!s.sound || s.volume <= 0) return
       const a = audio()
+      if (document.hidden) return
       if (a && launchReady) {
+        launchStop()
         const src = a.createBufferSource()
+        launchSrc = src
         const g = a.createGain()
         src.buffer = launchReady
         g.gain.value = 0.9 * (s.volume / 100)
