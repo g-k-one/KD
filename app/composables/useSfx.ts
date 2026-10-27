@@ -24,13 +24,15 @@ const HEN: Record<'swap' | 'body' | 'scream' | 'inflate' | 'pop', [number, numbe
   pop: [4.35, 2.318],
 }
 let henBuf: Promise<AudioBuffer | null> | null = null
-// The home banner's chicken, poked: a second sprite (public/sfx/poke.mp3, KREA · Seed Audio): a surprised "bawk", an
-// indignant double cluck, a flustered frantic squawk and a soft feather puff; trimmed, levelled, short fades
-const POKE: Record<'bawk' | 'bukbuk' | 'fluster' | 'puff', [number, number]> = {
-  bawk: [0, 0.553],
-  bukbuk: [0.703, 0.604],
-  fluster: [1.457, 1.375],
-  puff: [2.982, 0.281],
+// The home banner's chicken, poked: a second sprite (public/sfx/poke.mp3, KREA · Seed Audio) in the voice of the reel's
+// KURWAAAA shout (a chubby hen, round and warm, mid-low): a surprised "buh-GAWK!", an indignant "buk-BUK?!", and, fed up,
+// a clipped "KUR-WAWK!" or an angry "KURWA!" with an offended cluck; plus a soft feather puff. Trimmed, levelled, short fades
+const POKE: Record<'gawk' | 'bukbuk' | 'kurwawk' | 'kurwa' | 'puff', [number, number]> = {
+  gawk: [0, 0.875],
+  bukbuk: [1.025, 0.58],
+  kurwawk: [1.755, 1.0],
+  kurwa: [2.905, 1.31],
+  puff: [4.365, 0.281],
 }
 let pokeBuf: Promise<AudioBuffer | null> | null = null
 
@@ -225,12 +227,12 @@ export function useSfx() {
     /** Get the banner chicken's poke sounds ready */
     pokeLoad,
     /**
-     * The banner chicken poked: level 1–2 a "bawk" or a double cluck (picked at random, a quick run climbs in pitch),
-     * level 3 the flustered squawk; a soft feather puff under each. The synth squawks until the sprite is in.
+     * The banner chicken poked: level 1–2 a "buh-GAWK!" or a "buk-BUK?!" (picked at random, a quick run climbs in pitch),
+     * level 3 — fed up — "KUR-WAWK!" or "KURWA!"; a soft feather puff under each. The synth squawks until the sprite is in.
      */
     henPoke: (level: number, combo = 1) => {
       const rate = level === 3 ? 1 : 1 + Math.min(combo - 1, 4) * 0.05 + (Math.random() - 0.5) * 0.06
-      const ok = level === 3 ? pokeCut('fluster', 0.85) : pokeCut(Math.random() < 0.5 ? 'bawk' : 'bukbuk', 0.8, rate)
+      const ok = level === 3 ? pokeCut(Math.random() < 0.5 ? 'kurwawk' : 'kurwa', 0.9) : pokeCut(Math.random() < 0.5 ? 'gawk' : 'bukbuk', 0.8, rate)
       if (!ok) return squawkNow()
       pokeCut('puff', level === 3 ? 0.55 : 0.35)
     },

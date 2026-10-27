@@ -8,7 +8,7 @@
  * A poke, as many times as you like: the bird squashes, hops away from the finger and lands with a wobble (squash and
  * stretch on its own wrapper), its eyes pop and its wings flap; feathers burst from the very spot that was poked, on the
  * banner's own canvas (so they scroll with the page), and a cluck plays. Quick pokes in a row build up: a bigger hop,
- * then a flustered flip with a cloud of feathers and a frantic squawk.
+ * then the bird puffs up and shakes with rage, in a cloud of feathers.
  * Behind it, two of the site's loot cases (the hero's open case, back and front) at two depths, dimmer and further
  * back, moving less with the pointer than the bird.
  * Its own WebGL canvas, drawn only while on screen; if WebGL is missing the chicken stays out and nothing breaks.
@@ -196,15 +196,15 @@ onMounted(async () => {
 onBeforeUnmount(() => stop())
 
 // the hop on the bird's own wrapper: a squash, a jump away from the finger with a stretch, a landing with a wobble;
-// the flustered one is a full flip. Transform only, so it runs on the compositor
+// the flustered one puffs up and shakes side to side. Transform only, so it runs on the compositor
 const HOPS = [
   { up: 22, tilt: 6, ms: 520 },
   { up: 40, tilt: 10, ms: 600 },
-  { up: 70, tilt: 360, ms: 760 },
 ]
+const SHAKE_MS = 720
 let combo = 0
 let lastPoke = 0
-let flipUntil = 0
+let shakeUntil = 0
 function poke(e: MouseEvent) {
   const now = performance.now()
   combo = now - lastPoke < 900 ? combo + 1 : 1
@@ -218,27 +218,40 @@ function poke(e: MouseEvent) {
   const x = e.detail ? e.clientX : b.left + b.width / 2
   const y = e.detail ? e.clientY : b.top + b.height * 0.45
   const dir = x < b.left + b.width / 2 ? 1 : -1
-  const h = HOPS[level - 1]!
-  // one hop at a time: a new poke takes over from the last one, but a flip always lands first
+  // one move at a time: a new poke takes over from the last hop, but a shake always runs out
   const el = hop.value
-  if (el && now >= flipUntil) {
+  if (el && now >= shakeUntil) {
     el.getAnimations().forEach((a) => a.cancel())
-    // every frame lists the same functions, so each one tweens on its own (the flip turns, it doesn't snap)
-    const end = level === 3 ? dir * 360 : 0
-    const f = (ty: number, r: number, sx: number, sy: number) => ({ transform: `translateY(${ty}px) rotate(${r}deg) scale(${sx}, ${sy})` })
-    el.animate(
+    // every frame lists the same functions, so each one tweens on its own
+    const f = (tx: number, ty: number, r: number, sx: number, sy: number) => ({ transform: `translate(${tx}px, ${ty}px) rotate(${r}deg) scale(${sx}, ${sy})` })
+    if (level === 3) {
+      // puffed up with rage: swells, shakes hard side to side, the shaking dying down, then settles
+      const shakes = [1, -1, 0.85, -0.85, 0.6, -0.6, 0.3]
+      el.animate(
+        [
+          f(0, 0, 0, 1, 1),
+          { ...f(0, 6, 0, 1.14, 0.88), offset: 0.08 },
+          ...shakes.map((k, i) => ({ ...f(k * 12, -12, k * 7, 1.12, 1.1), offset: 0.14 + i * 0.1 })),
+          f(0, 0, 0, 1, 1),
+        ],
+        { duration: SHAKE_MS, easing: 'ease-in-out' },
+      )
+      shakeUntil = now + SHAKE_MS
+    } else {
+      const h = HOPS[level - 1]!
       // each phase its own curve: a quick squash, a rise that slows at the top, a fall that speeds up, a soft settle
-      [
-        { ...f(0, 0, 1, 1), easing: 'cubic-bezier(0.33, 0, 0.67, 1)' },
-        { ...f(8, 0, 1.12, 0.86), offset: 0.12, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
-        // mid-air: tilted away from the finger; flustered, upside down halfway through the flip
-        { ...f(-h.up, dir * (level === 3 ? 180 : h.tilt), 0.93, 1.09), offset: 0.45, easing: 'cubic-bezier(0.55, 0, 0.8, 0.5)' },
-        { ...f(3, level === 3 ? end : -dir * 2, 1.06, 0.95), offset: 0.74, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
-        f(0, end, 1, 1),
-      ],
-      { duration: h.ms },
-    )
-    if (level === 3) flipUntil = now + h.ms
+      el.animate(
+        [
+          { ...f(0, 0, 0, 1, 1), easing: 'cubic-bezier(0.33, 0, 0.67, 1)' },
+          { ...f(0, 8, 0, 1.12, 0.86), offset: 0.12, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          // mid-air: tilted away from the finger
+          { ...f(0, -h.up, dir * h.tilt, 0.93, 1.09), offset: 0.45, easing: 'cubic-bezier(0.55, 0, 0.8, 0.5)' },
+          { ...f(0, 3, -dir * 2, 1.06, 0.95), offset: 0.74, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          f(0, 0, 0, 1, 1),
+        ],
+        { duration: h.ms },
+      )
+    }
   }
   // the feathers burst from the poke itself, more of them the harder it gets; flustered, a cloud from the whole bird
   const l = fxLayer.value?.getBoundingClientRect()
