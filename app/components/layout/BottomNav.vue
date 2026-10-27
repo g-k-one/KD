@@ -1,11 +1,13 @@
 <script setup lang="ts">
 const route = useRoute()
 const ui = useUiStore()
-const session = useSessionStore()
 
+// Five even tabs, the same for guests and players: topping up is the + by the balance in the header and signing in
+// its Sign in button, so the bar holds only places
 const TABS = [
   { key: 'cases', label: 'nav.cases', to: '/', icon: 'm-cases', order: 1 },
   { key: 'upgrade', label: 'nav.upgrade', to: '/upgrade', icon: 'm-upgrade', order: 2 },
+  { key: 'pvp', label: 'nav.pvp', to: '/pvp', icon: 'm-pvp', order: 3 },
   { key: 'bonus', label: 'nav.bonus', to: '/bonuses', icon: 'm-bonus', order: 4 },
 ]
 
@@ -13,13 +15,6 @@ const TABS = [
 // to the next daily case replaces the label until it is ready, then the dot says "come and take it"
 const { dailyReady, dailyIn, freeCount } = useBonuses()
 const tabClass = (active: boolean) => (active ? 'text-brand-light' : 'text-neutral-13')
-
-// Centre: a raised Deposit (Casehug's "Add Funds"), one thumb away on every page; guests sign in first
-function deposit() {
-  ui.mobileMenuOpen = false
-  if (!session.user) return ui.openSignIn()
-  navigateTo('/deposit')
-}
 </script>
 
 <template>
@@ -45,17 +40,6 @@ function deposit() {
       </NuxtLink>
       <button
         type="button"
-        class="kd-press type-12 order-3 flex h-16 flex-1 flex-col items-center justify-center gap-1"
-        :class="tabClass(isNavActive(route, '/deposit'))"
-        @click="deposit"
-      >
-        <span class="kd-deposit bg-brand-gradient -mt-7 mb-0.5 grid size-12 place-items-center rounded-2xl text-neutral-1">
-          <UiIcon name="plus" :size="24" />
-        </span>
-        {{ $t('wallet.deposit') }}
-      </button>
-      <button
-        type="button"
         class="kd-press type-12 order-5 flex h-16 flex-1 flex-col items-center justify-center gap-1"
         :class="tabClass(ui.mobileMenuOpen)"
         :aria-expanded="ui.mobileMenuOpen"
@@ -69,13 +53,6 @@ function deposit() {
 </template>
 
 <style scoped>
-/* Raised over the bar, ringed in the bar's colour so it reads as cut into it */
-.kd-deposit {
-  box-shadow:
-    0 0 0 4px var(--color-neutral-2),
-    0 6px 16px rgb(255 95 31 / 0.45),
-    inset 0 1px 0 rgb(255 255 255 / 0.35);
-}
 .kd-dot {
   box-shadow: 0 0 0 2px var(--color-neutral-2);
   animation: kd-dot 1.6s ease-in-out infinite;
