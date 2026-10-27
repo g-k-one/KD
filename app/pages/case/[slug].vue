@@ -9,7 +9,7 @@ const ui = useUiStore()
 const sfx = useSfx()
 const toast = useToast()
 const isSm = useMediaQuery('(min-width: 640px)')
-// Sound sits in the bar (CSGOGem, Casehug): three icons a side on phones — back · share · ‹ | › · sound · fairness
+// The bar: two icons a side on phones — back · history · ‹ name › · share · fairness (the upgrade and PvP bars match)
 
 // The page shows at once on a tap from elsewhere: its skeleton stands until the case comes in (the first load,
 // rendered on the server, comes complete)
@@ -187,11 +187,16 @@ if (import.meta.client) {
     <CasePageSkeleton v-if="!cs" />
     <template v-else>
       <div class="flex flex-col gap-4">
+        <!-- two a side, as on the upgrade and PvP bars: back and history, share and fairness -->
         <UiPageBar
           fixed-sides
           :left="[
             { label: $t('case.allCases'), icon: 'arrow-left', to: '/' },
+            { label: $t('upgrade.history'), icon: 'history', to: '/profile?tab=history&game=case' },
+          ]"
+          :right="[
             { label: $t('case.share'), icon: 'share', onClick: share },
+            { label: $t('case.fairness'), icon: 'shield', to: '/fairness' },
           ]"
         >
           <!-- Phones: the arrows sit at the ends of the centre, the name between them; desktop: a fixed-width name
