@@ -20,7 +20,7 @@ const ui = useUiStore()
         </button>
         <UiButton size="s" icon="plus" icon-only to="/deposit" class="ml-0.5" :aria-label="$t('wallet.deposit')" />
       </div>
-      <NuxtLink to="/profile" class="kd-press ml-1 rounded-full" :aria-label="$t('profile.profile')">
+      <NuxtLink to="/profile" class="kd-press ml-1 flex items-center rounded-full" :aria-label="$t('profile.profile')">
         <UiAvatar :src="session.user.avatar" :level="session.user.level" />
       </NuxtLink>
     </template>
