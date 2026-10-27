@@ -413,6 +413,8 @@ async function spin(winners: Item[], fast: boolean, kurwa: boolean[] = []) {
   landed.value = []
   const all = winners.map((_, i) => i)
   const hits = all.filter((i) => kurwa[i])
+  // known before the roll: a chicken column that lands while the others still spin keeps its real drop's name hidden
+  kurwaCols.value = hits
 
   // Roll 1: chicken columns land on the Golden Chicken
   await run(winners.map((w, i) => (kurwa[i] ? chicken.value : w)), fast, all)
@@ -420,7 +422,6 @@ async function spin(winners: Item[], fast: boolean, kurwa: boolean[] = []) {
   if (hits.length) {
     // The chicken comes out of the gold logo, screams and pops (henShow), then the respin starts among the expensive items
     chickenHit.value = all.map((i) => kurwa[i]!)
-    kurwaCols.value = hits
     haptics.jackpot()
     await nextTick()
     // one per chicken: skip a hit element nested in another one
