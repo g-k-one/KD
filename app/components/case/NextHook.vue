@@ -140,13 +140,14 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
   background: rgb(18 183 106 / 0.14);
   color: var(--color-success);
 }
+/* a 48px icon tile 8px in from the 64px card's 16px corners: 16 − 8 = 8 (concentric, as the top drops) */
 .kd-hc-ic {
   display: grid;
   width: 48px;
   height: 48px;
   flex-shrink: 0;
   place-items: center;
-  border-radius: 12px;
+  border-radius: 8px;
 }
 /* 48px tiles in a 64px card: 8px inset, 16 − 8 = 8 radius (concentric) */
 .kd-top-drop {

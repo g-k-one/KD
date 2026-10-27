@@ -3,6 +3,9 @@ import type { BattlePlayerRef } from '#shared/types/api'
 
 // Figma "BattlePlayer": Desktop = column header, Compact = mobile column header.
 // Empty shows Call bot; Winner = success tint + 1px success stroke.
+// The seat says one thing on the right at a time, big: the chance to win before the first round, the coins won so far
+// once rounds land (the chance small under it), WON / LOST at the end (the total then sits under the name). No line along
+// the bottom and no coin with a 0 before anything has dropped.
 const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost'; busy?: boolean }>()
 defineEmits<{ bot: []; join: [] }>()
 
@@ -12,6 +15,7 @@ const totalShown = useTransition(totalSrc, { duration: 700, transition: [0.22, 1
 // the chance to win rolls to each new estimate too
 const chanceSrc = computed(() => props.chance ?? 0)
 const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22, 1, 0.36, 1] })
+const playing = computed(() => (props.total ?? 0) > 0)
 </script>
 
 <template>
@@ -40,19 +44,21 @@ const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22,
           <span class="truncate" :class="compact ? 'type-12' : 'type-16-medium'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
           <UiLevelBadge :level="player.level" class="shrink-0" :class="compact && 'scale-90'" />
         </span>
-        <UiPrice :amount="Math.round(totalShown)" :size="compact ? 'xs' : 'm'" :tone="winner ? 'success' : 'default'" class="tabular-nums" />
+        <UiPrice v-if="result" :amount="Math.round(totalShown)" :size="compact ? 'xs' : 'm'" :tone="winner ? 'success' : 'default'" class="tabular-nums" />
       </span>
-      <!-- chance to win: the number on the right, a line along the bottom -->
-      <span v-if="chance != null" class="kd-chance flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end'">
+      <!-- while it plays: the coins won so far, big, the chance small under them -->
+      <span v-if="!result && playing" class="flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end'">
+        <UiPrice :amount="Math.round(totalShown)" :size="compact ? 's' : 'l'" tone="coin" class="tabular-nums" />
+        <span v-if="chance != null" class="type-10-caps tabular-nums text-neutral-11">{{ Math.round(chanceShown) }}% {{ compact ? '' : $t('pvp.toWin') }}</span>
+      </span>
+      <!-- before the first round: the chance to win -->
+      <span v-else-if="!result && chance != null" class="kd-chance flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end'">
         <span class="tabular-nums" :class="[compact ? 'type-12' : 'type-20-caps', chanceShown >= 50 ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15']">{{ Math.round(chanceShown) }}%</span>
         <span v-if="!compact" class="type-10-caps text-neutral-11">{{ $t('pvp.toWin') }}</span>
       </span>
       <!-- once it is over: what happened, not a 100% / 0% -->
-      <span v-else-if="result" class="flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end'">
+      <span v-if="result" class="flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end'">
         <span :class="[compact ? 'type-12-caps' : 'type-20-caps', result === 'won' ? 'text-success' : 'text-neutral-11']">{{ result === 'won' ? $t('pvp.won') : $t('pvp.lost') }}</span>
-      </span>
-      <span v-if="chance != null" class="kd-chance-track absolute inset-x-3 bottom-1 h-1 overflow-hidden rounded-full">
-        <span class="kd-chance-fill block h-full rounded-full" :style="{ width: `${Math.max(2, chanceShown)}%` }" />
       </span>
     </template>
     <template v-else>
@@ -80,15 +86,6 @@ const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22,
   transition:
     background-color var(--dur-slow) var(--ease-out),
     border-color var(--dur-slow) var(--ease-out);
-}
-.kd-chance-track {
-  background: var(--color-neutral-4);
-}
-.kd-chance-fill {
-  background: linear-gradient(90deg, var(--color-brand-base), #ffb13b);
-}
-.kd-slot.is-winner .kd-chance-fill {
-  background: var(--color-success);
 }
 .kd-slot.is-lead {
   border-color: rgb(255 95 31 / 0.45);
