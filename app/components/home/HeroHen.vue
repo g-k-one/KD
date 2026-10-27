@@ -205,8 +205,8 @@ const HOPS = [
 const SHAKE_MS = 720
 
 // the scene around the bird, back to front: behind it (under the canvas) and in front of it (over the canvas)
-const BEHIND = ['crate-back', 'crate-side', 'crate-open', 'awp'] as const
-const FRONT = ['bayonet'] as const
+const BEHIND = ['crate-back', 'crate-side', 'bayonet', 'crate-open'] as const
+const FRONT = ['awp'] as const
 let combo = 0
 let lastPoke = 0
 let shakeUntil = 0
@@ -373,10 +373,10 @@ function poke(e: MouseEvent) {
   width: 210px;
   filter: brightness(0.75) saturate(0.95) blur(1px);
 }
-/* the AWP fallen out of the open case: mirrored, its dragon stock on the left in front of the case, the barrel running
-   under the bird's feet; a slight float */
+/* in front: the AWP fallen out of the open case, mirrored, its dragon stock on the left, the barrel running across the
+   bird's feet; a slight float */
 .kd-hen-prop.is-awp {
-  --d: 0.65;
+  --d: 1.2;
   --r: 6deg;
   --sx: -1;
   --f: -5px;
@@ -390,23 +390,23 @@ function poke(e: MouseEvent) {
 .kd-hen-prop.is-crate-open {
   --d: 0.5;
   --r: -7deg;
-  left: 40px;
-  bottom: 40px;
+  left: 10px;
+  bottom: 72px;
   width: 360px;
   filter: brightness(0.98);
 }
-/* in front: the bayonet flying up out of the open case, mirrored so its tip points up and away to the left */
+/* behind the bird: the bayonet flying up out of the open case, mirrored so its tip points up and away to the left */
 .kd-hen-prop.is-bayonet {
-  --d: 1.6;
+  --d: 0.55;
   --r: 34deg;
   --sx: -1;
   --f: -14px;
   --fd: 3.6s;
   --fdl: -1.2s;
-  left: 10px;
-  top: 150px;
+  left: 100px;
+  top: 96px;
   width: 170px;
-  filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.45));
+  filter: brightness(0.88) drop-shadow(0 10px 14px rgb(0 0 0 / 0.45));
 }
 .kd-hen-lean {
   transform: translate3d(calc(var(--px, 0) * 10px), calc(var(--py, 0) * 6px), 0);
