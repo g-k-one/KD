@@ -8,7 +8,7 @@ defineProps<{ compact?: boolean }>()
 <template>
   <NuxtLink to="/pvp/create" class="kd-create kd-press flex min-w-0 flex-col gap-2 rounded-5xl bg-neutral-2 p-2">
     <!-- the dashed stage on the button's edges (16 px in), its 8 px corners concentric with the card's 24 -->
-    <div class="kd-create-stage relative mx-2 mt-2 flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-3" :class="compact ? 'h-38 pt-6' : 'h-50 pt-8'">
+    <div class="kd-create-stage relative mx-2 mt-2 flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-3" :class="compact ? 'h-42 pt-6' : 'h-58 pt-8'">
       <span class="absolute inset-x-1.5 top-1.5 flex items-center gap-2">
         <span class="kd-create-chip grid shrink-0 place-items-center rounded-lg text-brand-light" :class="compact ? 'size-7' : 'size-8'"><UiIcon name="plus" :size="compact ? 16 : 18" /></span>
         <span class="type-12-caps truncate text-brand-light">{{ $t('pvp.newBattle') }}</span>
