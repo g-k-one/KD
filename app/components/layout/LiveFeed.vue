@@ -130,9 +130,11 @@ function show(d: FeedDrop, e: MouseEvent) {
           @mouseleave="hover = null"
         >
           <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 56 : 40" class="w-full" />
-          <!-- not a case drop: a small full-colour picture of the source (an arrow up, a sword) in the bottom left corner,
+          <!-- not a case drop: the nav's own line icon for the source (upgrade, PvP) in the bottom left corner, quiet grey
                over the skin, no plate; a dark edge lifts it off whatever is under it -->
-          <img v-if="sourceOf(d.caseSlug) !== 'case'" :src="SOURCE_ART[sourceOf(d.caseSlug) as 'upgrade' | 'pvp']" :alt="$t(`nav.${sourceOf(d.caseSlug)}`)" :title="$t(`nav.${sourceOf(d.caseSlug)}`)" class="kd-feed-src absolute bottom-1 left-1 z-[2] size-3.5 lg:size-4" />
+          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute bottom-1 left-1 z-[2] text-neutral-13" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
+            <UiIcon :name="sourceOf(d.caseSlug)" :size="isLg ? 14 : 12" />
+          </span>
           <span v-if="mode === 'top'" class="type-10-caps absolute right-1 bottom-1 rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
         </NuxtLink>
       </TransitionGroup>
