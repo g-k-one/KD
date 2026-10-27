@@ -476,16 +476,7 @@
     "yourResult": "You got: {v}",
     "hood": "Under the hood",
     "hoodHint": "The formula, how each mode rolls, your seed log, a manual check and your seeds",
-    "pokeLabel": "Poke the inspector",
-    "poke0": "Poke me",
-    "poke1": "Checking…",
-    "poke2": "Hash OK",
-    "poke3": "Seeds OK",
-    "poke4": "Nonce OK",
-    "pokeDone": "100% fair!",
-    "chipHash": "SHA-256 {h}",
-    "chipClient": "client {s}",
-    "chipNonce": "nonce #{n}"
+    "lensLabel": "Look through the magnifier: your seeds and the formula behind every roll"
   },
   "account": {
     "title": "Profile",
