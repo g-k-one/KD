@@ -6,8 +6,8 @@
  * jiggles, the jaw chatters a little, the head turns a few degrees toward the cursor and both pupils slide toward it
  * (each anywhere inside its own eye). The whole canvas bobs on CSS. With no mouse (phones) the eyes wander on their own.
  * A poke: a jolt, a squawk, feathers; the banner counts the pokes (its bubble and the golden egg), the fifth bursts gold.
- * It rises out of an open loot case standing on the band's foot (the case's back and lid behind the bird, its front
- * wall over its legs), and a second, small case lies far back on the right; both move less with the pointer.
+ * Behind it, two of the site's loot cases (the hero's open case, back and front) at two depths, dimmer and further
+ * back, moving less with the pointer than the bird.
  * Its own WebGL canvas, drawn only while on screen; if WebGL is missing the chicken stays out and nothing breaks.
  */
 type Spine = typeof import('@esotericsoftware/spine-webgl')
@@ -23,9 +23,7 @@ const box = useTemplateRef<HTMLElement>('box')
 const host = useTemplateRef<HTMLElement>('host')
 const ok = ref(false)
 
-const VIEW_H = 600 // skeleton units shown top to bottom (the hen is ~450 tall: three quarters of its box)
-// the camera sits this far below the hen's middle, so the bird rides high in its box with its legs in the case
-const LIFT = 70
+const VIEW_H = 470 // skeleton units shown top to bottom (the hen is ~450 tall: it nearly fills its box)
 const CENTER_Y = 28 // the hen's middle in skeleton units
 // how far each pupil may sit from its eye's centre, skeleton units (the white's radius less the pupil's and the rim):
 // the near eye is big (white 77, pupil 24), the far one (eyeR) small (white 40, pupil 12)
@@ -102,7 +100,7 @@ onMounted(async () => {
     const r = canvas.getBoundingClientRect()
     const u = VIEW_H / Math.max(1, r.height)
     target.x = (e.clientX - (r.left + r.width / 2)) * u
-    target.y = CENTER_Y - LIFT - (e.clientY - (r.top + r.height / 2)) * u
+    target.y = CENTER_Y - (e.clientY - (r.top + r.height / 2)) * u
     lastMove = performance.now()
   }
   addEventListener('pointermove', onMove)
@@ -157,7 +155,7 @@ onMounted(async () => {
 
     const gl = ctx.gl
     renderer.camera.setViewport((VIEW_H * w) / h, VIEW_H)
-    renderer.camera.position.set(0, CENTER_Y - LIFT, 0)
+    renderer.camera.position.set(0, CENTER_Y, 0)
     gl.viewport(0, 0, canvas.width, canvas.height)
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
@@ -208,14 +206,11 @@ watch(
 
 <template>
   <div class="kd-hen absolute inset-0">
-    <!-- behind the bird: the open case's back and lid, and a small case far back on the right -->
+    <!-- the cases behind: a big one low on the left, a small far one high on the right -->
     <span class="kd-hen-crates pointer-events-none absolute" aria-hidden="true">
-      <span class="kd-hen-crate is-far absolute block">
+      <span v-for="c in ['a', 'b']" :key="c" class="kd-hen-crate absolute block" :class="`is-${c}`">
         <img src="/img/hero/case-back.webp" alt="" draggable="false" class="absolute inset-0 w-full" />
         <img src="/img/hero/case-front.webp" alt="" draggable="false" class="absolute inset-0 w-full" />
-      </span>
-      <span class="kd-hen-crate is-main absolute block">
-        <img src="/img/hero/case-back.webp" alt="" draggable="false" class="absolute inset-0 w-full" />
       </span>
     </span>
     <button ref="box" type="button" class="kd-hen-poke absolute" :aria-label="$t('hero.pokeLabel')" @click="poke">
@@ -223,22 +218,17 @@ watch(
         <span ref="host" class="kd-hen-bob relative block size-full" />
       </span>
     </button>
-    <!-- over the bird: the case's front wall, so its legs are inside the case -->
-    <span class="kd-hen-crates is-front pointer-events-none absolute" aria-hidden="true">
-      <span class="kd-hen-crate is-main absolute block">
-        <img src="/img/hero/case-front.webp" alt="" draggable="false" class="absolute inset-0 w-full" />
-      </span>
-    </span>
     <span v-if="bubble && ok" class="kd-hen-bubble type-12-caps lg:type-14-caps absolute rounded-lg px-2.5 py-1.5">{{ bubble }}</span>
   </div>
 </template>
 
 <style scoped>
-/* the chicken's box: from the band's top padding down past its foot into the empty right end of the big wins'
-   heading line, so the bird is big while the band keeps its height */
+/* the chicken's box: from just above the band's top padding (the canvas is clear there, the comb stays under the
+   strip) down past the band's foot into the empty right end of the big wins' heading line, so the bird is big while the
+   band keeps its height */
 .kd-hen-poke {
   right: -40px;
-  top: -40px;
+  top: -70px;
   width: 640px;
   height: calc(100% + 120px);
   cursor: pointer;
@@ -254,7 +244,7 @@ watch(
 /* the cases: the same box as the chicken; each moves with the pointer by its depth, less than the bird */
 .kd-hen-crates {
   right: -40px;
-  top: -40px;
+  top: -70px;
   width: 640px;
   height: calc(100% + 120px);
 }
@@ -263,25 +253,20 @@ watch(
   transform: translate3d(calc(var(--px, 0) * var(--d) * 10px), calc(var(--py, 0) * var(--d) * 6px), 0) rotate(var(--r));
   transition: transform var(--dur-slow) var(--ease-out);
 }
-.kd-hen-crates.is-front {
-  z-index: 1;
+.kd-hen-crate.is-a {
+  --d: 0.5;
+  --r: -10deg;
+  left: 40px;
+  bottom: 18px;
+  width: 300px;
+  filter: brightness(0.7) saturate(0.9);
 }
-/* the open case under the bird, centred, standing on the band's foot (40 px above the box's bottom) */
-.kd-hen-crate.is-main {
-  --d: 0.6;
-  --r: 0deg;
-  left: 50%;
-  bottom: 30px;
-  width: 340px;
-  margin-left: -170px;
-}
-/* a small case far back on the right, low, dim and soft */
-.kd-hen-crate.is-far {
+.kd-hen-crate.is-b {
   --d: 0.25;
-  --r: 12deg;
-  right: 0;
-  bottom: 110px;
-  width: 150px;
+  --r: 14deg;
+  right: 10px;
+  top: 40px;
+  width: 170px;
   filter: brightness(0.45) saturate(0.8) blur(2px);
 }
 .kd-hen-lean {
@@ -298,8 +283,8 @@ watch(
   }
 }
 .kd-hen-bubble {
-  right: 120px;
-  top: 10px;
+  right: 60px;
+  top: 0;
   z-index: 2;
   color: var(--color-neutral-1);
   background: var(--color-neutral-15);
