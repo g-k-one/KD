@@ -66,7 +66,7 @@ const shown = (key: string, list: Battle[]) => (key === 'finished' && !allFinish
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10">
-    <UiPageBar :title="$t('pvp.title')" :left="barLeft" :right="barRight" />
+    <UiPageBar logo :left="barLeft" :right="barRight" />
 
     <!-- How it works: a battle in four plain steps, as the upgrade explains itself -->
     <UiModal v-model="howOpen" :title="$t('pvp.howTitle')" :width="520">
