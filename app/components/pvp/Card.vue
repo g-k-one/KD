@@ -1,19 +1,20 @@
 <script setup lang="ts">
 import type { Battle } from '#shared/types/api'
 
-// A battle as one picture and one button, like a case card. The stage — no box, just the mode's light on the card —
-// carries one line along
-// its top — the mode's icon on the left (its rule in a tooltip), the players in the middle (a stack per side, VS between
-// the teams, + on a free seat), the number of cases on the right (with the round while live) — and the battle's dearest
-// case big in the middle. The button says what to do: Join with the seat's price, Watch, or View.
-// Compact: the same card for a phone's two columns.
+// A battle as a card (GK's sketch): the top lit in the mode's colour — its icon and name (the rule in a tooltip) on the
+// left, the number of cases on the right (the round while live); the battle's cases as a grid of tiles, three a row, the
+// second row fading into the card; over that fade the players (a stack per side, VS between the teams, + on a free
+// seat); and the one button: Join with the seat's price, Watch, or View. Compact: the same card for a phone's columns.
 const props = defineProps<{ battle: Battle; compact?: boolean }>()
 const now = useClock(1000)
 const { onPointerMove } = useSpotlight()
 const { t } = useI18n()
 
-// the dearest case is the picture
-const hero = computed(() => props.battle.rounds.reduce((a, b) => (b.price > a.price ? b : a)))
+// always six places, two rows of three, so every card is the same height: the rounds in order, empty tiles after the
+// last one, and past six the last tile counts the rest (+N, its own case among them)
+const SLOTS = 6
+const tiles = computed(() => props.battle.rounds.slice(0, SLOTS))
+const more = computed(() => (props.battle.rounds.length > SLOTS ? props.battle.rounds.length - (SLOTS - 1) : 0))
 const clock = computed(() => battleClock(props.battle, now.value))
 const round = computed(() => Math.min(props.battle.rounds.length, Math.max(1, clock.value.round + 1)))
 // the seats as one stack, or two with VS between in team mode
@@ -25,50 +26,61 @@ const modeTip = computed(() => t(`pvp.modeTip.${props.battle.mode}`))
 <template>
   <NuxtLink
     :to="`/pvp/${battle.id}`"
-    class="kd-bcard kd-spotlight group relative flex min-w-0 flex-col gap-2 rounded-5xl border p-2"
-    :class="[`is-${battle.mode}`, battle.status === 'finished' && 'is-finished']"
+    class="kd-bcard kd-spotlight group relative flex min-w-0 flex-col rounded-5xl border"
+    :class="[`is-${battle.mode}`, battle.status === 'finished' && 'is-finished', compact ? 'gap-2 p-2' : 'gap-3 p-4']"
     @pointermove="onPointerMove"
   >
-    <!-- the stage: the mode's light on the card, its top line 16 px in, on the button's edges -->
-    <div class="kd-bcard-stage relative grid place-items-center" :class="compact ? 'h-40' : 'h-52'">
-      <img :src="hero.image" :alt="hero.name" :title="hero.name" draggable="false" class="kd-bcard-hero object-contain" :class="compact ? 'mt-6 size-26' : 'mt-8 size-36'" />
+    <!-- the mode's light across the top -->
+    <span class="kd-bcard-wash pointer-events-none absolute inset-x-0 top-0 h-28 rounded-t-5xl" aria-hidden="true" />
 
-      <!-- along the top: the mode, the players, the cases -->
-      <div class="absolute inset-x-2 top-2 flex items-center justify-between gap-1">
-        <UiTooltip :text="modeTip" class="shrink-0">
-          <span class="kd-mode grid place-items-center" :class="compact ? 'size-6 rounded-md' : 'size-8 rounded-lg'" :aria-label="modeTip">
-            <UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="compact ? 14 : 18" />
+    <!-- top: the mode, and the cases -->
+    <div class="relative flex items-center justify-between gap-2">
+      <UiTooltip :text="modeTip" class="min-w-0">
+        <span class="flex min-w-0 items-center gap-2" :aria-label="modeTip">
+          <span class="kd-mode grid shrink-0 place-items-center" :class="compact ? 'size-7 rounded-md' : 'size-8 rounded-lg'">
+            <UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="compact ? 16 : 18" />
           </span>
-        </UiTooltip>
-        <div class="flex min-w-0 items-center" :class="compact ? 'gap-0.5' : 'gap-1.5'">
-          <template v-for="(side, k) in sides" :key="k">
-            <span v-if="k > 0" class="type-10-caps text-neutral-11">{{ $t('pvp.vs') }}</span>
-            <span class="flex items-center">
-              <template v-for="s in side" :key="s.slot">
-                <span v-if="s.player" class="kd-bcard-av overflow-hidden rounded-full bg-neutral-7 first:ml-0" :class="compact ? '-ml-1.5 size-5' : '-ml-1.5 size-7'" :title="s.player.nickname">
-                  <img :src="s.player.avatar" alt="" class="size-full object-cover" :class="s.player.bot && 'scale-75 object-contain'" />
-                </span>
-                <span v-else class="kd-bcard-av grid place-items-center rounded-full border border-dashed border-neutral-8 bg-neutral-2 text-neutral-11 first:ml-0" :class="compact ? '-ml-1.5 size-5' : '-ml-1.5 size-7'">
-                  <UiIcon name="plus" :size="compact ? 10 : 12" />
-                </span>
-              </template>
-            </span>
-          </template>
-        </div>
-        <span class="kd-bcard-pill flex shrink-0 items-center gap-1 rounded-lg tabular-nums" :class="compact ? 'h-6 px-1.5 type-12' : 'h-8 px-2 type-14'" :title="$t('pvp.roundsN', { n: battle.rounds.length })">
-          <template v-if="battle.status === 'live'"><span class="kd-live-dot size-1.5 rounded-full bg-danger" /><span class="text-danger">{{ round }}/{{ battle.rounds.length }}</span></template>
-          <template v-else><UiIcon v-if="!compact" name="cases" :size="14" class="text-neutral-11" />{{ battle.rounds.length }}</template>
+          <span class="kd-mode-name truncate" :class="compact ? 'type-12-caps max-sm:hidden' : 'type-14-caps'">{{ $t(`pvp.modeName.${battle.mode}`) }}</span>
         </span>
+      </UiTooltip>
+      <span class="kd-bcard-pill flex shrink-0 items-center gap-1 tabular-nums" :class="compact ? 'h-7 rounded-md px-1.5 type-12' : 'h-8 rounded-lg px-2 type-14'" :title="$t('pvp.roundsN', { n: battle.rounds.length })">
+        <template v-if="battle.status === 'live'"><span class="kd-live-dot size-1.5 rounded-full bg-danger" /><span class="text-danger">{{ round }}/{{ battle.rounds.length }}</span></template>
+        <template v-else><UiIcon name="cases" :size="14" />{{ battle.rounds.length }}</template>
+      </span>
+    </div>
+
+    <!-- the cases, three a row; the second row fades into the card under the players -->
+    <div class="relative">
+      <div class="kd-bcard-grid grid grid-cols-3" :class="compact ? 'gap-1' : 'gap-2'">
+        <span v-for="(c, i) in tiles" :key="i" class="kd-bcard-tile relative grid aspect-square place-items-center" :class="compact ? 'rounded-lg' : 'rounded-xl'" :title="c.name">
+          <img :src="c.image" :alt="c.name" draggable="false" class="kd-bcard-case size-[88%] object-contain" />
+          <span v-if="more && i === SLOTS - 1" class="kd-bcard-more absolute inset-0 grid place-items-center text-neutral-15 tabular-nums" :class="compact ? 'type-14-caps rounded-lg' : 'type-16-caps rounded-xl'">+{{ more }}</span>
+        </span>
+        <span v-for="n in SLOTS - tiles.length" :key="`e${n}`" class="kd-bcard-tile is-empty aspect-square" :class="compact ? 'rounded-lg' : 'rounded-xl'" />
+      </div>
+      <!-- the players, over the fade -->
+      <div class="absolute inset-x-0 flex items-center justify-center" :class="compact ? 'bottom-1 gap-1' : 'bottom-3 gap-2'">
+        <template v-for="(side, k) in sides" :key="k">
+          <span v-if="k > 0" class="type-12-caps text-neutral-14">{{ $t('pvp.vs') }}</span>
+          <span class="flex items-center">
+            <template v-for="s in side" :key="s.slot">
+              <span v-if="s.player" class="kd-bcard-av overflow-hidden rounded-full bg-neutral-7 first:ml-0" :class="compact ? '-ml-1.5 size-7' : '-ml-2 size-9'" :title="s.player.nickname">
+                <img :src="s.player.avatar" alt="" class="size-full object-cover" :class="s.player.bot && 'scale-75 object-contain'" />
+              </span>
+              <span v-else class="kd-bcard-av grid place-items-center rounded-full bg-neutral-4 text-neutral-11 first:ml-0" :class="compact ? '-ml-1.5 size-7' : '-ml-2 size-9'">
+                <UiIcon name="plus" :size="compact ? 12 : 14" />
+              </span>
+            </template>
+          </span>
+        </template>
       </div>
     </div>
 
-    <!-- the action, its 8 px corners 16 px in from the card's 24 -->
-    <div class="px-2 pb-2">
-      <span class="kd-btn type-12-caps inline-flex h-10 w-full items-center justify-center gap-1 rounded-lg" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
-        {{ $t(action) }}
-        <span v-if="battle.status === 'waiting'" class="btn-value"><UiPrice :amount="battle.cost" size="s" tone="inverse" /></span>
-      </span>
-    </div>
+    <!-- the action, its 8 px corners concentric with the card's 24 -->
+    <span class="kd-btn type-12-caps relative mt-auto inline-flex h-10 w-full items-center justify-center gap-1 rounded-lg" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
+      {{ $t(action) }}
+      <span v-if="battle.status === 'waiting'" class="btn-value"><UiPrice :amount="battle.cost" size="s" tone="inverse" /></span>
+    </span>
   </NuxtLink>
 </template>
 
@@ -88,27 +100,42 @@ const modeTip = computed(() => t(`pvp.modeTip.${props.battle.mode}`))
 .kd-bcard.is-team {
   --mc: var(--color-item-milspec);
 }
+.kd-bcard-wash {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mc) 28%, transparent), transparent);
+}
+.kd-bcard.is-finished .kd-bcard-wash {
+  opacity: 0.4;
+}
 .kd-mode {
   color: var(--mc);
-  background: color-mix(in srgb, var(--mc) 20%, var(--color-neutral-3));
+  background: color-mix(in srgb, var(--mc) 24%, var(--color-neutral-2));
 }
-/* the stage: the mode's light from the middle, straight on the card */
-.kd-bcard-stage {
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--mc) 30%, transparent), transparent);
+.kd-mode-name {
+  color: var(--mc);
 }
-.kd-bcard.is-finished .kd-bcard-stage {
-  background: none;
+.kd-bcard-pill {
+  background: rgb(12 13 16 / 0.6);
 }
-.kd-bcard-hero {
-  filter: drop-shadow(0 12px 18px rgb(0 0 0 / 0.5));
+/* the tiles: tinted by the mode; the second row fades into the card */
+.kd-bcard-tile {
+  background: color-mix(in srgb, var(--mc) 8%, var(--color-neutral-3));
+}
+.kd-bcard-tile.is-empty {
+  background: color-mix(in srgb, var(--mc) 4%, var(--color-neutral-3));
+  opacity: 0.6;
+}
+.kd-bcard-more {
+  background: rgb(12 13 16 / 0.55);
+}
+.kd-bcard-grid {
+  mask-image: linear-gradient(180deg, #000 55%, transparent 96%);
+}
+.kd-bcard-case {
+  filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.45));
   transition: transform var(--dur-slow) var(--ease-spring);
 }
-.kd-bcard.is-finished .kd-bcard-hero {
+.kd-bcard.is-finished .kd-bcard-case {
   filter: brightness(0.6) saturate(0.6);
-}
-/* the glass under the corner count, so it reads over the light */
-.kd-bcard-pill {
-  background: var(--color-neutral-3);
 }
 .kd-bcard-av {
   box-shadow: 0 0 0 2px var(--color-neutral-2);
@@ -117,8 +144,8 @@ const modeTip = computed(() => t(`pvp.modeTip.${props.battle.mode}`))
   .kd-bcard:hover {
     border-color: var(--color-neutral-6);
   }
-  .kd-bcard:hover .kd-bcard-hero {
-    transform: translateY(-4px) scale(1.05);
+  .kd-bcard:hover .kd-bcard-case {
+    transform: translateY(-2px) scale(1.05);
   }
   .kd-bcard:hover .kd-btn-primary {
     background-position: 100% 0;

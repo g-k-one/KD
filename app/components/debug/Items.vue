@@ -5,6 +5,13 @@ import type { BattlesResponse, CasesResponse, Item, MarketResponse, Rarity } fro
 const { data: market } = useFetch<MarketResponse>('/api/market', { key: 'dbg-market', server: false })
 const { data: cases } = useFetch<CasesResponse>('/api/cases', { key: 'dbg-cases', server: false })
 const { data: battles } = useFetch<BattlesResponse>('/api/battles', { key: 'dbg-battles', server: false })
+// one waiting battle, cut and stretched to 1–9 rounds (its own cases, cycled), to see how the card lays them out
+const roundsDemo = computed(() => {
+  const b = battles.value?.battles.find((x) => x.status === 'waiting')
+  if (!b) return []
+  const pool = (battles.value?.battles ?? []).flatMap((x) => x.rounds)
+  return [1, 2, 3, 5, 6, 9].map((n) => ({ ...b, id: `${b.id}-${n}`, rounds: Array.from({ length: n }, (_, i) => pool[i % pool.length]!) }))
+})
 
 const art = reactive({ rarity: 'covert' as Rarity, size: 120, float: true, morph: false, dim: false, statTrak: false })
 const replay = ref(0)
@@ -130,9 +137,9 @@ const flash = ref(true)
     </section>
 
     <section class="dbg-card">
-      <h2 class="dbg-h">PvpCard <span class="dbg-note">{{ battles?.battles.length ?? 0 }} battles in the mock</span></h2>
-      <div class="grid gap-3 lg:grid-cols-2">
-        <PvpCard v-for="b in (battles?.battles ?? []).slice(0, 4)" :key="b.id" :battle="b" />
+      <h2 class="dbg-h">PvpCard <span class="dbg-note">the same battle with 1, 2, 3, 5, 6 and 9 rounds</span></h2>
+      <div class="kd-dbg-pvp grid grid-cols-2 gap-3 lg:grid-cols-6">
+        <PvpCard v-for="b in roundsDemo" :key="b.id" :battle="b" />
       </div>
     </section>
 
