@@ -8,12 +8,10 @@ import type { StageLayer, StageLoot } from '~/components/banner/Stage.vue'
 // greeted by name and the one thing worth doing now: the welcome cases still free, else the daily case if it is
 // ready, else the fresh picks below.
 // The art is a BannerStage: the chicken (drawn after the logo) bursts out of an open case — the case's back, the
-// chicken, the case's front wall — with real catalog skins and KD coins flying around. The fifth poke lays a golden
-// egg — an honest one: it offers the free demo spin every case has.
+// chicken, the case's front wall — with real catalog skins and KD coins flying around. A poke throws feathers.
 // `bare`: no ground, no frame and no side padding — the full-width band around it (HomeHeroBleed) paints the light;
-// the words line up with the page's column and set the banner's height. The `art` slot replaces the chicken's stage
-// and gets the pokes (poke, bubble, pokes) so the same bubble and golden egg go on; the `aside` slot sits on the
-// buttons' line, at its right end (desktop).
+// the words line up with the page's column and set the banner's height. The `art` slot replaces the chicken's stage;
+// the `aside` slot sits on the buttons' line, at its right end (desktop).
 const session = useSessionStore()
 const ui = useUiStore()
 const { dailyReady, welcomeLeft } = useBonuses()
@@ -33,7 +31,6 @@ function start() {
 }
 
 const { onMove, onLeave, vars } = usePointerTilt()
-const stage = useTemplateRef<{ burst: () => void }>('stage')
 
 const BACK: StageLayer[] = [{ src: '/img/hero/case-back.webp', x: 200, y: 76, w: 330, d: 0.3 }]
 const CHICKEN: StageLayer = { src: '/img/hero/chicken.webp', x: 212, y: -6, w: 300, d: 0.6 }
@@ -50,23 +47,6 @@ const LOOT: StageLoot[] = [
   { src: '/img/coins/coin.webp', x: 140, y: 330, w: 52, r: 16, d: 2.2, bx: -24, by: 12 },
   { src: '/img/coins/coin.webp', x: 560, y: 320, w: 40, r: 39, d: 1.7, bx: 22, by: 14 },
 ]
-
-const PECKS = 5
-const pecks = ref(0)
-const egg = ref(false)
-function onPoke() {
-  if (egg.value) return
-  pecks.value += 1
-  if (pecks.value >= PECKS) {
-    egg.value = true
-    stage.value?.burst()
-  }
-}
-function closeEgg() {
-  egg.value = false
-  pecks.value = 0
-}
-const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value, PECKS - 1)}`))
 </script>
 
 <template>
@@ -82,18 +62,8 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
 
     <!-- The stage. Phones: a band above the text; wider: the right side, rising over the banner's top -->
     <div class="relative -mx-4 -mt-4 mb-2 h-44 sm:absolute sm:inset-y-0 sm:right-0 sm:m-0 sm:h-auto sm:w-[52%] lg:w-[620px]">
-      <slot name="art" :poke="onPoke" :bubble="bubble ? $t(bubble) : ''" :pokes="pecks" />
-      <BannerStage
-        v-if="!$slots.art"
-        ref="stage"
-        :back="BACK"
-        :mascot="CHICKEN"
-        :front="FRONT"
-        :loot="LOOT"
-        :bubble="bubble ? $t(bubble) : ''"
-        :poke-label="$t('hero.pokeLabel')"
-        @poke="onPoke"
-      />
+      <slot name="art" />
+      <BannerStage v-if="!$slots.art" :back="BACK" :mascot="CHICKEN" :front="FRONT" :loot="LOOT" :poke-label="$t('hero.pokeLabel')" />
     </div>
 
     <div
@@ -122,20 +92,6 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
       </div>
     </div>
 
-    <!-- the fifth poke: a golden egg, and the free demo spin it stands for -->
-    <Transition name="kd-egg">
-      <div v-if="egg" class="kd-hero-egg absolute top-3 right-3 z-20 grid w-[280px] grid-cols-[56px_minmax(0,1fr)] items-center gap-x-3 gap-y-3 rounded-3xl p-4 sm:top-auto sm:right-6 sm:bottom-6 lg:right-10 lg:bottom-10">
-        <span class="kd-hero-egg-icon grid size-14 place-items-center rounded-2xl"><UiIcon name="egg" :size="30" /></span>
-        <div class="flex min-w-0 flex-col gap-0.5 pr-5">
-          <span class="type-16-caps text-gold-light">{{ $t('hero.eggTitle') }}</span>
-          <span class="type-12-regular text-neutral-13">{{ $t('hero.eggText') }}</span>
-        </div>
-        <UiButton size="m" icon="demo" to="/case/kurwa-classic?demo=1" class="col-span-2 w-full">{{ $t('hero.eggCta') }}</UiButton>
-        <button type="button" class="kd-hit absolute top-3 right-3 text-neutral-11 hover:text-neutral-15" :aria-label="$t('hero.eggClose')" @click="closeEgg">
-          <UiIcon name="close" :size="16" />
-        </button>
-      </div>
-    </Transition>
   </section>
 </template>
 
@@ -146,36 +102,5 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
     radial-gradient(60% 90% at 78% 70%, rgb(255 110 30 / 0.42), transparent 70%),
     radial-gradient(40% 60% at 70% 100%, rgb(255 190 80 / 0.25), transparent 70%),
     linear-gradient(110deg, var(--color-neutral-2) 30%, #2a1209 100%);
-}
-.kd-hero-egg {
-  background:
-    radial-gradient(70% 90% at 15% 30%, rgb(245 198 73 / 0.22), transparent 70%),
-    rgb(12 13 16 / 0.92);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 55%, transparent),
-    0 12px 32px rgb(0 0 0 / 0.5);
-  backdrop-filter: blur(8px);
-}
-.kd-hero-egg-icon {
-  color: #3a2400;
-  background: linear-gradient(180deg, #ffe58a, #f5b82e 55%, var(--color-gold-dark));
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.5),
-    0 0 24px rgb(245 198 73 / 0.45);
-}
-.kd-egg-enter-active {
-  transition:
-    opacity var(--dur-base) var(--ease-out),
-    transform var(--dur-slow) var(--ease-spring);
-}
-.kd-egg-leave-active {
-  transition: opacity var(--dur-base) var(--ease-out);
-}
-.kd-egg-enter-from {
-  opacity: 0;
-  transform: translateY(12px) scale(0.92);
-}
-.kd-egg-leave-to {
-  opacity: 0;
 }
 </style>

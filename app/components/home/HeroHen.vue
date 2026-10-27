@@ -5,15 +5,13 @@
  * animation, so the life is procedural, on its own bones, every frame: the wings beat slowly, the legs dangle, the comb
  * jiggles, the jaw chatters a little, the head turns a few degrees toward the cursor and both pupils slide toward it
  * (each anywhere inside its own eye). The whole canvas bobs on CSS. With no mouse (phones) the eyes wander on their own.
- * A poke: a jolt, a squawk, feathers; the banner counts the pokes (its bubble and the golden egg), the fifth bursts gold.
+ * A poke: a jolt, a squawk, feathers — as many times as you like.
  * Behind it, two of the site's loot cases (the hero's open case, back and front) at two depths, dimmer and further
  * back, moving less with the pointer than the bird.
  * Its own WebGL canvas, drawn only while on screen; if WebGL is missing the chicken stays out and nothing breaks.
  */
 type Spine = typeof import('@esotericsoftware/spine-webgl')
 
-const props = defineProps<{ bubble?: string; pokes?: number }>()
-const emit = defineEmits<{ poke: [] }>()
 const base = useRuntimeConfig().app.baseURL
 const sfx = useSfx()
 const haptics = useHaptics()
@@ -21,7 +19,6 @@ const fx = useForge()
 
 const box = useTemplateRef<HTMLElement>('box')
 const host = useTemplateRef<HTMLElement>('host')
-const ok = ref(false)
 
 const VIEW_H = 470 // skeleton units shown top to bottom (the hen is ~450 tall: it nearly fills its box)
 const CENTER_Y = 28 // the hen's middle in skeleton units
@@ -77,7 +74,6 @@ onMounted(async () => {
     ] as const,
   }
   host.value.appendChild(canvas)
-  ok.value = true
 
   // the canvas fills the box; its backing store follows its size (DPR ≤ 2, capped)
   let w = 1
@@ -191,17 +187,7 @@ function poke() {
   haptics.tap()
   sfx.squawk()
   fx.at('feathers:white', box.value, 0.9)
-  emit('poke')
 }
-watch(
-  () => props.pokes,
-  (n) => {
-    if (n === 5) {
-      haptics.jackpot()
-      fx.at('kdJackpot', box.value, 1.2)
-    }
-  },
-)
 </script>
 
 <template>
@@ -218,19 +204,18 @@ watch(
         <span ref="host" class="kd-hen-bob relative block size-full" />
       </span>
     </button>
-    <span v-if="bubble && ok" class="kd-hen-bubble type-12-caps lg:type-14-caps absolute rounded-lg px-2.5 py-1.5">{{ bubble }}</span>
   </div>
 </template>
 
 <style scoped>
-/* the chicken's box: from just above the band's top padding (the canvas is clear there, the comb stays under the
-   strip) down past the band's foot into the empty right end of the big wins' heading line, so the bird is big while the
-   band keeps its height */
+/* the chicken's box: from above the band's top padding (the canvas is clear there, the comb stays under the strip) down
+   past the band's foot into the empty right end of the big wins' heading line, so the bird is big while the band keeps
+   its height */
 .kd-hen-poke {
-  right: -40px;
-  top: -70px;
-  width: 640px;
-  height: calc(100% + 120px);
+  right: -70px;
+  top: -100px;
+  width: 720px;
+  height: calc(100% + 190px);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -256,16 +241,16 @@ watch(
 .kd-hen-crate.is-a {
   --d: 0.5;
   --r: -10deg;
-  left: 40px;
-  bottom: 18px;
+  left: -50px;
+  bottom: 30px;
   width: 300px;
   filter: brightness(0.7) saturate(0.9);
 }
 .kd-hen-crate.is-b {
   --d: 0.25;
   --r: 14deg;
-  right: 10px;
-  top: 40px;
+  right: 40px;
+  top: 150px;
   width: 170px;
   filter: brightness(0.45) saturate(0.8) blur(2px);
 }
@@ -282,14 +267,6 @@ watch(
     transform: translateY(-14px);
   }
 }
-.kd-hen-bubble {
-  right: 60px;
-  top: 0;
-  z-index: 2;
-  color: var(--color-neutral-1);
-  background: var(--color-neutral-15);
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
-}
 
 /* tablets and phones: the band above the words — the chicken centred in it */
 @media (max-width: 1023px) {
@@ -302,9 +279,6 @@ watch(
     width: 260px;
     height: calc(100% + 16px);
     translate: 50% 0;
-  }
-  .kd-hen-bubble {
-    right: 12%;
   }
 }
 @media (prefers-reduced-motion: reduce) {
