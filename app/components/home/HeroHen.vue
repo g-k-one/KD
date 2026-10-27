@@ -26,6 +26,8 @@ const CENTER_Y = 28 // the hen's middle in skeleton units
 // how far each pupil may sit from its eye's centre, skeleton units (the white's radius less the pupil's and the rim):
 // the near eye is big (white 77, pupil 24), the far one (eyeR) small (white 40, pupil 12)
 const PUPIL = { eyeL: 20, eyeR: 10 }
+// how far down a pupil may go, as a share of that: the beak covers the lower part of the far eye
+const DOWN = { eyeL: 1, eyeR: 0.25 }
 const MAX_PX = 1400
 
 let stop = () => {}
@@ -136,13 +138,16 @@ onMounted(async () => {
     // each pupil sits on the line from its eye's centre toward the look point: the further the point, the nearer the
     // white's edge, never past it — both eyes move the whole way their own size allows
     for (const [eye, pup] of B.eyes) {
-      const max = PUPIL[eye.data.name as keyof typeof PUPIL]
-      v.set(look.x, look.y)
-      eye.appliedPose.worldToLocal(v)
-      const len = Math.hypot(v.x, v.y) || 1
-      const s = Math.min(max, len * 0.12) / len
-      pup.pose.x = v.x * s
-      pup.pose.y = v.y * s
+      const name = eye.data.name as keyof typeof PUPIL
+      const e = eye.appliedPose
+      const dx = look.x - e.worldX
+      const dy = look.y - e.worldY
+      const len = Math.hypot(dx, dy) || 1
+      const s = Math.min(PUPIL[name], len * 0.12) / len
+      v.set(e.worldX + dx * s, e.worldY + dy * s * (dy < 0 ? DOWN[name] : 1))
+      e.worldToLocal(v)
+      pup.pose.x = v.x
+      pup.pose.y = v.y
     }
     sk.updateWorldTransform(spine.Physics.update)
 
