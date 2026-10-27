@@ -6,6 +6,7 @@ const slug = computed(() => String(route.params.slug))
 const { t } = useI18n()
 const session = useSessionStore()
 const ui = useUiStore()
+const sfx = useSfx()
 const toast = useToast()
 const isSm = useMediaQuery('(min-width: 640px)')
 // Sound sits in the bar (CSGOGem, Casehug): three icons a side on phones — back · share · ‹ | › · sound · fairness
@@ -96,6 +97,8 @@ async function open(asDemo = false) {
     // Top up over the case instead of leaving it
     return ui.openDeposit(openPrice.value * count.value - session.user.balance)
   }
+  // the launch sounds on the press, before anything is drawn (the reel would play it a frame later)
+  sfx.riser()
   phase.value = 'spinning'
   demo.value = asDemo
   sold.value = []

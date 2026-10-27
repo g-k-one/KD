@@ -35,6 +35,8 @@ const POKE: Record<'gawk' | 'bukbuk' | 'kurwawk' | 'kurwa' | 'puff', [number, nu
   puff: [4.365, 0.281],
 }
 let pokeBuf: Promise<AudioBuffer | null> | null = null
+// the last launch: the case page plays it on the press and the reel again as it starts, the second within 300 ms is dropped
+let lastLaunch = 0
 
 export function useSfx() {
   const settings = useSettingsStore()
@@ -280,11 +282,13 @@ export function useSfx() {
     /** The launch of a reel or an upgrade: the reel's own tick, and on its heels the coin's two bright notes */
     riser: () => {
       if (import.meta.client && document.hidden) return
+      const now = performance.now()
+      if (now - lastLaunch < 300) return
+      lastLaunch = now
+      // the tick and the coin's first note together, on the press itself; the coin's second note right after
       blip(1400, 0.035, 0.06, 'square')
-      setTimeout(() => {
-        blip(1320, 0.08, 0.07)
-        setTimeout(() => blip(1760, 0.12, 0.06), 60)
-      }, 45)
+      blip(1320, 0.08, 0.07)
+      setTimeout(() => blip(1760, 0.12, 0.06), 60)
     },
     /** The reel hangs on a card edge: a low tense pulse */
     tense: () => blip(110, 0.22, 0.14, 'sine'),
