@@ -13,12 +13,13 @@ const { dailyReady, welcomeLeft } = useBonuses()
 // what the signed-in player is offered, most valuable first
 const offer = computed(() => {
   if (!session.user) return null
-  if (welcomeLeft.value > 0) return { title: 'hero.freeTitle', n: welcomeLeft.value, cta: 'hero.freeCta', icon: 'bonuses', to: '/bonuses' }
-  if (dailyReady.value) return { title: 'hero.dailyTitle', n: 0, cta: 'hero.dailyCta', icon: 'bonuses', to: '/bonuses' }
-  return { title: 'hero.picksTitle', n: 0, cta: 'hero.picksCta', icon: 'cases', to: '' }
+  if (welcomeLeft.value > 0) return { title: 'hero.freeTitle', text: 'hero.freeText', n: welcomeLeft.value, cta: 'hero.freeCta', icon: 'bonuses', to: '/bonuses' }
+  if (dailyReady.value) return { title: 'hero.dailyTitle', text: 'hero.dailyText', n: 0, cta: 'hero.dailyCta', icon: 'bonuses', to: '/bonuses' }
+  return { title: 'hero.picksTitle', text: 'hero.picksText', n: 0, cta: 'hero.picksCta', icon: 'cases', to: '' }
 })
 const eyebrow = computed(() => (session.user ? t('hero.back', { name: session.user.nickname }) : t('hero.eyebrow')))
 const title = computed(() => (offer.value ? t(offer.value.title, { n: offer.value.n }, offer.value.n || 1) : t('hero.title')))
+const text = computed(() => t(offer.value?.text ?? 'hero.text'))
 function start() {
   if (!session.user) ui.openSignIn()
   else emit('start')
@@ -26,7 +27,7 @@ function start() {
 </script>
 
 <template>
-  <BannerBleed glow="warm" :eyebrow="eyebrow" :title="title">
+  <BannerBleed glow="warm" :eyebrow="eyebrow" :title="title" :text="text">
     <template #art><HomeHeroHen /></template>
     <template #actions>
       <UiButton v-if="!offer" size="l" class="max-sm:h-10 max-sm:px-4" @click="start">{{ $t('hero.cta') }}</UiButton>

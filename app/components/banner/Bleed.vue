@@ -2,8 +2,8 @@
 /*
  * The full-width banner that opens the home page, Bonuses and Provably Fair: one scene from edge to edge with no frame,
  * the light an arc of colour hanging from the top and dissolving into the page; the words line up with the page's
- * column. One layout for all three, so the eyebrow, the title and the buttons stand in the same place on each: on
- * desktop the words sit at the top of a column of fixed height and the buttons at its foot, whatever the words say.
+ * column. One layout and one shape of words for all three — an eyebrow, a one-line title, one line under it — with the
+ * same gaps, so the eyebrow, the title and the buttons stand in the same place on each.
  * Slots: `art` (the scene on the right; a band above the words on phones), `actions` (the buttons' line).
  * The pointer anywhere on the band sets --px / --py (-1…1) for the art's parallax.
  */
@@ -32,9 +32,8 @@ const EYEBROW = { warm: 'text-brand-light', gold: 'text-coin', green: 'text-succ
         <div class="relative -mx-4 -mt-4 mb-2 sm:absolute sm:inset-y-0 sm:right-0 sm:m-0 sm:h-auto sm:w-[52%] lg:w-[620px]" :class="artClass">
           <slot name="art" />
         </div>
-        <!-- the words at the top, the buttons at the foot: one height on desktop, so the buttons line up page to page;
-             only the words and the buttons take the pointer, the art behind the empty middle stays clickable -->
-        <div class="pointer-events-none relative z-10 flex min-h-50 flex-col justify-between gap-4 sm:max-w-[52%] sm:gap-6 lg:min-h-70 lg:w-[600px] lg:max-w-none [&>*]:pointer-events-auto">
+        <!-- the words and the buttons, centred in the band, the same gaps on every page; only they take the pointer, the art behind the empty middle stays clickable -->
+        <div class="pointer-events-none relative z-10 flex flex-col justify-center gap-4 sm:max-w-[52%] lg:w-[600px] lg:gap-6 lg:max-w-none [&>*]:pointer-events-auto">
           <div class="flex flex-col gap-1 sm:gap-2">
             <p class="type-12-caps lg:type-16-caps" :class="EYEBROW[glow]">{{ eyebrow }}</p>
             <h1 class="text-[28px] leading-8 font-extrabold uppercase tabular-nums sm:text-[36px] sm:leading-10 lg:text-[50px] lg:leading-[54px] lg:tracking-[-0.01em]">
