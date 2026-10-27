@@ -8,7 +8,10 @@ const session = useSessionStore()
 const ui = useUiStore()
 const toast = useToast()
 
-const newClient = ref('')
+// The next pair's client seed is there from the start (a random one, yours to change or roll again), so the field never
+// reads as a required step; after a rotation it moves up into the active pair and a fresh one takes its place
+const randomSeed = () => (import.meta.client ? [...crypto.getRandomValues(new Uint8Array(5))].map((b) => b.toString(16).padStart(2, '0')).join('') : '')
+const newClient = ref(randomSeed())
 const rotating = ref(false)
 
 async function rotate() {
@@ -16,7 +19,7 @@ async function rotate() {
   rotating.value = true
   try {
     seeds.value = await $fetch<SeedsResponse>('/api/seeds/rotate', { method: 'POST', body: { clientSeed: newClient.value } })
-    newClient.value = ''
+    newClient.value = randomSeed()
   } catch (e) {
     toast.error(e, t('common.error'))
   } finally {
@@ -39,11 +42,13 @@ async function rotate() {
 
       <div class="flex flex-col gap-2">
         <label for="new-client" class="type-12-caps text-neutral-12">{{ $t('fair.newClientSeed') }}</label>
+        <!-- the seed and a new random one beside it; the rotation is its own step under them -->
         <div class="flex gap-2">
-          <UiInput id="new-client" v-model="newClient" size="l" mono clearable class="min-w-0 flex-1" />
-          <UiButton variant="fair" size="l" icon="refresh" :loading="rotating" @click="rotate">{{ $t('fair.rotate') }}</UiButton>
+          <UiInput id="new-client" v-model="newClient" size="l" mono class="min-w-0 flex-1" />
+          <UiButton variant="secondary" size="l" icon="refresh" icon-only :aria-label="$t('fair.randomSeed')" :title="$t('fair.randomSeed')" @click="newClient = randomSeed()" />
         </div>
         <span class="type-12-regular text-neutral-11">{{ $t('fair.rotateHint') }}</span>
+        <UiButton variant="fair" size="l" icon="shield-check" block :loading="rotating" :disabled="!newClient.trim()" class="mt-1" @click="rotate">{{ $t('fair.rotate') }}</UiButton>
       </div>
 
       <div class="flex flex-col gap-3 rounded-2xl bg-neutral-3 p-4">
