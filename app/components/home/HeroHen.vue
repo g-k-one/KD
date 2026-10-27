@@ -382,8 +382,8 @@ function poke(e: MouseEvent) {
 .kd-hen-prop.is-crate-side {
   --d: 0.35;
   --r: -8deg;
-  right: -16px;
-  bottom: 112px;
+  right: 24px;
+  bottom: 72px;
   width: 210px;
   filter: brightness(0.8) contrast(1.2) saturate(1.12) blur(1px);
 }
@@ -391,9 +391,9 @@ function poke(e: MouseEvent) {
 .kd-hen-prop.is-crate-open {
   --d: 0.5;
   --r: -7deg;
-  left: -24px;
-  bottom: 100px;
-  width: 390px;
+  left: 0;
+  bottom: 112px;
+  width: 340px;
   filter: contrast(1.2) saturate(1.12);
 }
 /* the light out of the open case, up into the space over it; it breathes */
