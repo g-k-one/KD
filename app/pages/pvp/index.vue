@@ -37,8 +37,9 @@ const session = useSessionStore()
 const mode = ref<'all' | BattleMode>('all')
 const sort = ref<'default' | 'priceDesc' | 'priceAsc'>('default')
 const affordable = ref(false)
-const modeOptions = computed(() => [{ value: 'all' as const, label: t('pvp.anyMode') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`), icon: PVP_MODE_ICON[m] }))])
-const sortOptions = computed(() => (['default', 'priceDesc', 'priceAsc'] as const).map((s) => ({ value: s, label: t(`filters.sortOptions.${s}`) })))
+const modeOptions = computed(() => [{ value: 'all' as const, label: t('pvp.anyMode') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`), icon: PVP_MODE_ICON[m], iconColor: PVP_MODE_COLOR[m] }))])
+// the battles come newest first: the default order says so
+const sortOptions = computed(() => (['default', 'priceDesc', 'priceAsc'] as const).map((s) => ({ value: s, label: t(`filters.sortOptions.${s === 'default' ? 'newest' : s}`) })))
 const inPlay = computed(() => (data.value?.battles ?? []).filter((b) => b.status !== 'finished').reduce((a, b) => a + b.cost * b.size, 0))
 const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a + (b.viewers ?? 0), 0))
 
@@ -54,16 +55,12 @@ const byStatus = (st: BattleStatus) => filtered.value.filter((b) => b.status ===
 const JUST_ENDED_MS = 60_000
 const now = useClock(5000)
 const endedAt = (b: Battle) => (b.startedAt ? Date.parse(b.startedAt) + b.rounds.length * b.roundMs : 0)
-const sections = computed(() => [
-  { key: 'waiting', title: t('pvp.openSeats'), list: byStatus('waiting') },
-  { key: 'live', title: t('pvp.liveNow'), list: [...byStatus('live'), ...byStatus('finished').filter((b) => now.value - endedAt(b) < JUST_ENDED_MS)] },
-])
+const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...byStatus('finished').filter((b) => now.value - endedAt(b) < JUST_ENDED_MS)])
 /** Phones: two columns of compact cards */
 // false through hydration (the server renders desktop), then the real width — or hydrated cards keep desktop classes
 const mounted = useMounted()
 const phoneQuery = useMediaQuery('(max-width: 639.98px)')
 const isPhone = computed(() => mounted.value && phoneQuery.value)
-const shown = (_key: string, list: Battle[]) => list
 </script>
 
 <template>
@@ -100,7 +97,7 @@ const shown = (_key: string, list: Battle[]) => list
         <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" class="shrink-0" @click="affordable = !affordable"><span class="max-sm:hidden">{{ $t('filters.affordableShort') }}</span></UiChip>
       </div>
       <!-- the numbers on their way: their cells, not zeros -->
-      <div class="flex items-center gap-2 max-lg:w-full">
+      <div class="flex items-center gap-2 max-lg:w-full max-lg:justify-center max-lg:gap-1">
         <template v-if="!data">
           <span v-for="n in 2" :key="n" class="kd-skeleton h-10 w-28 rounded-lg max-lg:flex-1" aria-hidden="true" />
         </template>
@@ -114,25 +111,16 @@ const shown = (_key: string, list: Battle[]) => list
     </div>
       <!-- the battles on their way: a row of card skeletons in the grid's columns -->
       <section v-if="!data" class="flex flex-col gap-4" aria-hidden="true">
-        <div class="flex h-8 items-center"><span class="kd-skeleton h-6 w-40 rounded-md" /></div>
         <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
           <span v-for="n in 8" :key="n" class="kd-skeleton h-[266px] rounded-5xl lg:h-[342px]" />
         </div>
       </section>
-      <template v-for="sec in sections" :key="sec.key">
-        <section v-if="data && (sec.list.length || sec.key === 'waiting')" class="flex flex-col gap-4">
-          <UiSectionHeader :title="sec.title">
-            <template #actions>
-              <span class="type-12-caps text-neutral-11 tabular-nums">{{ sec.list.length }}</span>
-            </template>
-          </UiSectionHeader>
-          <TransitionGroup tag="div" name="kd-list" class="relative grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
-            <!-- the open seats start with your own battle, always in the first slot -->
-            <PvpCreateTile v-if="sec.key === 'waiting'" key="create" :compact="isPhone" />
-            <PvpCard v-for="b in shown(sec.key, sec.list)" :key="b.id" :battle="b" :compact="isPhone" />
-          </TransitionGroup>
-        </section>
-      </template>
+      <!-- one grid, no section headers: start your own first, then the open seats, then what is live (a red round on
+           the card) and what just ended (Ended, for a minute) — the rows fill however few battles there are -->
+      <TransitionGroup v-if="data" tag="div" name="kd-list" class="relative grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
+        <PvpCreateTile key="create" :compact="isPhone" />
+        <PvpCard v-for="b in lobby" :key="b.id" :battle="b" :compact="isPhone" />
+      </TransitionGroup>
 
   </div>
 </template>
@@ -148,7 +136,7 @@ const shown = (_key: string, list: Battle[]) => list
     display: none;
   }
 }
-/* a number on the plate: the controls' 40 px height and 8 px corners (16 − 8) */
+/* a number on the plate: the controls' 40 px height and 8 px corners (16 − 8); phones: plain text on one thin line */
 .kd-stat {
   display: inline-flex;
   height: 40px;
@@ -162,9 +150,9 @@ const shown = (_key: string, list: Battle[]) => list
 }
 @media (max-width: 63.999rem) {
   .kd-stat {
-    flex: 1;
-    justify-content: center;
-    padding-inline: 8px;
+    height: 24px;
+    background: none;
+    padding-inline: 4px;
   }
 }
 .kd-stat-dot {

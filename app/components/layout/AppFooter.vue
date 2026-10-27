@@ -55,7 +55,8 @@ const columns = computed(() => [
         <div class="lg:flex-1" />
 
         <div class="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:flex lg:gap-24">
-          <div v-for="col in columns" :key="col.title" class="flex flex-col gap-4">
+          <!-- phones: Play repeats the bottom menu, so Info and Legal stand side by side -->
+          <div v-for="col in columns" :key="col.title" class="flex flex-col gap-4" :class="col.title === 'footer.play' && 'max-lg:hidden'">
             <span class="type-12-caps text-neutral-10">{{ $t(col.title) }}</span>
             <NuxtLink
               v-for="l in col.links"

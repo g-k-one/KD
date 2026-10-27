@@ -6,6 +6,9 @@ export interface SelectOption<V extends string> {
   label: string
   /** CSS color for a leading swatch dot */
   swatch?: string
+  /** a leading icon, in its own colour when iconColor is set */
+  icon?: string
+  iconColor?: string
   coin?: boolean
 }
 
@@ -93,6 +96,7 @@ const isSelected = (o: SelectOption<T>) => (props.multiple ? many.value.includes
               <UiIcon v-if="isSelected(o)" name="check" :size="12" class="text-neutral-1" />
             </span>
             <span v-if="o.swatch" class="size-2.5 shrink-0 rounded-full" :style="{ background: o.swatch }" />
+            <UiIcon v-if="o.icon" :name="o.icon" :size="16" class="shrink-0" :style="o.iconColor ? { color: o.iconColor } : undefined" />
             <UiCoin v-if="o.coin" :size="16" />
             <span class="flex-1 text-sm leading-5" :class="isSelected(o) ? 'font-semibold text-neutral-15' : 'text-neutral-13'">
               {{ o.label }}

@@ -2,6 +2,8 @@ import type { Battle, BattleCaseRef } from '#shared/types/api'
 
 /** Each battle mode's icon (its colour is the card's .kd-mode): the trophy for the most value, a falling line for the least, people for the teams */
 export const PVP_MODE_ICON = { classic: 'trophy', crazy: 'mode-crazy', team: 'mode-team' } as const
+/** …and its colour, as the cards wear it */
+export const PVP_MODE_COLOR = { classic: 'var(--color-coin)', crazy: 'var(--color-item-classified)', team: 'var(--color-item-milspec)' } as const
 
 /** Collapses consecutive rounds of the same case into thumbnails with a quantity badge. */
 export function groupRounds(rounds: BattleCaseRef[]) {
