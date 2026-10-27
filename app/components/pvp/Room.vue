@@ -294,7 +294,7 @@ const roundLine = computed(() => {
       </div>
     </section>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
-    <section class="kd-arena relative overflow-hidden rounded-5xl">
+    <section class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
         <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="[done && winners.includes(s.slot) && 'is-winner', leaders.includes(s.slot) && 'is-lead', isTeam && s.slot === 2 && 'is-team-split']">
           <span :key="revealed" class="kd-seat-flash pointer-events-none absolute inset-0" aria-hidden="true" />
@@ -454,6 +454,24 @@ const roundLine = computed(() => {
 .kd-amark {
   translate: 0 -50%;
   z-index: 2;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+/* the battle is over: the frame goes plain grey and the arrows slip out, as on a case's drop screen */
+.kd-arena.is-done {
+  background:
+    linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
+    linear-gradient(var(--color-neutral-4), var(--color-neutral-4)) border-box;
+}
+.kd-arena.is-done .kd-amark {
+  opacity: 0;
+}
+.kd-arena.is-done .kd-amark.left-0 {
+  transform: translateX(-12px);
+}
+.kd-arena.is-done .kd-amark.right-0 {
+  transform: translateX(12px);
 }
 /* the arrows sit on the frame's line, base flush with it (the rotated picture leaves a side gap of its own) */
 .kd-amark.left-0 {
