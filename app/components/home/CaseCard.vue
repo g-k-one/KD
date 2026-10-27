@@ -77,7 +77,7 @@ function onArtLeave() {
   <div class="relative">
   <NuxtLink
     :to="`/case/${item.slug}`"
-    class="kd-case-card kd-spotlight group relative flex h-full flex-col items-center gap-2 rounded-5xl border"
+    class="kd-case-card kd-spotlight group relative flex h-full flex-col items-center gap-2 rounded-5xl border max-sm:rounded-4xl"
     :class="[stock?.out && 'is-sold-out', shape && `is-${shape}`, look && `look-${look}`, full && 'is-full']"
     @pointermove="onArtPointer"
     @pointerleave="onArtLeave"
@@ -151,10 +151,11 @@ function onArtLeave() {
       </div>
     </div>
 
-    <span v-if="badge" class="absolute top-3 left-3 lg:top-4 lg:left-4">
+    <!-- phones: the labels 8 px in, pills (11–12 px corners) on a 20 px card corner, so the corners run concentric -->
+    <span v-if="badge" class="absolute top-2 left-2 sm:top-3 sm:left-3 lg:top-4 lg:left-4">
       <!-- Only HOT cases burn; the other badges stay calm so the fire still means something -->
       <FxFire :on="badge.kind === 'hot'">
-        <span class="kd-badge type-10-caps relative z-[2] inline-flex items-center gap-1 rounded-md px-1.5 py-1" :class="`is-${badge.kind}`">
+        <span class="kd-badge type-10-caps relative z-[2] inline-flex items-center gap-1 rounded-md px-1.5 py-1 max-sm:rounded-full max-sm:px-2" :class="`is-${badge.kind}`">
           <UiIcon :name="badge.kind === 'today' ? 'trophy' : badge.kind === 'new' ? 'sparkle' : 'fire'" :size="12" />
           {{ badge.text }}
         </span>
@@ -166,7 +167,7 @@ function onArtLeave() {
     v-if="!session.user"
     :to="`/case/${item.slug}?demo=1`"
     :aria-label="$t('case.tryFreeHint', { name: item.name })"
-    class="kd-try kd-press type-10-caps absolute top-3 right-3 inline-flex h-6 items-center gap-1 rounded-sm px-1.5 max-sm:w-6 max-sm:justify-center max-sm:px-0 lg:top-4 lg:right-4"
+    class="kd-try kd-press type-10-caps absolute top-2 right-2 inline-flex h-6 items-center gap-1 rounded-sm px-1.5 sm:top-3 sm:right-3 max-sm:w-6 max-sm:rounded-full max-sm:justify-center max-sm:px-0 lg:top-4 lg:right-4"
   >
     <UiIcon name="demo" :size="12" />
     <!-- phones: the icon alone, so it clears the badge on the left (the label stays for screen readers) -->

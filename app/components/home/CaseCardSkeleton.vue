@@ -4,7 +4,7 @@
 </script>
 
 <template>
-  <div class="flex h-full flex-col items-center gap-2 rounded-5xl border border-neutral-4 bg-neutral-2" aria-hidden="true">
+  <div class="flex h-full flex-col items-center gap-2 rounded-5xl border border-neutral-4 max-sm:rounded-4xl bg-neutral-2" aria-hidden="true">
     <div class="relative grid aspect-square w-full place-items-center lg:aspect-auto lg:h-55">
       <span class="kd-skeleton size-[62%] rounded-4xl lg:size-36" />
     </div>
