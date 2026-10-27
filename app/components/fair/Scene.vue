@@ -79,8 +79,8 @@ const columns = computed(() =>
 .kd-pf-layer.is-blueprint {
   --d: 0.35;
   --r: 15deg;
-  left: 64.5%;
-  top: 29%;
+  left: 68%;
+  top: 34%;
   width: 37%;
   filter: brightness(0.7) blur(0.5px);
 }
