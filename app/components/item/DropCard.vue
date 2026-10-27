@@ -16,7 +16,7 @@ const rc = computed(() => RARITY_COLOR[props.item.rarity])
 <template>
   <div
     class="kd-drop group kd-spotlight relative flex min-w-0 flex-col items-center rounded-3xl"
-    :class="compact ? 'gap-1.5 p-2.5' : 'gap-2 p-3 lg:p-4'"
+    :class="compact ? 'gap-1 p-2' : 'gap-2 p-3 lg:p-4'"
     @pointermove="onPointerMove"
   >
     <div class="flex w-full items-center justify-between gap-1 uppercase" :class="compact ? 'type-10-caps' : 'type-12'">
@@ -33,11 +33,12 @@ const rc = computed(() => RARITY_COLOR[props.item.rarity])
         </span>
       </span>
     </div>
-    <ItemArt :image="item.image" :rarity="item.rarity" :size="compact ? 72 : 96" :alt="`${item.weapon} | ${item.skin}`" class="w-full" />
-    <div class="flex w-full min-w-0 flex-col items-center gap-1 lg:gap-2">
-      <span class="kd-drop-weapon type-12-caps max-w-full truncate">{{ item.weapon }}</span>
-      <span class="type-14 max-w-full truncate text-center" :style="{ color: rc }">{{ item.skin }}</span>
-      <UiPrice :amount="item.price" />
+    <ItemArt :image="item.image" :rarity="item.rarity" :size="compact ? 60 : 96" :alt="`${item.weapon} | ${item.skin}`" class="w-full" />
+    <!-- compact (three to a row on phones): the words and the price a step smaller -->
+    <div class="flex w-full min-w-0 flex-col items-center lg:gap-2" :class="compact ? 'gap-0.5' : 'gap-1'">
+      <span class="kd-drop-weapon max-w-full truncate" :class="compact ? 'type-10-caps' : 'type-12-caps'">{{ item.weapon }}</span>
+      <span class="max-w-full truncate text-center" :class="compact ? 'type-12' : 'type-14'" :style="{ color: rc }">{{ item.skin }}</span>
+      <UiPrice :amount="item.price" :size="compact ? 's' : undefined" />
     </div>
   </div>
 </template>
