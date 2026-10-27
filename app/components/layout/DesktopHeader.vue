@@ -28,7 +28,8 @@ async function logout() {
 
 <template>
   <header class="relative flex h-18 items-center gap-2 border-b border-neutral-4 bg-neutral-1 px-4">
-    <NuxtLink to="/" class="kd-press mr-6 w-[118px] shrink-0" aria-label="KurwaDROP">
+    <!-- flex, so the logo centres on the nav's line (as a line of text it sat on a baseline, a few px high) -->
+    <NuxtLink to="/" class="kd-press mr-6 flex w-[118px] shrink-0 items-center" aria-label="KurwaDROP">
       <UiLogo :height="40" />
     </NuxtLink>
 
