@@ -206,6 +206,34 @@ const SHAKE_MS = 720
 
 // the scene around the bird, back to front: behind it (under the canvas) and in front of it (over the canvas)
 const PROPS = ['crate-back', 'crate-side', 'crate-open'] as const
+const propEls = ref<HTMLImageElement[]>([])
+// the cases feel the bird: when it comes down they jump a little, the nearer ones more; its rage shake rattles them.
+// On their pictures, so it adds up with the pointer's parallax on their wrappers
+const KICK: Record<string, number> = { 'crate-open': 1, 'crate-side': 0.7, 'crate-back': 0.35 }
+function kickProps(level: number, delay: number) {
+  const f = (y: number, r: number) => ({ transform: `translateY(${y}px) rotate(${r}deg)` })
+  propEls.value.forEach((img, i) => {
+    const k = KICK[img.dataset.k!] ?? 0.5
+    const side = i % 2 ? 1 : -1
+    img.getAnimations().forEach((a) => a.cancel())
+    if (level === 3) {
+      const rattle = [1, -1, 0.7, -0.7, 0.4, -0.4]
+      img.animate([f(0, 0), ...rattle.map((s, j) => ({ ...f(-4 * k * Math.abs(s), s * side * 3 * k), offset: 0.12 + j * 0.13 })), f(0, 0)], { duration: SHAKE_MS, easing: 'ease-in-out' })
+    } else {
+      const up = (level === 2 ? 14 : 8) * k
+      img.animate(
+        [
+          { ...f(0, 0), easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          { ...f(-up, side * 2.5 * k), offset: 0.35, easing: 'cubic-bezier(0.55, 0, 1, 0.45)' },
+          { ...f(0, 0), offset: 0.7, easing: 'ease-out' },
+          { ...f(-up * 0.2, 0), offset: 0.85, easing: 'ease-in' },
+          f(0, 0),
+        ],
+        { duration: 440, delay },
+      )
+    }
+  })
+}
 let combo = 0
 let lastPoke = 0
 let shakeUntil = 0
@@ -241,6 +269,7 @@ function poke(e: MouseEvent) {
         { duration: SHAKE_MS, easing: 'ease-in-out' },
       )
       shakeUntil = now + SHAKE_MS
+      kickProps(3, 0)
     } else {
       const h = HOPS[level - 1]!
       // each phase its own curve: a quick squash, a rise that slows at the top, a fall that speeds up, a soft settle
@@ -255,6 +284,8 @@ function poke(e: MouseEvent) {
         ],
         { duration: h.ms },
       )
+      // the landing, as the bird settles
+      kickProps(level, h.ms * 0.72)
     }
   }
   // the feathers burst from the poke itself, more of them the harder it gets; flustered, a cloud from the whole bird
@@ -276,7 +307,7 @@ function poke(e: MouseEvent) {
       <!-- the warm light spilling up out of the open case -->
       <span class="kd-hen-glow absolute block" />
       <span v-for="k in PROPS" :key="k" class="kd-hen-prop absolute block" :class="`is-${k}`">
-        <img :src="`/img/hero/${k}.webp`" alt="" draggable="false" class="block w-full" />
+        <img ref="propEls" :src="`/img/hero/${k}.webp`" :data-k="k" alt="" draggable="false" class="block w-full" />
       </span>
     </span>
     <!-- the poke sounds load on the first hover or touch (an audio context wants a gesture first) -->
@@ -300,7 +331,7 @@ function poke(e: MouseEvent) {
    its height */
 .kd-hen-poke {
   right: -70px;
-  top: -100px;
+  top: -108px;
   width: 720px;
   height: calc(100% + 190px);
   /* the box reaches over the live strip and the big wins' heading: it takes no taps itself, only its hit area does */
@@ -311,10 +342,10 @@ function poke(e: MouseEvent) {
   pointer-events: auto;
   cursor: pointer;
   border-radius: 45%;
-  /* from the band's top (the box starts 100 px above the art, the band 40 px above it) to its foot */
+  /* from the band's top (the box starts 108 px above the art, the band 40 px above it) to its foot */
   left: 15%;
   right: 15%;
-  top: 70px;
+  top: 78px;
   bottom: 50px;
 }
 .kd-hen-poke :deep(.kd-hen-cv) {
@@ -328,7 +359,7 @@ function poke(e: MouseEvent) {
    --r, may be mirrored (--sx) */
 .kd-hen-props {
   right: -70px;
-  top: -100px;
+  top: -108px;
   width: 720px;
   height: calc(100% + 190px);
 }
@@ -343,7 +374,7 @@ function poke(e: MouseEvent) {
   right: 150px;
   top: 150px;
   width: 140px;
-  filter: brightness(0.6) saturate(1.25) blur(2.5px);
+  filter: brightness(0.55) saturate(1.05) blur(2.5px);
 }
 /* nearer, low on the right: a closed case side on */
 .kd-hen-prop.is-crate-side {
@@ -352,7 +383,7 @@ function poke(e: MouseEvent) {
   right: -16px;
   bottom: 112px;
   width: 210px;
-  filter: brightness(0.85) saturate(1.35) blur(1px);
+  filter: brightness(0.8) saturate(1.12) blur(1px);
 }
 /* the open case it burst out of: big, low on the left, lit from inside */
 .kd-hen-prop.is-crate-open {
@@ -361,7 +392,7 @@ function poke(e: MouseEvent) {
   left: -24px;
   bottom: 100px;
   width: 390px;
-  filter: brightness(1.04) saturate(1.35);
+  filter: brightness(1) saturate(1.12);
 }
 /* the light out of the open case, up into the space over it; it breathes */
 .kd-hen-glow {
@@ -406,8 +437,35 @@ function poke(e: MouseEvent) {
 
 /* tablets and phones: the band above the words — the chicken centred in it */
 @media (max-width: 1023px) {
+  /* the cases close around the bird: the open one low on the left, the closed ones on the right */
   .kd-hen-props {
-    display: none;
+    right: 50%;
+    top: -8px;
+    width: min(380px, 100vw);
+    height: calc(100% + 16px);
+    translate: 50% 0;
+  }
+  .kd-hen-prop.is-crate-open {
+    left: 6px;
+    bottom: 18px;
+    width: 160px;
+  }
+  .kd-hen-prop.is-crate-side {
+    right: 4px;
+    bottom: 26px;
+    width: 104px;
+  }
+  .kd-hen-prop.is-crate-back {
+    right: 46px;
+    top: 34px;
+    width: 72px;
+    filter: brightness(0.55) saturate(1.05) blur(1.5px);
+  }
+  .kd-hen-glow {
+    left: -30px;
+    bottom: 40px;
+    width: 240px;
+    height: 200px;
   }
   .kd-hen-poke {
     right: 50%;
