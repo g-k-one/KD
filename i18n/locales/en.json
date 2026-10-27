@@ -471,6 +471,7 @@
     "check": "Check",
     "sealedHintShort": "Sealed: reveal your seed on the Provably Fair page to check it",
     "signInRolls": "Sign in to see your rolls and check each one.",
+    "signInSeeds": "Sign in to see your seed pairs and check them.",
     "noRollsYet": "No rolls yet. Open a case or try an upgrade, then check it here.",
     "match": "Matches your result",
     "mismatch": "Does not match your result",
