@@ -26,7 +26,16 @@ const moodPick = ref<'none' | 'nearWin' | 'nearLose'>('none')
 const mood = computed(() => (moodPick.value === 'none' ? null : moodPick.value))
 const sfx = useSfx()
 const haptics = useHaptics()
+// KURWADROP's chicken: its recorded sprite, one beat at a time and the whole show at henShow's timing
+onMounted(() => sfx.henLoad())
+const HEN_SHOW: [number, () => void][] = [[120, sfx.henSwap], [130, sfx.henBody], [820, () => sfx.henScream()], [1750, () => sfx.henInflate()], [2150, sfx.henPop]]
 const SOUNDS: [string, () => void][] = [
+  ['chicken show', () => HEN_SHOW.forEach(([ms, f]) => setTimeout(f, ms))],
+  ['chicken swap', sfx.henSwap],
+  ['chicken body', sfx.henBody],
+  ['chicken KURWA', () => sfx.henScream()],
+  ['chicken stretch', () => sfx.henInflate()],
+  ['chicken pop', sfx.henPop],
   ['squawk', sfx.squawk],
   ['tick', sfx.tick],
   ['coin', sfx.coin],

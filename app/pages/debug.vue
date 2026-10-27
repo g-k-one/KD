@@ -8,12 +8,13 @@ import type { Rarity, User } from '#shared/types/api'
  *   Items  — ItemArt knobs and reveal, tiles, drop cards, case / PvP cards, big wins
  *   Games  — the upgrade dial driven by hand, chicken moods, sounds, haptics
  *   FX     — kd* Forge effects on a stage, FxFire, FxBurst
+ *   Skeletons — the loading skeletons as each page shows them (case page, home catalog, battle room, drop cards)
  *   Tokens — colors, rarities, type scale, radii, motion
  * The floating dock (bottom-left, backquote key) has the same forces on every page.
  */
 useHead({ title: 'Debug · KurwaDROP' })
 
-type Tab = 'state' | 'kit' | 'items' | 'games' | 'fx' | 'tokens'
+type Tab = 'state' | 'kit' | 'items' | 'games' | 'fx' | 'skeletons' | 'tokens'
 const prefs = usePersisted('kd_debug_page', { tab: 'state' as Tab })
 const tab = computed({ get: () => prefs.value.tab, set: (v: Tab) => (prefs.value = { ...prefs.value, tab: v }) })
 const TABS: { value: Tab; label: string }[] = [
@@ -22,6 +23,7 @@ const TABS: { value: Tab; label: string }[] = [
   { value: 'items', label: 'Items' },
   { value: 'games', label: 'Games' },
   { value: 'fx', label: 'FX' },
+  { value: 'skeletons', label: 'Skeletons' },
   { value: 'tokens', label: 'Tokens' },
 ]
 
@@ -263,6 +265,7 @@ const motionKey = ref(0)
     <DebugItems v-else-if="tab === 'items'" />
     <DebugGames v-else-if="tab === 'games'" />
     <DebugFx v-else-if="tab === 'fx'" />
+    <DebugSkeletons v-else-if="tab === 'skeletons'" />
 
     <!-- TOKENS -->
     <template v-else>
