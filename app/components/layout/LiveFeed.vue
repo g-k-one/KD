@@ -93,7 +93,7 @@ function show(d: FeedDrop, e: MouseEvent) {
     >
       <ItemArt :image="feed.highlight.image" :rarity="feed.highlight.rarity" :size="isLg ? 56 : 44" class="w-12 shrink-0 lg:w-20" />
       <!-- its source, as on the tiles: the mark 5 px from the card's bottom left, the same inset both ways -->
-      <span v-if="sourceOf(feed.highlight.caseSlug) !== 'case'" class="kd-feed-src absolute bottom-[5px] left-[5px] z-[2] text-neutral-13" :title="$t(`nav.${sourceOf(feed.highlight.caseSlug)}`)">
+      <span v-if="sourceOf(feed.highlight.caseSlug) !== 'case'" class="kd-feed-src absolute bottom-[5px] left-[5px] z-[2] text-white/50" :title="$t(`nav.${sourceOf(feed.highlight.caseSlug)}`)">
         <UiIcon :name="`src-${sourceOf(feed.highlight.caseSlug)}`" :size="isLg ? 14 : 12" />
       </span>
       <div class="relative z-[2] flex min-w-0 flex-1 flex-col gap-0.5 lg:gap-1">
@@ -134,9 +134,9 @@ function show(d: FeedDrop, e: MouseEvent) {
           @mouseleave="hover = null"
         >
           <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 56 : 40" class="w-full" />
-          <!-- not a case drop: a solid mark for the source (upgrade, PvP; src-*.svg, drawn for it) in the bottom left corner, quiet grey
+          <!-- not a case drop: a solid mark for the source (upgrade, PvP; src-*.svg, drawn for it) in the bottom left corner, white at half strength
                over the skin, no plate, no shadow; 5 px from the tile's edge (its 1 px border + 4) on both sides -->
-          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute bottom-1 left-1 z-[2] text-neutral-13" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
+          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute bottom-1 left-1 z-[2] text-white/50" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
             <UiIcon :name="`src-${sourceOf(d.caseSlug)}`" :size="isLg ? 14 : 12" />
           </span>
           <span v-if="mode === 'top'" class="type-10-caps absolute right-1 bottom-1 rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
