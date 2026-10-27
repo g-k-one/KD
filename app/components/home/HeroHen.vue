@@ -274,6 +274,8 @@ function poke(e: MouseEvent) {
   <div class="kd-hen absolute inset-0">
     <!-- the scene behind the bird: far closed cases, the AWP, the open case it burst out of -->
     <span class="kd-hen-props pointer-events-none absolute" aria-hidden="true">
+      <!-- the warm light spilling up out of the open case -->
+      <span class="kd-hen-glow absolute block" />
       <span v-for="k in BEHIND" :key="k" class="kd-hen-prop absolute block" :class="`is-${k}`">
         <img :src="`/img/hero/${k}.webp`" alt="" draggable="false" class="block w-full" />
       </span>
@@ -390,23 +392,39 @@ function poke(e: MouseEvent) {
 .kd-hen-prop.is-crate-open {
   --d: 0.5;
   --r: -7deg;
-  left: 10px;
-  bottom: 72px;
-  width: 360px;
+  left: -24px;
+  bottom: 70px;
+  width: 390px;
   filter: brightness(0.98);
 }
-/* behind the bird: the bayonet flying up out of the open case, mirrored so its tip points up and away to the left */
+/* behind the bird: the bayonet flying up out of the open case into the space over it, mirrored so its tip points up
+   and away to the left */
 .kd-hen-prop.is-bayonet {
-  --d: 0.55;
-  --r: 34deg;
+  --d: 0.8;
+  --r: 28deg;
   --sx: -1;
   --f: -14px;
   --fd: 3.6s;
   --fdl: -1.2s;
-  left: 100px;
-  top: 96px;
-  width: 170px;
-  filter: brightness(0.88) drop-shadow(0 10px 14px rgb(0 0 0 / 0.45));
+  left: -50px;
+  top: 86px;
+  width: 230px;
+  filter: drop-shadow(0 12px 16px rgb(0 0 0 / 0.45));
+}
+/* the light out of the open case, up into the space where the bayonet flies; it breathes */
+.kd-hen-glow {
+  left: -90px;
+  bottom: 140px;
+  width: 460px;
+  height: 340px;
+  background: radial-gradient(closest-side, rgb(255 184 72 / 0.75), rgb(255 120 30 / 0.24) 60%, transparent);
+  transform: translate3d(calc(var(--px, 0) * 4px), calc(var(--py, 0) * 3px), 0);
+  animation: kd-hen-glow 4.2s var(--ease-in-out) infinite;
+}
+@keyframes kd-hen-glow {
+  50% {
+    opacity: 0.7;
+  }
 }
 .kd-hen-lean {
   transform: translate3d(calc(var(--px, 0) * 10px), calc(var(--py, 0) * 6px), 0);
@@ -458,6 +476,7 @@ function poke(e: MouseEvent) {
 }
 @media (prefers-reduced-motion: reduce) {
   .kd-hen-bob,
+  .kd-hen-glow,
   .kd-hen-prop img {
     animation: none;
   }
