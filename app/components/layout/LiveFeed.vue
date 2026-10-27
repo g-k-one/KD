@@ -92,6 +92,10 @@ function show(d: FeedDrop, e: MouseEvent) {
       @mouseleave="hover = null"
     >
       <ItemArt :image="feed.highlight.image" :rarity="feed.highlight.rarity" :size="isLg ? 56 : 44" class="w-12 shrink-0 lg:w-20" />
+      <!-- its source, as on the tiles: the mark in the art's bottom left -->
+      <span v-if="sourceOf(feed.highlight.caseSlug) !== 'case'" class="kd-feed-src absolute bottom-1 left-1.5 z-[2] text-neutral-13" :title="$t(`nav.${sourceOf(feed.highlight.caseSlug)}`)">
+        <UiIcon :name="`src-${sourceOf(feed.highlight.caseSlug)}`" :size="isLg ? 14 : 12" />
+      </span>
       <div class="relative z-[2] flex min-w-0 flex-1 flex-col gap-0.5 lg:gap-1">
         <span class="type-10-caps flex items-center gap-1 text-brand-light max-lg:hidden"><UiIcon name="fire" :size="12" />{{ $t('feed.highlight') }}</span>
         <span class="type-12 truncate max-lg:hidden">{{ feed.highlight.itemName }} | {{ feed.highlight.skinName }}</span>
