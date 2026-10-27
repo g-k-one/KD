@@ -1126,6 +1126,8 @@ export function deposit(amount: number, currency: FiatCurrency, methodId: string
 
 let dropSeq = 0
 const feed: FeedDrop[] = []
+/** Debug: a drop on every poll (the client polls faster too), to watch the strip fly */
+let feedFast = false
 
 export function makeDrop(overrides: Partial<FeedDrop> & Partial<Item> = {}): FeedDrop {
   const cs = CASES[Math.floor(Math.random() * CASES.length)]!
@@ -1191,7 +1193,7 @@ bigWins
 export function tickFeed() {
   if (state.queuedDrops.length) {
     feed.unshift(...state.queuedDrops.splice(0))
-  } else if (!adminSettings.feed.paused && Math.random() < adminSettings.feed.rateBp / 10_000) {
+  } else if (!adminSettings.feed.paused && (feedFast || Math.random() < adminSettings.feed.rateBp / 10_000)) {
     feed.unshift(makeDrop())
   }
   feed.splice(40)
@@ -1211,6 +1213,8 @@ export interface DebugStateBody {
   user?: Partial<Pick<User, 'balance' | 'level' | 'levelProgress' | 'nickname'>>
   resetUser?: boolean
   feedPaused?: boolean
+  /** A drop on every poll (with the client polling fast) */
+  feedFast?: boolean
   pushDrop?: Rarity
   resetDaily?: boolean
   /** Give the three welcome cases back */
@@ -1227,6 +1231,7 @@ export function applyDebugState(body: DebugStateBody) {
   if (body.resetUser) resetMockUser()
   if (body.user) Object.assign(state.user, body.user)
   if (typeof body.feedPaused === 'boolean') adminSettings.feed.paused = body.feedPaused
+  if (typeof body.feedFast === 'boolean') feedFast = body.feedFast
   if (body.pushDrop) state.queuedDrops.push(makeDropOfRarity(body.pushDrop))
   if (body.resetDaily) state.dailyAt = 0
   if (body.resetWelcome) state.welcomeLeft = adminSettings.bonuses.welcome.total
@@ -1240,5 +1245,5 @@ export function applyDebugState(body: DebugStateBody) {
     for (let k = 0; k < body.feedBurst; k++) state.queuedDrops.push(k % 5 === 4 ? makeDropOfRarity(k % 10 === 9 ? 'gold' : 'covert') : makeDrop())
   }
   syncSkinsValue()
-  return { user: state.user, feedPaused: adminSettings.feed.paused }
+  return { user: state.user, feedPaused: adminSettings.feed.paused, feedFast }
 }

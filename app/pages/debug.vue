@@ -35,14 +35,17 @@ const { refresh: refreshFeed } = useLiveFeed()
 
 // --- Mock state ------------------------------------------------------------------------------
 const feedPaused = ref(false)
+// the strip's poll reads this (useLiveFeed); the mock adds a drop on every poll while it is on
+const feedFast = useState('kd_feed_fast', () => false)
 const balanceInput = ref('')
 const nickInput = ref('')
 const progress = ref(50)
 const apiOut = ref('')
 
 async function setState(body: Record<string, unknown>, note?: string) {
-  const res = await $fetch<{ user: User; feedPaused: boolean }>('/api/debug/state', { method: 'POST', body })
+  const res = await $fetch<{ user: User; feedPaused: boolean; feedFast: boolean }>('/api/debug/state', { method: 'POST', body })
   feedPaused.value = res.feedPaused
+  feedFast.value = res.feedFast
   if (session.user) session.user = { ...session.user, ...res.user }
   if (note) toast.show(note)
 }
@@ -205,6 +208,7 @@ const motionKey = ref(0)
           <h2 class="dbg-h">Live feed</h2>
           <div class="flex flex-wrap gap-2">
             <UiButton size="s" variant="secondary" @click="setState({ feedPaused: !feedPaused })">{{ feedPaused ? 'Resume random drops' : 'Pause random drops' }}</UiButton>
+            <UiButton size="s" :variant="feedFast ? 'primary' : 'secondary'" icon="fast" @click="setState({ feedFast: !feedFast }, feedFast ? 'Feed back to normal' : 'Fast feed: a drop every 0.7 s')">{{ feedFast ? 'Fast feed: on' : 'Fast feed' }}</UiButton>
             <UiButton size="s" variant="secondary" @click="setState({ feedBurst: 12 }, '12 drops queued')">Burst ×12</UiButton>
             <UiButton size="s" variant="secondary" @click="setState({ feedBurst: 30 }, '30 drops queued')">Burst ×30</UiButton>
           </div>

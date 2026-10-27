@@ -1,6 +1,8 @@
 import type { FeedResponse } from '#shared/types/api'
 
 const POLL_MS = 3000
+/** Debug "Fast feed": the strip polls this often (and the mock adds a drop every time) */
+const FAST_MS = 700
 
 // One poll for the whole app, however many components read the feed; it stops while the tab is hidden
 // and when the last reader unmounts.
@@ -15,15 +17,22 @@ export function useLiveFeed() {
   })
 
   const reelBusy = useState('kd_reel_busy', () => false)
+  const fast = useState('kd_feed_fast', () => false)
 
   if (import.meta.client && getCurrentInstance()) {
     onMounted(() => {
       users += 1
       if (stop) return
-      // plain timer, not tied to the first reader's scope, so it outlives that component
-      const id = setInterval(() => document.visibilityState === 'visible' && !reelBusy.value && refresh(), POLL_MS)
+      // plain timer, not tied to the first reader's scope, so it outlives that component; each tick sets the next,
+      // so the debug fast feed takes effect on the next poll
+      let id: ReturnType<typeof setTimeout>
+      const tick = () => {
+        if (document.visibilityState === 'visible' && !reelBusy.value) refresh()
+        id = setTimeout(tick, fast.value ? FAST_MS : POLL_MS)
+      }
+      id = setTimeout(tick, POLL_MS)
       stop = () => {
-        clearInterval(id)
+        clearTimeout(id)
         stop = null
       }
     })
