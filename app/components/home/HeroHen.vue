@@ -307,7 +307,9 @@ function poke(e: MouseEvent) {
       <!-- the warm light spilling up out of the open case -->
       <span class="kd-hen-glow absolute block" />
       <span v-for="k in PROPS" :key="k" class="kd-hen-prop absolute block" :class="`is-${k}`">
-        <img ref="propEls" :src="`/img/hero/${k}.webp`" :data-k="k" alt="" draggable="false" class="block w-full" />
+        <span class="kd-hen-idle block">
+          <img ref="propEls" :src="`/img/hero/${k}.webp`" :data-k="k" alt="" draggable="false" class="block w-full" />
+        </span>
       </span>
     </span>
     <!-- the poke sounds load on the first hover or touch (an audio context wants a gesture first) -->
@@ -331,7 +333,7 @@ function poke(e: MouseEvent) {
    its height */
 .kd-hen-poke {
   right: -70px;
-  top: -108px;
+  top: -116px;
   width: 720px;
   height: calc(100% + 190px);
   /* the box reaches over the live strip and the big wins' heading: it takes no taps itself, only its hit area does */
@@ -342,10 +344,10 @@ function poke(e: MouseEvent) {
   pointer-events: auto;
   cursor: pointer;
   border-radius: 45%;
-  /* from the band's top (the box starts 108 px above the art, the band 40 px above it) to its foot */
+  /* from the band's top (the box starts 116 px above the art, the band 40 px above it) to its foot */
   left: 15%;
   right: 15%;
-  top: 78px;
+  top: 86px;
   bottom: 50px;
 }
 .kd-hen-poke :deep(.kd-hen-cv) {
@@ -359,7 +361,7 @@ function poke(e: MouseEvent) {
    --r, may be mirrored (--sx) */
 .kd-hen-props {
   right: -70px;
-  top: -108px;
+  top: -116px;
   width: 720px;
   height: calc(100% + 190px);
 }
@@ -374,7 +376,7 @@ function poke(e: MouseEvent) {
   right: 150px;
   top: 150px;
   width: 140px;
-  filter: brightness(0.55) saturate(1.05) blur(2.5px);
+  filter: brightness(0.55) contrast(1.15) saturate(1.05) blur(2.5px);
 }
 /* nearer, low on the right: a closed case side on */
 .kd-hen-prop.is-crate-side {
@@ -383,7 +385,7 @@ function poke(e: MouseEvent) {
   right: -16px;
   bottom: 112px;
   width: 210px;
-  filter: brightness(0.8) saturate(1.12) blur(1px);
+  filter: brightness(0.8) contrast(1.2) saturate(1.12) blur(1px);
 }
 /* the open case it burst out of: big, low on the left, lit from inside */
 .kd-hen-prop.is-crate-open {
@@ -392,7 +394,7 @@ function poke(e: MouseEvent) {
   left: -24px;
   bottom: 100px;
   width: 390px;
-  filter: brightness(1) saturate(1.12);
+  filter: contrast(1.2) saturate(1.12);
 }
 /* the light out of the open case, up into the space over it; it breathes */
 .kd-hen-glow {
@@ -431,7 +433,7 @@ function poke(e: MouseEvent) {
 }
 @keyframes kd-hen-bob {
   50% {
-    transform: translateY(-14px);
+    transform: translateY(-8px);
   }
 }
 
@@ -459,7 +461,7 @@ function poke(e: MouseEvent) {
     right: 46px;
     top: 34px;
     width: 72px;
-    filter: brightness(0.55) saturate(1.05) blur(1.5px);
+    filter: brightness(0.55) contrast(1.15) saturate(1.05) blur(1.5px);
   }
   .kd-hen-glow {
     left: -30px;
@@ -484,8 +486,32 @@ function poke(e: MouseEvent) {
     bottom: -320px;
   }
 }
+/* idle: each case rises and sways a little on its own beat, out of step with the others (--iy how far, --ir how much
+   it sways, --id how long, --idl where it starts); between the parallax on the wrapper and a poke's jump on the picture */
+.kd-hen-idle {
+  animation: kd-hen-idle var(--id, 4.6s) var(--ease-in-out) infinite;
+  animation-delay: var(--idl, 0s);
+}
+@keyframes kd-hen-idle {
+  50% {
+    transform: translateY(var(--iy, -4px)) rotate(var(--ir, 0.6deg));
+  }
+}
+.kd-hen-prop.is-crate-side {
+  --iy: -3px;
+  --ir: -0.8deg;
+  --id: 3.8s;
+  --idl: -1.3s;
+}
+.kd-hen-prop.is-crate-back {
+  --iy: -6px;
+  --ir: 1.2deg;
+  --id: 5.6s;
+  --idl: -2.4s;
+}
 @media (prefers-reduced-motion: reduce) {
   .kd-hen-bob,
+  .kd-hen-idle,
   .kd-hen-glow {
     animation: none;
   }
