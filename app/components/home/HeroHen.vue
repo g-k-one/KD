@@ -223,11 +223,12 @@ watch(
 </template>
 
 <style scoped>
-/* the chicken's box: from the band's top padding down past its foot into the empty right end of the big wins'
-   heading line, so the bird is big while the band keeps its height */
+/* the chicken's box: from just above the band's top padding (the canvas is clear there, the comb stays under the
+   strip) down past the band's foot into the empty right end of the big wins' heading line, so the bird is big while the
+   band keeps its height */
 .kd-hen-poke {
   right: -40px;
-  top: -40px;
+  top: -70px;
   width: 640px;
   height: calc(100% + 120px);
   cursor: pointer;
@@ -243,7 +244,7 @@ watch(
 /* the cases: the same box as the chicken; each moves with the pointer by its depth, less than the bird */
 .kd-hen-crates {
   right: -40px;
-  top: -40px;
+  top: -70px;
   width: 640px;
   height: calc(100% + 120px);
 }
