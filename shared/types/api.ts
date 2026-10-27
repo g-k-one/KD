@@ -465,6 +465,8 @@ export interface Battle {
    * uses: HMAC_SHA256(server_seed, eos_block_id + ":" + nonce). serverSeed: revealed when the battle ends.
    */
   seed: { serverSeedHash: string; eosBlock: number | null; eosBlockId: string | null; serverSeed: string | null }
+  /** Each case's skins and ticket ranges as they stood when the battle was made: the check maps every ticket to its skin */
+  odds: Record<string, CaseItem[]>
   createdAt: string
 }
 

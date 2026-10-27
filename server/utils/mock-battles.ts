@@ -5,6 +5,7 @@
 // exists, with the block ID read from the chain; the mock stands a random 64-hex ID in for it.
 import type { Battle, BattleCaseRef, BattleMode, BattlePlayerRef, BattleRoundResult, CreateBattleRequest } from '#shared/types/api'
 import { avatarFor } from '#shared/utils/avatar'
+import { battleTie, battleTotals, battleWinners } from '#shared/utils/battle'
 import { pickByTicket, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
 import { adminSettings, getCase, getMockState, lobbyCaseSlugs, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory } from './mock-db'
 
@@ -23,17 +24,6 @@ let idSeq = 48200
 const caseRef = (slug: string): BattleCaseRef => {
   const c = getCase(slug)
   return { slug: c.slug, name: c.name, image: c.image, price: c.price }
-}
-
-/** The winning seats by the mode's rule */
-function winnersOf(mode: BattleMode, totals: number[]) {
-  if (mode === 'team') {
-    const a = totals[0]! + totals[1]!
-    const b = totals[2]! + totals[3]!
-    return a >= b ? [0, 1] : [2, 3]
-  }
-  const pick = mode === 'crazy' ? Math.min(...totals) : Math.max(...totals)
-  return [totals.indexOf(pick)]
 }
 
 async function newBattle(size: number, rounds: BattleCaseRef[], mode: BattleMode = 'classic'): Promise<StoredBattle> {
@@ -55,50 +45,49 @@ async function newBattle(size: number, rounds: BattleCaseRef[], mode: BattleMode
     winners: [],
     viewers: 0,
     seed: { serverSeedHash: await sha256Hex(serverSeed), eosBlock: null, eosBlockId: null, serverSeed: null },
+    // the odds are fixed with the seed: what each ticket gives can't change after the hash is shown
+    odds: Object.fromEntries([...new Set(rounds.map((r) => r.slug))].map((slug) => [slug, getCase(slug).items.map((i) => ({ ...i }))])),
     serverSeed,
     clientSeed: '',
     createdAt: new Date().toISOString(),
   }
 }
 
-async function start(b: StoredBattle) {
-  // the block is named now; its ID (unknown to anyone until the block is produced) is the salt
-  b.seed.eosBlock = 412_000_000 + Math.floor(Math.random() * 1_000_000)
-  b.seed.eosBlockId = randomSeed(32)
-  b.clientSeed = b.seed.eosBlockId
+/** Every round of a battle rolled with one salt: a ticket per seat per round (nonce counting up), its skin, the winners */
+async function roll(b: StoredBattle, salt: string) {
   const results: BattleRoundResult[] = []
   let nonce = 0
   for (const r of b.rounds) {
-    const cs = getCase(r.slug)
     const drops = []
     const tickets = []
     for (let s = 0; s < b.size; s++) {
-      const { ticket } = await pfTicket(b.serverSeed, b.clientSeed, nonce++)
-      const { tickets: _t, ticketFrom: _f, ticketTo: _to, ...item } = pickByTicket(cs.items, ticket)
+      const { ticket } = await pfTicket(b.serverSeed, salt, nonce++)
+      const { tickets: _t, ticketFrom: _f, ticketTo: _to, drops24h: _d, ...item } = pickByTicket(b.odds[r.slug]!, ticket)
       drops.push(item)
       tickets.push(ticket)
     }
     results.push({ drops, tickets })
   }
-  let totals = b.slots.map((_, s) => results.reduce((a, r) => a + r.drops[s]!.price, 0))
-  // Debug: steer the winner by swapping whole drop columns between seats
+  const totals = battleTotals(b.size, results.map((r) => r.drops))
+  return { salt, results, winners: battleWinners(b.mode, totals, await battleTie(b.serverSeed, salt)) }
+}
+
+async function start(b: StoredBattle) {
+  // the block is named now; its ID (unknown to anyone until the block is produced) is the salt
+  b.seed.eosBlock = 412_000_000 + Math.floor(Math.random() * 1_000_000)
+  let out = await roll(b, randomSeed(32))
+  // Debug: steer the winner the honest way — the mock's stand-in block ID is drawn again until the battle comes out as
+  // asked, so every ticket, skin and the winner still check out against the seeds
   const forced = takeForcedBattle()
   const meSlot = b.slots.findIndex((s) => s.player?.you)
   if (forced && meSlot >= 0) {
-    const win = winnersOf(b.mode, totals)
-    const iWin = win.includes(meSlot)
-    // swap with a winning seat to win, with a losing one to lose
-    const swapWith = forced === 'you' ? (iWin ? -1 : win[0]!) : iWin ? b.slots.findIndex((s) => !win.includes(s.slot)) : -1
-    if (swapWith >= 0) {
-      for (const r of results) {
-        ;[r.drops[meSlot], r.drops[swapWith]] = [r.drops[swapWith]!, r.drops[meSlot]!]
-        ;[r.tickets[meSlot], r.tickets[swapWith]] = [r.tickets[swapWith]!, r.tickets[meSlot]!]
-      }
-      totals = b.slots.map((_, s) => results.reduce((a, r) => a + r.drops[s]!.price, 0))
-    }
+    for (let n = 0; n < 400 && out.winners.includes(meSlot) !== (forced === 'you'); n++) out = await roll(b, randomSeed(32))
   }
+  b.seed.eosBlockId = out.salt
+  b.clientSeed = out.salt
+  const results = out.results
   b.results = results
-  b.winners = winnersOf(b.mode, totals)
+  b.winners = out.winners
   b.winnerSlot = b.winners[0]!
   b.status = 'live'
   b.startedAt = new Date(Date.now() + 3600).toISOString()
