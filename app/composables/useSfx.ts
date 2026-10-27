@@ -35,8 +35,8 @@ const POKE: Record<'gawk' | 'bukbuk' | 'kurwawk' | 'kurwa' | 'puff', [number, nu
   puff: [4.365, 0.281],
 }
 let pokeBuf: Promise<AudioBuffer | null> | null = null
-// The launch of a reel or an upgrade (public/sfx/launch.mp3, KREA · Seed Audio): one short push, a tight thump with an
-// airy shove (a spring or a piston firing), under half a second, peaks at -3 dB
+// The launch of a reel or an upgrade (public/sfx/launch.mp3, KREA · Seed Audio): a pistol reload, the magazine clicked
+// in and the slide racked, with its own metallic ring-out (under a second, no silence before it), peaks at -2 dB
 let launchBuf: Promise<AudioBuffer | null> | null = null
 let launchReady: AudioBuffer | null = null
 let launchSrc: AudioBufferSourceNode | null = null
