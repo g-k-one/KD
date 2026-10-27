@@ -78,10 +78,10 @@ const columns = computed(() =>
 }
 .kd-pf-layer.is-blueprint {
   --d: 0.35;
-  --r: -6deg;
-  left: 62.7%;
-  top: 35.1%;
-  width: 43.1%;
+  --r: -13deg;
+  left: 64.5%;
+  top: 29%;
+  width: 37%;
   filter: brightness(0.7) blur(0.5px);
 }
 .kd-pf-layer.is-laptop {
