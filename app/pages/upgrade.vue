@@ -87,9 +87,10 @@ const skinSlots = computed(() => MAX_PIECES.value - (extra.value > 0 ? 1 : 0))
 function toggle(uid: string) {
   if (state.value === 'spinning') return
   resetResult()
-  if (selected.value.includes(uid)) return (selected.value = selected.value.filter((u) => u !== uid))
-  if (selected.value.length >= skinSlots.value) return toast.show(t('upgrade.maxPieces', { n: MAX_PIECES.value }))
+  if (selected.value.includes(uid)) return sfx.deselect(), (selected.value = selected.value.filter((u) => u !== uid))
+  if (selected.value.length >= skinSlots.value) return sfx.denied(), toast.show(t('upgrade.maxPieces', { n: MAX_PIECES.value }))
   selected.value = [...selected.value, uid]
+  sfx.select(selected.value.length)
 }
 
 const balance = computed(() => session.user?.balance ?? 0)
@@ -97,9 +98,11 @@ function allSkins() {
   resetResult()
   // the most valuable skins that fit
   selected.value = [...inventory.value].sort((a, b) => b.price - a.price).slice(0, skinSlots.value).map((i) => i.uid)
+  if (selected.value.length) sfx.select(selected.value.length)
 }
 function clearSkins() {
   resetResult()
+  if (selected.value.length) sfx.deselect()
   selected.value = []
 }
 // The controls change the balance part through this, so a new stake clears the last result
@@ -116,7 +119,7 @@ const extraModel = computed({
   set: (v: number) => {
     resetResult()
     // coins need a free slot
-    if (v > 0 && !extra.value && selected.value.length >= MAX_PIECES.value) return toast.show(t('upgrade.maxPieces', { n: MAX_PIECES.value }))
+    if (v > 0 && !extra.value && selected.value.length >= MAX_PIECES.value) return sfx.denied(), toast.show(t('upgrade.maxPieces', { n: MAX_PIECES.value }))
     extra.value = v
   },
 })
@@ -178,9 +181,11 @@ function pick(what: 'stake' | 'target') {
 }
 function pickTargetTile(it: Item) {
   // An upgrade only goes up: skins worth no more than the stake are not targets
-  if (inputValue.value && it.price <= inputValue.value) return toast.show(t('upgrade.targetTooCheap'))
+  if (inputValue.value && it.price <= inputValue.value) return sfx.denied(), toast.show(t('upgrade.targetTooCheap'))
   aimed.value = null
   target.value = target.value?.id === it.id ? null : it
+  if (target.value) sfx.pick()
+  else sfx.deselect()
   resetResult()
   if (!isLg.value && target.value) sheetOpen.value = false
 }
@@ -225,6 +230,14 @@ const filteredMarket = computed(() => {
 const pages = computed(() => Math.max(1, Math.ceil(filteredMarket.value.length / PAGE)))
 const marketPage = computed(() => filteredMarket.value.slice(page.value * PAGE, page.value * PAGE + PAGE))
 watch([search, priceFrom, priceTo, rarities, sortDesc], () => (page.value = 0))
+// The target's own page: a skin aimed with the chance bar (or a multiplier) shows among its neighbours in price when
+// the list comes into view — on phones as the Desired sheet opens, on desktop at once
+function showTarget() {
+  const i = target.value ? filteredMarket.value.findIndex((x) => x.id === target.value!.id) : -1
+  if (i >= 0) page.value = Math.floor(i / PAGE)
+}
+watch(() => target.value?.id, showTarget)
+watch([panelTab, sheetOpen], () => panelTab.value === 'desired' && sheetOpen.value && showTarget())
 function resetMarketFilters() {
   search.value = ''
   priceFrom.value = ''
@@ -286,10 +299,12 @@ function resetResult() {
 const pending = ref(false)
 async function runUpgrade() {
   if (!session.user) return ui.openSignIn()
-  if (!target.value) return toast.show(t('upgrade.chooseTarget'))
+  if (!target.value) return sfx.denied(), toast.show(t('upgrade.chooseTarget'))
   if (chance.value < rules.value.upgrade.minChanceBp) return toast.show(t('upgrade.chanceTooLow', { n: rules.value.upgrade.minChanceBp / 100 }), 'danger')
   if (target.value.price <= inputValue.value) return toast.show(t('upgrade.targetTooCheap'), 'danger')
   state.value = 'spinning'
+  // the breath before the pointer runs, as before a case's reel
+  sfx.riser()
   playedChance.value = chance.value
   // No particles around the dial while it turns (they distracted from the pointer); light comes only at the result
   // while it turns, the target burns in its rarity's colour (kdFlame, as on the home page's big wins)
@@ -386,9 +401,10 @@ async function runUpgrade() {
     <section class="grid grid-cols-2 items-center gap-2 lg:grid-cols-[400px_1fr_400px] lg:grid-rows-[auto_auto] lg:items-stretch lg:gap-x-4 lg:gap-y-3">
       <button type="button" class="kd-mini kd-press lg:hidden" :class="[state !== 'idle' && `is-${state}`, nextStep === 'stake' && 'is-next']" :disabled="state === 'spinning'" @click="openSheet('mine')">
         <template v-if="selectedItems.length || extra">
-          <span class="flex h-16 items-center -space-x-7">
-            <ItemArt v-for="it in selectedItems.slice(0, 3)" :key="it.uid" float :image="it.image" :rarity="it.rarity" :size="52" class="kd-mini-art w-16" />
-            <UiCoinStack v-if="extra && selectedItems.length < 3" :size="34" :amount="extra" class="kd-mini-art" />
+          <!-- a fan of what is in: the skins a touch smaller, the coins a size under them (their picture fills its square) -->
+          <span class="flex h-16 items-center -space-x-6">
+            <ItemArt v-for="it in selectedItems.slice(0, 3)" :key="it.uid" float :image="it.image" :rarity="it.rarity" :size="46" class="kd-mini-art w-14" />
+            <UiCoinStack v-if="extra && selectedItems.length < 3" :size="selectedItems.length ? 24 : 34" :amount="extra" class="kd-mini-art" />
           </span>
           <UiPrice :amount="inputValue" size="m" />
           <span class="type-10-caps text-neutral-11">{{ $t('upgrade.pieces', { n: selectedItems.length + (extra ? 1 : 0) }) }}</span>
