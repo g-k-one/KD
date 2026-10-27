@@ -40,6 +40,11 @@ function release() {
   paused.value = false
   arm(Math.max(1200, left))
 }
+function close() {
+  clearTimeout(timer)
+  paused.value = false
+  shown.value = null
+}
 
 watch(
   () => session.user?.level,
@@ -77,6 +82,15 @@ const earned = computed(() => program.value?.levelCases.find((c) => c.level === 
       @pointerenter="hold"
       @pointerleave="release"
     >
+      <!-- close it now instead of waiting the bar out -->
+      <button
+        type="button"
+        class="kd-press absolute top-2.5 right-2.5 z-[1] grid size-8 place-items-center rounded-full text-neutral-12 transition-colors hover:bg-white/8 hover:text-neutral-15"
+        :aria-label="$t('common.close')"
+        @click="close"
+      >
+        <UiIcon name="x" :size="18" />
+      </button>
       <!-- the badge stands half over the top edge -->
       <!-- the badge stands half over the top edge: a pseudo-3D plate (the face, its back and a stack of edge slices give
            it thickness) that turns over horizontally from the old level to the new one, its number on each face -->
