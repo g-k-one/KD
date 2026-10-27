@@ -79,7 +79,8 @@ watch(
 </script>
 
 <template>
-  <section id="rolls" class="flex scroll-mt-24 flex-col gap-3">
+  <section id="rolls" class="relative z-10 flex scroll-mt-24 flex-col gap-3">
+    <!-- relative z-10: the rolls lie over the banner's magnifier when it drifts down past the banner -->
     <!-- one line: the title, how many rolls are still sealed (the why on hover), and on the right the way to open them and
          the full history; the table and its Check buttons say the rest -->
     <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
