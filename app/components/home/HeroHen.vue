@@ -10,8 +10,8 @@
  * banner's own canvas (so they scroll with the page), and a cluck plays. Quick pokes in a row build up: a bigger hop,
  * then the bird puffs up and shakes with rage, in a cloud of feathers.
  * Around it, the scene (desktop): the big open orange case it burst out of, low on the left; two closed cases further
- * back on the right, dimmer and softer the further they are; an AWP Dragon Lore fallen out in front of the open case,
- * its dragon stock in the free space on the left, and a bayonet flying up out of the case, its tip away from the bird. Each sits at its own depth (moves with the pointer by it, the near ones more) and the guns float.
+ * back on the right, dimmer and softer the further they are; a warm light out of the open one. Each sits at its own
+ * depth (moves with the pointer by it, the near ones more).
  * Its own WebGL canvas, drawn only while on screen; if WebGL is missing the chicken stays out and nothing breaks.
  */
 type Spine = typeof import('@esotericsoftware/spine-webgl')
@@ -205,8 +205,7 @@ const HOPS = [
 const SHAKE_MS = 720
 
 // the scene around the bird, back to front: behind it (under the canvas) and in front of it (over the canvas)
-const BEHIND = ['crate-back', 'crate-side', 'bayonet', 'crate-open'] as const
-const FRONT = ['awp'] as const
+const PROPS = ['crate-back', 'crate-side', 'crate-open'] as const
 let combo = 0
 let lastPoke = 0
 let shakeUntil = 0
@@ -272,11 +271,11 @@ function poke(e: MouseEvent) {
 
 <template>
   <div class="kd-hen absolute inset-0">
-    <!-- the scene behind the bird: far closed cases, the AWP, the open case it burst out of -->
+    <!-- the scene behind the bird: far closed cases, the open case it burst out of -->
     <span class="kd-hen-props pointer-events-none absolute" aria-hidden="true">
       <!-- the warm light spilling up out of the open case -->
       <span class="kd-hen-glow absolute block" />
-      <span v-for="k in BEHIND" :key="k" class="kd-hen-prop absolute block" :class="`is-${k}`">
+      <span v-for="k in PROPS" :key="k" class="kd-hen-prop absolute block" :class="`is-${k}`">
         <img :src="`/img/hero/${k}.webp`" alt="" draggable="false" class="block w-full" />
       </span>
     </span>
@@ -290,12 +289,6 @@ function poke(e: MouseEvent) {
       <!-- the only part that takes a tap: the bird inside the band, never the live strip above nor the big wins below -->
       <span class="kd-hen-hit absolute" aria-hidden="true" />
     </button>
-    <!-- the scene in front of the bird: the bayonet -->
-    <span class="kd-hen-props is-front pointer-events-none absolute" aria-hidden="true">
-      <span v-for="k in FRONT" :key="k" class="kd-hen-prop absolute block" :class="`is-${k}`">
-        <img :src="`/img/hero/${k}.webp`" alt="" draggable="false" class="block w-full" />
-      </span>
-    </span>
     <!-- the feathers' canvas: wide around the bird and down over the big wins, under nothing that takes a tap -->
     <span ref="fxLayer" class="kd-hen-fx pointer-events-none absolute" aria-hidden="true" />
   </div>
@@ -332,30 +325,16 @@ function poke(e: MouseEvent) {
   pointer-events: none;
 }
 /* the scene: the same box as the chicken. Each prop moves with the pointer by its depth (--d; the bird is 1), tilts by
-   --r, may be mirrored (--sx); the guns float (--f: how far, --fd: how long, out of step) on their picture, so the float and the pointer add up */
+   --r, may be mirrored (--sx) */
 .kd-hen-props {
   right: -70px;
   top: -100px;
   width: 720px;
   height: calc(100% + 190px);
 }
-.kd-hen-props.is-front {
-  z-index: 2;
-}
 .kd-hen-prop {
   transform: translate3d(calc(var(--px, 0) * var(--d) * 10px), calc(var(--py, 0) * var(--d) * 6px), 0) rotate(var(--r)) scaleX(var(--sx, 1));
   transition: transform var(--dur-slow) var(--ease-out);
-}
-/* only the guns float; the cases rest */
-.kd-hen-prop.is-awp img,
-.kd-hen-prop.is-bayonet img {
-  animation: kd-hen-float var(--fd, 4s) var(--ease-in-out) infinite;
-  animation-delay: var(--fdl, 0s);
-}
-@keyframes kd-hen-float {
-  50% {
-    transform: translateY(var(--f, 0px));
-  }
 }
 /* far back, high on the right: a closed case, small, dim and soft */
 .kd-hen-prop.is-crate-back {
@@ -364,7 +343,7 @@ function poke(e: MouseEvent) {
   right: 150px;
   top: 150px;
   width: 140px;
-  filter: brightness(0.5) saturate(0.85) blur(2.5px);
+  filter: brightness(0.6) saturate(1.25) blur(2.5px);
 }
 /* nearer, low on the right: a closed case side on */
 .kd-hen-prop.is-crate-side {
@@ -373,20 +352,7 @@ function poke(e: MouseEvent) {
   right: -16px;
   bottom: 112px;
   width: 210px;
-  filter: brightness(0.75) saturate(0.95) blur(1px);
-}
-/* in front: the AWP fallen out of the open case, mirrored, its dragon stock on the left, the barrel running across the
-   bird's feet; a slight float */
-.kd-hen-prop.is-awp {
-  --d: 1.2;
-  --r: 6deg;
-  --sx: -1;
-  --f: -5px;
-  --fd: 5s;
-  left: -40px;
-  bottom: -8px;
-  width: 400px;
-  filter: brightness(0.95) drop-shadow(0 10px 12px rgb(0 0 0 / 0.5));
+  filter: brightness(0.85) saturate(1.35) blur(1px);
 }
 /* the open case it burst out of: big, low on the left, lit from inside */
 .kd-hen-prop.is-crate-open {
@@ -395,23 +361,9 @@ function poke(e: MouseEvent) {
   left: -24px;
   bottom: 100px;
   width: 390px;
-  filter: brightness(0.98);
+  filter: brightness(1.04) saturate(1.35);
 }
-/* behind the bird: the bayonet flying up out of the open case into the space over it, mirrored so its tip points up
-   and away to the left */
-.kd-hen-prop.is-bayonet {
-  --d: 0.8;
-  --r: 28deg;
-  --sx: -1;
-  --f: -14px;
-  --fd: 3.6s;
-  --fdl: -1.2s;
-  left: -50px;
-  top: 86px;
-  width: 230px;
-  filter: drop-shadow(0 12px 16px rgb(0 0 0 / 0.45));
-}
-/* the light out of the open case, up into the space where the bayonet flies; it breathes */
+/* the light out of the open case, up into the space over it; it breathes */
 .kd-hen-glow {
   left: -90px;
   bottom: 140px;
@@ -476,8 +428,7 @@ function poke(e: MouseEvent) {
 }
 @media (prefers-reduced-motion: reduce) {
   .kd-hen-bob,
-  .kd-hen-glow,
-  .kd-hen-prop img {
+  .kd-hen-glow {
     animation: none;
   }
 }
