@@ -215,11 +215,9 @@ const held = ref(false)
 /* phones: the running line — the track holds the cards twice and slides by half its width, so it loops without a seam
    (the track's end padding is one gap, so both halves are the same width); a finger holds it */
 @media (max-width: 63.999rem) {
-  /* the cards fade in and out at the screen's edges instead of being cut there; the mask is the rail's box, which
-     takes in the room above the cards, so the skins still break out over their top */
+  /* the line runs to the screen's very edges: no fade there (on the dark ground a fade read as a bite out of the card) */
   .kd-wins-rail {
     overflow-x: clip;
-    mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent);
   }
   .kd-wins-track {
     animation: kd-wins-run 22s linear infinite;

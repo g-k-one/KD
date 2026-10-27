@@ -281,6 +281,8 @@ function poke(e: MouseEvent) {
           <span ref="host" class="kd-hen-bob relative block size-full" />
         </span>
       </span>
+      <!-- the only part that takes a tap: the bird inside the band, never the live strip above nor the big wins below -->
+      <span class="kd-hen-hit absolute" aria-hidden="true" />
     </button>
     <!-- the feathers' canvas: wide around the bird and down over the big wins, under nothing that takes a tap -->
     <span ref="fxLayer" class="kd-hen-fx pointer-events-none absolute" aria-hidden="true" />
@@ -296,8 +298,19 @@ function poke(e: MouseEvent) {
   top: -100px;
   width: 720px;
   height: calc(100% + 190px);
-  cursor: pointer;
+  /* the box reaches over the live strip and the big wins' heading: it takes no taps itself, only its hit area does */
+  pointer-events: none;
   -webkit-tap-highlight-color: transparent;
+}
+.kd-hen-hit {
+  pointer-events: auto;
+  cursor: pointer;
+  border-radius: 45%;
+  /* from the band's top (the box starts 100 px above the art, the band 40 px above it) to its foot */
+  left: 15%;
+  right: 15%;
+  top: 70px;
+  bottom: 50px;
 }
 .kd-hen-poke :deep(.kd-hen-cv) {
   position: absolute;
@@ -371,6 +384,9 @@ function poke(e: MouseEvent) {
     width: 260px;
     height: calc(100% + 16px);
     translate: 50% 0;
+  }
+  .kd-hen-hit {
+    inset: 8px 6%;
   }
   .kd-hen-fx {
     left: -16px;
