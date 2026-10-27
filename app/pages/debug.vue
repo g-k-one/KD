@@ -141,7 +141,7 @@ const motionKey = ref(0)
         {{ session.user.nickname }} · lvl {{ session.user.level }} · <UiPrice :amount="session.user.balance" size="s" tone="coin" />
       </span>
     </div>
-    <div class="sticky top-[calc(124px+env(safe-area-inset-top))] z-20 -mx-4 bg-neutral-1 px-4 lg:top-0 lg:mx-0 lg:px-0">
+    <div class="sticky top-[calc(60px+env(safe-area-inset-top))] z-20 -mx-4 bg-neutral-1 px-4 lg:top-0 lg:mx-0 lg:px-0">
       <UiTabs v-model="tab" :tabs="TABS" />
     </div>
 

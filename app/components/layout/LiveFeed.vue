@@ -51,21 +51,12 @@ function show(d: FeedDrop, e: MouseEvent) {
   hover.value = { d, x: Math.min(window.innerWidth - 160, Math.max(160, r.left + r.width / 2)), y: r.bottom + 8 }
 }
 
-// Phones: hide while scrolling down
-const { y, directions } = useScroll(import.meta.client ? window : null)
-const tucked = ref(false)
-watch(y, (v) => {
-  if (isLg.value || v < 120) return (tucked.value = false)
-  if (directions.bottom) tucked.value = true
-  else if (directions.top) tucked.value = false
-})
 </script>
 
 <template>
   <section
     ref="root"
-    class="kd-feed relative flex h-16 items-center gap-2 border-b border-neutral-4 bg-neutral-2 px-2 py-1.5 max-lg:sticky max-lg:top-15 max-lg:z-20 lg:h-22 lg:py-2 lg:pr-6"
-    :class="tucked && 'is-tucked'"
+    class="kd-feed relative flex h-16 items-center gap-2 border-b border-neutral-4 bg-neutral-2 px-2 py-1.5 lg:h-22 lg:py-2 lg:pr-6"
     :aria-label="$t('feed.aria')"
   >
     <!-- Live / Best switch: a segment with a sliding thumb -->
@@ -201,12 +192,6 @@ watch(y, (v) => {
     background: var(--color-neutral-4);
     border-color: var(--color-neutral-6);
   }
-}
-.kd-feed {
-  transition: transform var(--dur-slow) var(--ease-out);
-}
-.kd-feed.is-tucked {
-  transform: translateY(-100%);
 }
 .kd-feed-x {
   font-size: 18px;
