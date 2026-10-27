@@ -457,7 +457,7 @@
     "changed": "changed",
     "myRolls": "Your rolls",
     "allHistory": "All history",
-    "sealedLine": "{n} roll sealed until you reveal its secret | {n} rolls sealed until you reveal their secret",
+    "sealedChip": "{n} sealed",
     "sealedHint": "Sealed so nobody can predict your next roll. Reveal the secret to check them; your next rolls get a new one.",
     "rotateReveal": "Reveal and check",
     "revealed": "Server seed revealed. Every roll of that pair can be checked now.",

@@ -80,12 +80,19 @@ watch(
 
 <template>
   <section id="rolls" class="flex scroll-mt-24 flex-col gap-3">
-    <!-- the title and its link, one line: the table and its Check buttons say the rest -->
-    <div class="flex items-center justify-between gap-3">
+    <!-- one line: the title, how many rolls are still sealed (the why on hover), and on the right the way to open them and
+         the full history; the table and its Check buttons say the rest -->
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
       <h2 class="type-20-caps">{{ $t('fair.myRolls') }}</h2>
-      <NuxtLink v-if="rows.length" to="/profile?tab=history" class="type-12-caps flex shrink-0 items-center gap-0.5 text-neutral-11 hover:text-neutral-15">
-        {{ $t('fair.allHistory') }}<UiIcon name="chevron-right" :size="14" />
-      </NuxtLink>
+      <span v-if="session.user && rows.length && sealed" class="type-12-caps flex h-6 items-center gap-1 rounded-md bg-success-24 px-2 text-success" :title="$t('fair.sealedHint')">
+        <UiIcon name="lock" :size="12" />{{ $t('fair.sealedChip', { n: sealed }, sealed) }}
+      </span>
+      <span class="ml-auto flex items-center gap-4">
+        <UiButton v-if="session.user && rows.length && sealed" variant="fair" size="s" icon="refresh" :loading="rotating" @click="emit('rotate')">{{ $t('fair.rotateReveal') }}</UiButton>
+        <NuxtLink v-if="rows.length" to="/profile?tab=history" class="type-12-caps flex shrink-0 items-center gap-0.5 text-neutral-11 hover:text-neutral-15">
+          {{ $t('fair.allHistory') }}<UiIcon name="chevron-right" :size="14" />
+        </NuxtLink>
+      </span>
     </div>
 
     <UiEmptyState v-if="!session.user" :text="$t('fair.signInRolls')">
@@ -97,13 +104,6 @@ watch(
       <UiButton to="/" icon="cases">{{ $t('account.openCases') }}</UiButton>
     </UiEmptyState>
     <template v-else-if="rows.length">
-      <!-- Rolls of the active pair can't be checked yet: say why and offer the rotation right here -->
-      <!-- one line, one size: how many are sealed and the way out (the why sits on the lock, on hover) -->
-      <div v-if="sealed" class="flex items-center gap-3 rounded-5xl bg-success-24 py-2 pr-2 pl-4">
-        <UiIcon name="lock" :size="18" class="shrink-0 text-success" :title="$t('fair.sealedHint')" />
-        <span class="type-14 min-w-0 flex-1 text-neutral-15">{{ $t('fair.sealedLine', { n: sealed }, sealed) }}</span>
-        <UiButton variant="fair" size="m" icon="refresh" :loading="rotating" class="shrink-0" @click="emit('rotate')">{{ $t('fair.rotateReveal') }}</UiButton>
-      </div>
       <!-- the profile's history table, with the roll's number; a revealed roll checks in place -->
       <div ref="list" class="rounded-5xl bg-neutral-2 px-1 py-2 lg:px-3">
         <HistoryTable
