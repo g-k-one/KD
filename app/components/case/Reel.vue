@@ -215,7 +215,9 @@ let skipping = false
 let active: Animation[] = []
 function skip() {
   skipping = true
-  active.forEach((a) => a.finish())
+  // only what still runs: finish() on a step that already ended (cancelled) revives it, and its fill: forwards then
+  // pinned the strip to that step's end — half a card off after a tease, a bit off after an overshoot
+  active.forEach((a) => a.playState === 'running' && a.finish())
   burst.value?.stop()
   hens.splice(0).forEach((h) => h.stop())
 }
@@ -266,6 +268,7 @@ function slide(t: HTMLElement, axis: string, a: number, b: number, duration: num
   return animationDone(anim, duration).then(() => {
     t.style.transform = `translate${axis}(${b}px)`
     anim.cancel()
+    active = active.filter((a) => a !== anim)
   })
 }
 
@@ -737,6 +740,9 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 }
 .kd-reel-window {
   mask-image: linear-gradient(180deg, transparent, #000 26px, #000 calc(100% - 26px), transparent);
+  /* paint containment: the moving strip (its own layer while it spins, blurred at the start) is clipped on the
+     compositor too — with overflow alone a frame of it could flash past the frame when its layer was made or dropped */
+  contain: paint;
 }
 .kd-reel-card {
   contain: layout style;
