@@ -3,7 +3,6 @@ import type { SeedsResponse } from '#shared/types/api'
 
 const open = defineModel<boolean>({ required: true })
 const seeds = defineModel<SeedsResponse | null>('seeds', { required: true })
-const emit = defineEmits<{ verify: [{ serverSeed: string; clientSeed: string; nonce: number }] }>()
 const { t } = useI18n()
 const session = useSessionStore()
 const ui = useUiStore()
@@ -55,15 +54,6 @@ async function rotate() {
             <div class="grid grid-cols-[140px_1fr] gap-3"><dt class="type-12-caps text-neutral-11">{{ $t('fair.clientSeed') }}</dt><dd class="truncate font-mono text-xs text-neutral-13">{{ seeds.previous.clientSeed }}</dd></div>
             <div class="grid grid-cols-[140px_1fr] gap-3"><dt class="type-12-caps text-neutral-11">{{ $t('fair.nonce') }}</dt><dd class="font-mono text-xs text-neutral-13">{{ seeds.previous.nonce ? `1–${seeds.previous.nonce}` : $t('fair.noRolls') }}</dd></div>
           </dl>
-          <UiButton
-            variant="fair"
-            icon="check-circle"
-            class="self-start"
-            :disabled="!seeds.previous.nonce"
-            @click="emit('verify', { serverSeed: seeds.previous!.serverSeed, clientSeed: seeds.previous!.clientSeed, nonce: Math.max(1, seeds.previous!.nonce) })"
-          >
-            {{ $t('fair.useInVerifier') }}
-          </UiButton>
         </template>
         <span v-else class="type-14-regular text-neutral-11">{{ $t('fair.noPrevious') }}</span>
       </div>
