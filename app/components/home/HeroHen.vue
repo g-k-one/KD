@@ -23,7 +23,7 @@ const box = useTemplateRef<HTMLElement>('box')
 const host = useTemplateRef<HTMLElement>('host')
 const ok = ref(false)
 
-const VIEW_H = 480 // skeleton units shown top to bottom (the hen is ~450 tall: it nearly fills its box)
+const VIEW_H = 470 // skeleton units shown top to bottom (the hen is ~450 tall: it nearly fills its box)
 const CENTER_Y = 28 // the hen's middle in skeleton units
 // how far each pupil may sit from its eye's centre, skeleton units (the white's radius less the pupil's and the rim):
 // the near eye is big (white 77, pupil 24), the far one (eyeR) small (white 40, pupil 12)
@@ -223,12 +223,13 @@ watch(
 </template>
 
 <style scoped>
-/* the chicken's box: the art's right side on desktop, a little taller than the banner so the beat has room */
+/* the chicken's box: from the band's top padding down past its foot into the empty right end of the big wins'
+   heading line, so the bird is big while the band keeps its height */
 .kd-hen-poke {
   right: -40px;
   top: -40px;
   width: 640px;
-  height: calc(100% + 80px);
+  height: calc(100% + 120px);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -244,7 +245,7 @@ watch(
   right: -40px;
   top: -40px;
   width: 640px;
-  height: calc(100% + 80px);
+  height: calc(100% + 120px);
 }
 .kd-hen-crate {
   aspect-ratio: 720 / 691;

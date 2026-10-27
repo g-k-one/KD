@@ -11,7 +11,7 @@ import type { StageLayer, StageLoot } from '~/components/banner/Stage.vue'
 // chicken, the case's front wall — with real catalog skins and KD coins flying around. The fifth poke lays a golden
 // egg — an honest one: it offers the free demo spin every case has.
 // `bare`: no ground, no frame and no side padding — the full-width band around it (HomeHeroBleed) paints the light;
-// the words line up with the page's column, centred in a banner tall enough for big art. The `art` slot replaces the chicken's stage
+// the words line up with the page's column and set the banner's height. The `art` slot replaces the chicken's stage
 // and gets the pokes (poke, bubble, pokes) so the same bubble and golden egg go on; the `aside` slot sits on the
 // buttons' line, at its right end (desktop).
 const session = useSessionStore()
@@ -72,7 +72,7 @@ const bubble = computed(() => (egg.value ? '' : `hero.poke${Math.min(pecks.value
 <template>
   <section
     class="kd-hero relative isolate flex flex-col p-4 sm:min-h-60 sm:flex-row sm:py-6 lg:gap-6 lg:py-10"
-    :class="bare ? 'overflow-visible sm:px-4 lg:min-h-[440px] xl:px-0' : 'overflow-hidden rounded-4xl sm:rounded-5xl sm:px-8 lg:h-80 lg:overflow-visible lg:rounded-[32px] lg:px-10'"
+    :class="bare ? 'overflow-visible sm:px-4 xl:px-0' : 'overflow-hidden rounded-4xl sm:rounded-5xl sm:px-8 lg:h-80 lg:overflow-visible lg:rounded-[32px] lg:px-10'"
     :style="vars"
     @pointermove="onMove"
     @pointerleave="onLeave"
