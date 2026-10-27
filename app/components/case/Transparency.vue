@@ -5,8 +5,10 @@ import type { CaseDetails } from '#shared/types/api'
 const props = defineProps<{ data: CaseDetails }>()
 const infoOpen = ref(false)
 // phones: the odds show under the RTP row from the start (the chances are the point of the block); a chevron folds them,
-// and the choice is remembered on every case (a cookie, so the server draws it the same way)
-const oddsOpen = useCookie<boolean>('kd_odds_open', { default: () => true, maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' })
+// and the choice is remembered on every case (usePersisted: a cookie on the site, localStorage in the artifact, where
+// cookies are blocked)
+const oddsPref = usePersisted('kd_odds', { open: true })
+const oddsOpen = computed({ get: () => oddsPref.value.open, set: (open: boolean) => (oddsPref.value = { ...oddsPref.value, open }) })
 // the risk explains itself too: hover on desktop, a tap anywhere
 const riskOpen = ref(false)
 const hoverRisk = (e: PointerEvent, v: boolean) => e.pointerType === 'mouse' && (riskOpen.value = v)
@@ -78,7 +80,7 @@ const isLg = useMediaQuery('(min-width: 1024px)')
          Phones: the same pieces in one line on the RTP row, right-aligned, a hairline away from the RTP's info. -->
     <button
       type="button"
-      class="kd-hit relative order-2 flex min-w-0 items-center justify-end gap-2 text-left max-lg:h-8 max-lg:border-l max-lg:border-neutral-4 max-lg:pl-3 lg:order-3 lg:w-44 lg:flex-col lg:items-start lg:justify-center lg:gap-1 lg:border-l lg:border-neutral-4 lg:pl-6"
+      class="kd-hit relative order-2 flex min-w-0 items-center justify-end gap-2 text-left max-lg:h-8 max-lg:pl-1 lg:order-3 lg:w-44 lg:flex-col lg:items-start lg:justify-center lg:gap-1 lg:border-l lg:border-neutral-4 lg:pl-6"
       :style="{ '--oc': RISK_COLOR[data.risk] }"
       :aria-expanded="riskOpen"
       :aria-label="$t('case.riskInfo')"
