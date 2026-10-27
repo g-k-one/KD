@@ -71,14 +71,14 @@ const columns = computed(() =>
 .kd-pf-layer.is-board {
   --d: 0.2;
   --r: 6deg;
-  left: 66%;
-  top: 12%;
-  width: 24.5%;
+  left: 67.5%;
+  top: 14%;
+  width: 20%;
   filter: brightness(0.5) saturate(0.8) blur(2px);
 }
 .kd-pf-layer.is-blueprint {
   --d: 0.35;
-  --r: -13deg;
+  --r: 9deg;
   left: 64.5%;
   top: 29%;
   width: 37%;
@@ -93,9 +93,9 @@ const columns = computed(() =>
 }
 .kd-pf-layer.is-shield {
   --d: 1;
-  left: 24.2%;
-  top: -4.8%;
-  width: 57.3%;
+  left: 30.4%;
+  top: -3.7%;
+  width: 46.5%;
   filter: drop-shadow(0 18px 26px rgb(0 0 0 / 0.5));
   animation: kd-pf-float 5.6s var(--ease-in-out) infinite;
 }
