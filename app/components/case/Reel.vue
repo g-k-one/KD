@@ -1101,20 +1101,17 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     transform: scale(1.5);
   }
 }
-/* KURWADROP: the whole frame goes gold — a thicker rim, the edge gradient and the markers */
+/* KURWADROP: the whole frame goes gold — one even gold rim all round (no ring on top of a gradient edge, which ran
+   thicker by the markers), its glow, and the markers */
 .kd-reel {
   transition: box-shadow var(--dur-slow) var(--ease-out);
 }
-.kd-reel.is-kurwa {
-  box-shadow: 0 0 0 3px var(--color-item-gold), 0 0 56px -6px var(--color-item-gold);
-  background:
-    linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
-    linear-gradient(90deg, var(--color-neutral-4) 10%, var(--color-item-gold) 50%, var(--color-neutral-4) 90%) border-box;
-}
+.kd-reel.is-kurwa,
 .kd-reel.is-kurwa.is-v {
+  box-shadow: 0 0 56px -6px var(--color-item-gold);
   background:
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
-    linear-gradient(180deg, var(--color-neutral-4) 10%, var(--color-item-gold) 50%, var(--color-neutral-4) 90%) border-box;
+    linear-gradient(var(--color-item-gold), var(--color-item-gold)) border-box;
 }
 /* the markers' gold twin (the frame's gold at the base, light gold at the tip) fades in over the orange ones with the
    gold frame, so the arrows flow out of the rim instead of an orange shape tinted by a filter */
