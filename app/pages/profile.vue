@@ -222,7 +222,7 @@ async function saveTrade() {
       <!-- the two columns end on one line: the trade link card stretches to the skins panel's height -->
       <section class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-5">
         <!-- My skins: the upgrade page's panel, tiles to pick; picked ones get the bar below -->
-        <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2 lg:pb-4">
+        <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
           <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
             <UiIcon name="inventory" :size="24" class="text-neutral-13" />
             <span class="type-14 lg:type-16-medium">{{ $t('upgrade.mySkins') }} ({{ inventory.length }})</span>
@@ -242,7 +242,7 @@ async function saveTrade() {
             <div class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
               <ItemTile v-for="it in shownInventory" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
             </div>
-            <UiButton v-if="sortedInventory.length > skinsCap" variant="ghost" size="s" :icon="showAllSkins ? 'chevron-up' : 'chevron-down'" class="mx-auto -mt-1 mb-2" @click="showAllSkins = !showAllSkins">
+            <UiButton v-if="sortedInventory.length > skinsCap" variant="ghost" size="s" :icon="showAllSkins ? 'chevron-up' : 'chevron-down'" class="mx-auto -mt-1 mb-3 lg:mb-4" @click="showAllSkins = !showAllSkins">
               {{ showAllSkins ? $t('account.skinsLess') : $t('account.skinsAll', { n: sortedInventory.length }) }}
             </UiButton>
           </template>
@@ -283,15 +283,15 @@ async function saveTrade() {
 
       <!-- Game history, the full width: what the player did, newest first; a roll opens its check -->
       <section>
-        <div ref="historyEl" class="flex min-w-0 scroll-mt-36 flex-col rounded-5xl bg-neutral-2 lg:pb-4">
+        <div ref="historyEl" class="flex min-w-0 scroll-mt-36 flex-col rounded-5xl bg-neutral-2">
           <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
             <UiIcon name="history" :size="24" class="text-neutral-13" />
             <span class="type-14 lg:type-16-medium">{{ $t('account.history') }}</span>
             <UiSelect v-model="gameFilter" :options="gameOptions" menu-width="fixed" class="ml-auto w-36 lg:w-40" :active="gameFilter !== 'all'" />
           </div>
-          <UiEmptyState v-if="!filteredHistory.length" :text="$t('account.emptyHistory')" class="m-3 mt-0 lg:m-4 lg:mt-0" />
+          <UiEmptyState v-if="!filteredHistory.length" :text="$t('account.emptyHistory')" class="m-3" />
           <!-- the table: game · drop · stake · payout · profit · time · check; a roll opens its check -->
-          <div v-else class="kd-history overflow-y-auto px-1 pb-2 lg:px-3">
+          <div v-else class="kd-history overflow-y-auto p-3">
             <HistoryTable :entries="filteredHistory" :link="(h) => (h.battleId ? `/pvp/${h.battleId}?check=1` : h.nonce ? `/fairness?roll=${h.id}` : undefined)" />
           </div>
         </div>

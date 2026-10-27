@@ -84,7 +84,7 @@ watch(
     <!-- relative z-10: the rolls lie over the banner's magnifier when it drifts down past the banner -->
     <!-- one card, as the profile's game history: a header line (the icon and the name, a chip with how many rolls are
          still sealed — the why on hover; on the right the way to open them and the full history), then the table -->
-    <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2 lg:pb-4">
+    <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
       <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
         <UiIcon name="shield-check" :size="24" class="shrink-0 text-neutral-13" />
         <span class="type-14 lg:type-16-medium">{{ $t('fair.myRolls') }}</span>
@@ -100,16 +100,17 @@ watch(
         </span>
       </div>
 
-      <UiEmptyState v-if="!session.user" :text="$t('fair.signInRolls')" class="m-3 lg:m-4 lg:mb-0">
+      <UiEmptyState v-if="!session.user" :text="$t('fair.signInRolls')" class="m-3">
         <UiButton icon="sign-in" @click="ui.openSignIn()">{{ $t('auth.signIn') }}</UiButton>
       </UiEmptyState>
       <!-- the rolls on their way: the table's place -->
-      <span v-else-if="!loaded" class="kd-skeleton m-3 h-[180px] rounded-3xl lg:m-4 lg:mb-0 lg:h-52" aria-hidden="true" />
-      <UiEmptyState v-else-if="!rows.length" :text="$t('fair.noRollsYet')" class="m-3 lg:m-4 lg:mb-0">
+      <span v-else-if="!loaded" class="kd-skeleton m-3 h-[180px] rounded-3xl lg:h-52" aria-hidden="true" />
+      <UiEmptyState v-else-if="!rows.length" :text="$t('fair.noRollsYet')" class="m-3">
         <UiButton to="/" icon="cases">{{ $t('account.openCases') }}</UiButton>
       </UiEmptyState>
       <!-- the profile's history table, with the roll's number; a revealed roll checks in place -->
-      <div v-else ref="list" class="px-1 pb-2 lg:px-3">
+      <!-- the rows' 12 px corners sit 12 px in from the card's 24, on every side -->
+      <div v-else ref="list" class="p-3">
         <HistoryTable
           roll
           :entries="rows.map((r) => r.e)"

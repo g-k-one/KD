@@ -25,8 +25,9 @@ watch(() => [props.version, session.user?.id], load)
       <h2 class="type-16-caps lg:type-20-caps">{{ $t('upgrade.myUpgrades') }}</h2>
       <NuxtLink to="/profile?tab=history" class="type-12-caps text-neutral-11 hover:text-neutral-15">{{ $t('upgrade.allHistory') }}</NuxtLink>
     </div>
-    <!-- the profile's history table, with the roll and the chance it was played at; a row opens its check -->
-    <div class="rounded-5xl bg-neutral-2 px-1 py-2 lg:px-3">
+    <!-- the profile's history table, with the roll and the chance it was played at; a row opens its check. The rows'
+         12 px corners sit 12 px in from the card's 24, on every side -->
+    <div class="rounded-5xl bg-neutral-2 p-3">
       <HistoryTable roll :entries="entries" :link="(e) => (e.nonce ? `/fairness?roll=${e.id}` : undefined)" />
     </div>
   </section>
