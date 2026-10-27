@@ -221,11 +221,11 @@ async function saveTrade() {
               <UiSortArrows :desc="invSort === 'priceDesc'" />
             </UiButton>
           </div>
-          <div v-if="loading" class="grid grid-cols-2 gap-2 p-3 sm:grid-cols-5 lg:p-4">
-            <span v-for="n in 15" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl lg:aspect-auto lg:h-[105px]" />
+          <div v-if="loading" class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
+            <span v-for="n in 15" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-[4/5] lg:aspect-auto lg:h-[105px]" />
           </div>
           <template v-else-if="inventory.length">
-            <div class="grid grid-cols-2 gap-2 p-3 sm:grid-cols-5 lg:p-4">
+            <div class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
               <ItemTile v-for="it in shownInventory" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
             </div>
             <UiButton v-if="sortedInventory.length > skinsCap" variant="ghost" size="s" :icon="showAllSkins ? 'chevron-up' : 'chevron-down'" class="mx-auto -mt-1 mb-2" @click="showAllSkins = !showAllSkins">
