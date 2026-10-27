@@ -92,10 +92,11 @@ watch(
           <UiIcon name="lock" :size="12" />{{ $t('fair.sealedChip', { n: sealed }, sealed) }}
         </span>
         <span class="ml-auto flex shrink-0 items-center gap-2">
+          <!-- the history a plain button with its own ground, the main action last, in the corner -->
+          <UiButton v-if="rows.length" variant="secondary" :size="isLg ? 'm' : 's'" icon-right="chevron-right" to="/profile?tab=history" class="max-sm:hidden">{{ $t('fair.allHistory') }}</UiButton>
           <UiButton v-if="session.user && rows.length && sealed" variant="fair" :size="isLg ? 'm' : 's'" icon="refresh" :loading="rotating" @click="emit('rotate')">
             <span class="max-sm:hidden">{{ $t('fair.rotateReveal') }}</span><span class="sm:hidden">{{ $t('fair.reveal') }}</span>
           </UiButton>
-          <UiButton v-if="rows.length" variant="ghost" :size="isLg ? 'm' : 's'" icon-right="chevron-right" to="/profile?tab=history" class="max-sm:hidden">{{ $t('fair.allHistory') }}</UiButton>
         </span>
       </div>
 
