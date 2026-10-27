@@ -1,57 +1,38 @@
 <script setup lang="ts">
 /*
- * Home banner, full width: one scene from edge to edge with no frame. The light pours from the top as a wide warm arc
- * and dissolves into the page (the imigo final call's glow, turned upside down); the words line up with the page's
- * column, the same air above and below them. Right: KURWADROP's Spine chicken hovering and watching the cursor
- * (HomeHeroHen), leaning toward the pointer anywhere on the band.
+ * Home banner (BannerBleed, warm): KURWADROP's Spine chicken hovering among the crates (HomeHeroHen) on the right.
+ * Two voices. A guest gets the pitch and Start playing (sign in). A signed-in player gets greeted by name and the one
+ * thing worth doing now: the welcome cases still free, else the daily case if it is ready, else the fresh picks below.
  */
 const emit = defineEmits<{ start: [] }>()
-const { onMove, onLeave, vars } = usePointerTilt()
+const session = useSessionStore()
+const ui = useUiStore()
+const { t } = useI18n()
+const { dailyReady, welcomeLeft } = useBonuses()
+
+// what the signed-in player is offered, most valuable first
+const offer = computed(() => {
+  if (!session.user) return null
+  if (welcomeLeft.value > 0) return { title: 'hero.freeTitle', n: welcomeLeft.value, cta: 'hero.freeCta', icon: 'bonuses', to: '/bonuses' }
+  if (dailyReady.value) return { title: 'hero.dailyTitle', n: 0, cta: 'hero.dailyCta', icon: 'bonuses', to: '/bonuses' }
+  return { title: 'hero.picksTitle', n: 0, cta: 'hero.picksCta', icon: 'cases', to: '' }
+})
+const eyebrow = computed(() => (session.user ? t('hero.back', { name: session.user.nickname }) : t('hero.eyebrow')))
+const title = computed(() => (offer.value ? t(offer.value.title, { n: offer.value.n }, offer.value.n || 1) : t('hero.title')))
+function start() {
+  if (!session.user) ui.openSignIn()
+  else emit('start')
+}
 </script>
 
 <template>
-  <section class="kd-bleed relative isolate pt-4 pb-6 lg:py-10" :style="vars" @pointermove="onMove" @pointerleave="onLeave">
-    <!-- the light: an arc of warm colour hanging from the top, brightest in the middle, gone before the page -->
-    <span class="kd-glow pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
-
-    <div class="mx-auto max-w-content">
-      <HomeHeroBanner bare @start="emit('start')">
-        <template #art><HomeHeroHen /></template>
-      </HomeHeroBanner>
-    </div>
-  </section>
+  <BannerBleed glow="warm" :eyebrow="eyebrow" :title="title">
+    <template #art><HomeHeroHen /></template>
+    <template #actions>
+      <UiButton v-if="!offer" size="l" class="max-sm:h-10 max-sm:px-4" @click="start">{{ $t('hero.cta') }}</UiButton>
+      <UiButton v-else-if="offer.to" size="l" :icon="offer.icon" :to="offer.to" class="max-sm:h-10 max-sm:px-4">{{ $t(offer.cta) }}</UiButton>
+      <UiButton v-else size="l" :icon="offer.icon" class="max-sm:h-10 max-sm:px-4" @click="start">{{ $t(offer.cta) }}</UiButton>
+      <UiButton variant="ghost" size="l" icon="info" to="/fairness" class="max-sm:h-10 max-sm:px-3">{{ $t('hero.howItWorks') }}</UiButton>
+    </template>
+  </BannerBleed>
 </template>
-
-<style scoped>
-/* the light: brand red → orange → gold → orange → wine across the band, a white-hot middle, masked to an arc that hangs
-   from the top and fades out on an eased curve (no edge anywhere) */
-.kd-glow {
-  background:
-    radial-gradient(ellipse 36% 40% at 50% 8%, rgb(255 240 210 / 0.22), transparent 70%),
-    linear-gradient(100deg, #5e1307, #e5401a 26%, #ff8a1f 48%, #ffc04a 58%, #ff6a1a 74%, #6e1236);
-  opacity: 0.62;
-  mask-image: radial-gradient(
-    ellipse 80% 100% at 50% 0%,
-    #000 0%,
-    rgb(0 0 0 / 1) 20%,
-    rgb(0 0 0 / 0.966) 28%,
-    rgb(0 0 0 / 0.869) 36%,
-    rgb(0 0 0 / 0.724) 44%,
-    rgb(0 0 0 / 0.552) 52%,
-    rgb(0 0 0 / 0.379) 60%,
-    rgb(0 0 0 / 0.226) 68%,
-    rgb(0 0 0 / 0.11) 76%,
-    rgb(0 0 0 / 0.037) 84%,
-    rgb(0 0 0 / 0.006) 92%,
-    rgb(0 0 0 / 0) 100%
-  );
-}
-/* phones: a narrow screen needs a wider arc to reach its sides */
-@media (max-width: 639px) {
-  .kd-glow {
-    mask-size: 190% 100%;
-    mask-position: 50% 0;
-    mask-repeat: no-repeat;
-  }
-}
-</style>

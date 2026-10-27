@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { DailyStep, InventoryItem, OpenCaseResponse, RankStep, SellResponse } from '#shared/types/api'
-import type { StageLayer, StageLoot } from '~/components/banner/Stage.vue'
 
 /*
  * Bonuses: the welcome cases (three free opens for signing up), then the level program — a rank every 10 levels and
@@ -9,9 +8,9 @@ import type { StageLayer, StageLoot } from '~/components/banner/Stage.vue'
  *   Level case — one for every new level, worth more each level, a big one on every new rank;
  *   Rakeback — a share of the house edge on every bet, higher every rank, claimed any time.
  * Promo code — one field. Every free case opens on the same reel as paid cases.
- * The page opens with a banner, like the home page and Provably Fair (no page bar): the chicken with a gift on the
- * BannerStage and the one thing on offer now — the welcome cases, the daily case, or when the next one comes —
- * with its button. Under it the level (what it is, how far the next one is, what it does for the daily case) and the
+ * The page opens with the full-width banner, like the home page and Provably Fair (BannerBleed, gold, no page bar):
+ * KURWADROP's chicken among the crates and the one thing on offer now — the welcome cases, the daily case, or when
+ * the next one comes — with its button. Under it the level (what it is, how far the next one is, what it does for the daily case) and the
  * promo code side by side; then the free case on the reel the full width, and everything it holds.
  */
 useHead({ title: 'Bonuses · KurwaDROP' })
@@ -140,8 +139,6 @@ const chance = (tickets: number) => {
 }
 
 // --- Banner -----------------------------------------------------------------------------------------------------
-const { onMove, onLeave, vars } = usePointerTilt()
-const stage = useTemplateRef<{ burst: () => void }>('stage')
 const reelEl = useTemplateRef<HTMLElement>('reelEl')
 const promoEl = useTemplateRef<HTMLElement>('promoEl')
 /** What the banner offers: the welcome cases first, then the daily case, else when it comes */
@@ -160,70 +157,23 @@ function openFromBanner() {
 }
 const toPromo = () => promoEl.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
-const MASCOT: StageLayer = { src: '/img/hero/bonus-chicken.webp', x: 250, y: 20, w: 290, d: 0.6 }
-// the skins this free case really holds, then gifts and coins
-const loot = computed<StageLoot[]>(() => {
-  const skins = (freeCase.value?.items ?? []).slice(0, 3)
-  const SKIN_AT = [
-    { x: 40, y: 40, w: 170, r: -18, d: 1.3, bx: -28, by: -16 },
-    { x: 10, y: 220, w: 150, r: 12, d: 1.6, bx: -30, by: 12 },
-    { x: 470, y: 250, w: 140, r: -10, d: 1.4, bx: 28, by: 12 },
-  ]
-  return [
-    ...skins.map((it, i) => ({ src: it.image, ...SKIN_AT[i]! })),
-    { src: '/img/hero/bonus-gift.webp', x: 180, y: 290, w: 84, r: -12, d: 1.8, bx: -18, by: 14 },
-    { src: '/img/hero/bonus-gift.webp', x: 520, y: 40, w: 64, r: 16, d: 2, bx: 20, by: -14 },
-    { src: '/img/coins/coin.webp', x: 200, y: 150, w: 44, r: -24, d: 1.9, bx: -20, by: -10 },
-    { src: '/img/coins/coin.webp', x: 560, y: 180, w: 36, r: 20, d: 2.1, bx: 22, by: -6 },
-    { src: '/img/coins/coin.webp', x: 120, y: 340, w: 40, r: 30, d: 1.7, bx: -16, by: 14 },
-  ]
-})
-const pokes = ref(0)
-function onPoke(n: number) {
-  pokes.value = Math.min(n, 5)
-  if (n === 5) stage.value?.burst()
-}
-const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke${pokes.value}`))
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
-    <!-- no page bar: the banner opens the page, like the home page's and Provably Fair's -->
-    <section
-      class="relative isolate flex min-h-80 flex-col overflow-hidden rounded-5xl px-5 pt-6 pb-6 lg:h-80 lg:min-h-0 lg:overflow-visible lg:rounded-[32px] lg:p-10"
-      :style="vars"
-      @pointermove="onMove"
-      @pointerleave="onLeave"
-    >
-      <!-- the ground: near-black, a pool of gold light where the gift opens -->
-      <span class="kd-bonus-ground pointer-events-none absolute inset-0 -z-10 rounded-[inherit]" aria-hidden="true" />
-      <div class="relative -mx-5 -mt-6 mb-2 h-44 sm:absolute sm:inset-y-0 sm:right-0 sm:m-0 sm:h-auto sm:w-[50%] lg:w-[620px]">
-        <BannerStage
-          ref="stage"
-          :mascot="MASCOT"
-          :loot="loot"
-          :bubble="$t(bubble)"
-          :bubble-at="{ x: 470, y: 10 }"
-          :poke-label="$t('bonus.pokeLabel')"
-          @poke="onPoke"
-        />
-      </div>
-      <div class="relative z-10 flex flex-col justify-between gap-5 sm:max-w-[52%] lg:justify-center lg:gap-10 lg:h-full lg:w-[600px] lg:max-w-none">
-        <div class="flex flex-col gap-2">
-          <p class="type-12-caps lg:type-16-caps text-coin lg:font-bold">{{ $t('bonus.title') }}</p>
-          <h1 class="text-[28px] leading-8 font-extrabold uppercase tabular-nums lg:type-48-caps">{{ offer.title }}</h1>
-          <p class="type-14-regular text-neutral-13 lg:type-16-medium">{{ offer.text }}</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <UiButton v-if="!session.user" size="l" icon="sign-in" class="max-sm:h-10 max-sm:px-4" @click="ui.openSignIn()">{{ $t('auth.signInToPlay') }}</UiButton>
-          <UiButton v-else-if="freeReady" size="l" icon="bonuses" class="max-sm:h-10 max-sm:px-4" :loading="phase === 'spinning'" @click="openFromBanner">
-            {{ source === 'welcome' && welcome ? $t('welcome.openFree', { n: welcome.left }) : $t('bonus.openFree') }}
-          </UiButton>
-          <!-- phones: a short word, so the icon is never alone -->
-          <UiButton v-if="session.user" variant="ghost" size="l" icon="sparkle" class="max-sm:h-10 max-sm:px-3" @click="toPromo"><span class="sm:hidden">{{ $t('bonus.promoShort') }}</span><span class="max-sm:hidden">{{ $t('bonus.promo') }}</span></UiButton>
-        </div>
-      </div>
-    </section>
+  <div>
+    <!-- no page bar: the banner opens the page, full width like the home page's and Provably Fair's -->
+    <BannerBleed glow="gold" :eyebrow="$t('bonus.title')" :title="offer.title" :text="offer.text">
+      <template #art><HomeHeroHen /></template>
+      <template #actions>
+        <UiButton v-if="!session.user" size="l" icon="sign-in" class="max-sm:h-10 max-sm:px-4" @click="ui.openSignIn()">{{ $t('auth.signInToPlay') }}</UiButton>
+        <UiButton v-else-if="freeReady" size="l" icon="bonuses" class="max-sm:h-10 max-sm:px-4" :loading="phase === 'spinning'" @click="openFromBanner">
+          {{ source === 'welcome' && welcome ? $t('welcome.openFree', { n: welcome.left }) : $t('bonus.openFree') }}
+        </UiButton>
+        <!-- phones: a short word, so the icon is never alone -->
+        <UiButton v-if="session.user" variant="ghost" size="l" icon="sparkle" class="max-sm:h-10 max-sm:px-3" @click="toPromo"><span class="sm:hidden">{{ $t('bonus.promoShort') }}</span><span class="max-sm:hidden">{{ $t('bonus.promo') }}</span></UiButton>
+      </template>
+    </BannerBleed>
+  <div class="mx-auto flex max-w-content flex-col gap-6 px-4 lg:gap-10 lg:px-0">
 
     <!-- Guests: what signing in starts — the daily case's ladder, standing on its first step -->
     <section v-if="!session.user && preview?.ladder?.length" class="flex flex-col gap-4 rounded-5xl bg-neutral-2 p-5">
@@ -360,6 +310,7 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
       <span class="kd-skeleton h-[278px] rounded-5xl lg:col-span-2" />
     </div>
   </div>
+  </div>
 </template>
 
 <style scoped>
@@ -382,11 +333,5 @@ const bubble = computed(() => (pokes.value >= 5 ? 'bonus.pokeDone' : `bonus.poke
 }
 .kd-tier-leave-active {
   display: none;
-}
-.kd-bonus-ground {
-  background:
-    radial-gradient(55% 90% at 74% 55%, rgb(255 170 40 / 0.34), transparent 70%),
-    radial-gradient(40% 60% at 66% 100%, rgb(255 210 110 / 0.2), transparent 70%),
-    linear-gradient(110deg, var(--color-neutral-2) 30%, #2a1d07 100%);
 }
 </style>
