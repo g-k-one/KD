@@ -23,7 +23,8 @@ const ok = ref(false)
 
 const VIEW_H = 560 // skeleton units shown top to bottom (the hen is ~450 tall)
 const CENTER_Y = 28 // the hen's middle in skeleton units
-const PUPIL = 13 // how far a pupil may slide from its rest, skeleton units
+// how far each pupil may slide from its rest, skeleton units: the near eye is big, the far one (eyeR) small
+const PUPIL = { eyeL: 13, eyeR: 5 }
 const MAX_PX = 1400
 
 let stop = () => {}
@@ -131,13 +132,14 @@ onMounted(async () => {
     // the head turns a little toward what it looks at
     B.head.pose.rotation += Math.max(-7, Math.min(7, -look.x / 60)) + Math.max(-5, Math.min(5, (look.y - CENTER_Y - 120) / 70))
     sk.updateWorldTransform(spine.Physics.update)
-    // each pupil slides from its rest toward the look point, never further than PUPIL
+    // each pupil slides from its rest toward the look point, never out of its eye
     for (const [eye, pup] of B.eyes) {
+      const max = PUPIL[eye.data.name as keyof typeof PUPIL]
       const p = pup.appliedPose
       const dx = look.x - p.worldX
       const dy = look.y - p.worldY
       const len = Math.hypot(dx, dy) || 1
-      const s = Math.min(PUPIL, len * 0.06) / len
+      const s = Math.min(max, len * 0.06) / len
       v.set(p.worldX + dx * s, p.worldY + dy * s)
       eye.appliedPose.worldToLocal(v)
       pup.pose.x = v.x
