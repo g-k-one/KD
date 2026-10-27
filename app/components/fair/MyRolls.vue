@@ -17,6 +17,7 @@ const emit = defineEmits<{
 
 const session = useSessionStore()
 const ui = useUiStore()
+const isLg = useMediaQuery('(min-width: 1024px)')
 const entries = ref<HistoryEntry[]>([])
 const loaded = ref(false)
 async function load() {
@@ -81,32 +82,33 @@ watch(
 <template>
   <section id="rolls" class="relative z-10 flex scroll-mt-24 flex-col gap-3">
     <!-- relative z-10: the rolls lie over the banner's magnifier when it drifts down past the banner -->
-    <!-- one line: the title, how many rolls are still sealed (the why on hover), and on the right the way to open them and
-         the full history; the table and its Check buttons say the rest -->
-    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-      <h2 class="type-20-caps">{{ $t('fair.myRolls') }}</h2>
-      <span v-if="session.user && rows.length && sealed" class="type-12-caps flex h-6 items-center gap-1 rounded-md bg-success-24 px-2 text-success" :title="$t('fair.sealedHint')">
-        <UiIcon name="lock" :size="12" />{{ $t('fair.sealedChip', { n: sealed }, sealed) }}
-      </span>
-      <span class="ml-auto flex items-center gap-4">
-        <UiButton v-if="session.user && rows.length && sealed" variant="fair" size="s" icon="refresh" :loading="rotating" @click="emit('rotate')">{{ $t('fair.rotateReveal') }}</UiButton>
-        <NuxtLink v-if="rows.length" to="/profile?tab=history" class="type-12-caps flex shrink-0 items-center gap-0.5 text-neutral-11 hover:text-neutral-15">
-          {{ $t('fair.allHistory') }}<UiIcon name="chevron-right" :size="14" />
-        </NuxtLink>
-      </span>
-    </div>
+    <!-- one card, as the profile's game history: a header line (the icon and the name, a chip with how many rolls are
+         still sealed — the why on hover; on the right the way to open them and the full history), then the table -->
+    <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2 lg:pb-4">
+      <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
+        <UiIcon name="shield-check" :size="24" class="shrink-0 text-neutral-13" />
+        <span class="type-14 lg:type-16-medium">{{ $t('fair.myRolls') }}</span>
+        <span v-if="session.user && rows.length && sealed" class="type-12-caps flex h-6 shrink-0 items-center gap-1 rounded-md bg-success-24 px-2 text-success" :title="$t('fair.sealedHint')">
+          <UiIcon name="lock" :size="12" />{{ $t('fair.sealedChip', { n: sealed }, sealed) }}
+        </span>
+        <span class="ml-auto flex shrink-0 items-center gap-2">
+          <UiButton v-if="session.user && rows.length && sealed" variant="fair" :size="isLg ? 'm' : 's'" icon="refresh" :loading="rotating" @click="emit('rotate')">
+            <span class="max-sm:hidden">{{ $t('fair.rotateReveal') }}</span><span class="sm:hidden">{{ $t('fair.reveal') }}</span>
+          </UiButton>
+          <UiButton v-if="rows.length" variant="ghost" :size="isLg ? 'm' : 's'" icon-right="chevron-right" to="/profile?tab=history" class="max-sm:hidden">{{ $t('fair.allHistory') }}</UiButton>
+        </span>
+      </div>
 
-    <UiEmptyState v-if="!session.user" :text="$t('fair.signInRolls')">
-      <UiButton icon="sign-in" @click="ui.openSignIn()">{{ $t('auth.signIn') }}</UiButton>
-    </UiEmptyState>
-    <!-- the rolls on their way: the table's place -->
-    <span v-else-if="!loaded" class="kd-skeleton h-[198px] rounded-5xl lg:h-60" aria-hidden="true" />
-    <UiEmptyState v-else-if="!rows.length" :text="$t('fair.noRollsYet')">
-      <UiButton to="/" icon="cases">{{ $t('account.openCases') }}</UiButton>
-    </UiEmptyState>
-    <template v-else-if="rows.length">
+      <UiEmptyState v-if="!session.user" :text="$t('fair.signInRolls')" class="m-3 lg:m-4 lg:mb-0">
+        <UiButton icon="sign-in" @click="ui.openSignIn()">{{ $t('auth.signIn') }}</UiButton>
+      </UiEmptyState>
+      <!-- the rolls on their way: the table's place -->
+      <span v-else-if="!loaded" class="kd-skeleton m-3 h-[180px] rounded-3xl lg:m-4 lg:mb-0 lg:h-52" aria-hidden="true" />
+      <UiEmptyState v-else-if="!rows.length" :text="$t('fair.noRollsYet')" class="m-3 lg:m-4 lg:mb-0">
+        <UiButton to="/" icon="cases">{{ $t('account.openCases') }}</UiButton>
+      </UiEmptyState>
       <!-- the profile's history table, with the roll's number; a revealed roll checks in place -->
-      <div ref="list" class="rounded-5xl bg-neutral-2 px-1 py-2 lg:px-3">
+      <div v-else ref="list" class="px-1 pb-2 lg:px-3">
         <HistoryTable
           roll
           :entries="rows.map((r) => r.e)"
@@ -116,6 +118,6 @@ watch(
           @pick="(e) => verify(rows.find((r) => r.e.id === e.id)!)"
         />
       </div>
-    </template>
+    </div>
   </section>
 </template>
