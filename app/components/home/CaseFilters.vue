@@ -43,8 +43,8 @@ function reset() {
 </script>
 
 <template>
-  <!-- concentric corners: 8px controls + 8px padding = 16px (rounded-3xl) -->
-  <div class="kd-filters flex items-center gap-2 rounded-3xl bg-neutral-2 p-2">
+  <!-- phones: 40 px controls, 8 in; desktop: the PvP and case docks' 48 px controls with 12 px corners, 12 in (24 around) -->
+  <div class="kd-filters flex items-center gap-2 rounded-3xl bg-neutral-2 p-2 lg:p-3">
     <!-- Search: the row's flexible part on phones, a fixed field after the dropdowns on desktop -->
     <UiInput v-model="query" icon="search" clearable inputmode="search" :placeholder="$t('filters.search')" class="kd-fsearch min-w-0 flex-1 lg:order-2 lg:w-56 lg:flex-none" />
     <!-- Phones: "fits my balance" one tap away (players only), the rest behind the filters icon -->
@@ -77,11 +77,11 @@ function reset() {
         </template>
       </UiSelect>
       <!-- a switch is a chip (the case page's Fast), not a field: the fields are the selects and the search -->
-      <UiChip size="m" icon="wallet" :active="affordable" :disabled="!session.user" class="normal-case" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
+      <UiChip size="m" icon="wallet" :active="affordable" :disabled="!session.user" class="normal-case lg:!h-12 lg:!rounded-xl lg:px-4" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
     </div>
     <Transition name="kd-reset">
       <!-- Reset is an action: a quiet ghost button, the row's height (the same in the PvP dock) -->
-      <UiButton v-if="dirty" variant="ghost" size="m" icon="refresh" class="shrink-0 max-lg:hidden lg:order-1" @click="reset">{{ $t('filters.reset') }}</UiButton>
+      <UiButton v-if="dirty" variant="ghost" size="m" icon="refresh" class="shrink-0 max-lg:hidden lg:order-1 lg:!h-12 lg:!rounded-xl" @click="reset">{{ $t('filters.reset') }}</UiButton>
     </Transition>
     <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:order-3 lg:w-48">
       <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
@@ -135,6 +135,18 @@ function reset() {
   :deep(.kd-sort > button .type-14),
   :deep(.kd-sort > button > :last-child) {
     display: none;
+  }
+}
+/* desktop: the search and the selects at 48 px, 12 px corners (the docks' controls) */
+@media (min-width: 64rem) {
+  .kd-fsearch {
+    height: 48px;
+    border-radius: 12px;
+  }
+  :deep(.kd-fsel > button),
+  :deep(.kd-sort > button) {
+    height: 48px;
+    border-radius: 12px;
   }
 }
 .kd-reset-enter-active,
