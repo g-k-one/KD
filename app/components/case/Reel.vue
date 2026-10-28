@@ -115,14 +115,14 @@ const compact = computed(() => grid.value && rows.value > 1)
 const cardH = computed(() => (compact.value ? 76 : isMobile.value ? 150 : 200))
 /** Length of one vertical reel window: a grid cell on phones (minus its 2px frame), the whole reel on desktop. */
 const cellLen = computed(() => (grid.value ? rowH.value - 4 : rootH.value))
-/** Centres an incomplete last row (x5 → 3 + 2) on a doubled column track. */
+/** Centres an incomplete row on a doubled column track and puts it on top (x5 → 2 + 3): the wider row is the base, and
+ *  the top centre — Try free's spot — falls on the gap between two cells instead of on a drop. */
 function cellStyle(i: number) {
   if (!grid.value) return {}
   const c = cols.value
-  const lastRowStart = (rows.value - 1) * c
-  const inLast = props.count - lastRowStart
-  const start = i >= lastRowStart && inLast < c ? (i - lastRowStart) * 2 + (c - inLast) + 1 : (i % c) * 2 + 1
-  return { gridColumn: `${start} / span 2` }
+  const short = props.count % c
+  if (short && i < short) return { gridColumn: `${i * 2 + (c - short) + 1} / span 2` }
+  return { gridColumn: `${((short ? i - short : i) % c) * 2 + 1} / span 2` }
 }
 
 // Filler follows the case's real odds; the winning item itself comes from the server roll.
@@ -721,12 +721,12 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
          once on the next spin -->
     <Transition name="kd-idle">
       <div v-if="tryFree && phase === 'idle' && !breathing" class="absolute inset-x-0 z-10 flex justify-center" :class="grid ? 'top-3' : 'top-2'">
-        <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage -translate-x-3" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
+        <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
       </div>
     </Transition>
     <Transition name="kd-result">
       <div v-if="tryFree && demo && results.length && (phase === 'result' || (!kurwaCols.length && results.every((_, c) => landed[c])))" class="absolute inset-x-0 z-10 flex justify-center" :class="grid ? 'top-3' : 'top-2'">
-        <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage -translate-x-3" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
+        <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
       </div>
     </Transition>
 
