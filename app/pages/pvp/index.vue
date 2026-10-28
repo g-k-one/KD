@@ -65,7 +65,8 @@ const isPhone = computed(() => mounted.value && phoneQuery.value)
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-5 px-4 pt-4 lg:gap-8 lg:px-0 lg:pt-10">
-    <UiPageBar logo :left="barLeft" :right="barRight" />
+    <!-- phones: 16 px down to the content, as under the case page's bar -->
+    <UiPageBar logo :left="barLeft" :right="barRight" class="max-lg:-mb-1" />
 
     <!-- How it works: a battle in four plain steps, as the upgrade explains itself -->
     <UiModal v-model="howOpen" :title="$t('pvp.howTitle')" :width="520">

@@ -373,7 +373,8 @@ async function runUpgrade() {
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
     <!-- the logo in the middle, as on the case page: players record short videos of this screen -->
-    <UiPageBar logo :left="barLeft" :right="barRight" />
+    <!-- phones: 16 px down to the content, as under the case page's bar -->
+    <UiPageBar logo :left="barLeft" :right="barRight" class="max-lg:-mb-2" />
 
     <!-- How it works: an upgrade in four plain steps, with the real numbers it plays by -->
     <UiModal v-model="howOpen" :title="$t('upgrade.howTitle')" :width="520">
@@ -456,6 +457,11 @@ async function runUpgrade() {
       </div>
 
       <div class="relative z-[26] flex flex-col items-center max-lg:order-3 max-lg:col-span-2 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+        <!-- Phones: Reset and Fast in the dial's top corners, clear of its ring -->
+        <div class="pointer-events-none absolute inset-x-0 top-0 z-[4] flex justify-between lg:hidden">
+          <UiChip size="m" icon="refresh" class="pointer-events-auto" :disabled="state === 'spinning' || !(inputValue || target)" @click="resetAll">{{ $t('upgrade.reset') }}</UiChip>
+          <UiChip size="m" tone="coin" icon="fast" class="pointer-events-auto" :active="fast" @click="fast = !fast">{{ $t('upgrade.fast') }}</UiChip>
+        </div>
         <!-- Forge layer behind the dial, wider than it so rings and sparks have room -->
         <div ref="fxHost" class="pointer-events-none absolute -inset-x-10 -inset-y-10 lg:-inset-20" />
         <div ref="fxDial" class="pointer-events-none absolute top-0 left-1/2 aspect-square w-full max-w-[216px] -translate-x-1/2 lg:-top-3 lg:max-w-80" />
@@ -493,7 +499,7 @@ async function runUpgrade() {
           <UiTextSwap :text="target.skin" class="type-10-caps max-w-full truncate" :style="{ color: RARITY_COLOR[target.rarity] }" />
         </template>
         <template v-else>
-          <span class="kd-mini-plus"><UiIcon name="target-up" :size="28" class="kd-ico-target" /></span>
+          <span class="kd-mini-plus"><UiIcon name="plus" :size="24" /></span>
           <span class="type-14 text-neutral-15">{{ $t('upgrade.pickTarget') }}</span>
           <span class="type-12-regular -mt-1 text-neutral-11">{{ $t('upgrade.pickTargetHint') }}</span>
         </template>
@@ -740,7 +746,7 @@ async function runUpgrade() {
     background-color var(--dur-base) var(--ease-out),
     color var(--dur-base) var(--ease-out);
 }
-/* The next step: a soft brand glow breathing around the card, the plus lit */
+/* The next step: a soft brand glow breathing around the card, the plus lit (the same circle, only tinted) */
 .kd-mini.is-next {
   background: linear-gradient(180deg, rgb(255 95 31 / 0.1), var(--color-neutral-2) 70%);
   box-shadow: inset 0 0 0 1px rgb(255 95 31 / 0.16);
@@ -756,8 +762,8 @@ async function runUpgrade() {
   animation: kd-glow-pulse 2.2s ease-in-out infinite;
 }
 .kd-mini.is-next .kd-mini-plus {
-  background: var(--color-brand-base);
-  color: var(--color-neutral-1);
+  background: rgb(255 95 31 / 0.16);
+  color: var(--color-brand-light);
 }
 /* While the dial turns the pieces float in place */
 .kd-mini.is-spinning .kd-mini-art {
@@ -768,8 +774,8 @@ async function runUpgrade() {
     translate: 0 -3px;
   }
 }
-/* Won: the stake is spent (slides towards the target and fades), the target card washes green and
-   pops; lost: everything goes grey and sinks */
+/* Won: the stake is spent (slides towards the target and fades), the target pops (no green wash, as on desktop);
+   lost: everything goes grey and sinks */
 .kd-mini:not(.kd-mini-target).is-win .kd-mini-art {
   animation: kd-mini-spent 650ms var(--ease-in) both;
 }
@@ -779,9 +785,6 @@ async function runUpgrade() {
     scale: 0.7;
     opacity: 0;
   }
-}
-.kd-mini-target.is-win {
-  background: linear-gradient(180deg, rgb(18 183 106 / 0.22), var(--color-neutral-2) 80%);
 }
 .kd-mini-target.is-win .kd-mini-art {
   animation: kd-mini-pop 700ms var(--ease-spring) both;

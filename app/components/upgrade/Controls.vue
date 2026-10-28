@@ -168,7 +168,8 @@ const canReset = computed(() => !!(props.input || props.target))
 
 <template>
   <section class="kd-controls grid grid-cols-[minmax(0,1fr)] gap-2" :class="busy && 'is-busy'">
-    <!-- CTA, then Reset · Fast as two equal chips under it (the case page's dock has the same block) -->
+    <!-- CTA, then Reset · Fast as two equal chips under it (the case page's dock has the same block). Phones: the two
+         sit in the dial's top corners instead (the page), so the dock is the button alone -->
     <div v-if="is('cta')" class="flex flex-wrap gap-2" :class="part !== 'cta' && 'kd-cta-dock max-lg:order-last'">
       <UiButton size="l" class="kd-cta h-12 min-w-0 basis-full lg:h-14" :variant="busy || idle ? 'secondary' : 'primary'" :loading="pending" @click="onCta">
         <template v-if="offerAgain && again">
@@ -194,10 +195,10 @@ const canReset = computed(() => !!(props.input || props.target))
         </template>
         <span v-else>{{ $t('auth.signInToPlay') }}</span>
       </UiButton>
-      <UiChip size="m" icon="refresh" class="kd-tool" :disabled="busy || !canReset" @click="emit('reset')">
+      <UiChip size="m" icon="refresh" class="kd-tool max-lg:hidden" :disabled="busy || !canReset" @click="emit('reset')">
         <span class="truncate">{{ $t('upgrade.reset') }}</span>
       </UiChip>
-      <UiChip size="m" tone="coin" icon="fast" class="kd-tool" :active="fast" @click="fast = !fast">
+      <UiChip size="m" tone="coin" icon="fast" class="kd-tool max-lg:hidden" :active="fast" @click="fast = !fast">
         <span class="truncate">{{ $t('upgrade.fast') }}</span>
       </UiChip>
     </div>
