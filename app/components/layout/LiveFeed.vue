@@ -45,10 +45,27 @@ provideForge(root)
 
 // Hover card
 const hover = ref<{ d: FeedDrop; x: number; y: number } | null>(null)
+function place(d: FeedDrop, el: HTMLElement) {
+  const r = el.getBoundingClientRect()
+  hover.value = { d, x: Math.min(window.innerWidth - 160, Math.max(160, r.left + r.width / 2)), y: r.bottom + 8 }
+}
 function show(d: FeedDrop, e: MouseEvent) {
   if (!isLg.value) return
-  const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
-  hover.value = { d, x: Math.min(window.innerWidth - 160, Math.max(160, r.left + r.width / 2)), y: r.bottom + 8 }
+  place(d, e.currentTarget as HTMLElement)
+}
+// Touch: the first tap on a tile shows its card, a second tap on the same tile opens where it dropped; a tap anywhere
+// else or a scroll puts the card away
+function onTap(d: FeedDrop, e: MouseEvent) {
+  if (isLg.value || hover.value?.d.id === d.id) return
+  e.preventDefault()
+  place(d, e.currentTarget as HTMLElement)
+}
+if (import.meta.client) {
+  useEventListener(document, 'pointerdown', (e) => {
+    if (isLg.value || !hover.value) return
+    if (!(e.target as HTMLElement).closest?.('.kd-feed-tile, .kd-feed-hl')) hover.value = null
+  })
+  useEventListener(window, 'scroll', () => !isLg.value && (hover.value = null), { passive: true })
 }
 
 </script>
@@ -118,7 +135,7 @@ function show(d: FeedDrop, e: MouseEvent) {
     </template>
 
     <!-- Drops strip -->
-    <div v-else class="scrollbar-none relative flex min-w-0 flex-1 gap-0.5 overflow-x-auto mask-r-from-90% lg:mask-none" @mouseenter="pause" @mouseleave="resume">
+    <div v-else class="scrollbar-none relative flex min-w-0 flex-1 gap-0.5 overflow-x-auto rounded-lg mask-r-from-90% lg:mask-none" @mouseenter="pause" @mouseleave="resume">
       <TransitionGroup
         enter-from-class="opacity-0 -translate-x-4"
         enter-active-class="transition duration-300"
@@ -132,14 +149,18 @@ function show(d: FeedDrop, e: MouseEvent) {
           :aria-label="$t('feed.dropBy', { item: `${d.itemName} | ${d.skinName}`, user: d.userNickname })"
           @mouseenter="show(d, $event)"
           @mouseleave="hover = null"
+          @click.capture="onTap(d, $event)"
         >
           <ItemArt :image="d.image" :rarity="d.rarity" :size="isLg ? 56 : 40" class="w-full" />
+          <!-- along the bottom, 5 px in (the tile's 1 px border + 4) on one line: the source on the left, Top's × on the right -->
+          <span class="absolute inset-x-1 bottom-1 z-[2] flex items-center justify-between">
           <!-- not a case drop: a solid mark for the source (upgrade, PvP; src-*.svg, drawn for it) in the bottom left corner, white at half strength
                over the skin, no plate, no shadow; 5 px from the tile's edge (its 1 px border + 4) on both sides -->
-          <span v-if="sourceOf(d.caseSlug) !== 'case'" class="kd-feed-src absolute bottom-1 left-1 z-[2] text-white/50" :title="$t(`nav.${sourceOf(d.caseSlug)}`)">
-            <UiIcon :name="`src-${sourceOf(d.caseSlug)}`" :size="isLg ? 14 : 12" />
+            <span class="kd-feed-src grid h-4 place-items-center text-white/50" :title="sourceOf(d.caseSlug) !== 'case' ? $t(`nav.${sourceOf(d.caseSlug)}`) : undefined">
+              <UiIcon v-if="sourceOf(d.caseSlug) !== 'case'" :name="`src-${sourceOf(d.caseSlug)}`" :size="isLg ? 14 : 12" />
+            </span>
+            <span v-if="mode === 'top'" class="type-10-caps flex h-4 items-center rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
           </span>
-          <span v-if="mode === 'top'" class="type-10-caps absolute right-1 bottom-1 rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
         </NuxtLink>
       </TransitionGroup>
     </div>

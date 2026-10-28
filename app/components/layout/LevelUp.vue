@@ -8,6 +8,7 @@
  *   A thin bar runs down the time left; hovering holds it. Light: our kdReveal in gold behind the badge.
  */
 const session = useSessionStore()
+const settingsStore = useSettingsStore()
 const sfx = useSfx()
 const haptics = useHaptics()
 const fx = useForge()
@@ -50,6 +51,8 @@ watch(
   () => session.user?.level,
   (lv, before) => {
     if (!import.meta.client || lv == null || before == null || lv <= before) return
+    // the player turned the plate off in the settings
+    if (!settingsStore.settings.levelUpPopup) return
     from.value = before
     shown.value = lv
     turned.value = false

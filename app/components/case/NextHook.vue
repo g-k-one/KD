@@ -87,7 +87,7 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
           <span class="type-12-caps flex items-center gap-1.5 text-neutral-11"><UiIcon name="trophy" :size="14" class="text-coin" />{{ $t('case.topDrops') }}</span>
           <span class="type-12-regular text-neutral-11">{{ $t('case.topDropsWindow') }}</span>
         </span>
-        <div class="scrollbar-none flex min-w-0 flex-1 gap-1.5 overflow-x-auto max-sm:-mr-2 max-sm:pr-2 mask-r-from-85% sm:mask-none">
+        <div class="scrollbar-none flex min-w-0 flex-1 gap-1.5 overflow-x-auto rounded-lg mask-r-from-85% sm:mask-none">
           <div v-for="(d, i) in top" :key="i" class="kd-top-drop" :style="{ '--rc': RARITY_COLOR[d.item.rarity], '--i': i }" :title="`${d.item.weapon} | ${d.item.skin} · ${d.nickname} · ${timeAgo(d.at)}`">
             <ItemArt :image="d.item.image" :rarity="d.item.rarity" :size="34" class="w-12 shrink-0" />
             <span class="flex min-w-0 flex-col gap-0.5">
@@ -122,8 +122,14 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
   background: var(--color-neutral-2);
   transition: background-color var(--dur-slow) var(--ease-out);
 }
+/* the top drops: 16 px before the label on desktop; phones hide the label, so the tiles sit 8 px in on both sides */
 .kd-hook-card.kd-top {
   padding: 0 8px 0 16px;
+}
+@media (max-width: 639.98px) {
+  .kd-hook-card.kd-top {
+    padding: 0 8px;
+  }
 }
 /* Desktop: three equal cards across the row. Phones: the upgrade card takes the width, the check is a square */
 @media (width < 64rem) {

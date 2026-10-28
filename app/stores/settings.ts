@@ -8,9 +8,11 @@ interface Settings {
   haptics: boolean
   /** The live drops strip under the header */
   liveFeed: boolean
+  /** The plate that pops up on a new level */
+  levelUpPopup: boolean
 }
 
-const DEFAULTS: Settings = { currency: 'USD', sound: true, volume: 70, streamerMode: false, haptics: true, liveFeed: true }
+const DEFAULTS: Settings = { currency: 'USD', sound: true, volume: 70, streamerMode: false, haptics: true, liveFeed: true, levelUpPopup: true }
 
 // the player's preferences, kept in a cookie (localStorage in the artifact), one shared copy for the whole app
 export const useSettingsStore = sharedStore('settings', () => {

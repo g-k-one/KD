@@ -62,7 +62,7 @@ function onClick(e: MouseEvent) {
     class="kd-bcard kd-spotlight group relative flex min-w-0 flex-col gap-2 rounded-5xl border p-2"
     :class="[`is-${battle.mode}`, battle.status === 'finished' && 'is-finished']"
     @pointermove="onPointerMove"
-    @click="onClick"
+    @click.capture="onClick"
   >
     <!-- the stage: the mode's light on the card, its top line 16 px in, on the button's edges -->
     <div class="kd-bcard-stage relative flex flex-col items-center justify-end" :class="compact ? 'h-44 pb-1' : 'h-60 pb-2'">

@@ -15,11 +15,14 @@ export interface PageBarLink {
 }
 
 /** fixedSides (phones): the link groups take just their icons and the centre takes the rest, so whatever sits at
- *  the centre's ends (e.g. ‹ title ›) stays put from page to page with an even gap to the icons */
+ *  the centre's ends (e.g. ‹ title ›) stays put from page to page with an even gap to the icons. Both sides are as wide
+ *  as the side with more icons, so the centre is the screen's middle even with two icons on one side and one on the other */
 const props = defineProps<{ title?: string; logo?: boolean; subtitle?: string; left?: PageBarLink[]; right?: PageBarLink[]; fixedSides?: boolean }>()
 const { t } = useI18n()
 const route = useRoute()
 const right = computed<PageBarLink[]>(() => props.right ?? (route.path === '/fairness' ? [] : [{ label: t('case.fairness'), icon: 'shield', to: '/fairness' }]))
+// the wider side's icon count: a 36 px icon each and the 4 px gaps between them
+const sideIcons = computed(() => Math.max(props.left?.length ?? 0, right.value.length))
 </script>
 
 <template>
@@ -27,7 +30,8 @@ const right = computed<PageBarLink[]>(() => props.right ?? (route.path === '/fai
     <div v-for="(side, s) in [left, right]" :key="s" class="contents">
       <div
         class="flex min-w-0 flex-1 items-center gap-1 overflow-hidden md:gap-4"
-        :class="[s === 0 ? 'order-1' : 'order-3 justify-end', fixedSides && 'max-md:flex-none']"
+        :class="[s === 0 ? 'order-1' : 'order-3 justify-end', fixedSides && 'kd-bar-side max-md:flex-none']"
+        :style="fixedSides ? { '--n': sideIcons } : undefined"
       >
         <template v-for="(l, i) in side" :key="l.label">
           <span v-if="i" class="hidden h-5 w-px bg-neutral-5 md:block" />
@@ -69,3 +73,11 @@ const right = computed<PageBarLink[]>(() => props.right ?? (route.path === '/fai
     </div>
   </div>
 </template>
+
+<style scoped>
+@media (max-width: 47.999rem) {
+  .kd-bar-side {
+    width: calc(var(--n) * 36px + (var(--n) - 1) * 4px);
+  }
+}
+</style>

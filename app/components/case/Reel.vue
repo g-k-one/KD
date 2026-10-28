@@ -561,7 +561,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
         v-for="(strip, col) in strips"
         :key="`${count}-${col}`"
         class="kd-cell relative h-full overflow-hidden [contain:layout_paint]"
-        :class="[grid ? 'is-framed rounded-3xl' : { 'border-l border-neutral-5': col > 0 }, tense[col] && 'is-tense']"
+        :class="[grid ? 'is-framed rounded-3xl' : { 'border-l border-neutral-5': col > 0 }, tense[col] && 'is-tense', chickenHit[col] && 'is-kurwa-cell']"
         :style="cellStyle(col)"
       >
         <!-- will-change only while it moves: a resting strip as a layer kept the whole 36-card texture in GPU memory -->
@@ -1121,6 +1121,18 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 }
 .kd-reel.is-kurwa .kd-marker-gold {
   opacity: 1;
+}
+/* the phone grid: only the cell the chicken landed in goes gold (its arrows and its frame), not every cell */
+.kd-reel.is-grid.is-kurwa .kd-marker-gold {
+  opacity: 0;
+}
+.kd-reel.is-grid .kd-cell.is-kurwa-cell .kd-marker-gold {
+  opacity: 1;
+}
+.kd-reel.is-grid .kd-cell.is-framed.is-kurwa-cell {
+  background:
+    linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
+    linear-gradient(var(--color-item-gold), var(--color-item-gold)) border-box;
 }
 .kd-reel.is-shaking {
   animation: kd-shake 520ms var(--ease-out);

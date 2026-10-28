@@ -71,7 +71,9 @@
     "haptics": "Vibration",
     "hapticsHint": "A short buzz on drops and wins. Android only.",
     "liveFeed": "Live drops",
-    "liveFeedHint": "The strip of everyone's latest drops under the header."
+    "liveFeedHint": "The strip of everyone's latest drops under the header.",
+    "levelUp": "Level-up pop-up",
+    "levelUpHint": "The plate that shows when you reach a new level. Off: the level still grows, quietly."
   },
   "feed": {
     "live": "Live",
