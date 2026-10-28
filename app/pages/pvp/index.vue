@@ -27,27 +27,21 @@ const { data, refresh } = req
 useIntervalFn(() => document.visibilityState === 'visible' && refresh(), 3000)
 
 // The lobby, skin.club's: the home page's filter plate (Create PvP at its end), then the battle list — open seats
-// first, then what is live, then what just ended. Filters: mode, players, "fits my balance" (seats the player can pay
-// for), sort by price.
+// first, then what is live, then what just ended. Filters: mode, "fits my balance" (seats the player can pay for), sort by
+// price — no players filter (the mode and the row's seats say it; the team mode is the only 2v2).
 const session = useSessionStore()
 const mode = ref<'all' | BattleMode>('all')
 const sort = ref<'default' | 'priceDesc' | 'priceAsc'>('default')
 const affordable = ref(false)
-// how many players, as skin.club filters (2v2 is the Team mode, so 4 covers it)
-const players = ref<'any' | '2' | '3' | '4'>('any')
-const playerOptions = computed(() => [{ value: 'any' as const, label: t('pvp.anyPlayers') }, ...(['2', '3', '4'] as const).map((n) => ({ value: n, label: t('pvp.playersN', { n }) }))])
-const dirty = computed(() => mode.value !== 'all' || players.value !== 'any' || affordable.value || sort.value !== 'default')
-const sheet = ref(false)
+const dirty = computed(() => mode.value !== 'all' || affordable.value || sort.value !== 'default')
 function reset() {
   mode.value = 'all'
-  players.value = 'any'
   affordable.value = false
   sort.value = 'default'
 }
 const modeOptions = computed(() => [{ value: 'all' as const, label: t('pvp.anyMode') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`), icon: PVP_MODE_ICON[m], iconColor: PVP_MODE_COLOR[m] }))])
-// desktop: the modes (their icons, the name on hover) and the players as switches in sight, as skin.club's bar
-const modeSeg = computed(() => [{ value: 'all' as const, label: t('pvp.allShort') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, icon: PVP_MODE_ICON[m], title: t(`pvp.modeName.${m}`) }))])
-const playerSeg = computed(() => [{ value: 'any' as const, label: t('pvp.anyShort') }, ...(['2', '3', '4'] as const).map((n) => ({ value: n, label: n, title: t('pvp.playersN', { n }) }))])
+// desktop: the modes as switches in sight, as skin.club's bar
+const modeSeg = computed(() => [{ value: 'all' as const, label: t('pvp.allShort') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`), icon: PVP_MODE_ICON[m] }))])
 // what is going on, one quiet line in the list's header: battles live (none: no "0 live"), people watching
 const liveCount = computed(() => (data.value?.battles ?? []).filter((b) => b.status === 'live').length)
 const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a + (b.viewers ?? 0), 0))
@@ -58,7 +52,6 @@ const sortOptions = computed(() => (['default', 'priceDesc', 'priceAsc'] as cons
 const filtered = computed(() =>
   (data.value?.battles ?? [])
     .filter((b) => mode.value === 'all' || b.mode === mode.value)
-    .filter((b) => players.value === 'any' || b.size === Number(players.value))
     .filter((b) => !affordable.value || (b.status === 'waiting' && b.cost <= (session.user?.balance ?? 0)))
     .sort((a, b) => (sort.value === 'priceDesc' ? b.cost - a.cost : sort.value === 'priceAsc' ? a.cost - b.cost : 0)),
 )
@@ -92,10 +85,9 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
         <UiButton variant="fair" size="s" icon="shield-check" to="/fairness" class="shrink-0" @click="howOpen = false">{{ $t('case.fairness') }}</UiButton>
       </div>
     </UiModal>
-    <!-- The filters, on the home page's plate (components/home/CaseFilters.vue). Desktop: the modes and the players as
-         switches in sight (skin.club's bar), the "fits my balance" switch, Reset when something is set, the sort on the
-         right. Phones: the mode, the wallet one tap away, the filters icon (the players, the switch and the sort in a
-         sheet) and the sort icon -->
+    <!-- The filters, on the home page's plate (components/home/CaseFilters.vue). Desktop: the modes as switches in sight
+         (skin.club's bar), the "fits my balance" switch, Reset when something is set, the sort on the right. Phones: the
+         mode, the wallet one tap away and the sort icon -->
     <!-- the filters' plate and, beside it, Create PvP on its own: the upgrade's CTA (the kit's large button, 56 px on desktop —
          the plate's height; phones: across, under the plate) -->
     <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
@@ -107,11 +99,6 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
       <span class="flex shrink-0 items-center gap-3 max-lg:hidden">
         <span class="type-10-caps text-neutral-11">{{ $t('pvp.mode') }}</span>
         <UiSegmented v-model="mode" :options="modeSeg" size="s" class="kd-seg10" />
-      </span>
-      <span class="kd-rule max-lg:hidden" aria-hidden="true" />
-      <span class="flex shrink-0 items-center gap-3 max-lg:hidden">
-        <span class="type-10-caps text-neutral-11">{{ $t('pvp.players') }}</span>
-        <UiSegmented v-model="players" :options="playerSeg" size="s" class="kd-seg10" />
       </span>
       <span class="kd-rule max-lg:hidden" aria-hidden="true" />
       <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" class="shrink-0 max-lg:hidden" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
@@ -126,39 +113,12 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
       >
         <UiIcon name="wallet" :size="18" />
       </button>
-      <button type="button" :aria-label="$t('filters.title')" class="kd-press relative grid size-10 shrink-0 place-items-center rounded-lg bg-neutral-1 lg:hidden" @click="sheet = true">
-        <UiIcon name="sliders" :size="18" class="text-neutral-12" />
-        <span v-if="players !== 'any'" class="type-10-caps absolute -top-1 -right-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand-base px-1 text-neutral-1">1</span>
-      </button>
       <Transition name="kd-reset">
         <UiButton v-if="dirty" variant="ghost" size="m" icon="refresh" class="max-lg:hidden" @click="reset">{{ $t('filters.reset') }}</UiButton>
       </Transition>
       <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:ml-auto lg:w-48" :active="sort !== 'default'">
         <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
       </UiSelect>
-
-      <UiSheet v-model="sheet" :title="$t('filters.title')">
-        <section class="flex flex-col gap-2">
-          <span class="type-12-caps text-neutral-11">{{ $t('pvp.players') }}</span>
-          <div class="flex flex-wrap gap-1.5">
-            <UiChip v-for="o in playerOptions" :key="o.value" size="m" class="normal-case" :active="players === o.value" @click="players = o.value">{{ o.label }}</UiChip>
-          </div>
-        </section>
-        <label class="flex h-12 items-center gap-3 rounded-xl bg-neutral-3 px-3" :class="!session.user && 'opacity-40'">
-          <UiToggle v-model="affordable" :label="$t('filters.affordable')" :disabled="!session.user" />
-          <span class="type-14">{{ $t('filters.affordable') }}</span>
-        </label>
-        <section class="flex flex-col gap-2">
-          <span class="type-12-caps text-neutral-11">{{ $t('filters.sort') }}</span>
-          <div class="flex flex-wrap gap-1.5">
-            <UiChip v-for="o in sortOptions" :key="o.value" size="m" class="normal-case" :active="sort === o.value" @click="sort = o.value">{{ o.label }}</UiChip>
-          </div>
-        </section>
-        <template #actions>
-          <UiButton variant="secondary" size="l" class="flex-1" :disabled="!dirty" @click="reset">{{ $t('filters.reset') }}</UiButton>
-          <UiButton size="l" class="flex-1" @click="sheet = false">{{ $t('upgrade.done') }}</UiButton>
-        </template>
-      </UiSheet>
     </div>
     <UiButton icon="plus" size="l" to="/pvp/create" class="shrink-0 max-lg:w-full lg:h-14 lg:w-60">{{ $t('pvp.create') }}</UiButton>
     </div>

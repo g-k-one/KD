@@ -633,7 +633,6 @@
     "replay": "Replay",
     "linkCopied": "Replay link copied",
     "anyMode": "Any mode",
-    "anyPlayers": "Any players",
     "battles": "Battles",
     "mode": "Mode",
     "noBattles": "No battles here yet. Start one and call a bot or a friend",
@@ -641,8 +640,6 @@
     "scenario": "Battle scenario",
     "twoVsTwo": "2 vs 2",
     "allShort": "All",
-    "anyShort": "Any",
-    "playersN": "{n} players",
     "wonBy": "{name} won",
     "modeName": {
       "classic": "Classic",

@@ -621,7 +621,7 @@ async function runUpgrade() {
             />
           </template>
         </div>
-        <UiEmptyState v-else :text="$t('upgrade.signInText')" art="guest-upgrade" class="flex-1 justify-center">
+        <UiEmptyState v-else :text="$t('upgrade.signInText')" art="signed-out" class="flex-1 justify-center">
           <UiButton size="l" icon="sign-in" class="w-full max-w-72" @click="ui.openSignIn()">{{ $t('auth.signInToPlay') }}</UiButton>
         </UiEmptyState>
         <UiPager v-if="session.user && invPages > 1" v-model="invPage" :pages="invPages" class="mt-auto h-12 lg:h-10" />
