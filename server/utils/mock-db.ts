@@ -922,13 +922,26 @@ function levelCase(level: number): CaseDetails {
   }
   return cs
 }
-export async function openLevelCase() {
+// A reward is taken before the first await and handed back if the open fails: checked first and marked after the roll,
+// two requests at once both passed the check and the same reward paid out twice
+async function claimed<T>(take: () => () => void, open: () => Promise<T>) {
+  const giveBack = take()
+  try {
+    await ensureSeed()
+    return await open()
+  } catch (e) {
+    giveBack()
+    throw e
+  }
+}
+
+export function openLevelCase() {
   const level = state.levelCases[0]
   if (level == null) throw new MockError(409, 'No level case to open')
-  await ensureSeed()
-  const res = await roll(levelCase(level), 1, false, false, 0)
-  state.levelCases.shift()
-  return res
+  return claimed(
+    () => (state.levelCases.shift(), () => state.levelCases.unshift(level)),
+    () => roll(levelCase(level), 1, false, false, 0),
+  )
 }
 function levelInfo() {
   const rank = rankOf(state.user.level)
@@ -1000,11 +1013,12 @@ function welcomeCase(): CaseDetails {
   return welcomeCache
 }
 
-export async function openWelcome() {
+export function openWelcome() {
   if (state.welcomeLeft <= 0) throw new MockError(409, 'No welcome cases left')
-  await ensureSeed()
-  state.welcomeLeft -= 1
-  return roll(welcomeCase(), 1, false, false, 0)
+  return claimed(
+    () => ((state.welcomeLeft -= 1), () => (state.welcomeLeft += 1)),
+    () => roll(welcomeCase(), 1, false, false, 0),
+  )
 }
 
 /** For guests: the daily case's ladder alone (no contents), so Bonuses can show what signing in starts */
@@ -1020,11 +1034,13 @@ export function getBonuses() {
   }
 }
 
-export async function openDaily() {
+export function openDaily() {
   if (state.dailyAt > Date.now()) throw new MockError(409, 'The daily case is not ready yet')
-  await ensureSeed()
-  state.dailyAt = Date.now() + adminSettings.bonuses.daily.cooldownHours * 3600_000
-  return roll(dailyCase(), 1, false, false, 0)
+  const was = state.dailyAt
+  return claimed(
+    () => ((state.dailyAt = Date.now() + adminSettings.bonuses.daily.cooldownHours * 3600_000), () => (state.dailyAt = was)),
+    () => roll(dailyCase(), 1, false, false, 0),
+  )
 }
 
 // --- Upgrade ----------------------------------------------------------------
