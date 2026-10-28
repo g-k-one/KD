@@ -15,6 +15,9 @@ const props = defineProps<{ text: string }>()
 const ex = useExtrude()
 const fx = useForge()
 const haptics = useHaptics()
+// frame: the place the word is fitted to (over the top of the reel); box: its canvas, which reaches well past the frame on
+// every side, so the letters blown apart at the pop fly out whole instead of being cut at the frame's edge
+const frame = useTemplateRef<HTMLElement>('frame')
 const box = useTemplateRef<HTMLElement>('box')
 const active = ref(false)
 let label: ExtrudeHandle | null = null
@@ -56,13 +59,30 @@ const SHOUT = {
 const LOOK = { face: GOLD.face, side: GOLD.side, metal: GOLD.metal, gloss: GOLD.gloss, strokes: GOLD.strokes, glow: GOLD.glow, depth: GOLD.depth, yaw: GOLD.yaw, pitch: GOLD.pitch, persp: GOLD.persp }
 
 let depth = SHOUT.depth
+/** The font size the engine would fit to the frame (the fit line across, the frame's height): given explicitly, since
+ *  the canvas is bigger than the frame */
+function fitSize() {
+  const el = frame.value
+  if (!el) return 0
+  const room = depth * GOLD.pad * 2 + 8 + GOLD.glow.size * 2
+  const x = (aim.ctx ??= document.createElement('canvas').getContext('2d')!)
+  x.font = GOLD.font.replace('{s}', '100')
+  return Math.max(8, Math.floor(Math.min(((el.clientWidth - room) / x.measureText(props.text).width) * 100, (el.clientHeight - room) / 1.05)))
+}
+let size = 0
 onMounted(async () => {
-  if (!box.value) return
-  const narrow = box.value.clientWidth < 480
+  if (!box.value || !frame.value) return
+  const narrow = frame.value.clientWidth < 480
   if (narrow) depth = 11
+  size = fitSize()
   // built in the shout's style from the start: the chicken's scream then only types letters (a style change rebuilds
   // the glyphs in the worker, and that landed on the scream itself as a hitch); the plain label restyles on its rare path
-  label = await ex.mount(box.value, { ...GOLD, ...SHOUT, depth, text: ' ', charset: props.text, fit: props.text })
+  label = await ex.mount(box.value, { ...GOLD, ...SHOUT, depth, size, text: ' ', charset: props.text })
+})
+// a new frame size (rotation, a resized window) refits the word, between openings only
+useResizeObserver(frame, () => {
+  const next = fitSize()
+  if (label && next && next !== size && !active.value) label.set({ size: (size = next) })
 })
 
 /**
@@ -72,17 +92,17 @@ onMounted(async () => {
  */
 function aim(word: string, at?: number) {
   const el = box.value
-  if (!el) return
+  const fr = frame.value
+  if (!el || !fr) return
   el.style.translate = ''
   if (at == null) return
   const room = depth * GOLD.pad * 2 + 8 + GOLD.glow.size * 2
   const x = (aim.ctx ??= document.createElement('canvas').getContext('2d')!)
   x.font = GOLD.font.replace('{s}', '100')
-  const fs = Math.min((el.clientWidth - room) / x.measureText(props.text).width * 100, (el.clientHeight - room) / 1.05)
   // the turned word's near end (K) comes out bigger than its flat width: a margin keeps it off the reel's frame
-  const w = (x.measureText(word).width * fs) / 100
-  const free = Math.max(0, (el.clientWidth - w * 1.12 - room) / 2)
-  const r = el.getBoundingClientRect()
+  const w = (x.measureText(word).width * size) / 100
+  const free = Math.max(0, (fr.clientWidth - w * 1.12 - room) / 2)
+  const r = fr.getBoundingClientRect()
   const dx = Math.max(-free, Math.min(free, at - (r.left + r.width / 2)))
   el.style.translate = `${Math.round(dx)}px 0`
 }
@@ -121,7 +141,7 @@ function play(fast = false): Promise<boolean> {
       later(1200 * k, () => {
         t.play('fly', { speed: speed * 1.6 })   // ~0.42 с: буквы улетели до начала респина
         haptics.tap()
-        if (box.value) fx.at('feathers:gold', box.value, 1.1)
+        if (frame.value) fx.at('feathers:gold', frame.value, 1.1)
       })
       later(1650 * k, () => {
         if (run !== my) return
@@ -181,5 +201,14 @@ defineExpose({ play, shout, blast, stop, active })
 </script>
 
 <template>
-  <div ref="box" class="pointer-events-none" aria-hidden="true" />
+  <div ref="frame" class="pointer-events-none" aria-hidden="true">
+    <div ref="box" class="kd-burst-canvas absolute" />
+  </div>
 </template>
+
+<style scoped>
+/* the canvas: the frame plus room for the blast — 60% of its height above and below, 15% of its width at each side */
+.kd-burst-canvas {
+  inset: -60% -15%;
+}
+</style>
