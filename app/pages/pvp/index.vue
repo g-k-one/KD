@@ -113,7 +113,8 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
 
       <div class="flex items-center justify-end gap-2 max-lg:hidden">
         <Transition name="kd-reset">
-          <UiButton v-if="dirty" variant="ghost" size="l" icon="refresh" @click="reset">{{ $t('filters.reset') }}</UiButton>
+          <!-- Fits my balance's chip: the row's 48 px, the selects' type -->
+          <UiChip v-if="dirty" size="m" variant="field" icon="refresh" class="!h-12 !rounded-xl shrink-0 lg:px-4" @click="reset">{{ $t('filters.reset') }}</UiChip>
         </Transition>
         <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort kd-sort48 w-48 shrink-0" :active="sort !== 'default'">
           <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>

@@ -5,9 +5,10 @@ import type { Battle } from '#shared/types/api'
 // (the status over a ring that fills in the mode's colour as the rounds are played, the count in it), the battle
 // scenario as case cells (the case big, its name under it; a run of one case as one cell, ×N, while seats are open), the
 // players (how many over the seats — overlapping, so four and VS fit — the mode under them) and one cell with the cost
-// over the button — Join (a guest signs in first), Watch or View — so the button is not an island in the row. Desktop:
-// the rounds, the players and the cost are cells of one make — the dark ground, a caps label on top on one line for all
-// three, the thing itself in the middle, the second line at the bottom on one line too.
+// over the button — Join (a guest signs in first), Watch or View — so the button is not an island in the row. The row is
+// one card in the house's way (the upgrade's stake, the profile's stats): neutral-2 with the case cells as lighter tiles
+// on it; the rounds, the players and the cost stand on the card itself — a caps label on top on one line for all three,
+// the thing itself in the middle, the second line at the bottom on one line too.
 // Live, the band shows progress only, as skin.club does: the cases played are dimmed, the one opening now is marked and
 // lifted, and the band slides along with it. No drops here — they are the room's (the lobby gets no results: lighter,
 // and nothing to read ahead of the replay). Phones: skin.club's card — rounds and status, the cost and the mode · the
@@ -77,7 +78,7 @@ function onClick(e: MouseEvent) {
     @click.capture="onClick"
   >
     <!-- rounds: the status, the ring with the count in it, "Rounds" -->
-    <div class="kd-brow-rounds kd-cellbg flex items-center gap-2.5 px-2 pt-2 lg:flex-col lg:justify-between lg:gap-0 lg:rounded-xl lg:px-2 lg:py-3">
+    <div class="kd-brow-rounds flex items-center gap-2.5 px-2 pt-2 lg:flex-col lg:justify-between lg:gap-0 lg:rounded-xl lg:px-2 lg:py-3">
       <span class="kd-brow-status type-10-caps flex items-center gap-1 max-lg:hidden">
         <span v-if="battle.status === 'live'" class="kd-live-dot size-1.5 rounded-full bg-danger" />{{ $t(status) }}
       </span>
@@ -122,7 +123,7 @@ function onClick(e: MouseEvent) {
     </div>
 
     <!-- the players: how many over the seats, the mode under them -->
-    <div class="kd-brow-who kd-cellbg flex min-w-0 items-center px-2 pb-2 lg:flex-col lg:justify-between lg:rounded-xl lg:px-2 lg:py-3">
+    <div class="kd-brow-who flex min-w-0 items-center px-2 pb-2 lg:flex-col lg:justify-between lg:rounded-xl lg:px-2 lg:py-3">
       <span class="type-10-caps text-neutral-11 tabular-nums max-lg:hidden">{{ battle.mode === 'team' ? $t('pvp.twoVsTwo') : `${seated}/${battle.size}` }}</span>
       <span class="flex items-center gap-1.5">
         <template v-for="(side, k) in sides" :key="k">
@@ -146,7 +147,7 @@ function onClick(e: MouseEvent) {
     </div>
 
     <!-- the cost over the button, one cell the row's height (phones: the button alone, the cost is on top) -->
-    <div class="kd-brow-action kd-cellbg flex items-center justify-end px-2 pb-2 lg:flex-col lg:justify-between lg:rounded-xl lg:px-4 lg:py-3">
+    <div class="kd-brow-action flex items-center justify-end px-2 pb-2 lg:flex-col lg:justify-between lg:rounded-xl lg:px-4 lg:py-3">
       <span class="type-10-caps text-neutral-11 max-lg:hidden">{{ $t('pvp.cost') }}</span>
       <UiPrice :amount="battle.cost" size="l" tone="coin" class="max-lg:hidden" />
       <span class="kd-btn type-14-caps inline-flex h-10 w-32 items-center justify-center gap-1.5 rounded-lg lg:w-full" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
@@ -161,7 +162,7 @@ function onClick(e: MouseEvent) {
 .kd-brow {
   --mc: var(--color-coin);
   --row: var(--color-neutral-2);
-  --cell: color-mix(in srgb, var(--color-neutral-1) 55%, var(--color-neutral-2));
+  --cell: var(--color-neutral-3);
   background: var(--row);
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
@@ -198,12 +199,6 @@ function onClick(e: MouseEvent) {
 }
 .kd-brow-action {
   grid-area: action;
-}
-/* the cost's and the players' cells: the band's darker ground (desktop; phones are one card) */
-@media (min-width: 64rem) {
-  .kd-cellbg {
-    background: var(--cell);
-  }
 }
 .kd-brow-status {
   color: var(--color-neutral-11);
@@ -291,11 +286,6 @@ function onClick(e: MouseEvent) {
   border-radius: 9999px;
   box-shadow: 0 0 0 2px var(--ring);
 }
-@media (min-width: 64rem) {
-  .kd-av {
-    --ring: var(--cell);
-  }
-}
 .kd-av-free {
   border-color: var(--color-neutral-8);
   background: var(--color-neutral-3);
@@ -317,6 +307,7 @@ function onClick(e: MouseEvent) {
 @media (hover: hover) {
   .kd-brow:hover {
     --row: var(--color-neutral-3);
+    --cell: var(--color-neutral-4);
   }
   /* the cases lift in a wave, one after another */
   .kd-brow:hover .kd-cell:not(.is-now, .is-done) .kd-cell-img {
