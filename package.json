@@ -8,7 +8,8 @@
     "build": "nuxt build",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "check": "node scripts/check-mock.mjs"
   },
   "dependencies": {
     "@esotericsoftware/spine-webgl": "^4.3.13",
@@ -27,6 +28,7 @@
     "@types/sortablejs": "^1.15.8",
     "@unocss/nuxt": "^66.10.5",
     "@unocss/preset-wind4": "^66.10.5",
+    "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "unocss": "^66.10.5",
     "vue-tsc": "^3.3.13"

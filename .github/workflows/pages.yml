@@ -28,6 +28,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # a type error or a mock API regression stops the deploy: the site keeps the last good build
+      - run: npm run typecheck
+      - run: npm run check
       - run: node scripts/build-artifact.mjs --pages
       - uses: actions/upload-pages-artifact@v3
         with:
