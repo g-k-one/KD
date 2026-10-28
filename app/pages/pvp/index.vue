@@ -96,7 +96,10 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
          switches in sight (skin.club's bar), the "fits my balance" switch, Reset when something is set, the sort on the
          right. Phones: the mode, the wallet one tap away, the filters icon (the players, the switch and the sort in a
          sheet) and the sort icon -->
-    <div class="kd-filters flex items-center gap-2 rounded-3xl bg-neutral-2 p-2">
+    <!-- the filters' plate and, beside it, Create PvP as a block of its own: the plate's height and corners (phones: large,
+         across, under the plate) -->
+    <div class="flex flex-col gap-2 lg:flex-row lg:gap-3">
+    <div class="kd-filters flex min-w-0 flex-1 items-center gap-2 rounded-3xl bg-neutral-2 p-2">
       <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="min-w-0 flex-1 lg:hidden" :active="mode !== 'all'">
         <template #leading><UiIcon :name="mode === 'all' ? 'pvp' : PVP_MODE_ICON[mode]" :size="16" class="text-neutral-11" /></template>
       </UiSelect>
@@ -124,8 +127,6 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
       <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:ml-auto lg:w-48" :active="sort !== 'default'">
         <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
       </UiSelect>
-      <!-- the way in at the plate's end, the controls' height (phones: large, across, under the plate) -->
-      <UiButton icon="plus" to="/pvp/create" class="w-48 shrink-0 max-lg:hidden">{{ $t('pvp.create') }}</UiButton>
 
       <UiSheet v-model="sheet" :title="$t('filters.title')">
         <section class="flex flex-col gap-2">
@@ -150,8 +151,8 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
         </template>
       </UiSheet>
     </div>
-
-    <UiButton icon="plus" size="l" to="/pvp/create" block class="lg:hidden">{{ $t('pvp.create') }}</UiButton>
+    <UiButton icon="plus" size="l" to="/pvp/create" class="kd-create shrink-0 max-lg:w-full lg:w-[280px]">{{ $t('pvp.create') }}</UiButton>
+    </div>
 
     <!-- The battles, skin.club's list: the header bar, then a row per battle — the open seats first, then what is live
          and what just ended (for a minute) -->
@@ -206,6 +207,14 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
   font-weight: inherit;
   color: var(--color-neutral-14);
   font-variant-numeric: tabular-nums;
+}
+/* Create PvP beside the plate: its 56 px and 24 px corners, a size up in type */
+@media (min-width: 64rem) {
+  .kd-create {
+    height: 56px;
+    border-radius: 24px;
+    font-size: 16px;
+  }
 }
 .kd-stat-dot {
   width: 6px;
