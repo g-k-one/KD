@@ -62,7 +62,7 @@ const flash = ref(true)
 <template>
   <div class="flex flex-col gap-4">
     <section class="dbg-card">
-      <h2 class="dbg-h">ItemArt</h2>
+      <h2 class="dbg-h">Item art <span class="dbg-note">ItemArt</span></h2>
       <div class="dbg-play">
         <div ref="artBox" class="relative grid min-h-64 flex-1 place-items-center overflow-hidden rounded-2xl bg-neutral-1 p-6">
           <div ref="artFx" class="pointer-events-none absolute inset-0" />
@@ -100,7 +100,7 @@ const flash = ref(true)
     </section>
 
     <section class="dbg-card">
-      <h2 class="dbg-h">ItemTile <span class="dbg-note">tap to select</span></h2>
+      <h2 class="dbg-h">Item tile <span class="dbg-note">ItemTile · tap to select</span></h2>
       <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         <ItemTile v-for="(r, i) in RARITIES" :key="r" :item="byRarity[r]" :selected="sel.has(i)" @toggle="sel.has(i) ? sel.delete(i) : sel.add(i)" />
       </div>
@@ -115,7 +115,7 @@ const flash = ref(true)
     </section>
 
     <section class="dbg-card">
-      <h2 class="dbg-h">ItemDropCard <span class="dbg-note">case contents</span></h2>
+      <h2 class="dbg-h">Drop card <span class="dbg-note">ItemDropCard · case contents</span></h2>
       <UiToggle v-model="flash" label="Flashlight (drops today)" />
       <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         <template v-for="(r, i) in RARITIES" :key="r">
@@ -130,21 +130,21 @@ const flash = ref(true)
     </section>
 
     <section class="dbg-card">
-      <h2 class="dbg-h">HomeCaseCard</h2>
+      <h2 class="dbg-h">Case card <span class="dbg-note">HomeCaseCard</span></h2>
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <HomeCaseCard v-for="c in caseList" :key="c.slug" :item="c" />
       </div>
     </section>
 
     <section class="dbg-card">
-      <h2 class="dbg-h">PvpCard <span class="dbg-note">the same battle with 1, 2, 3, 5, 6 and 9 rounds</span></h2>
+      <h2 class="dbg-h">PvP card <span class="dbg-note">PvpCard · the same battle with 1, 2, 3, 5, 6 and 9 rounds</span></h2>
       <div class="kd-dbg-pvp grid grid-cols-2 gap-3 lg:grid-cols-6">
         <PvpCard v-for="b in roundsDemo" :key="b.id" :battle="b" />
       </div>
     </section>
 
     <section class="dbg-card">
-      <h2 class="dbg-h">HomeBigWins</h2>
+      <h2 class="dbg-h">Big wins <span class="dbg-note">HomeBigWins</span></h2>
       <HomeBigWins />
     </section>
   </div>

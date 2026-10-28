@@ -3,14 +3,15 @@ import type { Rarity, User } from '#shared/types/api'
 
 /*
  * Internal QA page (prototype only, not linked from the UI). Tabs:
- *   State  — the mock backend: session, balance, level, inventory, bonuses, feed, forced outcomes, API
+ *   State  — the dock's groups in its order (next case drops, upgrade, PvP; player, level and inventory; live feed),
+ *            then settings and storage and the raw API
  *   Kit    — every ui/* component in its states, with playgrounds
  *   Items  — ItemArt knobs and reveal, tiles, drop cards, case / PvP cards, big wins
  *   Games  — the upgrade dial driven by hand, chicken moods, sounds, haptics
  *   FX     — kd* Forge effects on a stage, FxFire, FxBurst
  *   Skeletons — the loading skeletons as each page shows them (case page, home catalog, battle room, drop cards)
  *   Tokens — colors, rarities, type scale, radii, motion
- * The floating dock (bottom-left, backquote key) has the same forces on every page.
+ * The dock (bottom-left on desktop, the right edge on phones, backquote key) has the same forces on every page.
  */
 useHead({ title: 'Debug · KurwaDROP' })
 
@@ -139,7 +140,8 @@ const motionKey = ref(0)
   <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-6 lg:px-0">
     <div class="flex flex-wrap items-center gap-3">
       <h1 class="type-20-caps flex-1">Debug</h1>
-      <span class="type-12 rounded-md bg-neutral-4 px-2 py-1 text-neutral-12">{{ width }}×{{ height }} · {{ breakpoint }}</span>
+      <!-- the window is only known in the browser (the server would say Infinity) -->
+      <ClientOnly><span class="type-12 rounded-md bg-neutral-4 px-2 py-1 text-neutral-12">{{ width }}×{{ height }} · {{ breakpoint }}</span></ClientOnly>
       <span v-if="session.user" class="type-12 flex items-center gap-2 rounded-md bg-neutral-4 px-2 py-1 text-neutral-12">
         {{ session.user.nickname }} · lvl {{ session.user.level }} · <UiPrice :amount="session.user.balance" size="s" tone="coin" />
       </span>
@@ -148,23 +150,61 @@ const motionKey = ref(0)
       <UiTabs v-model="tab" :tabs="TABS" />
     </div>
 
-    <!-- STATE -->
+    <!-- STATE: the dock's groups in the dock's order (what the next game gives, then the player and the feed), then the
+         page's own extras: settings and storage, raw API answers -->
     <template v-if="tab === 'state'">
       <div class="grid gap-4 lg:grid-cols-2">
         <section class="dbg-card">
-          <h2 class="dbg-h">Session</h2>
+          <h2 class="dbg-h">Next case drops <span class="dbg-note">{{ force.cases.length }} queued</span></h2>
+          <div class="flex flex-wrap gap-1.5">
+            <UiChip v-for="r in RARITIES" :key="r" @click="post({ cases: [{ rarity: r }] })">
+              <span class="-mr-0.5 size-2 rounded-full" :style="{ background: RARITY_COLOR[r] }" />{{ r }}
+            </UiChip>
+            <UiChip tone="gold" icon="chicken" @click="post({ cases: [{ kurwa: true }] })">Chicken</UiChip>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <UiButton size="s" variant="secondary" @click="queue({ kurwa: true }, 3)">Chicken ×3</UiButton>
+            <UiButton size="s" variant="secondary" @click="queue({ rarity: 'gold' }, 5)">Gold ×5</UiButton>
+            <UiButton size="s" variant="secondary" @click="queue({ rarity: 'covert' }, 5)">Covert ×5</UiButton>
+            <UiButton size="s" variant="secondary" @click="queue({ rarity: 'industrial' }, 5)">Commons ×5</UiButton>
+            <UiButton size="s" variant="ghost" @click="post({ clear: true })">Clear forces</UiButton>
+          </div>
+          <span class="dbg-note">One entry per opened case. Chicken needs KURWADROP on.</span>
+        </section>
+
+        <section class="dbg-card">
+          <h2 class="dbg-h">Next upgrade</h2>
+          <div class="flex flex-wrap gap-1.5">
+            <UiChip v-for="u in UPGRADE" :key="u.label" :active="force.upgrade === u.v" @click="post({ upgrade: u.v })">{{ u.label }}</UiChip>
+          </div>
+          <span class="dbg-note">Win and lose land anywhere on their side; edge within 0.5 of the line, near 0.6 to 2.6 from it.</span>
+        </section>
+
+        <section class="dbg-card">
+          <h2 class="dbg-h">Next PvP</h2>
+          <div class="flex flex-wrap gap-1.5">
+            <UiChip v-for="b in BATTLE" :key="b.label" :active="force.battle === b.v" @click="post({ battle: b.v })">{{ b.label }}</UiChip>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <UiButton v-for="s in [2, 3, 4]" :key="s" size="s" variant="secondary" icon="pvp" @click="newBattle(s, false)">New {{ s }}p · waiting</UiButton>
+            <UiButton size="s" variant="secondary" icon="live" @click="newBattle(2, true)">New 1v1 · live</UiButton>
+          </div>
+        </section>
+
+        <section class="dbg-card">
+          <h2 class="dbg-h">Player</h2>
           <div class="flex flex-wrap gap-2">
             <UiButton v-if="!session.user" size="s" icon="sign-in" @click="session.login()">Log in as demo user</UiButton>
             <UiButton v-else size="s" variant="secondary" icon="logout" @click="session.logout()">Log out</UiButton>
-            <UiButton size="s" variant="secondary" icon="refresh" @click="refreshing({ resetUser: true }, 'User reset')">Reset user</UiButton>
             <UiButton size="s" variant="ghost" @click="ui.openSignIn()">Sign-in modal</UiButton>
             <UiButton size="s" variant="ghost" @click="ui.openDeposit()">Deposit modal</UiButton>
+            <UiButton size="s" variant="danger" icon="refresh" @click="refreshing({ resetUser: true }, 'User reset')">Reset user</UiButton>
           </div>
           <template v-if="session.user">
             <div class="flex flex-wrap gap-2">
               <UiButton v-for="c in [100, 10000, 100000, 1000000]" :key="c" size="s" variant="secondary" @click="addBalance(c)">+{{ (c / 100).toLocaleString('en-US') }}</UiButton>
-              <UiButton size="s" variant="secondary" @click="setState({ user: { balance: (session.user?.balance ?? 0) * 10 } })">×10</UiButton>
-              <UiButton size="s" variant="danger" @click="setState({ user: { balance: 0 } }, 'Broke')">Set 0</UiButton>
+              <UiButton size="s" variant="secondary" @click="setState({ user: { balance: (session.user?.balance ?? 0) * 10 } })">Balance ×10</UiButton>
+              <UiButton size="s" variant="secondary" @click="setState({ user: { balance: 0 } }, 'Broke')">Balance 0</UiButton>
             </div>
             <form class="flex gap-2" @submit.prevent="applyBalance">
               <UiInput v-model="balanceInput" size="s" coin placeholder="Balance in coins" inputmode="decimal" class="flex-1" />
@@ -178,29 +218,27 @@ const motionKey = ref(0)
         </section>
 
         <section class="dbg-card">
-          <h2 class="dbg-h">Level · Bonuses</h2>
+          <h2 class="dbg-h">Level · Inventory</h2>
           <div class="flex flex-wrap items-center gap-2">
             <span class="dbg-note">Level</span>
-            <UiButton v-for="l in [1, 5, 12, 27, 50, 99]" :key="l" size="s" variant="ghost" @click="setState({ user: { level: l } })">{{ l }}</UiButton>
-            <UiButton size="s" variant="secondary" @click="setState({ user: { level: (session.user?.level ?? 1) + 1, levelProgress: 5 } }, 'Level up')">Level up</UiButton>
+            <UiChip v-for="l in [1, 5, 12, 27, 50, 99]" :key="l" :active="session.user?.level === l" @click="setState({ user: { level: l } })">{{ l }}</UiChip>
           </div>
           <div class="flex items-end gap-2">
-            <UiSlider v-model="progress" label="Level progress %" class="flex-1" />
+            <div class="flex flex-1 flex-col gap-1">
+              <span class="dbg-note">Progress to the next level · {{ progress }}%</span>
+              <UiSlider v-model="progress" label="Level progress %" />
+            </div>
             <UiButton size="s" variant="secondary" @click="applyProgress">Apply</UiButton>
           </div>
           <div class="flex flex-wrap gap-2">
-            <UiButton size="s" variant="secondary" @click="refreshing({ levels: 1 }, '+1 level', 'bonuses')">+1 level</UiButton>
+            <UiButton size="s" variant="secondary" @click="setState({ user: { level: (session.user?.level ?? 1) + 1, levelProgress: 5 } }, 'Level up')">Level up</UiButton>
             <UiButton size="s" variant="secondary" @click="refreshing({ levels: 5 }, '+5 levels', 'bonuses')">+5 levels</UiButton>
-            <UiButton size="s" variant="secondary" @click="refreshing({ resetDaily: true }, 'Daily case ready', 'bonuses')">Daily ready</UiButton>
+            <UiButton v-if="FEATURES.bonuses" size="s" variant="secondary" @click="refreshing({ resetDaily: true }, 'Daily case ready', 'bonuses')">Daily case ready</UiButton>
           </div>
-        </section>
-
-        <section class="dbg-card">
-          <h2 class="dbg-h">Inventory</h2>
           <div class="flex flex-wrap gap-2">
             <UiButton size="s" variant="secondary" @click="refreshing({ inventory: 'loaded' }, '+12 skins')">+12 skins</UiButton>
-            <UiButton size="s" variant="danger" @click="refreshing({ inventory: 'empty' }, 'Inventory emptied')">Empty</UiButton>
-            <UiButton size="s" variant="ghost" to="/inventory">Open inventory</UiButton>
+            <UiButton size="s" variant="secondary" @click="refreshing({ inventory: 'empty' }, 'Inventory emptied')">Empty inventory</UiButton>
+            <UiButton size="s" variant="ghost" to="/profile?tab=inventory">Open inventory</UiButton>
           </div>
         </section>
 
@@ -213,36 +251,10 @@ const motionKey = ref(0)
             <UiButton size="s" variant="secondary" @click="setState({ feedBurst: 30 }, '30 drops queued')">Burst ×30</UiButton>
           </div>
           <div class="flex flex-wrap gap-1.5">
-            <button v-for="r in RARITIES" :key="r" type="button" class="kd-press type-12-caps h-8 rounded-md px-3 text-neutral-1" :style="{ background: RARITY_COLOR[r] }" @click="pushDrop(r)">{{ r }}</button>
-          </div>
-        </section>
-
-        <section class="dbg-card">
-          <h2 class="dbg-h">Next case drops <span class="dbg-note">{{ force.cases.length }} queued</span></h2>
-          <div class="flex flex-wrap gap-1.5">
-            <button v-for="r in RARITIES" :key="r" type="button" class="kd-press type-12-caps h-8 rounded-md px-3 text-neutral-1" :style="{ background: RARITY_COLOR[r] }" @click="post({ cases: [{ rarity: r }] })">{{ r }}</button>
-            <UiChip size="m" tone="gold" icon="chicken" @click="post({ cases: [{ kurwa: true }] })">Chicken</UiChip>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <UiButton size="s" variant="secondary" @click="queue({ kurwa: true }, 3)">Chicken ×3</UiButton>
-            <UiButton size="s" variant="secondary" @click="queue({ rarity: 'gold' }, 5)">Gold ×5</UiButton>
-            <UiButton size="s" variant="secondary" @click="queue({ rarity: 'covert' }, 5)">Covert ×5</UiButton>
-            <UiButton size="s" variant="secondary" @click="queue({ rarity: 'industrial' }, 5)">Commons ×5</UiButton>
-            <UiButton size="s" variant="ghost" icon="close" @click="post({ clear: true })">Clear all forces</UiButton>
-          </div>
-        </section>
-
-        <section class="dbg-card">
-          <h2 class="dbg-h">Upgrade · PvP</h2>
-          <div class="flex flex-wrap gap-1.5">
-            <UiChip v-for="u in UPGRADE" :key="u.label" :active="force.upgrade === u.v" @click="post({ upgrade: u.v })">{{ u.label }}</UiChip>
-          </div>
-          <div class="flex flex-wrap gap-1.5">
-            <UiChip v-for="b in BATTLE" :key="b.label" :active="force.battle === b.v" @click="post({ battle: b.v })">{{ b.label }}</UiChip>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <UiButton v-for="s in [2, 3, 4]" :key="s" size="s" variant="secondary" icon="pvp" @click="newBattle(s, false)">Open {{ s }}p</UiButton>
-            <UiButton size="s" icon="live" @click="newBattle(2, true)">Live 1v1 vs bot</UiButton>
+            <span class="dbg-note w-full">Push one drop now</span>
+            <UiChip v-for="r in RARITIES" :key="r" @click="pushDrop(r)">
+              <span class="-mr-0.5 size-2 rounded-full" :style="{ background: RARITY_COLOR[r] }" />{{ r }}
+            </UiChip>
           </div>
         </section>
 
@@ -256,9 +268,9 @@ const motionKey = ref(0)
         </section>
 
         <section class="dbg-card">
-          <h2 class="dbg-h">API</h2>
+          <h2 class="dbg-h">API <span class="dbg-note">tap an endpoint to see its answer</span></h2>
           <div class="flex flex-wrap gap-1.5">
-            <UiChip v-for="e in ENDPOINTS" :key="e" size="s" @click="callApi(e)">{{ e.replace('/api', '') }}</UiChip>
+            <UiChip v-for="e in ENDPOINTS" :key="e" @click="callApi(e)">{{ e.replace('/api', '') }}</UiChip>
           </div>
           <pre v-if="apiOut" class="dbg-pre max-h-80">{{ apiOut }}</pre>
         </section>

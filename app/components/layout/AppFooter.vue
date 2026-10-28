@@ -2,7 +2,7 @@
 const PLAY = [
   { key: 'cases', to: '/' },
   { key: 'upgrade', to: '/upgrade' },
-  ...(FEATURES.bonuses ? [{ key: 'bonuses', to: '/bonuses' }] : []),
+  { key: 'bonuses', to: '/bonuses' },
   { key: 'pvp', to: '/pvp' },
 ]
 const INFO = [

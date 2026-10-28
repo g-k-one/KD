@@ -10,8 +10,7 @@ import type { Item, Rarity } from '#shared/types/api'
  * counts to the new value, the rarity colour flows over and the weapon morphs into the next (ItemArt morph); the item hovers while the gauge spins,
  * a win flashes a ring of rarity light and pops, a loss drains to grey and sinks.
  */
-// ghosts: pictures for the empty card's blurred hint (skins from the top of the market)
-const props = defineProps<{ item: Item | null; state: 'idle' | 'spinning' | 'win' | 'lose'; ghosts?: string[] }>()
+const props = defineProps<{ item: Item | null; state: 'idle' | 'spinning' | 'win' | 'lose' }>()
 defineEmits<{ clear: [] }>()
 const isLg = useMediaQuery('(min-width: 1024px)')
 // The card's own Forge layer under the art: the aura while the dial turns and the rank reveal of a won skin
@@ -74,13 +73,8 @@ watch(
           </div>
           <UiPrice :amount="Math.round(priceShown)" size="xxl" class="absolute bottom-6 left-1/2 -translate-x-1/2" />
         </div>
-        <div v-else key="empty" class="relative isolate flex h-full flex-col items-center justify-center gap-4 text-center">
-<!-- three skins it could be, blurred far behind the plus, so the empty card hints at what goes in -->
-          <span v-if="ghosts?.length" class="kd-ghosts pointer-events-none absolute inset-0 z-[-1] overflow-hidden" aria-hidden="true">
-            <img v-for="(g, i) in ghosts.slice(0, 3)" :key="g" :src="g" alt="" class="kd-ghost absolute top-1/2 left-1/2 w-40 object-contain" :style="{ '--i': i - 1 }" />
-          </span>
-          <!-- the phone cards' plus, one size up: the same circle on both sides of the dial -->
-          <span class="grid size-16 place-items-center rounded-full bg-neutral-4 text-neutral-12"><UiIcon name="plus" :size="32" /></span>
+        <div v-else key="empty" class="flex h-full flex-col items-center justify-center gap-4 text-center">
+          <UiIcon name="target-up" :size="72" class="kd-target-icon kd-ico-target text-neutral-10" />
           <p class="flex flex-col gap-1">
             <span class="type-16-caps font-bold text-neutral-12">{{ $t('upgrade.pickTarget') }}</span>
             <span class="type-14-regular text-neutral-11">{{ $t('upgrade.pickTargetHint') }}</span>
@@ -92,13 +86,6 @@ watch(
 </template>
 
 <style scoped>
-/* the empty card's three blurred skins, fanned behind its plus */
-.kd-ghost {
-  opacity: 0.4;
-  filter: blur(4px) saturate(0.85);
-  transform: translate(calc(-50% + var(--i) * 92px), calc(-62% + (var(--i) * var(--i)) * 14px)) rotate(calc(var(--i) * 14deg));
-}
-
 .kd-wear {
   transition:
     opacity var(--dur-base) var(--ease-out),
@@ -107,6 +94,14 @@ watch(
 .kd-wear.is-hidden {
   opacity: 0;
   translate: -4px 0;
+}
+.kd-target-icon {
+  animation: kd-float 3.2s var(--ease-in-out) infinite;
+}
+@keyframes kd-float {
+  50% {
+    transform: translateY(-5px) rotate(3deg);
+  }
 }
 
 /* New target: drops in from above with a bounce. */

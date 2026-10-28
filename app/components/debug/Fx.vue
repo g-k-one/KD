@@ -51,7 +51,7 @@ const burstTier = ref(3)
 
     <div class="grid gap-4 lg:grid-cols-2">
       <section class="dbg-card">
-        <h2 class="dbg-h">FxFire</h2>
+        <h2 class="dbg-h">Fire <span class="dbg-note">FxFire</span></h2>
         <UiToggle v-model="fire" label="On" />
         <div class="flex items-center gap-8 rounded-2xl bg-neutral-1 p-6">
           <FxFire :on="fire"><span class="type-28 relative z-[2] text-brand-light">x281</span></FxFire>
@@ -59,7 +59,7 @@ const burstTier = ref(3)
         </div>
       </section>
       <section class="dbg-card">
-        <h2 class="dbg-h">FxBurst <span class="dbg-note">legacy CSS burst</span></h2>
+        <h2 class="dbg-h">Burst <span class="dbg-note">FxBurst · legacy CSS burst</span></h2>
         <UiSegmented v-model="burstTier" :options="[1, 2, 3, 4].map((t) => ({ value: t, label: `Tier ${t}` }))" size="s" />
         <div class="relative grid h-48 place-items-center overflow-hidden rounded-2xl bg-neutral-1" @click="burstKey++">
           <FxBurst :key="burstKey" :tier="burstTier" :color="RARITY_COLOR.covert" :size="180" />

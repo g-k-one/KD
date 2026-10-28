@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Figma "ProfileMenu" head + balance block. compact = MobileMenu version (Deposit + Withdraw, no skins row).
+// Figma "ProfileMenu" head + balance block. compact = MobileMenu version (both values in the coin colour, Deposit + Withdraw as small buttons).
 import type { User } from '#shared/types/api'
 
 const props = withDefaults(defineProps<{ user: User; compact?: boolean; actions?: boolean }>(), { actions: true })
@@ -36,7 +36,7 @@ const maskedSteamId = computed(() => `${props.user.steamId.slice(0, 4)}…${prop
         <span class="type-12-caps text-neutral-11">{{ $t('wallet.balance') }}</span>
         <UiPrice :amount="user.balance" size="l" :tone="compact ? 'coin' : 'default'" />
       </div>
-      <div v-if="!compact" class="flex items-center justify-between">
+      <div class="flex items-center justify-between">
         <span class="type-12-caps text-neutral-11">{{ $t('wallet.skins') }}</span>
         <UiPrice :amount="user.skinsValue" size="l" tone="coin" />
       </div>

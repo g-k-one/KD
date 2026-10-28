@@ -12,14 +12,14 @@ const rc = computed(() => (props.item ? RARITY_COLOR[props.item.rarity] : undefi
 </script>
 
 <template>
-  <div v-if="!item" class="grid aspect-[164/128] place-items-center max-sm:aspect-[4/5] lg:aspect-auto lg:h-[105px] rounded-2xl bg-neutral-3 text-neutral-7">
+  <div v-if="!item" class="grid aspect-[164/128] place-items-center max-sm:aspect-square lg:aspect-auto lg:h-[105px] rounded-2xl bg-neutral-3 text-neutral-7">
     <UiIcon name="pistol" :size="40" />
   </div>
   <component
     :is="readonly ? 'div' : 'button'"
     v-else
     :type="readonly ? undefined : 'button'"
-    class="kd-tile group relative aspect-[164/128] w-full max-sm:aspect-[4/5] lg:aspect-auto lg:h-[105px] overflow-hidden rounded-2xl border text-left"
+    class="kd-tile group relative aspect-[164/128] w-full max-sm:aspect-square lg:aspect-auto lg:h-[105px] overflow-hidden rounded-2xl border text-left"
     :class="readonly && 'is-readonly'"
     :aria-pressed="selected"
     :data-near="near || undefined"

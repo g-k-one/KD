@@ -88,8 +88,8 @@
     "aria": "Live drops"
   },
   "hero": {
-    "eyebrow": "Provably Fair isn’t enough",
-    "title": "No more scams",
+    "eyebrow": "Stop getting scammed",
+    "title": "Play KurwaDrop",
     "text": "Real skins, and every roll provably fair.",
     "cta": "Start playing",
     "howItWorks": "How it works",
@@ -701,6 +701,8 @@
   },
   "bonus": {
     "title": "Bonuses",
+    "soonTitle": "Coming soon",
+    "soonText": "Free cases every day, a case for every level and rakeback on every bet. We are almost there.",
     "signIn": "Sign in for a free case every day, a case for every level and rakeback on every bet.",
     "openFree": "Open for free",
     "tier": "Tier {tier}",

@@ -72,14 +72,14 @@ const HAPTICS: [string, () => void][] = [
 <template>
   <div class="flex flex-col gap-4">
     <section class="dbg-card">
-      <h2 class="dbg-h">UpgradeGauge <span class="dbg-note">state: {{ g.state }}</span></h2>
+      <h2 class="dbg-h">Upgrade dial <span class="dbg-note">UpgradeGauge · {{ g.state }}</span></h2>
       <div class="dbg-play">
         <div class="relative grid flex-1 place-items-center rounded-2xl bg-neutral-1 px-4 pt-6 pb-16">
           <UpgradeGauge ref="gauge" :chance="g.chance" :state="g.state" :nonce="42" />
         </div>
         <div class="dbg-knobs">
-          <UiSlider v-model="g.chance" :min="1" :max="80" label="Chance %" />
-          <UiSlider v-model="g.roll" :min="0" :max="100" label="Roll" />
+          <label class="flex flex-col gap-1"><span class="dbg-note">Chance · {{ g.chance }}%</span><UiSlider v-model="g.chance" :min="1" :max="80" label="Chance %" /></label>
+          <label class="flex flex-col gap-1"><span class="dbg-note">Roll · {{ g.roll }}</span><UiSlider v-model="g.roll" :min="0" :max="100" label="Roll" /></label>
           <div class="flex flex-wrap gap-3">
             <UiToggle v-model="g.fast" label="Fast" />
           </div>
@@ -97,7 +97,7 @@ const HAPTICS: [string, () => void][] = [
 
     <div class="grid gap-4 lg:grid-cols-2">
       <section class="dbg-card">
-        <h2 class="dbg-h">UpgradeChicken</h2>
+        <h2 class="dbg-h">Upgrade chicken <span class="dbg-note">UpgradeChicken · its moods by the line</span></h2>
         <div class="relative h-56 overflow-hidden rounded-2xl bg-neutral-1">
           <div class="absolute inset-x-0 bottom-12 h-px bg-neutral-6" />
           <div class="absolute inset-x-0 bottom-12">

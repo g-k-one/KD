@@ -34,9 +34,6 @@ const { data: market } = await useFetch<MarketResponse>('/api/market', { key: 'm
 const inventory = ref<InventoryItem[]>([])
 // Client only: server-side $fetch would go out without the session cookie and get a 401
 const inventoryLoading = ref(true)
-// The empty cards' blurred hints (desktop): three of the player's skins, three from the top of the market
-const stakeGhosts = computed(() => inventory.value.slice(0, 3).map((i) => i.image))
-const targetGhosts = computed(() => [...(market.value?.items ?? [])].sort((a, b) => b.price - a.price).slice(0, 3).map((i) => i.image))
 async function loadInventory() {
   if (import.meta.server) return
   if (!session.user) {
@@ -430,7 +427,6 @@ async function runUpgrade() {
         class="lg:col-start-1 lg:row-start-1"
         :items="selectedItems"
         :coins="extra"
-        :ghosts="stakeGhosts"
         :total="inputValue"
         :state="state"
         :disabled="state === 'spinning' || !session.user"
@@ -510,7 +506,7 @@ async function runUpgrade() {
         </template>
       </button>
       <div class="max-lg:hidden lg:contents">
-        <UpgradeTarget ref="targetCard" class="lg:col-start-3 lg:row-start-1" :item="target" :state="state" :ghosts="targetGhosts" @clear="(target = null), resetResult()" />
+        <UpgradeTarget ref="targetCard" class="lg:col-start-3 lg:row-start-1" :item="target" :state="state" @clear="(target = null), resetResult()" />
         <UpgradeControls
           :pending="pending"
           class="lg:col-start-3 lg:row-start-2"
@@ -606,7 +602,7 @@ async function runUpgrade() {
           </UiButton>
         </div>
         <div v-if="session.user && inventoryLoading" class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
-          <span v-for="n in PAGE" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-[4/5] lg:aspect-auto lg:h-[105px]" :style="{ animationDelay: `${n * 40}ms` }" />
+          <span v-for="n in PAGE" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-square lg:aspect-auto lg:h-[105px]" :style="{ animationDelay: `${n * 40}ms` }" />
         </div>
         <!-- nothing to stake yet: one big step, open a case (no second, small "open cases" line under it) -->
         <UiEmptyState v-else-if="session.user && !inventory.length" :text="$t('account.emptyInventory')" class="flex-1 justify-center">
@@ -642,11 +638,11 @@ async function runUpgrade() {
           <Transition name="kd-search" mode="out-in">
             <UiInput v-if="searchOpen" id="market-search" key="s" v-model="search" icon="search" clearable :placeholder="$t('upgrade.search')" class="min-w-0 flex-1" @keydown.esc="searchOpen = false" />
             <div v-else key="f" class="flex min-w-0 flex-1 items-center gap-2">
-              <template v-if="isSm">
-                <UiInput id="price-from" v-model="priceFrom" coin inputmode="decimal" :placeholder="$t('upgrade.from')" class="w-24" />
-                <UiInput id="price-to" v-model="priceTo" coin inputmode="decimal" :placeholder="$t('upgrade.to')" class="w-24" />
-              </template>
-              <UiSelect v-model:values="rarities" multiple :options="rarityOptions" class="kd-rarity-select min-w-20" menu-width="fixed">
+              <!-- the price range shares the line on every width: on phones the two fields split what the rarity and search leave,
+                   without the coin (the placeholder and the prices around say it) -->
+              <UiInput id="price-from" v-model="priceFrom" :coin="isSm" inputmode="decimal" :placeholder="$t('upgrade.from')" class="min-w-0 flex-1 sm:w-24 sm:flex-none" />
+              <UiInput id="price-to" v-model="priceTo" :coin="isSm" inputmode="decimal" :placeholder="$t('upgrade.to')" class="min-w-0 flex-1 sm:w-24 sm:flex-none" />
+              <UiSelect v-model:values="rarities" multiple :options="rarityOptions" class="kd-rarity-select shrink-0 sm:min-w-20" menu-width="fixed">
                 <template #leading>
                   <!-- The trigger shows the choice: every colour dimmed = all rarities, otherwise just the picked ones -->
                   <TransitionGroup tag="span" name="kd-rdot" class="flex items-center gap-0.5">
@@ -663,11 +659,6 @@ async function runUpgrade() {
             </div>
           </Transition>
           <UiButton variant="ghost" :size="isLg ? 'm' : 's'" :icon="searchOpen ? 'close' : 'search'" icon-only :aria-label="$t(searchOpen ? 'common.close' : 'upgrade.search')" @click="searchOpen = !searchOpen" />
-        </div>
-        <!-- phones: the price range on a row of its own under the header (beside the rarity and search it had no room) -->
-        <div v-if="!isSm" class="flex gap-2 border-b border-neutral-4 px-4 py-3">
-          <UiInput id="price-from" v-model="priceFrom" coin inputmode="decimal" :placeholder="$t('upgrade.from')" class="min-w-0 flex-1" />
-          <UiInput id="price-to" v-model="priceTo" coin inputmode="decimal" :placeholder="$t('upgrade.to')" class="min-w-0 flex-1" />
         </div>
         <!-- Always a full page of slots (empty ones on the last page), so paging never changes the height -->
         <div class="relative">
@@ -917,6 +908,15 @@ async function runUpgrade() {
 }
 :deep(.kd-rarity-select button[aria-haspopup] .type-14) {
   display: none;
+}
+/* phones: the dots alone in the field (no chevron), so From and To get the room */
+@media (max-width: 639.98px) {
+  :deep(.kd-rarity-select button[aria-haspopup]) {
+    padding-inline: 10px;
+  }
+  :deep(.kd-rarity-select button[aria-haspopup] > :last-child) {
+    display: none;
+  }
 }
 .kd-rdot-enter-active,
 .kd-rdot-leave-active {

@@ -14,8 +14,6 @@ import type { InventoryItem } from '#shared/types/api'
 const props = defineProps<{
   items: InventoryItem[]
   coins: number
-  /** Pictures for the empty card's blurred hint (the player's skins) */
-  ghosts?: string[]
   total: number
   state: 'idle' | 'spinning' | 'win' | 'lose'
   disabled?: boolean
@@ -86,13 +84,8 @@ function removePiece(p: Piece) {
       :class="`is-${state}`"
     >
       <Transition name="kd-stake-swap" mode="out-in">
-        <div v-if="layout === 'empty'" key="empty" class="relative isolate flex min-h-56 flex-1 flex-col items-center justify-center gap-4 text-center">
-<!-- three skins it could be, blurred far behind the plus, so the empty card hints at what goes in -->
-          <span v-if="ghosts?.length" class="kd-ghosts pointer-events-none absolute inset-0 z-[-1] overflow-hidden" aria-hidden="true">
-            <img v-for="(g, i) in ghosts.slice(0, 3)" :key="g" :src="g" alt="" class="kd-ghost absolute top-1/2 left-1/2 w-40 object-contain" :style="{ '--i': i - 1 }" />
-          </span>
-          <!-- the phone cards' plus, one size up: the same circle on both sides of the dial -->
-          <span class="grid size-16 place-items-center rounded-full bg-neutral-4 text-neutral-12"><UiIcon name="plus" :size="32" /></span>
+        <div v-if="layout === 'empty'" key="empty" class="flex min-h-56 flex-1 flex-col items-center justify-center gap-4 text-center">
+          <UiIcon name="deck-plus" :size="72" class="kd-stake-icon kd-ico-deck text-neutral-10" />
           <!-- the same words as the phone's card: the step, then where it comes from -->
           <p class="flex flex-col gap-1">
             <span class="type-16-caps font-bold text-neutral-12">{{ $t('upgrade.addSkins') }}</span>
@@ -200,14 +193,16 @@ function removePiece(p: Piece) {
 </template>
 
 <style scoped>
-/* the empty card's three blurred skins, fanned behind its plus */
-.kd-ghost {
-  opacity: 0.4;
-  filter: blur(4px) saturate(0.85);
-  transform: translate(calc(-50% + var(--i) * 92px), calc(-62% + (var(--i) * var(--i)) * 14px)) rotate(calc(var(--i) * 14deg));
-}
 .kd-stake {
   transition: border-color var(--dur-base) var(--ease-out);
+}
+.kd-stake-icon {
+  animation: kd-float 3.2s var(--ease-in-out) infinite;
+}
+@keyframes kd-float {
+  50% {
+    transform: translateY(-5px) rotate(-3deg);
+  }
 }
 
 /* Pieces in the stake: Figma InventoryItem on the neutral-4 stake surface; coins get a neutral-6 rim. */

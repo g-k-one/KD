@@ -35,7 +35,7 @@ const isSm = useMediaQuery('(min-width: 640px)')
 
     <template v-else>
       <section class="dbg-card">
-        <h2 class="dbg-h">DropCardSkeleton <span class="dbg-note">regular · compact (phones)</span></h2>
+        <h2 class="dbg-h">Drop card skeleton <span class="dbg-note">DropCardSkeleton · regular · compact (phones)</span></h2>
         <div class="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-6">
           <ItemDropCardSkeleton v-for="n in 6" :key="n" :compact="!isSm" />
         </div>

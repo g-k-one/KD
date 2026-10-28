@@ -146,6 +146,16 @@
     scrollbar-color: var(--color-neutral-6) transparent;
   }
 }
+/* phones: no scrollbars at all, the finger scrolls without them (a desktop browser at phone width showed a bar that
+   took a strip off the right edge, so the bottom bars and sheets sat off-centre) */
+@media (max-width: 639.98px) {
+  * {
+    scrollbar-width: none;
+  }
+  ::-webkit-scrollbar {
+    display: none;
+  }
+}
 
 /*
  * Page ground, kept outside @layer on purpose: hosts that wrap the page (the claude.ai artifact

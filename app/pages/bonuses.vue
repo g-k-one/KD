@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type { DailyStep, InventoryItem, OpenCaseResponse, RankStep, SellResponse } from '#shared/types/api'
 
-// switched off for now (FEATURES.bonuses): the page answers as a missing one
-if (!FEATURES.bonuses) throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
+// switched off for now (FEATURES.bonuses): the page keeps its place in the menus and shows only its banner, "coming soon"
 
 /*
  * Bonuses: the welcome cases (three free opens for signing up), then the level program — a rank every 10 levels and
@@ -27,7 +26,7 @@ const daily = computed(() => data.value?.daily ?? null)
 const level = computed(() => data.value?.level ?? null)
 const rank = computed(() => level.value?.ranks[level.value.rank] ?? null)
 // guests get the ladder only
-const { data: preview } = useLazyFetch<{ ladder: Array<Omit<DailyStep, 'items'>>; ranks: RankStep[] }>('/api/bonuses/preview', { key: 'bonus-preview', server: false })
+const { data: preview } = useLazyFetch<{ ladder: Array<Omit<DailyStep, 'items'>>; ranks: RankStep[] }>('/api/bonuses/preview', { key: 'bonus-preview', server: false, immediate: FEATURES.bonuses })
 const welcome = computed(() => (welcomeLeft.value > 0 ? (data.value?.welcome ?? null) : null))
 
 // Which free case is on the reel: the one the player tapped Open on, else the welcome cases, the daily case when it is
@@ -164,6 +163,13 @@ const toPromo = () => promoEl.value?.scrollIntoView({ behavior: 'smooth', block:
 
 <template>
   <div>
+    <BannerBleed v-if="!FEATURES.bonuses" glow="gold" :eyebrow="$t('bonus.title')" :title="$t('bonus.soonTitle')" :text="$t('bonus.soonText')">
+      <template #art><HomeHeroHen /></template>
+      <template #actions>
+        <UiButton to="/" size="l" icon="cases" class="max-sm:h-10 max-sm:px-4">{{ $t('common.backHome') }}</UiButton>
+      </template>
+    </BannerBleed>
+  <template v-else>
     <!-- no page bar: the banner opens the page, full width like the home page's and Provably Fair's -->
     <BannerBleed glow="gold" :eyebrow="$t('bonus.title')" :title="offer.title" :text="offer.text">
       <template #art><HomeHeroHen /></template>
@@ -347,6 +353,7 @@ const toPromo = () => promoEl.value?.scrollIntoView({ behavior: 'smooth', block:
       <span class="kd-skeleton h-[278px] rounded-5xl lg:col-span-2" />
     </div>
   </div>
+  </template>
   </div>
 </template>
 

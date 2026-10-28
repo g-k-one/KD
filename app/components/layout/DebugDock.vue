@@ -2,15 +2,14 @@
 import type { Rarity } from '#shared/types/api'
 
 /*
- * Cross-cutting debug dock (prototype only). Lives on every page, bottom-left.
- * Queues forced outcomes in the mock backend and fires events, so every animation path
- * can be checked without waiting for luck:
- *   cases   — next drops by rarity, or the Golden Chicken (KURWADROP on)
- *   upgrade — win / lose / near-miss on either side of the chance line,  *             and a ready setup (your top skin aimed at about ×2) one tap away
- *   bonuses — several levels at once (the level-up plate), the daily case ready again
- *   PvP     — who takes the next battle that fills
- *   events  — balance credit, rare drop in the live feed, level up, reset
- * Toggle with the bug button or the backquote key.
+ * Cross-cutting debug dock (prototype only). Lives on every page: bottom-left on desktop, a tab on the right edge on phones.
+ * Queues forced outcomes in the mock backend and fires events, so every animation path can be checked without luck:
+ *   Next case drops — by rarity, or the Golden Chicken (KURWADROP on)
+ *   Next upgrade    — win / lose / near-miss on either side of the line, and a ready setup (your top skin at about ×2)
+ *   Next PvP        — who takes the next battle that fills, and a new battle waiting or already live
+ *   Player          — balance, levels (the level-up plate), inventory, reset
+ *   Live feed · Tools — a gold drop or a burst in the feed; home layout, admin, sound, Forge FX, the full page
+ * The same groups in the same order as the State tab of /debug. Toggle with the tab or the backquote key.
  */
 type Force = { cases: { rarity?: Rarity; kurwa?: boolean }[]; upgrade: string | null; battle: string | null }
 
@@ -147,41 +146,25 @@ const resetDaily = async () => {
       <UiIcon name="settings" :size="16" />
     </button>
 
+    <!-- One order everywhere, the same as the State tab of /debug: what the next game gives (cases, upgrade, PvP), then
+         the player, the live feed, the tools. Picks that stay on are chips, one-off actions are buttons in even rows. -->
     <Transition name="kd-dock">
-      <div v-if="open" class="absolute right-0 bottom-12 flex max-h-[min(640px,calc(100dvh-140px))] max-lg:fixed max-lg:inset-x-3 max-lg:top-[132px] max-lg:bottom-auto max-lg:w-auto lg:left-0 lg:right-auto w-80 flex-col gap-4 overflow-y-auto rounded-3xl border border-neutral-5 bg-neutral-2 p-4 shadow-[0_8px_24px_rgb(0_0_0/0.6)]">
-        <div class="flex items-center justify-between">
-          <span class="type-16-caps">Debug</span>
-          <span class="flex gap-3">
-            <button type="button" class="type-12-caps text-neutral-12 hover:text-neutral-15" @click="post({ clear: true })">Clear all</button>
-            <button type="button" class="type-12-caps text-neutral-12 hover:text-neutral-15" title="Three taps on the logo or Shift+D bring it back" @click="shown = false">Hide tab</button>
-          </span>
+      <div v-if="open" class="absolute right-0 bottom-12 flex max-h-[min(640px,calc(100dvh-140px))] max-lg:fixed max-lg:inset-x-3 max-lg:top-[132px] max-lg:bottom-auto max-lg:w-auto lg:left-0 lg:right-auto w-80 flex-col gap-5 overflow-y-auto rounded-3xl border border-neutral-5 bg-neutral-2 p-4 shadow-[0_8px_24px_rgb(0_0_0/0.6)]">
+        <div class="flex items-center gap-1">
+          <span class="type-16-caps flex-1">Debug</span>
+          <UiButton size="s" variant="ghost" @click="post({ clear: true })">Clear forces</UiButton>
+          <UiButton size="s" variant="ghost" title="Three taps on the logo or Shift+D bring it back" @click="shown = false">Hide</UiButton>
         </div>
 
         <section class="flex flex-col gap-2">
-          <span class="type-12-caps text-neutral-12">Admin</span>
-          <div class="grid grid-cols-2 gap-1">
-            <UiButton size="s" variant="secondary" icon="sliders" @click="editHome">Edit home layout</UiButton>
-            <UiButton size="s" variant="secondary" icon="settings" to="/admin" @click="open = false">Admin panel</UiButton>
-          </div>
-          <p class="type-12-regular text-neutral-11">Home in place: rows, scenes, card kinds. The panel: every setting of the site.</p>
-        </section>
-
-        <section class="flex flex-col gap-2">
           <div class="flex items-center justify-between">
-            <span class="type-12-caps text-neutral-12">Next case drops</span>
-            <span class="type-12 text-neutral-11">queued: {{ force.cases.length }}</span>
+            <span class="dock-h">Next case drops</span>
+            <span class="dock-note">{{ force.cases.length }} queued</span>
           </div>
-          <div class="grid grid-cols-3 gap-1">
-            <button
-              v-for="c in CASES"
-              :key="c.label"
-              type="button"
-              class="kd-press type-12 h-8 rounded-md border bg-neutral-4 px-1 hover:bg-neutral-6"
-              :style="{ borderColor: c.color }"
-              @click="post({ cases: [{ rarity: c.rarity, kurwa: c.kurwa }] })"
-            >
-              {{ c.label }}
-            </button>
+          <div class="flex flex-wrap gap-1">
+            <UiChip v-for="c in CASES" :key="c.label" :tone="c.kurwa ? 'gold' : 'none'" :icon="c.kurwa ? 'chicken' : undefined" @click="post({ cases: [{ rarity: c.rarity, kurwa: c.kurwa }] })">
+              <span v-if="!c.kurwa" class="-mr-0.5 size-2 rounded-full" :style="{ background: c.color }" />{{ c.label }}
+            </UiChip>
           </div>
           <div class="grid grid-cols-3 gap-1">
             <UiButton size="s" variant="secondary" @click="queue({ kurwa: true }, 3)">Chicken ×3</UiButton>
@@ -191,57 +174,65 @@ const resetDaily = async () => {
           <div v-if="force.cases.length" class="flex flex-wrap gap-1">
             <span v-for="(c, i) in force.cases" :key="i" class="type-10-caps rounded-sm bg-neutral-4 px-1.5 py-0.5 text-neutral-13">{{ c.kurwa ? 'chicken' : c.rarity }}</span>
           </div>
-          <p class="type-12-regular text-neutral-11">Chicken needs KURWADROP on. One entry per opened case.</p>
+          <p class="dock-note">One entry per opened case. Chicken needs KURWADROP on.</p>
         </section>
 
         <section class="flex flex-col gap-2">
-          <span class="type-12-caps text-neutral-12">Next upgrade</span>
+          <span class="dock-h">Next upgrade</span>
           <div class="flex flex-wrap gap-1">
             <UiChip v-for="u in UPGRADE" :key="u.label" :active="force.upgrade === u.v" @click="post({ upgrade: u.v })">{{ u.label }}</UiChip>
           </div>
-          <div class="grid grid-cols-2 gap-1">
-            <UiButton size="s" variant="secondary" @click="upgradeSetup('near-lose')">Setup · near lose</UiButton>
-            <UiButton size="s" variant="secondary" @click="upgradeSetup('near-win')">Setup · near win</UiButton>
-            <UiButton size="s" variant="secondary" @click="upgradeSetup(null)">Setup · auto</UiButton>
+          <p class="dock-note">Open Upgrade with your top skin aimed at about ×2:</p>
+          <div class="grid grid-cols-3 gap-1">
+            <UiButton size="s" variant="secondary" @click="upgradeSetup(null)">Auto</UiButton>
+            <UiButton size="s" variant="secondary" @click="upgradeSetup('near-win')">Near win</UiButton>
+            <UiButton size="s" variant="secondary" @click="upgradeSetup('near-lose')">Near lose</UiButton>
           </div>
         </section>
 
         <section class="flex flex-col gap-2">
-          <span class="type-12-caps text-neutral-12">Bonuses</span>
-          <div class="grid grid-cols-2 gap-1">
-            <UiButton size="s" variant="secondary" @click="bonuses({ levels: 5 }, '+5 levels')">+5 levels</UiButton>
-            <UiButton size="s" variant="secondary" @click="resetDaily">Daily ready</UiButton>
-          </div>
-        </section>
-
-        <section class="flex flex-col gap-2">
-          <span class="type-12-caps text-neutral-12">Next PvP</span>
+          <span class="dock-h">Next PvP</span>
           <div class="flex flex-wrap gap-1">
             <UiChip v-for="b in BATTLE" :key="b.label" :active="force.battle === b.v" @click="post({ battle: b.v })">{{ b.label }}</UiChip>
           </div>
+          <div class="grid grid-cols-2 gap-1">
+            <UiButton size="s" variant="secondary" icon="pvp" @click="newBattle(false)">New · waiting</UiButton>
+            <UiButton size="s" variant="secondary" icon="live" @click="newBattle(true)">New · live</UiButton>
+          </div>
         </section>
 
         <section class="flex flex-col gap-2">
-          <span class="type-12-caps text-neutral-12">Events</span>
+          <span class="dock-h">Player</span>
           <div class="grid grid-cols-2 gap-1">
             <UiButton size="s" variant="secondary" @click="credit">+1 000 coins</UiButton>
-            <UiButton size="s" variant="secondary" @click="rareFeed">Gold in feed</UiButton>
-            <UiButton size="s" variant="secondary" @click="levelUp">Level up</UiButton>
-            <UiButton size="s" variant="secondary" @click="resetDaily">Daily ready</UiButton>
             <UiButton size="s" variant="secondary" @click="rich">Balance ×10</UiButton>
             <UiButton size="s" variant="secondary" @click="broke">Balance 0</UiButton>
+            <UiButton size="s" variant="secondary" @click="ui.openDeposit(2500)">Quick deposit</UiButton>
+            <UiButton size="s" variant="secondary" @click="levelUp">Level up</UiButton>
+            <UiButton size="s" variant="secondary" @click="bonuses({ levels: 5 }, '+5 levels')">+5 levels</UiButton>
             <UiButton size="s" variant="secondary" @click="invLoaded">+12 skins</UiButton>
             <UiButton size="s" variant="secondary" @click="invEmpty">Empty inventory</UiButton>
-            <UiButton size="s" variant="secondary" @click="burst">Feed burst</UiButton>
-            <UiButton size="s" variant="secondary" @click="ui.openDeposit(2500)">Quick deposit</UiButton>
-            <UiButton size="s" variant="secondary" @click="newBattle(false)">PvP: waiting</UiButton>
-            <UiButton size="s" variant="secondary" @click="newBattle(true)">PvP: live now</UiButton>
-            <UiButton size="s" variant="secondary" @click="testFeel">Sound + buzz</UiButton>
-            <UiButton size="s" variant="secondary" @click="reset">Reset user</UiButton>
+            <UiButton v-if="FEATURES.bonuses" size="s" variant="secondary" class="col-span-2" @click="resetDaily">Daily case ready</UiButton>
+            <UiButton size="s" variant="danger" icon="refresh" class="col-span-2" @click="reset">Reset user</UiButton>
           </div>
-          <div class="flex gap-4">
-            <NuxtLink to="/debug" class="type-12 text-brand-light hover:underline" @click.capture="open = false">Full debug page →</NuxtLink>
-            <NuxtLink to="/fx" class="type-12 text-brand-light hover:underline" @click.capture="open = false">Forge FX →</NuxtLink>
+        </section>
+
+        <section class="flex flex-col gap-2">
+          <span class="dock-h">Live feed</span>
+          <div class="grid grid-cols-2 gap-1">
+            <UiButton size="s" variant="secondary" @click="rareFeed">Gold drop</UiButton>
+            <UiButton size="s" variant="secondary" @click="burst">Burst ×12</UiButton>
+          </div>
+        </section>
+
+        <section class="flex flex-col gap-2">
+          <span class="dock-h">Tools</span>
+          <div class="grid grid-cols-2 gap-1">
+            <UiButton size="s" variant="secondary" icon="sliders" @click="editHome">Edit home</UiButton>
+            <UiButton size="s" variant="secondary" icon="settings" to="/admin" @click="open = false">Admin panel</UiButton>
+            <UiButton size="s" variant="secondary" icon="sound" @click="testFeel">Sound + buzz</UiButton>
+            <UiButton size="s" variant="secondary" icon="fire" to="/fx" @click="open = false">Forge FX</UiButton>
+            <UiButton size="s" variant="secondary" class="col-span-2" to="/debug" @click="open = false">Full debug page</UiButton>
           </div>
         </section>
       </div>
@@ -250,6 +241,12 @@ const resetDaily = async () => {
 </template>
 
 <style scoped>
+.dock-h {
+  @apply type-12-caps text-neutral-12;
+}
+.dock-note {
+  @apply type-12-regular text-neutral-11;
+}
 .kd-dock-enter-active,
 .kd-dock-leave-active {
   transition:
