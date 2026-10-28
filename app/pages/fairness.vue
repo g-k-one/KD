@@ -14,7 +14,6 @@ const seeds = ref<SeedsResponse | null>(seedsData.value ?? null)
 watch(seedsData, (v) => (seeds.value = v ?? null))
 // the seeds are the account's: signing in or out reads them again (a guest sees none, only the sign-in)
 const session = useSessionStore()
-const ui = useUiStore()
 watch(
   () => session.user?.id,
   () => seedsReq.refresh(),
@@ -86,7 +85,8 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
     <!-- the banner opens the page, full width like the home page's -->
     <FairHero :seeds="seeds" @seeds="seedsOpen = true" />
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 lg:gap-10 lg:px-0">
-    <FairMyRolls :seeds="seeds" :focus="focusNonce" :focus-roll="focusRoll" :rotating="rotating" @verify="openVerifier" @rotate="rotate" />
+    <!-- Your rolls and the seed log are a player's own: a guest gets neither (two empty "sign in" cards said nothing) -->
+    <FairMyRolls v-if="session.user" :seeds="seeds" :focus="focusNonce" :focus-roll="focusRoll" :rotating="rotating" @verify="openVerifier" @rotate="rotate" />
 
     <!-- Steps -->
     <section class="grid gap-3 md:grid-cols-3 lg:gap-4">
@@ -105,9 +105,11 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
     <!-- The formula, each mode, the seed log: always out, nothing to unfold -->
     <div id="seeds" class="flex scroll-mt-24 flex-col gap-4 lg:gap-6">
     <section class="flex flex-col rounded-5xl bg-neutral-2">
-      <div class="flex h-18 items-center gap-3 border-b border-neutral-4 px-6">
-        <UiIcon name="function" :size="24" class="text-neutral-13" />
-        <h3 class="type-16-medium font-semibold">{{ $t('fair.formula') }}</h3>
+      <!-- Verify a result sits by the formula it runs: there for guests too (any seeds can be checked by hand) -->
+      <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
+        <UiIcon name="function" :size="24" class="shrink-0 text-neutral-13" />
+        <h3 class="type-14 lg:type-16-medium lg:font-semibold">{{ $t('fair.formula') }}</h3>
+        <UiButton variant="secondary" :size="isLg ? 'm' : 's'" icon="function" class="ml-auto" @click="openVerifier()">{{ $t('fair.verify') }}</UiButton>
       </div>
       <div class="flex flex-col gap-4 p-4 lg:gap-3 lg:p-6">
         <div class="overflow-x-auto rounded-2xl bg-neutral-1 p-4">
@@ -142,16 +144,12 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
          names over thin lines, a row per pair at the table's height, newest first — the one in use (its hash only, the
          rolls so far, its check waiting in grey), then each past pair with its period, the rolls it covered, its client
          seed (and whether you changed it) and its revealed server seed, which checks in one tap with the same green chip -->
-    <section class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
+    <section v-if="session.user" class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
       <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
         <UiIcon name="seeds" :size="24" class="shrink-0 text-neutral-13" />
         <span class="type-14 lg:type-16-medium">{{ $t('fair.history') }}</span>
-        <UiButton variant="secondary" :size="isLg ? 'm' : 's'" icon="function" class="ml-auto" @click="openVerifier()">{{ $t('fair.verify') }}</UiButton>
       </div>
-      <UiEmptyState v-if="!session.user" :text="$t('fair.signInSeeds')" class="m-3">
-        <UiButton icon="sign-in" @click="ui.openSignIn()">{{ $t('auth.signIn') }}</UiButton>
-      </UiEmptyState>
-      <div v-else-if="seeds" class="p-3">
+      <div v-if="seeds" class="p-3">
         <!-- the column names (desktop): wrapped, as the grid class sets its own display -->
         <div class="hidden lg:block">
           <div class="kd-seedgrid type-10-caps h-9 border-b border-neutral-4 px-3 text-neutral-11">

@@ -16,7 +16,6 @@ const emit = defineEmits<{
 }>()
 
 const session = useSessionStore()
-const ui = useUiStore()
 const isLg = useMediaQuery('(min-width: 1024px)')
 const entries = ref<HistoryEntry[]>([])
 const loaded = ref(false)
@@ -100,11 +99,8 @@ watch(
         </span>
       </div>
 
-      <UiEmptyState v-if="!session.user" :text="$t('fair.signInRolls')" class="m-3">
-        <UiButton icon="sign-in" @click="ui.openSignIn()">{{ $t('auth.signIn') }}</UiButton>
-      </UiEmptyState>
-      <!-- the rolls on their way: the table's place -->
-      <span v-else-if="!loaded" class="kd-skeleton m-3 h-[180px] rounded-3xl lg:h-52" aria-hidden="true" />
+      <!-- the rolls on their way: the table's place (signed in only: the page leaves this card out for guests) -->
+      <span v-if="!loaded" class="kd-skeleton m-3 h-[180px] rounded-3xl lg:h-52" aria-hidden="true" />
       <UiEmptyState v-else-if="!rows.length" :text="$t('fair.noRollsYet')" class="m-3">
         <UiButton to="/" icon="cases">{{ $t('account.openCases') }}</UiButton>
       </UiEmptyState>
