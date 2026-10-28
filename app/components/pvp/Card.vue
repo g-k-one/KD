@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { Battle } from '#shared/types/api'
 
-// A battle as a row of the lobby (components/pvp/Table.vue), skin.club's row 1:1 in our colours and corners: the rounds
-// (the status over the count tile on the mode's colour, "Rounds" under it), the battle scenario as one band of case
-// cells (the case big, its name under it; a run of one case as one cell, ×N, while seats are open), the cost, the
-// players (how many over the seats, the mode under them) and the button — Join (a guest signs in first), Watch or View.
+// A battle as a row of the lobby (components/pvp/Table.vue), on skin.club's row in our colours and corners: the rounds
+// (the status over a ring that fills in the mode's colour as the rounds are played, the count in it), the battle
+// scenario as case cells (the case big, its name under it; a run of one case as one cell, ×N, while seats are open), the
+// players (how many over the seats — overlapping, so four and VS fit — the mode under them) and one cell with the cost
+// over the button — Join (a guest signs in first), Watch or View — so the button is not an island in the row.
 // Live, the band shows progress only, as skin.club does: the cases played are dimmed, the one opening now is marked and
 // lifted, and the band slides along with it. No drops here — they are the room's (the lobby gets no results: lighter,
 // and nothing to read ahead of the replay). Phones: skin.club's card — rounds and status, the cost and the mode · the
@@ -46,6 +47,10 @@ const fits = computed(() => (mounted.value ? Math.max(1, Math.floor((viewW.value
 const shift = computed(() => (props.battle.status === 'live' ? Math.min(Math.max(0, played.value - 1), Math.max(0, cells.value.length - fits.value)) : 0))
 const overflows = computed(() => mounted.value && (cells.value.length - shift.value) * step.value - CELL_GAP > viewW.value + 1)
 
+// the rounds' ring: played of all (open seats: empty; over: full, grey)
+const RING_R = 26
+const RING_C = 2 * Math.PI * RING_R
+const ringDash = computed(() => RING_C * (1 - played.value / Math.max(1, props.battle.rounds.length)))
 const winners = computed<number[]>(() => (props.battle.status === 'finished' ? (props.battle.winners ?? (props.battle.winnerSlot != null ? [props.battle.winnerSlot] : [])) : []))
 // the seats in a line, or two with VS between in team mode
 const sides = computed(() => (props.battle.mode === 'team' ? [props.battle.slots.slice(0, 2), props.battle.slots.slice(2)] : [props.battle.slots]))
@@ -69,13 +74,17 @@ function onClick(e: MouseEvent) {
     :class="[`is-${battle.mode}`, `is-${battle.status}`]"
     @click.capture="onClick"
   >
-    <!-- rounds: the status, the count on the mode's colour, "Rounds" -->
+    <!-- rounds: the status, the ring with the count in it, "Rounds" -->
     <div class="kd-brow-rounds flex items-center gap-2.5 px-2 pt-2 lg:flex-col lg:justify-center lg:gap-1.5 lg:p-0">
       <span class="kd-brow-status type-10-caps flex items-center gap-1 max-lg:hidden">
         <span v-if="battle.status === 'live'" class="kd-live-dot size-1.5 rounded-full bg-danger" />{{ $t(status) }}
       </span>
-      <span class="kd-badge grid h-10 w-11 shrink-0 place-items-center rounded-xl tabular-nums lg:h-[72px] lg:w-16 lg:rounded-2xl">
-        <span class="type-16-caps lg:type-20-caps">{{ battle.status === 'live' ? round : battle.rounds.length }}</span>
+      <span class="kd-ring relative grid size-11 shrink-0 place-items-center lg:size-16">
+        <svg viewBox="0 0 60 60" class="absolute inset-0 size-full -rotate-90" aria-hidden="true">
+          <circle cx="30" cy="30" :r="RING_R" class="kd-ring-track" fill="none" stroke-width="4" />
+          <circle cx="30" cy="30" :r="RING_R" class="kd-ring-fill" fill="none" stroke-width="4" stroke-linecap="round" :stroke-dasharray="RING_C" :stroke-dashoffset="ringDash" />
+        </svg>
+        <span class="kd-ring-n type-16-caps relative tabular-nums lg:type-20-caps">{{ battle.status === 'live' ? round : battle.rounds.length }}</span>
       </span>
       <span class="flex flex-col gap-0.5 lg:items-center">
         <span class="kd-brow-status type-10-caps flex items-center gap-1 lg:hidden"><span v-if="battle.status === 'live'" class="kd-live-dot size-1.5 rounded-full bg-danger" />{{ $t(status) }}</span>
@@ -104,8 +113,8 @@ function onClick(e: MouseEvent) {
       <span v-if="overflows" class="kd-band-fade pointer-events-none absolute inset-y-0 right-0 w-12" aria-hidden="true" />
     </div>
 
-    <!-- the cost (phones: top right, the mode under it) -->
-    <div class="kd-brow-cost kd-cellbg flex flex-col items-end justify-center gap-1 px-2 pt-2 lg:items-center lg:rounded-xl lg:p-0">
+    <!-- phones: the cost top right, the mode under it (desktop: the cost sits over the button) -->
+    <div class="kd-brow-cost flex flex-col items-end justify-center gap-1 px-2 pt-2 lg:hidden">
       <UiPrice :amount="battle.cost" size="m" tone="coin" :title="$t('pvp.cost')" />
       <span class="kd-brow-mode type-10-caps flex items-center gap-1 lg:hidden"><UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="12" />{{ $t(`pvp.modeName.${battle.mode}`) }}</span>
     </div>
@@ -113,18 +122,20 @@ function onClick(e: MouseEvent) {
     <!-- the players: how many over the seats, the mode under them -->
     <div class="kd-brow-who kd-cellbg flex min-w-0 items-center px-2 pb-2 lg:flex-col lg:justify-between lg:rounded-xl lg:px-2 lg:py-3">
       <span class="type-12 text-neutral-11 tabular-nums max-lg:hidden">{{ battle.mode === 'team' ? '2 vs 2' : `${seated}/${battle.size}` }}</span>
-      <span class="flex items-center gap-1">
+      <span class="flex items-center gap-1.5">
         <template v-for="(side, k) in sides" :key="k">
-          <span v-if="k > 0" class="type-10-caps mx-0.5 text-neutral-11">{{ $t('pvp.vs') }}</span>
+          <span v-if="k > 0" class="type-10-caps text-neutral-11">{{ $t('pvp.vs') }}</span>
+          <span class="flex items-center">
           <template v-for="s in side" :key="s.slot">
-            <span v-if="s.player" class="kd-av relative size-7" :class="[winners.includes(s.slot) && 'is-won', battle.status === 'finished' && !winners.includes(s.slot) && 'is-lost']" :title="s.player.nickname">
+            <span v-if="s.player" class="kd-av relative -ml-2 size-8 first:ml-0" :class="[winners.includes(s.slot) && 'is-won', battle.status === 'finished' && !winners.includes(s.slot) && 'is-lost']" :title="s.player.nickname">
               <span class="block size-full overflow-hidden rounded-full bg-neutral-7">
                 <img :src="s.player.avatar" alt="" class="size-full object-cover" :class="s.player.bot && 'scale-75 object-contain'" />
               </span>
               <UiIcon v-if="winners.includes(s.slot)" name="crown-fill" :size="12" class="kd-av-crown absolute -top-2.5 left-1/2 -translate-x-1/2" />
             </span>
-            <span v-else class="kd-av kd-av-free grid size-7 place-items-center rounded-full border border-dashed"><UiIcon name="plus" :size="12" /></span>
+            <span v-else class="kd-av kd-av-free relative -ml-2 grid size-8 place-items-center rounded-full border border-dashed first:ml-0"><UiIcon name="plus" :size="14" /></span>
           </template>
+          </span>
         </template>
       </span>
       <UiTooltip :text="modeTip" class="max-lg:hidden">
@@ -132,9 +143,13 @@ function onClick(e: MouseEvent) {
       </UiTooltip>
     </div>
 
-    <!-- the button -->
-    <div class="kd-brow-action flex items-center justify-end px-2 pb-2 lg:justify-center lg:p-0">
-      <span class="kd-btn type-14-caps inline-flex h-10 w-32 items-center justify-center gap-1.5 rounded-lg lg:w-[152px]" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
+    <!-- the cost over the button, one cell the row's height (phones: the button alone, the cost is on top) -->
+    <div class="kd-brow-action kd-cellbg flex items-center justify-end px-2 pb-2 lg:flex-col lg:justify-center lg:gap-3 lg:rounded-xl lg:px-4 lg:py-3">
+      <span class="flex flex-col items-center gap-0.5 max-lg:hidden">
+        <span class="type-10-caps text-neutral-11">{{ $t('pvp.cost') }}</span>
+        <UiPrice :amount="battle.cost" size="l" tone="coin" />
+      </span>
+      <span class="kd-btn type-14-caps inline-flex h-10 w-32 items-center justify-center gap-1.5 rounded-lg lg:w-full" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
         <UiIcon v-if="battle.status !== 'waiting'" name="eye" :size="16" class="shrink-0" />
         {{ $t(action) }}
       </span>
@@ -155,11 +170,11 @@ function onClick(e: MouseEvent) {
     'who action';
   transition: background-color var(--dur-base) var(--ease-out);
 }
-/* desktop: skin.club's columns — rounds · the band · cost · players · the button (the header has the same) */
+/* desktop: rounds · the band · players · cost and button (the header has the same) */
 @media (min-width: 64rem) {
   .kd-brow {
-    grid-template-columns: var(--pvp-cols, 112px minmax(0, 1fr) 112px 152px 184px);
-    grid-template-areas: 'rounds band cost who action';
+    grid-template-columns: var(--pvp-cols, 112px minmax(0, 1fr) 168px 184px);
+    grid-template-areas: 'rounds band who action';
   }
 }
 /* the mode's colour: gold for Classic (the most wins), pink for Crazy (the least wins), blue for the teams */
@@ -199,19 +214,25 @@ function onClick(e: MouseEvent) {
 .kd-brow-mode {
   color: var(--mc);
 }
-/* the count: the mode's colour, its edge a shade stronger; red while live, grey once over */
-.kd-badge {
-  color: var(--color-neutral-15);
-  background: color-mix(in srgb, var(--mc) 16%, var(--color-neutral-3));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mc) 45%, transparent);
+/* the rounds' ring: a dim track in the mode's colour, filled in it as rounds are played (it steps once a round — no
+   animation inside the SVG); the count in it, red while live; grey once over */
+.kd-ring-track {
+  stroke: color-mix(in srgb, var(--mc) 22%, var(--color-neutral-4));
 }
-.kd-brow.is-live .kd-badge {
+.kd-ring-fill {
+  stroke: var(--mc);
+}
+.kd-ring-n {
+  color: var(--color-neutral-15);
+}
+.kd-brow.is-live .kd-ring-n {
   color: var(--color-danger);
 }
-.kd-brow.is-finished .kd-badge {
+.kd-brow.is-finished .kd-ring-fill {
+  stroke: var(--color-neutral-8);
+}
+.kd-brow.is-finished .kd-ring-n {
   color: var(--color-neutral-11);
-  background: var(--color-neutral-3);
-  box-shadow: none;
 }
 /* the band: a cell per case, each its own dark block (the row shows between them, as on skin.club); played ones dimmed,
    the one now lit in the mode's colour, marked, its case lifted. It slides with the round (transform only) */
@@ -264,9 +285,16 @@ function onClick(e: MouseEvent) {
 .kd-brow.is-finished .kd-cell-img {
   opacity: 0.45;
 }
+/* the seats overlap: each ringed in the ground it sits on (the players' cell on desktop, the card on phones) */
 .kd-av {
+  --ring: var(--row);
   border-radius: 9999px;
-  box-shadow: 0 0 0 2px var(--cell);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+@media (min-width: 64rem) {
+  .kd-av {
+    --ring: var(--cell);
+  }
 }
 .kd-av-free {
   border-color: var(--color-neutral-8);
@@ -274,8 +302,9 @@ function onClick(e: MouseEvent) {
   color: var(--color-neutral-11);
 }
 .kd-av.is-won {
+  z-index: 1;
   box-shadow:
-    0 0 0 2px var(--cell),
+    0 0 0 2px var(--ring),
     0 0 0 3.5px var(--color-success);
 }
 .kd-av.is-lost {

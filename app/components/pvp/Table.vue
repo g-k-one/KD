@@ -14,7 +14,6 @@ defineProps<{ battles: Battle[] }>()
     <div class="kd-th type-10-caps hidden h-8 items-center gap-1 px-1 text-neutral-11 lg:grid">
       <span class="text-center">{{ $t('pvp.rounds') }}</span>
       <span class="text-center">{{ $t('pvp.scenario') }}</span>
-      <span class="text-center">{{ $t('pvp.cost') }}</span>
       <span class="text-center">{{ $t('pvp.players') }}</span>
       <span />
     </div>
@@ -26,9 +25,9 @@ defineProps<{ battles: Battle[] }>()
 </template>
 
 <style scoped>
-/* skin.club's columns, shared with every row: rounds · the battle scenario · cost · players · the button */
+/* the columns, shared with every row: rounds · the battle scenario · players · the cost over the button */
 .kd-pvp-table {
-  --pvp-cols: 112px minmax(0, 1fr) 112px 152px 184px;
+  --pvp-cols: 112px minmax(0, 1fr) 168px 184px;
 }
 .kd-th {
   grid-template-columns: var(--pvp-cols);
