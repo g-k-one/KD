@@ -92,7 +92,8 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
         <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="kd-sort48 min-w-0 flex-1 lg:w-48 lg:flex-none" :active="mode !== 'all'">
           <template #leading><UiIcon :name="mode === 'all' ? 'pvp' : PVP_MODE_ICON[mode]" :size="16" class="text-neutral-11" /></template>
         </UiSelect>
-        <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" class="!h-12 !rounded-xl shrink-0 max-lg:hidden lg:px-4" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
+        <!-- a switch is a chip (the case dock's Fast), not a field: the fields are the selects -->
+        <UiChip size="m" icon="wallet" :active="affordable" :disabled="!session.user" class="!h-12 !rounded-xl shrink-0 normal-case max-lg:hidden lg:px-4" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
         <button
           v-if="session.user"
           type="button"
@@ -113,8 +114,8 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
 
       <div class="flex items-center justify-end gap-2 max-lg:hidden">
         <Transition name="kd-reset">
-          <!-- Fits my balance's chip: the row's 48 px, the selects' type -->
-          <UiChip v-if="dirty" size="m" variant="field" icon="refresh" class="!h-12 !rounded-xl shrink-0 lg:px-4" @click="reset">{{ $t('filters.reset') }}</UiChip>
+          <!-- Reset is an action: a quiet ghost button (the home filters' too), the dock's 48 px -->
+          <UiButton v-if="dirty" variant="ghost" size="m" icon="refresh" class="!h-12 !rounded-xl shrink-0" @click="reset">{{ $t('filters.reset') }}</UiButton>
         </Transition>
         <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort kd-sort48 w-48 shrink-0" :active="sort !== 'default'">
           <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
