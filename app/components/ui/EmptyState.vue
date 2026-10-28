@@ -1,21 +1,15 @@
 <script setup lang="ts">
 // The one empty state of the kit (docs/ux-research-v3.md → A3): the chicken mascot, a line of text, an action.
-// The art is chicken-moods.webp, two faces side by side: `tired` (sweating, nothing here) or `laugh`.
-withDefaults(defineProps<{ text: string; mood?: 'tired' | 'laugh' }>(), { mood: 'tired' })
+// Each place has its own chicken doing what the line says (public/img/moods, cut by scripts/cut-sheet.py from the
+// sheets in docs/ART_PROMPTS.md → 2): an empty case for an empty inventory, a blank scroll for no history, a magnifier
+// for no match, the dice for no rolls yet, the teasing laugh for a guest on the upgrade.
+export type EmptyArt = 'empty-inventory' | 'empty-history' | 'empty-search' | 'empty-pvp' | 'no-rolls' | 'guest-upgrade' | 'guest-rolls' | 'signed-out' | 'error'
+defineProps<{ text: string; art: EmptyArt }>()
 </script>
 
 <template>
   <div class="flex flex-col items-center gap-4 rounded-5xl bg-neutral-2 px-6 py-12 text-center lg:py-16">
-    <span class="kd-empty-art block size-24 overflow-hidden" aria-hidden="true">
-      <img
-        src="/img/items/chicken-moods.webp"
-        alt=""
-        class="h-full w-auto max-w-none"
-        :style="{ translate: mood === 'tired' ? '-50%' : '0' }"
-        draggable="false"
-        loading="lazy"
-      />
-    </span>
+    <img :src="`/img/moods/${art}.webp`" alt="" class="kd-empty-art block size-24 object-contain lg:size-28" draggable="false" loading="lazy" />
     <p class="type-14-regular max-w-72 text-neutral-12">{{ text }}</p>
     <slot />
   </div>

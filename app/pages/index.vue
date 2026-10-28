@@ -158,7 +158,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
         <HomeHiddenRow v-for="r in hiddenBefore.end" :key="r.id" :row="r" />
         <ClientOnly><HomeLayoutBar v-if="homeLayout.editing.value" /></ClientOnly>
 
-        <UiEmptyState v-if="data && !sections.length" :text="$t('cases.empty')">
+        <UiEmptyState v-if="data && !sections.length" :text="$t('cases.empty')" art="empty-search">
           <UiButton variant="secondary" @click="filters.reset()">{{ $t('filters.reset') }}</UiButton>
         </UiEmptyState>
       </div>

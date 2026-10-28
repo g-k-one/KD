@@ -607,7 +607,7 @@ async function runUpgrade() {
           <span v-for="n in PAGE" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-square lg:aspect-auto lg:h-[105px]" :style="{ animationDelay: `${n * 40}ms` }" />
         </div>
         <!-- nothing to stake yet: one big step, open a case (no second, small "open cases" line under it) -->
-        <UiEmptyState v-else-if="session.user && !inventory.length" :text="$t('account.emptyInventory')" class="flex-1 justify-center">
+        <UiEmptyState v-else-if="session.user && !inventory.length" :text="$t('account.emptyInventory')" art="empty-inventory" class="flex-1 justify-center">
           <UiButton size="l" icon="cases" to="/" class="w-full max-w-72">{{ $t('account.openCases') }}</UiButton>
         </UiEmptyState>
         <div v-else-if="session.user" class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
@@ -620,7 +620,7 @@ async function runUpgrade() {
             />
           </template>
         </div>
-        <UiEmptyState v-else :text="$t('upgrade.signInText')" mood="laugh" class="flex-1 justify-center">
+        <UiEmptyState v-else :text="$t('upgrade.signInText')" art="guest-upgrade" class="flex-1 justify-center">
           <UiButton size="l" icon="sign-in" class="w-full max-w-72" @click="ui.openSignIn()">{{ $t('auth.signInToPlay') }}</UiButton>
         </UiEmptyState>
         <UiPager v-if="session.user && invPages > 1" v-model="invPage" :pages="invPages" class="mt-auto h-12 lg:h-10" />
@@ -680,7 +680,7 @@ async function runUpgrade() {
         </TransitionGroup>
         <!-- the filters found nothing: say so over the empty slots (the panel keeps its height) and undo them in a tap -->
         <div v-if="market && !filteredMarket.length" class="absolute inset-0 grid place-items-center p-4">
-          <UiEmptyState :text="$t('upgrade.noMatch')" class="bg-transparent py-0 lg:py-0">
+          <UiEmptyState :text="$t('upgrade.noMatch')" art="empty-search" class="bg-transparent py-0 lg:py-0">
             <UiButton variant="secondary" size="m" icon="close" @click="resetMarketFilters">{{ $t('upgrade.resetFilters') }}</UiButton>
           </UiEmptyState>
         </div>

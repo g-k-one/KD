@@ -26,7 +26,7 @@ watch(
       <span class="kd-bubble type-12-caps whitespace-nowrap rounded-xl px-2.5 py-1" :class="mood === 'nearLose' ? 'is-tease' : 'is-phew'">
         {{ line }}<template v-if="margin != null"> · {{ margin.toFixed(2) }}</template>
       </span>
-      <!-- one sprite, two meme frames: laughing at a near miss, wiping its brow on a near win -->
+      <!-- two meme frames (public/img/moods): laughing at a near miss, wiping its brow on a near win -->
       <span class="kd-chick kd-chick-meme block size-24 lg:size-28" :class="mood === 'nearLose' ? 'is-lol' : 'is-phew'" aria-hidden="true" />
     </span>
   </Transition>
@@ -43,11 +43,11 @@ watch(
   transform-origin: 50% 100%;
 }
 .kd-chick-meme {
-  background: url('/img/items/chicken-moods.webp') no-repeat 0 0 / 200% 100%;
+  background: url('/img/moods/near-lose.webp') no-repeat 50% 0 / contain;
   filter: drop-shadow(0 8px 16px rgb(0 0 0 / 0.5));
 }
 .kd-chick-meme.is-phew {
-  background-position: 100% 0;
+  background-image: url('/img/moods/near-win.webp');
 }
 .is-nearWin .kd-chick {
   animation: kd-chick-phew 1.2s var(--ease-in-out) infinite;

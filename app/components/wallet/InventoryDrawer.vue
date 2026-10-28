@@ -81,7 +81,7 @@ const upgradeTo = computed(() => `/upgrade?item=${target.value.slice(0, 6).map((
     <div v-if="loading && !items.length" class="grid grid-cols-3 gap-2 sm:grid-cols-4">
       <span v-for="n in 8" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-[4/5]" />
     </div>
-    <UiEmptyState v-else-if="!items.length" :text="$t('account.emptyInventory')">
+    <UiEmptyState v-else-if="!items.length" :text="$t('account.emptyInventory')" art="empty-inventory">
       <UiButton to="/" icon="cases" @click="open = false">{{ $t('account.openCases') }}</UiButton>
     </UiEmptyState>
     <div v-else class="grid max-h-[40dvh] grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">

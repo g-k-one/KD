@@ -36,6 +36,8 @@ no UI, no frame. The subject fits inside the image with a clear margin on every 
 
 ## 2. Курица-эмоции: пустые состояния и подсказки (3 листа 2×2)
 
+**Готово 28.10:** листы A–C нарезаны в `public/img/moods/` скриптом `scripts/cut-sheet.py` (чистит мусор вокруг вырезки) и подключены: пустой инвентарь, история, поиск, «бросков ещё нет», гость в апгрейде, «на волосок» в апгрейде. В запасе, пока негде показать: `empty-pvp`, `guest-rolls` (гостю карточку бросков больше не показываем), `signed-out`, `error`, `check-ok`. Старая `items/chicken-moods.webp` — в `_ARCHIVE/old_versions_2026-10-28/`.
+
 Сейчас на все пустые места одна картинка `items/chicken-moods.webp` (две мордочки, вырезаны грубо, с тёмной подложкой). Вместо неё у каждого места своя сценка: курица делает то, о чём говорит текст под ней. На сайте они стоят в 96–112 px, поэтому:
 - один жест и один предмет, крупно; никаких мелких деталей, которые пропадут в 96 px;
 - кадр у всех одинаковый: курица от груди до гребня, голова одного размера во всех клетках, взгляд и свет как у образца;
@@ -77,6 +79,7 @@ orange rim light. Each one has a single clear gesture and at most one prop, big 
 
 ## 3. Иллюстрации
 
+- **Готово 28.10:** новая сценка (курица над ящиком со скинами) стоит в окне входа, старая — в архиве.
 - `illustrations/sign-in.webp` (3:2): `The mascot holding up a glowing Steam-style round key badge (a plain round grey-blue badge, no Steam logo), smiling, inviting the viewer in. Bust from the waist up, landscape 3:2.`
 - Шаги Provably Fair (`pf-commit`, `pf-randomness`, `pf-verify`, 5:2, иконки-сцены без курицы):
   - `A chunky 3D server block with a padlock, an arrow pointing to a green tile with a # sign. Landscape 5:2, objects in a row.`

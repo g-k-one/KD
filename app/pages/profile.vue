@@ -246,7 +246,7 @@ async function saveTrade() {
               {{ showAllSkins ? $t('account.skinsLess') : $t('account.skinsAll', { n: sortedInventory.length }) }}
             </UiButton>
           </template>
-          <UiEmptyState v-else :text="$t('account.emptyInventory')" class="m-3 lg:m-4">
+          <UiEmptyState v-else :text="$t('account.emptyInventory')" art="empty-inventory" class="m-3 lg:m-4">
             <UiButton to="/" icon="cases">{{ $t('account.openCases') }}</UiButton>
           </UiEmptyState>
         </div>
@@ -289,7 +289,7 @@ async function saveTrade() {
             <span class="type-14 lg:type-16-medium">{{ $t('account.history') }}</span>
             <UiSelect v-model="gameFilter" :options="gameOptions" menu-width="fixed" class="ml-auto w-36 lg:w-40" :active="gameFilter !== 'all'" />
           </div>
-          <UiEmptyState v-if="!filteredHistory.length" :text="$t('account.emptyHistory')" class="m-3" />
+          <UiEmptyState v-if="!filteredHistory.length" :text="$t('account.emptyHistory')" art="empty-history" class="m-3" />
           <!-- the table: game · drop · stake · payout · profit · time · check; a roll opens its check -->
           <div v-else class="kd-history overflow-y-auto p-3">
             <HistoryTable :entries="filteredHistory" :link="(h) => (h.battleId ? `/pvp/${h.battleId}?check=1` : h.nonce ? `/fairness?roll=${h.id}` : undefined)" />
