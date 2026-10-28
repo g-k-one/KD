@@ -23,7 +23,7 @@ watch(() => [props.version, session.user?.id], load)
   <section v-if="entries.length" class="flex flex-col gap-3">
     <div class="flex items-center justify-between">
       <h2 class="type-16-caps lg:type-20-caps">{{ $t('upgrade.myUpgrades') }}</h2>
-      <NuxtLink to="/profile?tab=history" class="type-12-caps text-neutral-11 hover:text-neutral-15">{{ $t('upgrade.allHistory') }}</NuxtLink>
+      <NuxtLink to="/profile?tab=history" class="kd-hit type-12-caps relative text-neutral-11 [--hit:-12px_-8px] hover:text-neutral-15">{{ $t('upgrade.allHistory') }}</NuxtLink>
     </div>
     <!-- the profile's history table, with the roll and the chance it was played at; a row opens its check. The rows'
          12 px corners sit 12 px in from the card's 24, on every side -->

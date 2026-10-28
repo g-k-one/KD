@@ -7,8 +7,10 @@
  */
 const props = withDefaults(defineProps<{ tier: number; color: string; size?: number }>(), { size: 160 })
 
-// Particle directions are random per reveal; this only renders on the client after a spin.
+// Particle directions are random per reveal, so they are drawn only once mounted (a server render would not match)
+const mounted = useMounted()
 const sparks = computed(() => {
+  if (!mounted.value) return []
   const n = props.tier >= 4 ? 30 : props.tier >= 3 ? 20 : props.tier >= 2 ? 10 : 0
   return Array.from({ length: n }, (_, i) => {
     const a = (i / n) * Math.PI * 2 + Math.random() * 0.4

@@ -38,7 +38,7 @@ async function logout() {
         v-for="item in desktopNav"
         :key="item.key"
         :to="item.to"
-        class="kd-nav-link group type-14-caps relative flex h-10 items-center gap-2 rounded-full px-3 transition-colors duration-200"
+        class="kd-nav-link group type-14-caps relative flex h-10 items-center gap-2 rounded-full px-3 whitespace-nowrap transition-colors duration-200"
         :class="isNavActive(route, item.to) ? 'text-neutral-15' : 'text-neutral-12 hover:text-neutral-15'"
       >
         <UiIcon
@@ -47,7 +47,12 @@ async function logout() {
           class="kd-icon transition-colors duration-200"
           :class="isNavActive(route, item.to) ? (item.accent ?? 'text-brand-light') : 'text-neutral-12 group-hover:text-neutral-15'"
         />
-        {{ $t(`nav.${item.key}`) }}
+        <!-- under 1440 px "Provably Fair" became two lines next to one-line items: it reads Fair there -->
+        <template v-if="item.key === 'provablyFair'">
+          <span class="min-[90rem]:hidden">{{ $t('nav.fair') }}</span>
+          <span class="max-[89.999rem]:hidden">{{ $t('nav.provablyFair') }}</span>
+        </template>
+        <template v-else>{{ $t(`nav.${item.key}`) }}</template>
       </NuxtLink>
     </nav>
 

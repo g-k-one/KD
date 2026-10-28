@@ -225,6 +225,17 @@ html body {
     opacity: 0.48;
     pointer-events: none;
   }
+  /* A primary that can't be pressed yet goes grey (a dimmed orange still read as a live button); while it loads it
+     keeps its colour */
+  .kd-btn-primary:disabled:not([aria-busy]) {
+    opacity: 1;
+    background: var(--color-neutral-4);
+    color: var(--color-neutral-10);
+    box-shadow: none;
+  }
+  .kd-btn-primary:disabled:not([aria-busy])::after {
+    display: none;
+  }
 
   /*
    * Primary: Figma hover swaps base→bright for light→coin. A gradient can't be transitioned,

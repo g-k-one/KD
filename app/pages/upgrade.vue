@@ -34,6 +34,9 @@ const { data: market } = await useFetch<MarketResponse>('/api/market', { key: 'm
 const inventory = ref<InventoryItem[]>([])
 // Client only: server-side $fetch would go out without the session cookie and get a 401
 const inventoryLoading = ref(true)
+// The empty cards' blurred hints (desktop): three of the player's skins, three from the top of the market
+const stakeGhosts = computed(() => inventory.value.slice(0, 3).map((i) => i.image))
+const targetGhosts = computed(() => [...(market.value?.items ?? [])].sort((a, b) => b.price - a.price).slice(0, 3).map((i) => i.image))
 async function loadInventory() {
   if (import.meta.server) return
   if (!session.user) {
@@ -426,6 +429,7 @@ async function runUpgrade() {
         class="lg:col-start-1 lg:row-start-1"
         :items="selectedItems"
         :coins="extra"
+        :ghosts="stakeGhosts"
         :total="inputValue"
         :state="state"
         :disabled="state === 'spinning' || !session.user"
@@ -505,7 +509,7 @@ async function runUpgrade() {
         </template>
       </button>
       <div class="max-lg:hidden lg:contents">
-        <UpgradeTarget ref="targetCard" class="lg:col-start-3 lg:row-start-1" :item="target" :state="state" @clear="(target = null), resetResult()" />
+        <UpgradeTarget ref="targetCard" class="lg:col-start-3 lg:row-start-1" :item="target" :state="state" :ghosts="targetGhosts" @clear="(target = null), resetResult()" />
         <UpgradeControls
           :pending="pending"
           class="lg:col-start-3 lg:row-start-2"

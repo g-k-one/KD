@@ -60,8 +60,8 @@ const now = useClock(200)
 const clock = computed(() => battleClock(b.value, now.value))
 const done = computed(() => b.value.status === 'finished' || clock.value.round >= b.value.rounds.length)
 const roundIdx = computed(() => Math.min(b.value.rounds.length - 1, Math.max(0, clock.value.round)))
-// The round strip shows what fits (a 56 px tile + 8 px gap): a window that keeps the current round in view and ends
-// in a "+N" tile when more rounds follow
+// The round strip shows what fits (a 56 px tile + 8 px gap): a window that keeps the current round in view, faded on
+// the side where more rounds are out of view (no "+N" tile, as in the lobby: Rounds 0/6 beside it gives the count)
 const stripEl = useTemplateRef<HTMLElement>('stripEl')
 const { width: stripW } = useElementSize(() => stripEl.value?.parentElement ?? null)
 const strip = computed(() => {
@@ -70,7 +70,7 @@ const strip = computed(() => {
   const room = isMobile.value ? stripW.value - 8 : Math.max(0, stripW.value - 2 * 340)
   const fit = Math.max(3, Math.floor((room + 8) / 64))
   if (n <= fit) return { idx: Array.from({ length: n }, (_, i) => i), more: 0, from: 0 }
-  const shown = fit - 1
+  const shown = fit
   const from = Math.min(Math.max(0, roundIdx.value - 1), n - shown)
   return { idx: Array.from({ length: shown }, (_, k) => from + k), more: n - (from + shown), from }
 })
@@ -287,9 +287,8 @@ const roundLine = computed(() => {
       </div>
       <!-- As many rounds as fit, none cut: a window that follows the current round, a "+N" tile for the ones after it,
            and a soft fade on the side where earlier rounds went out of view -->
-      <div ref="stripEl" class="kd-rounds flex min-w-0 items-center gap-2 overflow-hidden px-1 py-2 max-lg:order-last max-lg:w-full lg:max-w-full" :class="strip.from > 0 && 'is-cut'">
+      <div ref="stripEl" class="kd-rounds flex min-w-0 items-center gap-2 overflow-hidden px-1 py-2 max-lg:order-last max-lg:w-full lg:max-w-full" :class="[strip.from > 0 && 'is-cut', strip.more > 0 && 'is-more']">
         <PvpCaseThumb v-for="i in strip.idx" :key="i" :image="b.rounds[i]!.image" :name="`${b.rounds[i]!.name} · ${formatCoins(b.rounds[i]!.price)}`" size="m" :state="roundState(i)" />
-        <span v-if="strip.more" class="type-14 grid size-14 shrink-0 place-items-center rounded-2xl bg-neutral-3 text-neutral-12 tabular-nums" :title="$t('pvp.roundsN', { n: b.rounds.length })">+{{ strip.more }}</span>
       </div>
       <div class="type-12-caps flex justify-end gap-2 max-lg:w-full">
         <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="m" /></span>
@@ -303,7 +302,21 @@ const roundLine = computed(() => {
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
         <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="[done && winners.includes(s.slot) && 'is-winner', leaders.includes(s.slot) && 'is-lead', isTeam && s.slot === 2 && 'is-team-split']">
           <span :key="revealed" class="kd-seat-flash pointer-events-none absolute inset-0" aria-hidden="true" />
+          <!-- a free seat while it waits: a dashed stage with Join, as the lobby's New battle tile (not the case picture
+               standing in every barrel) -->
+          <div v-if="!s.player && b.status === 'waiting'" class="flex items-center justify-center p-2" :class="isMobile ? 'h-50' : 'h-72'">
+            <button
+              type="button"
+              class="kd-press kd-free-seat flex size-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed text-neutral-11"
+              :disabled="youIn && !isCreator"
+              @click="youIn ? isCreator && bot(s.slot) : join(s.slot)"
+            >
+              <span class="grid size-10 place-items-center rounded-full bg-brand-base text-neutral-1 lg:size-12"><UiIcon name="plus" :size="22" /></span>
+              <span class="type-12-caps">{{ youIn ? (isCreator ? $t('pvp.callBot') : $t('pvp.waitingForPlayer')) : $t('pvp.join') }}</span>
+            </button>
+          </div>
           <PvpReel
+            v-else
             bare
             :case-ref="b.rounds[roundIdx] ?? null"
             :target="clock.round >= 0 || done ? (b.results?.[roundIdx]?.drops[s.slot] ?? null) : null"
@@ -403,11 +416,26 @@ const roundLine = computed(() => {
 .kd-rounds.is-cut {
   mask-image: linear-gradient(90deg, transparent, #000 48px);
 }
+.kd-rounds.is-more {
+  mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent);
+}
+.kd-rounds.is-cut.is-more {
+  mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent);
+}
 .kd-seat-drops {
   transition: opacity var(--dur-slow) var(--ease-out);
 }
 .kd-seat-drops.is-lost {
   opacity: 0.4;
+}
+.kd-free-seat {
+  border-color: var(--color-neutral-5);
+  transition: border-color var(--dur-base) var(--ease-out);
+}
+@media (hover: hover) {
+  .kd-free-seat:hover:not(:disabled) {
+    border-color: var(--color-brand-base);
+  }
 }
 /* the meta line folds away when the battle is over (rows to 0 and the column's gap taken back) */
 .kd-fold {

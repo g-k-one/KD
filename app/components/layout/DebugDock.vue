@@ -14,8 +14,21 @@ import type { Rarity } from '#shared/types/api'
  */
 type Force = { cases: { rarity?: Rarity; kurwa?: boolean }[]; upgrade: string | null; battle: string | null }
 
-const dock = usePersisted('kd_debug', { open: false })
+const dock = usePersisted('kd_debug', { open: false, shown: false })
 const open = computed({ get: () => dock.value.open, set: (v: boolean) => (dock.value = { ...dock.value, open: v }) })
+// The tab stays out of the way until asked for (it sat over cards for anyone shown the prototype): three quick taps
+// on the logo, or Shift+D, show or hide it; the choice is remembered on this device
+const shown = computed({ get: () => !!dock.value.shown, set: (v: boolean) => (dock.value = { ...dock.value, shown: v, open: v && dock.value.open }) })
+let taps: number[] = []
+useEventListener(import.meta.client ? document : null, 'click', (e: MouseEvent) => {
+  if (!(e.target as HTMLElement).closest?.('a[aria-label="KurwaDROP"]')) return
+  taps = [...taps.filter((t) => e.timeStamp - t < 700), e.timeStamp]
+  if (taps.length >= 3) {
+    taps = []
+    shown.value = !shown.value
+  }
+})
+onKeyStroke((e) => e.shiftKey && e.key === 'D' && !(e.target as HTMLElement).closest?.('input, textarea'), () => (shown.value = !shown.value))
 const session = useSessionStore()
 const toast = useToast()
 const force = ref<Force>({ cases: [], upgrade: null, battle: null })
@@ -123,7 +136,7 @@ const resetDaily = async () => {
 
 <template>
   <!-- phones: a narrow tab on the screen's edge, so it sits in the side margin instead of over cards and buttons -->
-  <div class="fixed top-[45%] right-0 z-[65] lg:top-auto lg:right-auto lg:bottom-4 lg:left-4">
+  <div v-if="shown" class="fixed top-[45%] right-0 z-[65] lg:top-auto lg:right-auto lg:bottom-4 lg:left-4">
     <button
       type="button"
       class="kd-press grid h-10 w-6 place-items-center rounded-l-xl border border-r-0 border-neutral-6 bg-neutral-3 text-lg opacity-80 shadow-elevation-2 lg:size-10 lg:rounded-full lg:border-r lg:opacity-100"
@@ -138,7 +151,10 @@ const resetDaily = async () => {
       <div v-if="open" class="absolute right-0 bottom-12 flex max-h-[min(640px,calc(100dvh-140px))] max-lg:fixed max-lg:inset-x-3 max-lg:top-[132px] max-lg:bottom-auto max-lg:w-auto lg:left-0 lg:right-auto w-80 flex-col gap-4 overflow-y-auto rounded-3xl border border-neutral-5 bg-neutral-2 p-4 shadow-[0_8px_24px_rgb(0_0_0/0.6)]">
         <div class="flex items-center justify-between">
           <span class="type-16-caps">Debug</span>
-          <button type="button" class="type-12-caps text-neutral-12 hover:text-neutral-15" @click="post({ clear: true })">Clear all</button>
+          <span class="flex gap-3">
+            <button type="button" class="type-12-caps text-neutral-12 hover:text-neutral-15" @click="post({ clear: true })">Clear all</button>
+            <button type="button" class="type-12-caps text-neutral-12 hover:text-neutral-15" title="Three taps on the logo or Shift+D bring it back" @click="shown = false">Hide tab</button>
+          </span>
         </div>
 
         <section class="flex flex-col gap-2">

@@ -73,6 +73,10 @@ const MODES = [
   { key: 'upgrade', icon: 'upgrade' },
   { key: 'pvp', icon: 'pvp' },
 ] as const
+// phones: one card with the three modes as a switch (three stacked cards made the page ~900 px longer)
+const fairMode = ref<(typeof MODES)[number]['key']>('cases')
+const modeOptions = computed(() => MODES.map((m) => ({ value: m.key, label: t(`fair.${m.key}`) })))
+const shownModes = computed(() => (isLg.value ? MODES : MODES.filter((m) => m.key === fairMode.value)))
 const ROWS = ['Server', 'Client', 'Nonce', 'Output'] as const
 const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce: 'fair.nonce', Output: 'fair.output' }
 </script>
@@ -117,10 +121,13 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
 
     <!-- Modes -->
     <section class="grid gap-3 lg:grid-cols-3 lg:gap-4">
-      <div v-for="m in MODES" :key="m.key" class="flex flex-col rounded-5xl bg-neutral-2">
-        <div class="flex h-18 items-center gap-3 border-b border-neutral-4 px-6">
+      <div v-for="m in shownModes" :key="m.key" class="flex flex-col rounded-5xl bg-neutral-2">
+        <div v-if="isLg" class="flex h-18 items-center gap-3 border-b border-neutral-4 px-6">
           <UiIcon :name="m.icon" :size="24" class="text-neutral-13" />
           <h3 class="type-16-medium font-semibold">{{ $t(`fair.${m.key}`) }}</h3>
+        </div>
+        <div v-else class="border-b border-neutral-4 p-3">
+          <UiSegmented v-model="fairMode" :options="modeOptions" block />
         </div>
         <dl class="flex flex-col px-6 py-2 lg:pb-4">
           <div v-for="(r, i) in ROWS" :key="r" class="flex min-h-12 items-center justify-between gap-4 lg:min-h-11" :class="{ 'border-t border-neutral-4': i > 0 }">

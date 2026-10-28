@@ -31,7 +31,8 @@ const PRESETS = [20, 50, 100, 200, 500, 1000]
 const promoInput = ref('KURWA10')
 const promo = ref<PromoResponse | null>(null)
 const promoError = ref(false)
-const agree = ref(true)
+// unticked: an agreement ticked for the player is not one
+const agree = ref(false)
 const paying = ref(false)
 
 const method = computed(() => methods.value.find((m) => m.id === methodId.value))
@@ -126,8 +127,10 @@ async function pay() {
 
       <div class="flex flex-col gap-4 max-lg:order-last lg:col-start-1 lg:row-start-2">
         <p class="type-14-regular rounded-2xl bg-neutral-2 px-4 py-3 text-neutral-12">
+          <!-- one line and the rules (the long version lives in the AML policy) -->
           <i18n-t keypath="deposit.sharedWarning" scope="global">
             <template #notAllow><span class="text-danger">{{ $t('deposit.notAllow') }}</span></template>
+            <template #rules><NuxtLink to="/aml" class="text-brand-light underline-offset-2 hover:underline">{{ $t('deposit.rules') }}</NuxtLink></template>
           </i18n-t>
         </p>
         <div class="type-12-regular flex flex-col gap-2 px-2 text-neutral-10 lg:type-14-regular lg:gap-1.5 lg:px-4">

@@ -289,7 +289,7 @@ const canReset = computed(() => !!(props.input || props.target))
           v-for="p in BAL_PRESETS"
           :key="p.label"
           type="button"
-          class="kd-press kd-preset type-14 lg:type-12 absolute top-0 rounded-md px-1.5 py-0.5 tabular-nums"
+          class="kd-press kd-preset kd-hit type-14 lg:type-12 absolute top-0 rounded-md px-1.5 py-0.5 tabular-nums"
           :class="[{ 'is-on': !!extra && Math.abs(extra - (p.f === 1 ? balance : balance * p.f)) < balance * 0.01 }, p.f === 1 ? '-translate-x-full' : '-translate-x-1/2']"
           :style="{ left: `${p.f === 1 ? 100 : Math.sqrt(p.f) * 100}%` }"
           :disabled="balOff"

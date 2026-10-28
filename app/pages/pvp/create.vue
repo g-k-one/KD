@@ -91,7 +91,14 @@ async function create() {
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 pb-44 lg:gap-6 lg:px-0 lg:pt-10 lg:pb-0">
     <!-- phones: pb-44 leaves room for the summary bar (rounds strip, totals, button), so the last cases scroll clear -->
-    <UiPageBar :title="$t('pvp.create')" :left="[{ label: $t('pvp.back'), icon: 'arrow-left', to: '/pvp' }]" />
+    <!-- the same bar as the lobby's: back and the PvP history on the left -->
+    <UiPageBar
+      :title="$t('pvp.create')"
+      :left="[
+        { label: $t('pvp.back'), icon: 'arrow-left', to: '/pvp' },
+        { label: $t('upgrade.history'), icon: 'history', to: '/profile?tab=history&game=pvp' },
+      ]"
+    />
 
     <div class="grid items-start gap-4 lg:grid-cols-[1fr_340px] lg:gap-6">
       <div class="flex min-w-0 flex-col gap-4">
@@ -105,7 +112,7 @@ async function create() {
             </span>
           </Transition>
           <Transition name="kd-fade" mode="out-in">
-            <span :key="mode" class="type-12-regular text-neutral-12 lg:flex-1 lg:text-right">{{ $t(`pvp.modeRule.${mode}`) }}</span>
+            <span :key="mode" class="type-12-caps text-neutral-12 lg:flex-1 lg:text-right">{{ $t(`pvp.modeTip.${mode}`) }}</span>
           </Transition>
         </div>
         <!-- the cases, in the lobby's and the home page's card language: a section header, 24px cards -->
@@ -186,9 +193,13 @@ async function create() {
             <dd><UiPrice :amount="cost * size" size="s" /></dd>
           </div>
         </dl>
+        <!-- no rounds yet: grey, and it names the next step instead of "Create for 0" -->
         <UiButton size="l" block :disabled="!rounds" :loading="creating" @click="create">
-          {{ $t('pvp.createFor') }}
-          <UiPrice :amount="cost" size="m" tone="inverse" />
+          <template v-if="rounds">
+            {{ $t('pvp.createFor') }}
+            <UiPrice :amount="cost" size="m" tone="inverse" />
+          </template>
+          <template v-else>{{ $t('pvp.pickCase') }}</template>
         </UiButton>
       </aside>
     </div>

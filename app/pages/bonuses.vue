@@ -181,6 +181,40 @@ const toPromo = () => promoEl.value?.scrollIntoView({ behavior: 'smooth', block:
       <BonusLadder :ladder="preview.ladder" :ranks="preview.ranks" :tier="0" @pick="ui.openSignIn()" />
       <p class="type-12-regular text-neutral-11">{{ $t('bonus.guestLadder') }}</p>
     </section>
+    <!-- Guests: the three rewards a player has, locked — the reason to sign in, in the same cards -->
+    <div v-if="!session.user && preview?.ladder?.length" class="grid gap-3 lg:grid-cols-3 lg:gap-4">
+      <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4">
+        <div class="flex items-center gap-3">
+          <ItemArt :image="preview.ladder[0]!.best.image" :rarity="preview.ladder[0]!.best.rarity" :size="44" class="w-12 shrink-0" />
+          <div class="flex min-w-0 flex-col gap-0.5">
+            <span class="type-16-caps">{{ $t('bonus.dailyShort') }}</span>
+            <span class="type-12-regular text-neutral-11">{{ $t('bonus.dailyRank', { rank: preview.ranks[0]?.name }) }}</span>
+          </div>
+          <UiPrice :amount="preview.ladder[0]!.value" tone="coin" class="ml-auto shrink-0" />
+        </div>
+        <UiButton variant="secondary" size="m" icon="lock" block class="mt-auto" @click="ui.openSignIn()">{{ $t('bonus.signInToClaim') }}</UiButton>
+      </div>
+      <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4">
+        <div class="flex items-center gap-3">
+          <span class="kd-reward-badge grid size-12 shrink-0 place-items-center rounded-lg"><UiLevelBadge :level="2" /></span>
+          <div class="flex min-w-0 flex-col gap-0.5">
+            <span class="type-16-caps">{{ $t('bonus.levelCase') }}</span>
+            <span class="type-12-regular text-neutral-11">{{ $t('bonus.levelCaseHow') }}</span>
+          </div>
+        </div>
+        <UiButton variant="secondary" size="m" icon="lock" block class="mt-auto" @click="ui.openSignIn()">{{ $t('bonus.signInToClaim') }}</UiButton>
+      </div>
+      <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4">
+        <div class="flex items-center gap-3">
+          <span class="kd-reward-badge grid size-12 shrink-0 place-items-center rounded-lg text-success"><UiIcon name="refresh" :size="24" /></span>
+          <div class="flex min-w-0 flex-col gap-0.5">
+            <span class="type-16-caps">{{ $t('bonus.rakeback') }}</span>
+            <span class="type-12-regular text-neutral-11">{{ $t('bonus.rakebackHow', { pct: pct(preview.ranks[0]?.rakebackBp ?? 0) }) }}</span>
+          </div>
+        </div>
+        <UiButton variant="secondary" size="m" icon="lock" block class="mt-auto" @click="ui.openSignIn()">{{ $t('bonus.signInToClaim') }}</UiButton>
+      </div>
+    </div>
 
     <!-- The level program: who you are (level, rank, how far the next level is) over the ranks' ladder, then the three
          rewards side by side — the daily case, the level cases, rakeback — then the promo code -->

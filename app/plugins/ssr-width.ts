@@ -6,5 +6,12 @@ import { provideSSRWidth } from '@vueuse/core'
 export default defineNuxtPlugin((nuxtApp) => {
   if (!import.meta.server && !nuxtApp.isHydrating) return
   provideSSRWidth(390, nuxtApp.vueApp)
-  if (import.meta.client) nuxtApp.hook('app:suspense:resolve', () => provideSSRWidth(null, nuxtApp.vueApp))
+  // after hydration: clear the provided width in place (a second provideSSRWidth would make Vue warn on every page)
+  if (import.meta.client) {
+    nuxtApp.hook('app:suspense:resolve', () => {
+      const provides = nuxtApp.vueApp._context.provides as Record<symbol, unknown>
+      const key = Object.getOwnPropertySymbols(provides).find((s) => s.description === 'vueuse-ssr-width')
+      if (key) provides[key] = null
+    })
+  }
 })

@@ -39,7 +39,8 @@ const waiting = computed(() => (paused.value ? drops.value.filter((d) => !frozen
 
 const linkOf = (d: FeedDrop) => sourceLink(d.caseSlug)
 
-// Flames for the highlight live on the strip's own Forge layer
+// Flames for the highlight live on the strip's own Forge layer (desktop). Phones keep to two WebGL canvases on the home
+// page (the banner's hen and the page's own layer), so there the "x" glows in CSS instead of burning
 const root = useTemplateRef<HTMLElement>('root')
 provideForge(root)
 
@@ -119,7 +120,8 @@ if (import.meta.client) {
         <span class="flex items-end justify-between gap-1 max-lg:flex-col-reverse max-lg:items-start">
           <UiPrice :amount="feed.highlight.price" tone="coin" size="s" compact class="lg:hidden" />
           <UiPrice :amount="feed.highlight.price" tone="coin" class="max-lg:hidden" />
-          <FxFire class="shrink-0">
+          <FxFire class="shrink-0" :on="isLg">
+            <span v-if="!isLg" class="kd-feed-glow pointer-events-none absolute z-[1]" aria-hidden="true" />
             <span class="kd-feed-x relative z-[2]">{{ xLabel(feed.highlight) }}</span>
           </FxFire>
         </span>
@@ -300,5 +302,22 @@ if (import.meta.client) {
 }
 .kd-hovercard-leave-to {
   opacity: 0;
+}
+/* phones: the highlight's "x" glows warm and breathes (transform and opacity only) instead of a WebGL flame */
+.kd-feed-glow {
+  inset: -10px -16px;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgb(255 150 40 / 0.6), rgb(249 83 17 / 0.22) 62%, transparent);
+  animation: kd-feed-glow 1.4s ease-in-out infinite alternate;
+}
+@keyframes kd-feed-glow {
+  from {
+    opacity: 0.55;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.08);
+  }
 }
 </style>

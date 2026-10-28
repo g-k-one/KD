@@ -226,9 +226,14 @@ const held = ref(false)
     animation-play-state: paused;
   }
 }
+/* it starts with the first card on the page's 16 px line (the grid below), not at the screen's edge; the same 16 px at
+   both ends keeps the loop seamless */
 @keyframes kd-wins-run {
+  from {
+    transform: translateX(16px);
+  }
   to {
-    transform: translateX(-50%);
+    transform: translateX(calc(-50% + 16px));
   }
 }
 @media (max-width: 63.999rem) and (prefers-reduced-motion: reduce) {

@@ -16,6 +16,9 @@ const totalShown = useTransition(totalSrc, { duration: 700, transition: [0.22, 1
 const chanceSrc = computed(() => props.chance ?? 0)
 const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22, 1, 0.36, 1] })
 const playing = computed(() => (props.total ?? 0) > 0)
+// Sparks only at the moment the seat wins, not for a battle that was already over when the page opened
+const celebrate = ref(false)
+watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
 </script>
 
 <template>
@@ -28,7 +31,7 @@ const playing = computed(() => (props.total ?? 0) > 0)
   >
     <template v-if="player">
       <!-- Winner: burst of sparks and a WINNER tag (Skin.club) -->
-      <FxBurst v-if="winner" :tier="3" color="var(--color-success)" :size="compact ? 90 : 160" />
+      <FxBurst v-if="celebrate" :tier="3" color="var(--color-success)" :size="compact ? 90 : 160" />
       <span v-if="winner" class="kd-winner-tag type-10-caps absolute -top-2 left-1/2 rounded-sm bg-success px-1.5 py-0.5 text-neutral-1">{{ $t('pvp.winner') }}</span>
       <Transition name="kd-lead">
         <span v-if="lead && !winner" class="kd-lead-tag type-10-caps absolute -top-2 left-1/2 rounded-sm bg-brand-base px-1.5 py-0.5 text-neutral-15">{{ $t('pvp.lead') }}</span>
@@ -38,10 +41,11 @@ const playing = computed(() => (props.total ?? 0) > 0)
           <img :src="player.avatar" alt="" class="size-full object-cover" :class="player.bot && 'scale-75 object-contain'" />
         </span>
       </span>
-      <span class="flex min-w-0 flex-col gap-0.5" :class="compact ? 'items-center' : 'flex-1 items-start'">
-        <span class="flex max-w-full items-center gap-1.5">
+      <span class="flex min-w-0 max-w-full flex-col gap-0.5" :class="compact ? 'items-center' : 'flex-1 items-start'">
+        <!-- phones: the level under the name, so a narrow seat cuts the name instead of running it into the next seat -->
+        <span class="flex min-w-0 max-w-full items-center" :class="compact ? 'flex-col gap-0.5' : 'gap-1.5'">
           <UiIcon v-if="winner && !compact" name="crown" :size="16" class="kd-crown shrink-0 text-coin" />
-          <span class="truncate" :class="compact ? 'type-12' : 'type-16-medium'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
+          <span class="min-w-0 max-w-full truncate" :class="compact ? 'type-12' : 'type-16-medium'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
           <UiLevelBadge :level="player.level" class="shrink-0" :class="compact && 'scale-90'" />
         </span>
         <UiPrice v-if="result" :amount="Math.round(totalShown)" :size="compact ? 'xs' : 'm'" :tone="winner ? 'success' : 'default'" class="tabular-nums" />
