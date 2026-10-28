@@ -6,8 +6,8 @@ import type { Battle } from '#shared/types/api'
 // scenario as case cells (the case big, its name under it; a run of one case as one cell, ×N, while seats are open), the
 // players (how many over the seats — overlapping, so four and VS fit — the mode under them) and one cell with the cost
 // over the button — Join (a guest signs in first), Watch or View — so the button is not an island in the row. The row is
-// one card in the house's way (the upgrade's stake, the profile's stats): neutral-2 with the case cells as lighter tiles
-// on it; the rounds, the players and the cost stand on the card itself — a caps label on top on one line for all three,
+// one card in the house's way (24 px, 8 in; phones 20): neutral-2, the cases standing on it without tiles; the rounds,
+// the players and the cost stand on the card itself — a caps label on top on one line for all three,
 // the thing itself in the middle, the second line at the bottom on one line too.
 // Live, the band shows progress only, as skin.club does: the cases played are dimmed, the one opening now is marked and
 // lifted, and the band slides along with it. No drops here — they are the room's (the lobby gets no results: lighter,
@@ -42,7 +42,7 @@ const cells = computed<Cell[]>(() => {
 // The cell width is CSS (132 / 100 px); the slide is worked out once mounted (the server renders at a phone's width).
 const mounted = useMounted()
 const isLg = useMediaQuery('(min-width: 1024px)')
-const CELL_GAP = 4
+const CELL_GAP = 6
 const step = computed(() => (isLg.value ? 132 : 100) + CELL_GAP)
 const viewport = useTemplateRef<HTMLElement>('viewport')
 const { width: viewW } = useElementSize(viewport)
@@ -73,12 +73,12 @@ function onClick(e: MouseEvent) {
 <template>
   <NuxtLink
     :to="`/pvp/${battle.id}`"
-    class="kd-brow grid min-w-0 gap-1 rounded-3xl p-1 lg:h-[140px] lg:gap-1.5 lg:rounded-2xl"
+    class="kd-brow grid min-w-0 gap-1.5 rounded-4xl p-2 lg:h-[140px] lg:rounded-5xl"
     :class="[`is-${battle.mode}`, `is-${battle.status}`]"
     @click.capture="onClick"
   >
     <!-- rounds: the status, the ring with the count in it, "Rounds" -->
-    <div class="kd-brow-rounds flex items-center gap-2.5 px-2 pt-2 lg:flex-col lg:justify-between lg:gap-0 lg:rounded-xl lg:px-2 lg:py-3">
+    <div class="kd-brow-rounds flex items-center gap-2.5 px-2 pt-2 lg:flex-col lg:justify-between lg:gap-0 lg:px-2 lg:py-2">
       <span class="kd-brow-status type-10-caps flex items-center gap-1 max-lg:hidden">
         <span v-if="battle.status === 'live'" class="kd-live-dot size-1.5 rounded-full bg-danger" />{{ $t(status) }}
       </span>
@@ -96,18 +96,19 @@ function onClick(e: MouseEvent) {
     </div>
 
     <!-- the battle scenario: one band of case cells -->
-    <!-- phones: 4 px in, so the cells' 16 px corners sit concentric in the card's 24 (desktop: 12 in the row's 16) -->
-    <div ref="viewport" class="kd-brow-band relative min-w-0 overflow-hidden px-1 lg:px-0">
+    <!-- our card's corners: the row 20 (phones, the case card's) / 24 (desktop), 8 in, so the case tiles sit concentric at
+         12 / 16 -->
+    <div ref="viewport" class="kd-brow-band relative min-w-0 overflow-hidden">
       <div class="kd-band flex h-full" :style="{ gap: `${CELL_GAP}px`, transform: `translateX(${-shift * step}px)` }">
         <div
           v-for="(c, i) in cells"
           :key="c.key"
-          class="kd-cell relative flex h-[112px] w-[100px] shrink-0 flex-col items-center rounded-2xl px-1.5 pt-1.5 lg:h-full lg:w-[132px] lg:rounded-xl lg:pt-2"
+          class="kd-cell relative flex h-[112px] w-[100px] shrink-0 flex-col items-center rounded-2xl px-1.5 pt-1.5 lg:h-full lg:w-[132px] lg:rounded-3xl lg:pt-2"
           :class="`is-${c.state}`"
           :style="{ '--i': i }"
           :title="c.qty > 1 ? `${c.name} ×${c.qty}` : c.name"
         >
-          <img :src="c.image" alt="" draggable="false" class="kd-cell-img size-[76px] object-contain lg:size-[96px]" />
+          <img :src="c.image" alt="" draggable="false" class="kd-cell-img size-[76px] object-contain lg:size-[88px]" />
           <span class="kd-cell-name type-12 mt-auto mb-2 w-full truncate text-center lg:mb-2.5">{{ c.name }}</span>
           <span v-if="c.qty > 1" class="kd-cell-qty type-10-caps absolute top-1.5 right-1.5 rounded-md px-1 tabular-nums">×{{ c.qty }}</span>
           <span v-if="c.state === 'now'" class="kd-cell-mark absolute top-0 left-1/2" aria-hidden="true" />
@@ -123,7 +124,7 @@ function onClick(e: MouseEvent) {
     </div>
 
     <!-- the players: how many over the seats, the mode under them -->
-    <div class="kd-brow-who flex min-w-0 items-center px-2 pb-2 lg:flex-col lg:justify-between lg:rounded-xl lg:px-2 lg:py-3">
+    <div class="kd-brow-who flex min-w-0 items-center px-2 pb-2 lg:flex-col lg:justify-between lg:px-2 lg:py-2">
       <span class="type-10-caps text-neutral-11 tabular-nums max-lg:hidden">{{ battle.mode === 'team' ? $t('pvp.twoVsTwo') : `${seated}/${battle.size}` }}</span>
       <span class="flex items-center gap-1.5">
         <template v-for="(side, k) in sides" :key="k">
@@ -147,7 +148,7 @@ function onClick(e: MouseEvent) {
     </div>
 
     <!-- the cost over the button, one cell the row's height (phones: the button alone, the cost is on top) -->
-    <div class="kd-brow-action flex items-center justify-end px-2 pb-2 lg:flex-col lg:justify-between lg:rounded-xl lg:px-4 lg:py-3">
+    <div class="kd-brow-action flex items-center justify-end px-2 pb-2 lg:flex-col lg:justify-between lg:px-2 lg:py-2">
       <span class="type-10-caps text-neutral-11 max-lg:hidden">{{ $t('pvp.cost') }}</span>
       <UiPrice :amount="battle.cost" size="l" tone="coin" class="max-lg:hidden" />
       <span class="kd-btn type-14-caps inline-flex h-10 w-32 items-center justify-center gap-1.5 rounded-lg lg:w-full" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
@@ -229,11 +230,8 @@ function onClick(e: MouseEvent) {
 .kd-brow.is-finished .kd-ring-n {
   color: var(--color-neutral-11);
 }
-/* the band: a cell per case, each its own dark block (the row shows between them, as on skin.club); played ones dimmed,
-   the one now lit in the mode's colour, marked, its case lifted. It slides with the round (transform only) */
-.kd-cell {
-  background: var(--cell);
-}
+/* the band: the cases stand on the row itself, no tile under them; played ones dimmed, the one now lit from behind in
+   the mode's colour, marked, its case lifted. It slides with the round (transform only) */
 .kd-band {
   transition: transform var(--dur-slow) var(--ease-out);
 }
@@ -252,9 +250,7 @@ function onClick(e: MouseEvent) {
   opacity: 0.3;
 }
 .kd-cell.is-now {
-  background:
-    radial-gradient(60% 50% at 50% 42%, color-mix(in srgb, var(--mc) 30%, transparent), transparent),
-    var(--cell);
+  background: radial-gradient(55% 45% at 50% 42%, color-mix(in srgb, var(--mc) 32%, transparent), transparent);
 }
 .kd-cell.is-now .kd-cell-img {
   transform: translateY(-2px) scale(1.12);

@@ -126,7 +126,7 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
     <!-- The battles, skin.club's list: the header bar, then a row per battle — the open seats first, then what is live
          and what just ended (for a minute) -->
     <div v-if="!data" class="flex flex-col gap-2" aria-hidden="true">
-      <span v-for="n in 6" :key="n" class="kd-skeleton h-[236px] rounded-3xl lg:h-[140px] lg:rounded-2xl" />
+      <span v-for="n in 6" :key="n" class="kd-skeleton h-[244px] rounded-4xl lg:h-[140px] lg:rounded-5xl" />
     </div>
     <PvpTable v-else :battles="lobby">
       <!-- what is going on, one quiet line in the header's free column over the buttons -->
