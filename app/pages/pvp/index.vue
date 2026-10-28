@@ -57,10 +57,9 @@ const now = useClock(5000)
 const endedAt = (b: Battle) => (b.startedAt ? Date.parse(b.startedAt) + b.rounds.length * b.roundMs : 0)
 const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...byStatus('finished').filter((b) => now.value - endedAt(b) < JUST_ENDED_MS)])
 /** Phones: two columns of compact cards */
-// false through hydration (the server renders desktop), then the real width — or hydrated cards keep desktop classes
-const mounted = useMounted()
-const phoneQuery = useMediaQuery('(max-width: 639.98px)')
-const isPhone = computed(() => mounted.value && phoneQuery.value)
+// the server and hydration answer at the phone width the ssr-width plugin provides (most players are on phones),
+// so a phone gets its own layout from the first paint instead of the desktop one switching after mount
+const isPhone = useMediaQuery('(max-width: 639.98px)')
 </script>
 
 <template>

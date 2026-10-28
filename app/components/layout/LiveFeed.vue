@@ -9,7 +9,7 @@ import type { FeedDrop } from '#shared/types/api'
  *   highlight shows the same card.
  *   Phones — sticks under the header, slides away while scrolling down and comes back on the way up.
  */
-const { feed, loading } = useLiveFeed()
+const { feed, loading, visible } = useLiveFeed()
 const isLg = useMediaQuery('(min-width: 1024px)')
 const mode = ref<'live' | 'top'>('live')
 
@@ -42,6 +42,38 @@ const linkOf = (d: FeedDrop) => sourceLink(d.caseSlug)
 // Flames for the highlight live on the strip's own Forge layer (desktop). Phones keep to two WebGL canvases on the home
 // page (the banner's hen and the page's own layer), so there the "x" glows in CSS instead of burning
 const root = useTemplateRef<HTMLElement>('root')
+// Off screen (scrolled past on a phone) the feed stops polling, so nothing redraws for nobody
+const rootVisible = useElementVisibility(root)
+let counted = true
+watch(rootVisible, (v) => {
+  if (v === counted) return
+  counted = v
+  visible(v)
+})
+onBeforeUnmount(() => counted || visible(true))
+
+// New drops arrive at the front: the old tiles jump right in the DOM, so the whole track starts shifted back by the
+// newcomers' width and slides to 0 — one transform on one element, instead of measuring and moving every tile
+const track = useTemplateRef<HTMLElement>('track')
+const STEP = { phone: 64 + 2, desk: 96 + 2 } // a tile and the 2 px gap
+watch(
+  () => shown.value.map((d) => d.id),
+  (ids, old) => {
+    const el = track.value
+    if (!el || !old?.length || mode.value === 'top' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const k = ids.indexOf(old[0]!)
+    if (k <= 0) return
+    el.style.transition = 'none'
+    el.style.transform = `translate3d(${-k * (isLg.value ? STEP.desk : STEP.phone)}px, 0, 0)`
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        el.style.transition = 'transform 300ms var(--ease-out)'
+        el.style.transform = ''
+      }),
+    )
+  },
+  { flush: 'post' },
+)
 provideForge(root)
 
 // Hover card
@@ -138,11 +170,7 @@ if (import.meta.client) {
 
     <!-- Drops strip -->
     <div v-else class="scrollbar-none relative flex min-w-0 flex-1 gap-0.5 overflow-x-auto rounded-lg mask-r-from-90% lg:mask-none" @mouseenter="pause" @mouseleave="resume">
-      <TransitionGroup
-        enter-from-class="opacity-0 -translate-x-4"
-        enter-active-class="transition duration-300"
-        move-class="transition-transform duration-300"
-      >
+      <div ref="track" class="flex gap-0.5">
         <NuxtLink
           v-for="d in shown"
           :key="d.id"
@@ -164,7 +192,7 @@ if (import.meta.client) {
             <span v-if="mode === 'top'" class="type-10-caps flex h-4 items-center rounded-xs bg-neutral-1/80 px-1 text-coin">{{ xLabel(d) }}</span>
           </span>
         </NuxtLink>
-      </TransitionGroup>
+      </div>
     </div>
     <Transition name="kd-paused">
       <span v-if="paused" class="type-10-caps pointer-events-none absolute top-1 right-6 z-10 flex items-center gap-1 rounded-sm bg-neutral-1/90 px-1.5 py-0.5 text-neutral-12">
@@ -215,6 +243,13 @@ if (import.meta.client) {
 .kd-feed-tile {
   background: var(--color-neutral-3);
   border-color: var(--color-neutral-4);
+  animation: kd-feed-in 300ms var(--ease-out) backwards;
+}
+/* a tile fades in where it lands (the track's slide brings it in from the left) */
+@keyframes kd-feed-in {
+  from {
+    opacity: 0;
+  }
 }
 @media (hover: hover) {
   .kd-feed-tile:hover {

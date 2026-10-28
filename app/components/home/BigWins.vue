@@ -65,7 +65,10 @@ const held = ref(false)
         <div class="kd-win-stage relative z-[2] self-stretch">
           <span class="kd-win-shadow absolute" aria-hidden="true" />
           <!-- the fire: its base line on the skin's lower edge, licks rising behind it -->
-          <span class="kd-win-fire absolute"><FxFire effect="kdFlame" :color="RARITY_HEX[p.win.item.rarity]" :spread="1.7" class="w-full"><span class="block h-2 w-full" /></FxFire></span>
+          <!-- phones: the belt moves, and a WebGL flame riding a moving card made the page re-sample its animation every
+               frame; there the warm light breathes in CSS (the same place, the rarity's colour), desktop's still grid burns -->
+          <span class="kd-win-fire absolute"><FxFire effect="kdFlame" :on="isLg" :color="RARITY_HEX[p.win.item.rarity]" :spread="1.7" class="w-full"><span class="block h-2 w-full" /></FxFire></span>
+          <span v-if="!isLg" class="kd-win-heat absolute" aria-hidden="true" />
           <ItemArt :image="p.win.item.image" :rarity="p.win.item.rarity" :size="artSize()" float class="kd-win-art relative w-full" />
         </div>
         <div class="relative z-[2] flex min-w-0 flex-col items-start gap-1 lg:gap-1.5">
@@ -107,6 +110,27 @@ const held = ref(false)
   left: 8%;
   right: 8%;
   bottom: 22%;
+}
+.kd-win-heat {
+  left: 4%;
+  right: 4%;
+  bottom: 14%;
+  height: 70%;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side at 50% 80%, color-mix(in srgb, var(--rc) 70%, #ffb648), color-mix(in srgb, var(--rc) 24%, transparent) 60%, transparent);
+  transform-origin: 50% 90%;
+  animation: kd-win-heat 1.3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * -0.4s);
+}
+@keyframes kd-win-heat {
+  from {
+    opacity: 0.5;
+    transform: scale(0.92, 0.86);
+  }
+  to {
+    opacity: 0.9;
+    transform: scale(1.04, 1.06);
+  }
 }
 /* the rarity shape stands out from the card's light (same hue, so it needs the contrast) */
 .kd-win :deep(.kd-art-star) {

@@ -112,8 +112,12 @@ onMounted(async () => {
   const v = new spine.Vector2()
   let raf = 0
   let t0 = 0
+  let drawn = 0
   const frame = (now: number) => {
     raf = requestAnimationFrame(frame)
+    // the idle life draws at 30 fps (half the work on a phone, the motion is slow); a poke plays at the full rate
+    if (now - jolt > 700 && now - drawn < 31) return
+    drawn = now
     if (!t0) t0 = now
     const t = (now - t0) / 1000
     // no mouse for a while: the eyes wander between a few spots on their own
@@ -179,9 +183,14 @@ onMounted(async () => {
     cancelAnimationFrame(raf)
     if (on) raf = requestAnimationFrame(frame)
   }
-  const io = new IntersectionObserver(([e]) => run(!!e?.isIntersecting && document.visibilityState === 'visible'))
+  let inView = false
+  const io = new IntersectionObserver(([e]) => {
+    inView = !!e?.isIntersecting
+    run(inView && document.visibilityState === 'visible')
+  })
   io.observe(host.value)
-  const vis = () => run(document.visibilityState === 'visible')
+  // back to the tab: only if the banner is still on screen
+  const vis = () => run(inView && document.visibilityState === 'visible')
   document.addEventListener('visibilitychange', vis)
 
   stop = () => {
@@ -376,6 +385,10 @@ function poke(e: MouseEvent) {
   right: 150px;
   top: 150px;
   width: 140px;
+}
+/* the depth filters sit on the pictures, under the idle sway: the sway then only moves a finished layer, instead of
+   the browser redrawing a filtered (blurred) box every frame */
+.kd-hen-prop.is-crate-back img {
   filter: brightness(0.55) contrast(1.15) saturate(1.05) blur(2.5px);
 }
 /* nearer, low on the right: a closed case side on */
@@ -385,6 +398,8 @@ function poke(e: MouseEvent) {
   right: 24px;
   bottom: 72px;
   width: 210px;
+}
+.kd-hen-prop.is-crate-side img {
   filter: brightness(0.8) contrast(1.2) saturate(1.12) blur(1px);
 }
 /* the open case it burst out of: big, low on the left, lit from inside */
@@ -394,6 +409,8 @@ function poke(e: MouseEvent) {
   left: 0;
   bottom: 72px;
   width: 340px;
+}
+.kd-hen-prop.is-crate-open img {
   filter: contrast(1.2) saturate(1.12);
 }
 /* the light out of the open case, up into the space over it, its top inside the band (never over the live strip); it
@@ -462,6 +479,8 @@ function poke(e: MouseEvent) {
     right: 46px;
     top: 34px;
     width: 72px;
+  }
+  .kd-hen-prop.is-crate-back img {
     filter: brightness(0.55) contrast(1.15) saturate(1.05) blur(1.5px);
   }
   .kd-hen-glow {
@@ -490,6 +509,7 @@ function poke(e: MouseEvent) {
 /* idle: each case rises and sways a little on its own beat, out of step with the others (--iy how far, --ir how much
    it sways, --id how long, --idl where it starts); between the parallax on the wrapper and a poke's jump on the picture */
 .kd-hen-idle {
+  will-change: transform;
   animation: kd-hen-idle var(--id, 4.6s) var(--ease-in-out) infinite;
   animation-delay: var(--idl, 0s);
 }

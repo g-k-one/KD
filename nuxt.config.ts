@@ -6,13 +6,19 @@ export default defineNuxtConfig({
   ...(artifact && {
     ssr: false,
     router: { options: { hashMode: true } },
-    experimental: { appManifest: false },
     nitro: { preset: 'static' },
   }),
 
   runtimeConfig: {
     // debug: the 🐞 dock and /debug, /fx tools. On for the prototype; NUXT_PUBLIC_DEBUG=false hides them.
     public: { clientMock: artifact, debug: true },
+  },
+
+  experimental: {
+    ...(artifact && { appManifest: false }),
+    // A link loads its page's code when a finger or the cursor reaches it, not as soon as it scrolls into view: on a
+    // slow phone every page's chunks no longer download and parse in the background of the one being read
+    defaults: { nuxtLink: { prefetchOn: { visibility: false, interaction: true } } },
   },
 
   compatibilityDate: '2025-07-15',

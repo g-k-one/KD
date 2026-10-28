@@ -82,11 +82,9 @@ const revealed = computed(() => {
 })
 const totals = computed(() => slotTotals(b.value, revealed.value))
 const pot = computed(() => totals.value.reduce((a, x) => a + x, 0))
-// false on the server and through hydration (both render desktop), then the real width: a mismatch here left
-// hydrated slots with the desktop classes on phones
-const mounted = useMounted()
-const phoneQuery = useMediaQuery('(max-width: 767px)')
-const isMobile = computed(() => mounted.value && phoneQuery.value)
+// the server and hydration answer at the phone width the ssr-width plugin provides (most players are on phones),
+// so a phone gets its own layout from the first paint instead of the desktop one switching after mount
+const isMobile = useMediaQuery('(max-width: 767px)')
 
 // The round's best drop rings its rarity once, when the first reel lands (they land together)
 let rungRound = -1

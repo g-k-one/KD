@@ -13,10 +13,9 @@ const list = computed(() =>
     .sort((a, b) => ORDER[a.status] - ORDER[b.status] || b.cost - a.cost)
     .slice(0, 4),
 )
-// false through hydration (the server renders desktop), then the real width
-const mounted = useMounted()
-const phoneQuery = useMediaQuery('(max-width: 639.98px)')
-const isPhone = computed(() => mounted.value && phoneQuery.value)
+// the server and hydration answer at the phone width the ssr-width plugin provides (most players are on phones),
+// so a phone gets its own layout from the first paint instead of the desktop one switching after mount
+const isPhone = useMediaQuery('(max-width: 639.98px)')
 const liveCount = computed(() => (data.value?.battles ?? []).filter((b) => b.status === 'live').length)
 </script>
 
