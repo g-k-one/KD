@@ -1,6 +1,8 @@
 // KD_ARTIFACT=1 → static SPA for the claude.ai artifact: no server, hash routes,
 // relative asset paths, in-browser mock API (app/plugins/00.client-mock.client.ts).
 const artifact = !!process.env.KD_ARTIFACT
+// KD_PAGES=1 (with KD_ARTIFACT) → the same SPA for GitHub Pages: pictures beside the page instead of the artifact's store
+const pages = !!process.env.KD_PAGES
 
 export default defineNuxtConfig({
   ...(artifact && {
@@ -32,6 +34,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   vite: {
+    define: { 'import.meta.env.VITE_KD_PAGES': JSON.stringify(pages ? '1' : '') },
     // The artifact host caps a version at 511 files: one stylesheet instead of one per component
     ...(artifact && { build: { cssCodeSplit: false } }),
     // and small client JS chunks merged into their neighbours (the skin pictures alone take ~360 of the files)

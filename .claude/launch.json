@@ -55,6 +55,17 @@
       ],
       "port": 4320,
       "autoPort": false
+    },
+    {
+      "name": "kurwadrop-pages",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/serve-pages.mjs",
+        "4321"
+      ],
+      "port": 4321,
+      "url": "http://127.0.0.1:4321",
+      "autoPort": false
     }
   ]
 }

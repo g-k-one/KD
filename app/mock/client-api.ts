@@ -6,7 +6,8 @@ import ARTIFACT_ASSETS from './artifact-assets.json'
 
 // Pictures kept in the artifact's asset store (the host caps a version at 511 files, the store doesn't count):
 // path without the leading slash -> store URL. Every response hands the UI the store URL instead of the path.
-const STORE = ARTIFACT_ASSETS as Record<string, string>
+// The GitHub Pages build (KD_PAGES) ships the pictures beside the page, so it has no store.
+const STORE = (import.meta.env.VITE_KD_PAGES ? {} : ARTIFACT_ASSETS) as Record<string, string>
 const hasStore = Object.keys(STORE).length > 0
 function toStore(v: unknown): unknown {
   if (typeof v === 'string') return STORE[v.replace(/^\//, '')] ?? v
