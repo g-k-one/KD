@@ -2,8 +2,8 @@
 const route = useRoute()
 const ui = useUiStore()
 
-// Five even tabs, the same for guests and players: topping up is the + by the balance in the header and signing in
-// its Sign in button, so the bar holds only places
+// Four even tabs, the same for guests and players: topping up is the + by the balance in the header, signing in
+// its Sign in button and the menu its top-right icon, so the bar holds only places
 const TABS = [
   { key: 'cases', label: 'nav.cases', to: '/', icon: 'm-cases', order: 1 },
   { key: 'upgrade', label: 'nav.upgrade', to: '/upgrade', icon: 'm-upgrade', order: 2 },
@@ -38,16 +38,6 @@ const tabClass = (active: boolean) => (active ? 'text-brand-light' : 'text-neutr
         <span v-if="t.key === 'bonus' && dailyIn" class="tabular-nums">{{ dailyIn }}</span>
         <template v-else>{{ $t(t.label) }}</template>
       </NuxtLink>
-      <button
-        type="button"
-        class="kd-press type-12 order-5 flex h-16 flex-1 flex-col items-center justify-center gap-1"
-        :class="tabClass(ui.mobileMenuOpen)"
-        :aria-expanded="ui.mobileMenuOpen"
-        @click="ui.mobileMenuOpen = !ui.mobileMenuOpen"
-      >
-        <UiIcon name="m-menu" :size="20" />
-        {{ $t('nav.menu') }}
-      </button>
     </div>
   </nav>
 </template>

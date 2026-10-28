@@ -24,6 +24,20 @@ provideForge(fxHost)
 const filtersSentinel = useTemplateRef<HTMLElement>('filtersSentinel')
 const filtersStuck = ref(false)
 useIntersectionObserver(filtersSentinel, ([e]) => (filtersStuck.value = !!e && !e.isIntersecting && e.boundingClientRect.top < 100), { rootMargin: '-68px 0px 0px 0px' })
+// Phones: the stuck bar slides away under the header while you scroll down the cases and comes back on the first
+// scroll up (not while you type in its search)
+const filtersHidden = ref(false)
+let lastY = 0
+useEventListener(
+  'scroll',
+  () => {
+    const y = window.scrollY
+    if (Math.abs(y - lastY) < 8) return
+    filtersHidden.value = filtersStuck.value && y > lastY && !document.activeElement?.closest('.kd-filters input')
+    lastY = y
+  },
+  { passive: true },
+)
 
 // Sections with a clock (the weekly picks) count down on their header
 const clock = useClock(1000)
@@ -75,7 +89,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
 
       <div ref="casesEl" class="flex scroll-mt-40 flex-col gap-4 lg:gap-10">
         <span ref="filtersSentinel" class="-mb-4 h-px lg:-mb-10" aria-hidden="true" />
-        <div class="kd-filters-wrap sticky top-17 z-20 lg:top-18" :class="filtersStuck && 'is-stuck'">
+        <div class="kd-filters-wrap sticky top-17 z-20 lg:top-18" :class="[filtersStuck && 'is-stuck', filtersHidden && 'is-hidden']">
         <HomeCaseFilters
           v-model:price="filters.price.value"
           v-model:risks="filters.risks.value"
@@ -181,6 +195,18 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
 }
 
 /* Phones: stuck 8 px under the header, only the filters' own card shows, nothing behind it */
+@media (max-width: 63.999rem) {
+  .kd-filters-wrap {
+    transition:
+      transform var(--dur-base) var(--ease-out),
+      opacity var(--dur-base) var(--ease-out);
+  }
+  .kd-filters-wrap.is-hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+}
 /* Stuck under the header: the bar sheds its labels' air and floats over the cases */
 @media (min-width: 64rem) {
   .kd-filters-wrap {

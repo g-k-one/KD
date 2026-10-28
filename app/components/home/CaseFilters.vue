@@ -31,7 +31,8 @@ const sortOptions = computed(() =>
 )
 const dirty = computed(() => !!query.value.trim() || price.value !== 'any' || risks.value.length > 0 || affordable.value || sort.value !== 'default')
 const sheet = ref(false)
-const activeCount = computed(() => (price.value !== 'any' ? 1 : 0) + risks.value.length + (affordable.value ? 1 : 0))
+// the wallet has its own button on phones, so the count covers what hides in the sheet
+const activeCount = computed(() => (price.value !== 'any' ? 1 : 0) + risks.value.length)
 function reset() {
   price.value = 'any'
   risks.value = []
@@ -46,6 +47,18 @@ function reset() {
   <div class="kd-filters flex items-center gap-2 rounded-3xl bg-neutral-2 p-2">
     <!-- Search: the row's flexible part on phones, a fixed field after the dropdowns on desktop -->
     <UiInput v-model="query" icon="search" clearable inputmode="search" :placeholder="$t('filters.search')" class="kd-fsearch min-w-0 flex-1 lg:order-2 lg:w-56 lg:flex-none" />
+    <!-- Phones: "fits my balance" one tap away (players only), the rest behind the filters icon -->
+    <button
+      v-if="session.user"
+      type="button"
+      :aria-label="$t('filters.affordable')"
+      :aria-pressed="affordable"
+      class="kd-press grid size-10 shrink-0 place-items-center rounded-lg lg:hidden"
+      :class="affordable ? 'bg-brand-base/16 text-brand-light ring-1 ring-brand-base ring-inset' : 'bg-neutral-1 text-neutral-12'"
+      @click="affordable = !affordable"
+    >
+      <UiIcon name="wallet" :size="18" />
+    </button>
     <!-- Phones: one icon, everything in the sheet -->
     <button type="button" :aria-label="$t('filters.title')" class="kd-press kd-ftrigger relative grid size-10 shrink-0 place-items-center rounded-lg bg-neutral-1 lg:hidden" @click="sheet = true">
       <UiIcon name="sliders" :size="18" class="text-neutral-12" />

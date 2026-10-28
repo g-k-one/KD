@@ -256,6 +256,8 @@ if (import.meta.client) {
           :unsold-total="unsoldTotal"
           :pending="pending"
           :selling="selling"
+          try-free
+          @demo="open(true)"
           @open="open()"
           @skip="reel?.skip()"
           @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"

@@ -25,16 +25,18 @@ const ui = useUiStore()
       </NuxtLink>
     </template>
 
-    <UiButton
-      v-if="!session.user"
-      variant="ghost"
-      size="s"
-      icon="settings"
-      icon-only
-      :aria-label="$t('settings.title')"
-      @click="ui.mobileMenuOpen = true"
-    />
-
     <UiButton v-if="!session.user" size="s" icon="sign-in" @click="ui.openSignIn()">{{ $t('auth.signIn') }}</UiButton>
+
+    <!-- the menu sits top right, where the thumb of a right hand reaches, and the drawer slides in from this side -->
+    <UiButton
+      variant="ghost"
+      size="m"
+      icon="m-menu"
+      icon-only
+      class="-mr-2"
+      :aria-label="$t('nav.menu')"
+      :aria-expanded="ui.mobileMenuOpen"
+      @click="ui.mobileMenuOpen = !ui.mobileMenuOpen"
+    />
   </header>
 </template>

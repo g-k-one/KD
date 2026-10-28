@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Figma "MobileMenu". Slides in from the right, the side the Menu tab sits on,
+// Figma "MobileMenu". Slides in from the right, the side its icon sits on (top right of the header),
 // and opens with the account first: that is what people come to the menu for.
 const route = useRoute()
 const session = useSessionStore()

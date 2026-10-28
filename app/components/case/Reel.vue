@@ -620,7 +620,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
                    the row (an invisible stand-in) so the names line up, and the real button sits once at the stage's
                    centre, where it stood before the spin -->
               <UiButton
-                v-if="phase === 'result' && demo && tryFree && (!grid || col === tryCol)"
+                v-if="phase === 'result' && demo && tryFree && !isMobile && (!grid || col === tryCol)"
                 variant="secondary"
                 size="s"
                 icon="demo"
@@ -694,7 +694,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
             </UiButton>
           </div>
           <!-- a demo drop: nothing to sell, so another free go stands in its place -->
-          <UiButton v-else-if="tryFree" variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
+          <UiButton v-else-if="tryFree && !isMobile" variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
         </div>
       </Transition>
     </div>
@@ -729,9 +729,10 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     </Transition>
 
     <!-- Demo spin ("Try free", free, nothing is charged): one spot for it before and after a spin — the stage's
-         bottom centre, the same line as the x1 result's buttons -->
+         bottom centre, the same line as the x1 result's buttons. Phones: it lives by the Open button instead
+         (CaseOpenControls), since the x2–x5 grid fills the stage and the button had to hop under a cell -->
     <Transition name="kd-idle">
-      <div v-if="tryFree && phase === 'idle' && !breathing" class="absolute inset-x-0 bottom-4 z-10 flex justify-center sm:bottom-5">
+      <div v-if="tryFree && !isMobile && phase === 'idle' && !breathing" class="absolute inset-x-0 bottom-4 z-10 flex justify-center sm:bottom-5">
         <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
       </div>
     </Transition>
