@@ -8,8 +8,7 @@
 // "Sell all" gets a slot of its own (desktop: the middle card of the row under the dock, right below the main
 // button; phones: a row that unfolds under the button), so its arrival never pushes the main button.
 // The page decides what the main button says (open · sign in · top up the shortfall). The demo spin is on the
-// reel's stage (CaseReel) from 640px up; on phones a square button left of the main one, the same spot before and
-// after every spin at any amount. Labels change at once (no letter-by-letter swap: rapid taps made the text
+// reel's stage (CaseReel), not here. Labels change at once (no letter-by-letter swap: rapid taps made the text
 // jitter), and every control in the block is 48px high (56px main button on desktop).
 const count = defineModel<1 | 2 | 3 | 4 | 5>('count', { required: true })
 const fast = defineModel<boolean>('fast', { required: true })
@@ -27,10 +26,8 @@ const props = defineProps<{
   pending?: boolean
   /** selling the drops, the server has not answered yet */
   selling?: boolean
-  /** Offer a demo spin (phones; wider screens have it on the reel's stage) */
-  tryFree?: boolean
 }>()
-const emit = defineEmits<{ open: []; skip: []; sellAll: []; demo: [] }>()
+const emit = defineEmits<{ open: []; skip: []; sellAll: [] }>()
 const main = () => (props.phase === 'spinning' ? emit('skip') : emit('open'))
 const showSell = computed(() => props.phase === 'result' && props.unsoldTotal > 0)
 
@@ -45,28 +42,15 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
     <UiSegmented v-model="count" :options="COUNT_OPTIONS" :disabled="phase === 'spinning'" block class="mb-1 lg:mb-0 lg:w-60" />
 
     <div class="flex flex-col">
-      <div class="flex gap-2">
-        <UiButton
-          v-if="tryFree"
-          variant="secondary"
-          size="l"
-          icon="demo"
-          icon-only
-          class="shrink-0 sm:hidden"
-          :aria-label="$t('case.tryFree')"
-          :disabled="phase === 'spinning' || pending"
-          @click="emit('demo')"
-        />
-        <UiButton size="l" class="kd-main min-w-0 flex-1 lg:h-14 lg:w-80 lg:flex-none" :variant="phase === 'spinning' ? 'secondary' : 'primary'" :loading="pending" @click="main">
-          <span>{{ label }}</span>
-          <span v-if="phase !== 'spinning'" class="btn-value">
-            <span v-if="short" class="type-14">+</span>
-            <UiPrice :amount="amount" size="m" tone="inverse" />
-          </span>
-          <UiIcon v-else-if="!pending" name="chevron-right" :size="18" class="kd-skip-icon" />
-          <span v-if="phase === 'idle'" class="kd-shine" />
-        </UiButton>
-      </div>
+      <UiButton size="l" class="kd-main w-full lg:h-14 lg:w-80" :variant="phase === 'spinning' ? 'secondary' : 'primary'" :loading="pending" @click="main">
+        <span>{{ label }}</span>
+        <span v-if="phase !== 'spinning'" class="btn-value">
+          <span v-if="short" class="type-14">+</span>
+          <UiPrice :amount="amount" size="m" tone="inverse" />
+        </span>
+        <UiIcon v-else-if="!pending" name="chevron-right" :size="18" class="kd-skip-icon" />
+        <span v-if="phase === 'idle'" class="kd-shine" />
+      </UiButton>
       <!-- Phones: Sell all unfolds under the main button instead of squeezing it -->
       <div class="kd-unfold lg:hidden" :class="showSell && 'is-open'">
         <div class="min-h-0">

@@ -21,6 +21,8 @@ const props = withDefaults(
     menuWidth?: 'trigger' | 'fixed'
     /** the "filter is set" look, shared with UiChip variant=field */
     active?: boolean
+    /** up: always open above the trigger (a select at the very bottom of the page); auto: below unless there is no room */
+    placement?: 'auto' | 'up'
   }>(),
   { menuWidth: 'trigger' },
 )
@@ -30,6 +32,16 @@ const many = defineModel<T[]>('values', { default: () => [] })
 
 const open = ref(false)
 const root = useTemplateRef<HTMLElement>('root')
+// Opens upward when the screen has no room for the menu below the trigger and more above it (a select at the page's
+// very bottom, as the footer's language, was cut off by the screen's edge)
+const up = ref(false)
+watch(open, (v) => {
+  if (!v || !root.value) return
+  const r = root.value.getBoundingClientRect()
+  const need = Math.min(320, props.options.length * 38 + 8) + 8
+  const below = window.innerHeight - r.bottom
+  up.value = props.placement === 'up' || (below < need && r.top > below)
+})
 onClickOutside(root, () => (open.value = false))
 onKeyStroke('Escape', () => (open.value = false))
 
@@ -77,8 +89,8 @@ const isSelected = (o: SelectOption<T>) => (props.multiple ? many.value.includes
         v-if="open"
         role="listbox"
         :aria-multiselectable="multiple"
-        class="kd-menu absolute top-full z-30 mt-2 flex max-h-80 origin-top flex-col gap-0.5 overflow-auto rounded-2xl border border-neutral-5 bg-neutral-2 p-1 shadow-[0_8px_12px_rgb(0_0_0/0.64)]"
-        :class="menuWidth === 'trigger' ? 'inset-x-0' : 'left-0 w-54'"
+        class="kd-menu absolute z-30 flex max-h-80 flex-col gap-0.5 overflow-auto rounded-2xl border border-neutral-5 bg-neutral-2 p-1 shadow-[0_8px_12px_rgb(0_0_0/0.64)]"
+        :class="[menuWidth === 'trigger' ? 'inset-x-0' : 'left-0 w-54', up ? 'is-up bottom-full mb-2 origin-bottom' : 'top-full mt-2 origin-top']"
       >
         <li v-for="(o, i) in options" :key="o.value" :style="{ '--i': i }">
           <button
@@ -125,6 +137,10 @@ const isSelected = (o: SelectOption<T>) => (props.multiple ? many.value.includes
 .kd-menu-leave-to {
   opacity: 0;
   transform: translateY(-4px) scale(0.97);
+}
+.kd-menu.is-up.kd-menu-enter-from,
+.kd-menu.is-up.kd-menu-leave-to {
+  transform: translateY(4px) scale(0.97);
 }
 .kd-menu-enter-active li {
   animation: kd-row-in var(--dur-slow) var(--ease-out) both;

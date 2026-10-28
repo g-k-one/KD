@@ -106,6 +106,8 @@ export function useForge(host?: Ref<HTMLElement | null | undefined>) {
   async function play(name: string, o: ForgeOptions = {}) {
     const e = await get()
     const h = e?.play(name, o) ?? null
+    // forget the finished ones, so the set holds only what still draws
+    for (const x of live) if (!x.alive()) live.delete(x)
     if (h) live.add(h)
     return h
   }
@@ -157,8 +159,14 @@ export function useForge(host?: Ref<HTMLElement | null | undefined>) {
     return a
   }
 
+  // stopAll lets every effect fade out on its own; killAll drops them at once — for an effect riding an element that
+  // is about to jump (a reel strip reset for the next spin), a fade would trail it out past the frame
   function stopAll() {
     live.forEach((h) => h.stop())
+    live.clear()
+  }
+  function killAll() {
+    live.forEach((h) => h.kill())
     live.clear()
   }
 
@@ -173,7 +181,7 @@ export function useForge(host?: Ref<HTMLElement | null | undefined>) {
       e.then((x) => x?.destroy?.())
     })
 
-  return { play, at, stopAll, preload: async (atlas: string) => (await get())?.preload(atlas) }
+  return { play, at, stopAll, killAll, preload: async (atlas: string) => (await get())?.preload(atlas) }
 }
 
 /** sizeEl sizes it by another element; lift moves it up by that share of its size; follow keeps it on el as el moves */

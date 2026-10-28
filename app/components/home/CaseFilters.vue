@@ -123,14 +123,15 @@ function reset() {
 </template>
 
 <style scoped>
-/* Right-aligned menu so it never leaves the screen; on phones the select shrinks to its icon */
+/* Right-aligned menu so it never leaves the screen; on phones the select shrinks to its icon (only its own trigger:
+   the menu's options are buttons too and must keep their labels) */
 :deep(.kd-sort > ul) {
   left: auto;
   right: 0;
 }
 @media (max-width: 1023.98px) {
-  :deep(.kd-sort button .type-14),
-  :deep(.kd-sort button > :last-child) {
+  :deep(.kd-sort > button .type-14),
+  :deep(.kd-sort > button > :last-child) {
     display: none;
   }
 }

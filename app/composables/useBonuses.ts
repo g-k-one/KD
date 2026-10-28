@@ -11,7 +11,8 @@ export function useBonuses() {
     // Signed out: nothing to show
     default: () => null as unknown as BonusesResponse,
   })
-  if (import.meta.client) {
+  // switched off (FEATURES.bonuses): nothing is fetched, so every free-case timer and dot stays quiet
+  if (import.meta.client && FEATURES.bonuses) {
     watch(
       () => [session.user?.id, session.user?.level],
       ([id]) => (id ? refresh() : (data.value = null as unknown as BonusesResponse)),

@@ -4,8 +4,9 @@ type Size = 'xs' | 's' | 'm' | 'l' | 'xl' | 'xxl'
 type Tone = 'default' | 'coin' | 'success' | 'muted' | 'inverse'
 
 /** compact: from 100 coins on the cents go (986), from 1 000 the amount shortens to 12.9k / 1.2M (tight tiles).
+ *  noCoin: the amount alone, in its tone's colour (a pill too tight for the coin, money already shown beside it)
  *  countUp: on mount the amount runs up from zero (a drop's price as it lands, CSGOGem) */
-const props = withDefaults(defineProps<{ amount: number; size?: Size; tone?: Tone; compact?: boolean; countUp?: boolean }>(), {
+const props = withDefaults(defineProps<{ amount: number; size?: Size; tone?: Tone; compact?: boolean; countUp?: boolean; noCoin?: boolean }>(), {
   size: 'm',
   tone: 'default',
 })
@@ -69,7 +70,7 @@ const toneClass = computed(
 
 <template>
   <span class="inline-flex items-center whitespace-nowrap tabular-nums" :class="[spec.gap, spec.text, toneClass]">
-    <UiCoin :size="spec.coin" :inverse="tone === 'inverse'" />
+    <UiCoin v-if="!noCoin" :size="spec.coin" :inverse="tone === 'inverse'" />
     {{ compact ? shortCoins(shown) : formatCoins(shown) }}
   </span>
 </template>

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { DailyStep, InventoryItem, OpenCaseResponse, RankStep, SellResponse } from '#shared/types/api'
 
+// switched off for now (FEATURES.bonuses): the page answers as a missing one
+if (!FEATURES.bonuses) throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
+
 /*
  * Bonuses: the welcome cases (three free opens for signing up), then the level program — a rank every 10 levels and
  * three rewards that all grow with the level and never run out:

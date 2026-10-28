@@ -110,8 +110,8 @@ if (import.meta.client) {
       @mouseleave="hover = null"
     >
       <ItemArt :image="feed.highlight.image" :rarity="feed.highlight.rarity" :size="isLg ? 56 : 44" class="w-12 shrink-0 lg:w-20" />
-      <!-- its source, as on the tiles: the mark 5 px from the card's bottom left, the same inset both ways -->
-      <span v-if="sourceOf(feed.highlight.caseSlug) !== 'case'" class="kd-feed-src absolute bottom-[5px] left-[5px] z-[2] text-white/50" :title="$t(`nav.${sourceOf(feed.highlight.caseSlug)}`)">
+      <!-- its source, as on the tiles: the mark in the card's bottom left corner, 3 px up and 5 px in -->
+      <span v-if="sourceOf(feed.highlight.caseSlug) !== 'case'" class="kd-feed-src absolute bottom-[3px] left-[5px] z-[2] text-white/50" :title="$t(`nav.${sourceOf(feed.highlight.caseSlug)}`)">
         <UiIcon :name="`src-${sourceOf(feed.highlight.caseSlug)}`" :size="isLg ? 14 : 12" />
       </span>
       <div class="relative z-[2] flex min-w-0 flex-1 flex-col gap-0.5 lg:gap-1">

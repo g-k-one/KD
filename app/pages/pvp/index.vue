@@ -132,8 +132,8 @@ const isPhone = computed(() => mounted.value && phoneQuery.value)
   right: 0;
 }
 @media (max-width: 1023.98px) {
-  :deep(.kd-sort button .type-14),
-  :deep(.kd-sort button > :last-child) {
+  :deep(.kd-sort > button .type-14),
+  :deep(.kd-sort > button > :last-child) {
     display: none;
   }
 }

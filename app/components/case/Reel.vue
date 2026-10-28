@@ -38,8 +38,6 @@ const props = defineProps<{
   fast?: boolean
 }>()
 const emit = defineEmits<{ sell: [uid: string]; demo: []; share: [item: InventoryItem] }>()
-// after a demo spin of several cases, "Try free" again sits once, under the middle reel
-const tryCol = computed(() => Math.floor((props.results.length - 1) / 2))
 
 const sfx = useSfx()
 const haptics = useHaptics()
@@ -153,7 +151,7 @@ watch(
   (n) => {
     tracks.value = []
     landed.value = []
-    fxBg.stopAll()
+    fxBg.killAll()
     spunOnce = false
     buildStrips(n)
     nextTick(resetPositions)
@@ -406,7 +404,8 @@ async function rareFx(winners: Item[]) {
 async function spin(winners: Item[], fast: boolean, kurwa: boolean[] = []) {
   // from the first frame to the landing: the feed holds (no layout work, and your drop does not show early)
   reelBusy.value = true
-  fxBg.stopAll()
+  // the last landing's rank burst rides its card: the strip resets now, so drop it at once instead of a fade outside
+  fxBg.killAll()
   await breathDone
   chickenHit.value = []
   kurwaCols.value = []
@@ -616,23 +615,6 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
               >
                 <template v-if="!(compact || isMobile)">{{ $t('share.share') }}</template>
               </UiButton>
-              <!-- after a demo spin: in the phone grid the icon under the middle cell; side by side, every column keeps
-                   the row (an invisible stand-in) so the names line up, and the real button sits once at the stage's
-                   centre, where it stood before the spin -->
-              <UiButton
-                v-if="phase === 'result' && demo && tryFree && !isMobile && (!grid || col === tryCol)"
-                variant="secondary"
-                size="s"
-                icon="demo"
-                :icon-only="compact || isMobile"
-                :aria-label="$t('case.tryFree')"
-                class="max-sm:h-7 max-sm:w-7"
-                :class="!grid && 'invisible'"
-                @click.stop="emit('demo')"
-              >
-                <!-- a mini reel on a phone is too narrow for the label: the icon, like Share -->
-                <template v-if="!(compact || isMobile)">{{ $t('case.tryFree') }}</template>
-              </UiButton>
               </div>
             </div>
           </Transition>
@@ -693,8 +675,6 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
               <template v-if="!isMobile">{{ $t('share.share') }}</template>
             </UiButton>
           </div>
-          <!-- a demo drop: nothing to sell, so another free go stands in its place -->
-          <UiButton v-else-if="tryFree && !isMobile" variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
         </div>
       </Transition>
     </div>
@@ -728,16 +708,10 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
       </div>
     </Transition>
 
-    <!-- Demo spin ("Try free", free, nothing is charged): one spot for it before and after a spin — the stage's
-         bottom centre, the same line as the x1 result's buttons. Phones: it lives by the Open button instead
-         (CaseOpenControls), since the x2–x5 grid fills the stage and the button had to hop under a cell -->
+    <!-- Demo spin ("Try free", free, nothing is charged): on the idle stage only, at its bottom centre (the x1 result's
+         buttons line). A result screen shows the drops alone: no Try free there at any amount -->
     <Transition name="kd-idle">
-      <div v-if="tryFree && !isMobile && phase === 'idle' && !breathing" class="absolute inset-x-0 bottom-4 z-10 flex justify-center sm:bottom-5">
-        <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
-      </div>
-    </Transition>
-    <Transition name="kd-result">
-      <div v-if="tryFree && demo && phase === 'result' && !horizontal && !grid" class="absolute inset-x-0 bottom-3 z-10 flex justify-center sm:bottom-5">
+      <div v-if="tryFree && phase === 'idle' && !breathing" class="absolute inset-x-0 bottom-4 z-10 flex justify-center sm:bottom-5">
         <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
       </div>
     </Transition>

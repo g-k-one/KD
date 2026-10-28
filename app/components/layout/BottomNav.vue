@@ -2,13 +2,13 @@
 const route = useRoute()
 const ui = useUiStore()
 
-// Four even tabs, the same for guests and players: topping up is the + by the balance in the header, signing in
-// its Sign in button and the menu its top-right icon, so the bar holds only places
+// Even tabs, the same for guests and players: topping up is the + by the balance in the header, signing in its
+// Sign in button and the menu its top-right icon, so the bar holds only places (Bonus while FEATURES.bonuses is on)
 const TABS = [
   { key: 'cases', label: 'nav.cases', to: '/', icon: 'm-cases', order: 1 },
   { key: 'upgrade', label: 'nav.upgrade', to: '/upgrade', icon: 'm-upgrade', order: 2 },
   { key: 'pvp', label: 'nav.pvp', to: '/pvp', icon: 'm-pvp', order: 3 },
-  { key: 'bonus', label: 'nav.bonus', to: '/bonuses', icon: 'm-bonus', order: 4 },
+  ...(FEATURES.bonuses ? [{ key: 'bonus', label: 'nav.bonus', to: '/bonuses', icon: 'm-bonus', order: 4 }] : []),
 ]
 
 // The bonus tab doubles as the free case timer on phones (the desktop header has its own chip): the countdown

@@ -13,6 +13,7 @@ const { dailyReady, welcomeLeft } = useBonuses()
 // what the signed-in player is offered, most valuable first
 const offer = computed(() => {
   if (!session.user) return null
+  if (!FEATURES.bonuses) return { title: 'hero.picksTitle', text: 'hero.picksText', n: 0, cta: 'hero.picksCta', icon: 'cases', to: '' }
   if (welcomeLeft.value > 0) return { title: 'hero.freeTitle', text: 'hero.freeText', n: welcomeLeft.value, cta: 'hero.freeCta', icon: 'bonuses', to: '/bonuses' }
   if (dailyReady.value) return { title: 'hero.dailyTitle', text: 'hero.dailyText', n: 0, cta: 'hero.dailyCta', icon: 'bonuses', to: '/bonuses' }
   return { title: 'hero.picksTitle', text: 'hero.picksText', n: 0, cta: 'hero.picksCta', icon: 'cases', to: '' }

@@ -77,21 +77,23 @@ function onClick(e: MouseEvent) {
       </div>
 
       <!-- along the top: the mode, the players, what is at stake -->
-      <div class="absolute inset-x-2 top-2 flex items-center justify-between gap-1">
+      <div class="absolute inset-x-2 top-2 flex items-center justify-between" :class="compact ? 'gap-0.5' : 'gap-1'">
         <UiTooltip :text="modeTip" class="shrink-0">
-          <span class="kd-mode grid place-items-center" :class="compact ? 'size-7 rounded-md' : 'size-8 rounded-lg'" :aria-label="modeTip">
-            <UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="compact ? 16 : 18" />
+          <span class="kd-mode grid place-items-center" :class="compact ? 'size-6 rounded-md' : 'size-8 rounded-lg'" :aria-label="modeTip">
+            <UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="compact ? 14 : 18" />
           </span>
         </UiTooltip>
         <div class="flex min-w-0 items-center" :class="compact ? 'gap-0.5' : 'gap-1.5'">
           <template v-for="(side, k) in sides" :key="k">
-            <span v-if="k > 0" class="type-10-caps text-neutral-11">{{ $t('pvp.vs') }}</span>
+            <!-- phones: a thin line between the sides instead of VS, so 2v2 and three players fit beside the pot -->
+            <span v-if="k > 0 && compact" class="mx-px h-3 w-px shrink-0 bg-neutral-8" aria-hidden="true" />
+            <span v-else-if="k > 0" class="type-10-caps text-neutral-11">{{ $t('pvp.vs') }}</span>
             <span class="flex items-center">
               <template v-for="s in side" :key="s.slot">
                 <span
                   v-if="s.player"
                   class="kd-bcard-av relative first:ml-0"
-                  :class="[compact ? '-ml-1.5 size-5' : '-ml-1.5 size-7', leaders.includes(s.slot) && 'is-lead', winners.includes(s.slot) && 'is-won', battle.status === 'finished' && !winners.includes(s.slot) && 'is-lost']"
+                  :class="[compact ? '-ml-2.5 size-5' : '-ml-1.5 size-7', leaders.includes(s.slot) && 'is-lead', winners.includes(s.slot) && 'is-won', battle.status === 'finished' && !winners.includes(s.slot) && 'is-lost']"
                   :title="s.player.nickname"
                 >
                   <span class="block size-full overflow-hidden rounded-full bg-neutral-7">
@@ -99,19 +101,20 @@ function onClick(e: MouseEvent) {
                   </span>
                   <UiIcon v-if="leaders.includes(s.slot) || winners.includes(s.slot)" name="crown-fill" :size="compact ? 10 : 12" class="kd-bcard-crown absolute left-1/2 -translate-x-1/2" :class="compact ? '-top-2' : '-top-2.5'" />
                 </span>
-                <span v-else class="kd-bcard-av grid place-items-center rounded-full border border-dashed border-neutral-8 bg-neutral-2 text-neutral-11 first:ml-0" :class="compact ? '-ml-1.5 size-5' : '-ml-1.5 size-7'">
+                <span v-else class="kd-bcard-av relative grid place-items-center rounded-full border border-dashed border-neutral-8 bg-neutral-2 text-neutral-11 first:ml-0" :class="compact ? '-ml-2.5 size-5' : '-ml-1.5 size-7'">
                   <UiIcon name="plus" :size="compact ? 10 : 12" />
                 </span>
               </template>
             </span>
           </template>
         </div>
-        <span class="kd-bcard-pill flex shrink-0 items-center gap-1 tabular-nums" :class="compact ? 'h-7 rounded-md px-1.5 type-12' : 'h-8 rounded-lg px-2 type-14'">
+        <span class="kd-bcard-pill flex shrink-0 items-center gap-1 tabular-nums" :class="compact ? 'h-6 rounded-md px-1 type-12' : 'h-8 rounded-lg px-2 type-14'">
           <template v-if="battle.status === 'live'">
             <span class="kd-live-dot size-1.5 rounded-full bg-danger" /><span class="text-danger">{{ $t('pvp.roundShort', { n: round, of: battle.rounds.length }) }}</span>
           </template>
           <span v-else-if="battle.status === 'finished'" class="text-neutral-12" :class="compact ? 'type-10-caps' : 'type-12-caps'">{{ $t('pvp.ended') }}</span>
-          <UiPrice v-else :amount="pot" size="s" tone="coin" compact :title="$t('pvp.pot')" />
+          <!-- phones: the amount alone, so 2v2 and four players fit beside it (the button under it says the cost with its coin) -->
+          <UiPrice v-else :amount="pot" size="s" tone="coin" compact :no-coin="compact" :title="$t('pvp.pot')" />
         </span>
       </div>
     </div>

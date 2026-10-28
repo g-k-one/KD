@@ -2,7 +2,7 @@
 const PLAY = [
   { key: 'cases', to: '/' },
   { key: 'upgrade', to: '/upgrade' },
-  { key: 'bonuses', to: '/bonuses' },
+  ...(FEATURES.bonuses ? [{ key: 'bonuses', to: '/bonuses' }] : []),
   { key: 'pvp', to: '/pvp' },
 ]
 const INFO = [
@@ -10,11 +10,13 @@ const INFO = [
   { key: 'provablyFair', to: '/fairness' },
   { key: 'contact', to: '/contact' },
 ]
+// on hover each takes its brand's colour and the glyph goes black on it (the same for all four); X is its logo, not
+// the close cross
 const SOCIAL = [
-  { key: 'discord', label: 'Discord', hover: 'hover:bg-[#5865f2]' },
-  { key: 'x', label: 'X', hover: 'hover:bg-neutral-15 hover:text-neutral-1' },
-  { key: 'telegram', label: 'Telegram', hover: 'hover:bg-[#229ed9]' },
-  { key: 'kick', label: 'Kick', hover: 'hover:bg-[#53fc18] hover:text-neutral-1' },
+  { key: 'discord', label: 'Discord', icon: 'discord', hover: 'hover:bg-[#5865f2]' },
+  { key: 'x', label: 'X', icon: 'x-logo', hover: 'hover:bg-neutral-15' },
+  { key: 'telegram', label: 'Telegram', icon: 'telegram', hover: 'hover:bg-[#229ed9]' },
+  { key: 'kick', label: 'Kick', icon: 'kick', hover: 'hover:bg-[#53fc18]' },
 ]
 const PAYMENTS = ['visa', 'mastercard', 'applepay', 'googlepay', 'blik', 'crypto', 'skrill']
 const year = new Date().getFullYear()
@@ -43,11 +45,11 @@ const columns = computed(() => [
               v-for="s in SOCIAL"
               :key="s.key"
               href="#"
-              class="grid size-10 place-items-center rounded-lg bg-neutral-6 text-neutral-12 transition-colors hover:text-neutral-15 active:opacity-80"
+              class="grid size-10 place-items-center rounded-lg bg-neutral-6 text-neutral-12 transition-colors hover:text-neutral-1 active:opacity-80"
               :class="s.hover"
               :aria-label="s.label"
             >
-              <UiIcon :name="s.key" :size="20" />
+              <UiIcon :name="s.icon" :size="s.key === 'x' ? 18 : 20" />
             </a>
           </div>
         </div>
@@ -96,7 +98,8 @@ const columns = computed(() => [
 
       <div class="flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
         <span class="type-12-caps text-neutral-8">{{ $t('footer.copyright', { year }) }}</span>
-        <UiSelect v-model="lang" :options="localeOptions" class="w-40">
+        <!-- the page's last control: its menu opens upward, clear of the screen's bottom edge and the OS taskbar -->
+        <UiSelect v-model="lang" :options="localeOptions" placement="up" class="w-40">
           <template #leading>
             <img src="/img/brand/flag-en.svg" alt="" class="h-3.5 w-5 shrink-0" />
           </template>

@@ -398,14 +398,17 @@ const toSummary = ({ items: _i, odds: _o, oddsVersion: _v, kurwadrop: _k, ...s }
 
 /** The row that fills itself: five cases a week, none of them from the first row */
 export const AUTO_ROW = 'weekly'
+// Mixed sizes out of the box, counted for the 5-column desktop grid so every row closes: Hot is four cases with Piekło
+// wide (5 cells, one row); Featured is eight with Złoty Rush tall and Warsaw Nights wide (10 cells, two rows). A card
+// kind belongs to the case, not the row, so the big ones sit in one row each (High Roller stays in the full catalog)
 const DEFAULT_HOME_LAYOUT: HomeLayout = {
   sections: [
-    { id: 'hot', title: 'Hot right now', cases: ['pieklo', 'mafia', 'wiosna', 'high-roller', 'krakow-knife'] },
+    { id: 'hot', title: 'Hot right now', cases: ['pieklo', 'mafia', 'wiosna', 'krakow-knife'] },
     { id: AUTO_ROW, title: 'Weekly picks', theme: 'coop' },
-    { id: 'featured', title: 'Featured cases', cases: ['pierogi-pack', 'kurwa-classic', 'zloty-rush', 'babcias-box', 'warsaw-nights', 'vodka-drop', 'krakow-knife', 'golden-kielbasa', 'budget-boom', 'high-roller'] },
+    { id: 'featured', title: 'Featured cases', cases: ['zloty-rush', 'warsaw-nights', 'pierogi-pack', 'kurwa-classic', 'babcias-box', 'vodka-drop', 'golden-kielbasa', 'budget-boom'] },
     { id: 'polish-classics', title: 'Polish classics', cases: ['babcias-box', 'vodka-drop', 'golden-kielbasa', 'kurwa-classic', 'pierogi-pack'] },
   ],
-  cards: { mafia: 'full', 'babcias-box': 'full', 'vodka-drop': 'full' },
+  cards: { pieklo: 'wide', 'zloty-rush': 'tall', 'warsaw-nights': 'wide', mafia: 'full', 'babcias-box': 'full', 'vodka-drop': 'full' },
 }
 let homeLayout: HomeLayout = structuredClone(DEFAULT_HOME_LAYOUT)
 export function setCaseCard(slug: string, kind: HomeCardKind) {

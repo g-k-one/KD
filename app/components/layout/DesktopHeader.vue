@@ -63,7 +63,7 @@ async function logout() {
          gift, otherwise its countdown. Shown once the bonuses have loaded, so the pill never grows from empty. -->
     <Transition name="kd-fade">
       <NuxtLink
-        v-if="session.user && data"
+        v-if="FEATURES.bonuses && session.user && data"
         to="/bonuses"
         class="kd-press kd-daily type-12-caps relative mr-1 flex h-10 items-center gap-2 rounded-xl px-3"
         :class="freeReady ? 'is-ready text-neutral-15' : 'text-neutral-12 hover:text-neutral-15'"

@@ -126,11 +126,11 @@ const earned = computed(() => program.value?.levelCases.find((c) => c.level === 
       <span class="type-12-caps kd-lvl-kicker">{{ $t('bonus.levelUp') }}</span>
       <span class="type-28 mt-1 uppercase">{{ $t('bonus.levelTitle', { n: shown }) }}</span>
       <!-- what it means, in one line -->
-      <span class="type-14-regular mt-2 text-neutral-14">
+      <span v-if="FEATURES.bonuses" class="type-14-regular mt-2 text-neutral-14">
         <template v-if="newRank">{{ $t('bonus.levelNewRank', { rank: newRank.name, pct: `${+(newRank.rakebackBp / 100).toFixed(1)}%` }) }}</template>
         <template v-else-if="earned">{{ $t('bonus.levelCaseEarned', { amount: formatCoins(earned.price) }) }}</template>
       </span>
-      <UiButton v-if="earned" size="m" block to="/bonuses" class="mt-4" @click.capture="shown = null">{{ $t('bonus.openLevelCase') }}</UiButton>
+      <UiButton v-if="FEATURES.bonuses && earned" size="m" block to="/bonuses" class="mt-4" @click.capture="shown = null">{{ $t('bonus.openLevelCase') }}</UiButton>
       <!-- time left before it goes away by itself: a thin bar along the bottom edge -->
       <span class="absolute inset-x-5 bottom-0 h-0.5 overflow-hidden rounded-full bg-white/10">
         <span :key="String(from) + String(shown)" class="kd-lvl-time block h-full" :class="paused && 'is-paused'" :style="{ animationDuration: `${DURATION}ms` }" />

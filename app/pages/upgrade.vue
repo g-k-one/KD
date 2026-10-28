@@ -68,6 +68,7 @@ const prefs = usePersisted('kd_upgrade', { fast: false })
 const lastNonce = ref<number | null>(null)
 const fast = computed({ get: () => !!prefs.value.fast, set: (v: boolean) => (prefs.value = { ...prefs.value, fast: v }) })
 const isLg = useMediaQuery('(min-width: 1024px)')
+const isSm = useMediaQuery('(min-width: 640px)')
 const panelTab = ref<'mine' | 'desired'>('mine')
 
 const selectedItems = computed(() => inventory.value.filter((i) => selected.value.includes(i.uid)))
@@ -641,8 +642,10 @@ async function runUpgrade() {
           <Transition name="kd-search" mode="out-in">
             <UiInput v-if="searchOpen" id="market-search" key="s" v-model="search" icon="search" clearable :placeholder="$t('upgrade.search')" class="min-w-0 flex-1" @keydown.esc="searchOpen = false" />
             <div v-else key="f" class="flex min-w-0 flex-1 items-center gap-2">
-              <UiInput id="price-from" v-model="priceFrom" coin inputmode="decimal" :placeholder="$t('upgrade.from')" class="hidden w-24 sm:flex" />
-              <UiInput id="price-to" v-model="priceTo" coin inputmode="decimal" :placeholder="$t('upgrade.to')" class="hidden w-24 sm:flex" />
+              <template v-if="isSm">
+                <UiInput id="price-from" v-model="priceFrom" coin inputmode="decimal" :placeholder="$t('upgrade.from')" class="w-24" />
+                <UiInput id="price-to" v-model="priceTo" coin inputmode="decimal" :placeholder="$t('upgrade.to')" class="w-24" />
+              </template>
               <UiSelect v-model:values="rarities" multiple :options="rarityOptions" class="kd-rarity-select min-w-20" menu-width="fixed">
                 <template #leading>
                   <!-- The trigger shows the choice: every colour dimmed = all rarities, otherwise just the picked ones -->
@@ -660,6 +663,11 @@ async function runUpgrade() {
             </div>
           </Transition>
           <UiButton variant="ghost" :size="isLg ? 'm' : 's'" :icon="searchOpen ? 'close' : 'search'" icon-only :aria-label="$t(searchOpen ? 'common.close' : 'upgrade.search')" @click="searchOpen = !searchOpen" />
+        </div>
+        <!-- phones: the price range on a row of its own under the header (beside the rarity and search it had no room) -->
+        <div v-if="!isSm" class="flex gap-2 border-b border-neutral-4 px-4 py-3">
+          <UiInput id="price-from" v-model="priceFrom" coin inputmode="decimal" :placeholder="$t('upgrade.from')" class="min-w-0 flex-1" />
+          <UiInput id="price-to" v-model="priceTo" coin inputmode="decimal" :placeholder="$t('upgrade.to')" class="min-w-0 flex-1" />
         </div>
         <!-- Always a full page of slots (empty ones on the last page), so paging never changes the height -->
         <div class="relative">
