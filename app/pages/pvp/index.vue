@@ -51,8 +51,6 @@ function reset() {
 const modeOptions = computed(() => [{ value: 'all' as const, label: t('pvp.anyMode') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`), icon: PVP_MODE_ICON[m], iconColor: PVP_MODE_COLOR[m] }))])
 // the battles come newest first: the default order says so
 const sortOptions = computed(() => (['default', 'priceDesc', 'priceAsc'] as const).map((s) => ({ value: s, label: t(`filters.sortOptions.${s === 'default' ? 'newest' : s}`) })))
-const inPlay = computed(() => (data.value?.battles ?? []).filter((b) => b.status !== 'finished').reduce((a, b) => a + b.cost * b.size, 0))
-const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a + (b.viewers ?? 0), 0))
 
 const filtered = computed(() =>
   (data.value?.battles ?? [])
@@ -152,7 +150,7 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
       </UiSheet>
     </div>
 
-    <!-- The battles, as the profile's Game history card: its header (the title, what is going on, Create PvP), then the
+    <!-- The battles, as the profile's Game history card: its header (the title, how many are live, Create PvP), then the
          table — the open seats first, then what is live and what just ended (for a minute) -->
     <section class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
       <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
@@ -160,8 +158,6 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
         <span class="type-14 lg:type-16-medium">{{ $t('pvp.battles') }}</span>
         <!-- no battle running: no "0 live" -->
         <span v-if="counts.live" class="type-12-caps flex items-center gap-1.5 text-neutral-11"><span class="kd-stat-dot" /><span class="text-neutral-15 tabular-nums">{{ counts.live }}</span>{{ $t('pvp.live') }}</span>
-        <span v-if="data" class="type-12-caps flex items-center gap-1.5 text-neutral-11 max-lg:hidden"><UiIcon name="eye" :size="16" /><span class="text-neutral-15 tabular-nums">{{ watching }}</span>{{ $t('pvp.watching') }}</span>
-        <span v-if="data" class="type-12-caps flex items-center gap-1.5 text-neutral-11 max-lg:hidden">{{ $t('pvp.inPlay') }}<UiPrice :amount="inPlay" size="s" tone="coin" /></span>
         <UiButton icon="plus" :size="isPhone ? 's' : 'm'" to="/pvp/create" class="ml-auto shrink-0">{{ $t('pvp.create') }}</UiButton>
       </div>
       <!-- the battles on their way: line skeletons -->
