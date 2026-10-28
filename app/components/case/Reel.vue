@@ -707,28 +707,32 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
           :key="c.key"
           :src="data.image"
           :alt="c.key === 0 ? data.name : ''"
-          class="kd-reel-case absolute top-[44%] -translate-x-1/2 -translate-y-1/2 object-contain"
+          class="kd-reel-case absolute top-[calc(50%+4px)] -translate-x-1/2 -translate-y-1/2 object-contain"
           :style="c.style"
         />
       </div>
     </Transition>
 
-    <!-- Demo spin ("Try free", free, nothing is charged): at the stage's top centre, under the marker, idle and after a
-         demo spin — a line no state fills (the drops' names and Sell sit at the bottom), so another free spin is one tap
-         in the same place and every name stays whole. Idle, it comes and goes with the idle stage; after a demo it
-         arrives with the drops' names (as the last reel lands) and leaves with them at once on the next spin -->
+    <!-- Demo spin ("Try free", free, nothing is charged): at the stage's top centre (where the x1 top marker steps aside
+         for it), idle and after a demo spin — a line no state fills (the drops' names and Sell sit at the bottom), so
+         another free spin is one tap in the same place and every name stays whole. 12 px under the stage's outer edge at
+         every amount: 8 inside the 4 px frame, 12 on the phone grid (no frame of its own). Idle, it comes and goes with
+         the idle stage; after a demo it arrives with the drops' names (as the last reel lands) and leaves with them at
+         once on the next spin -->
     <Transition name="kd-idle">
-      <div v-if="tryFree && phase === 'idle' && !breathing" class="absolute inset-x-0 top-3.5 z-10 flex justify-center">
-        <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
+      <div v-if="tryFree && phase === 'idle' && !breathing" class="absolute inset-x-0 z-10 flex justify-center" :class="grid ? 'top-3' : 'top-2'">
+        <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage -translate-x-3" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
       </div>
     </Transition>
     <Transition name="kd-result">
-      <div v-if="tryFree && demo && results.length && (phase === 'result' || (!kurwaCols.length && results.every((_, c) => landed[c])))" class="absolute inset-x-0 top-3.5 z-10 flex justify-center">
-        <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
+      <div v-if="tryFree && demo && results.length && (phase === 'result' || (!kurwaCols.length && results.every((_, c) => landed[c])))" class="absolute inset-x-0 z-10 flex justify-center" :class="grid ? 'top-3' : 'top-2'">
+        <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage -translate-x-3" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
       </div>
     </Transition>
 
-    <div v-if="!grid" class="pointer-events-none absolute inset-0 overflow-hidden" :class="markerClass">
+    <!-- above the stage (z 2): the case winding up after the press rose over the top marker, then the marker over it.
+         While Try free sits at the top centre the x1 top marker steps out (as on a result) and glides in on the press -->
+    <div v-if="!grid" class="pointer-events-none absolute inset-0 z-[2] overflow-hidden" :class="[markerClass, tryFree && phase === 'idle' && 'no-top']">
       <img src="/img/fx/marker-top.svg" alt="" class="kd-marker-a absolute" />
       <img src="/img/fx/marker-top.svg" alt="" class="kd-marker-b absolute" />
       <img src="/img/fx/marker-top-gold.svg" alt="" class="kd-marker-a kd-marker-gold absolute" />
@@ -899,7 +903,8 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     opacity: 0;
   }
 }
-/* Centring comes from the utilities' `translate` property, so the float only touches `transform` */
+/* Centring comes from the utilities' `translate` property, so the float only touches `transform`; it rises 0–8 px, so
+   the case sits 4 px under the stage's centre and its float is centred on it */
 @keyframes kd-case-float {
   50% {
     transform: translateY(-8px);
@@ -1170,7 +1175,8 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     translate 520ms var(--ease-out),
     filter 120ms linear;
 }
-.kd-reel.result .kd-markers-h .kd-marker-a {
+.kd-reel.result .kd-markers-h .kd-marker-a,
+.kd-markers-h.no-top .kd-marker-a {
   opacity: 0;
   translate: 0 -12px;
 }
