@@ -37,6 +37,9 @@ const session = useSessionStore()
 const mode = ref<'all' | BattleMode>('all')
 const sort = ref<'default' | 'priceDesc' | 'priceAsc'>('default')
 const affordable = ref(false)
+// how many players, as skin.club filters (2v2 is the Team mode, so 4 covers it)
+const players = ref<0 | 2 | 3 | 4>(0)
+const playerOptions = computed(() => [{ value: 0 as const, label: t('pvp.anyPlayers') }, ...([2, 3, 4] as const).map((n) => ({ value: n, label: String(n), title: t('pvp.playersN', { n }) }))])
 const modeOptions = computed(() => [{ value: 'all' as const, label: t('pvp.anyMode') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`), icon: PVP_MODE_ICON[m], iconColor: PVP_MODE_COLOR[m] }))])
 // the battles come newest first: the default order says so
 const sortOptions = computed(() => (['default', 'priceDesc', 'priceAsc'] as const).map((s) => ({ value: s, label: t(`filters.sortOptions.${s === 'default' ? 'newest' : s}`) })))
@@ -46,6 +49,7 @@ const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a +
 const filtered = computed(() =>
   (data.value?.battles ?? [])
     .filter((b) => mode.value === 'all' || b.mode === mode.value)
+    .filter((b) => !players.value || b.size === players.value)
     .filter((b) => !affordable.value || (b.status === 'waiting' && b.cost <= (session.user?.balance ?? 0)))
     .sort((a, b) => (sort.value === 'priceDesc' ? b.cost - a.cost : sort.value === 'priceAsc' ? a.cost - b.cost : 0)),
 )
@@ -56,7 +60,7 @@ const JUST_ENDED_MS = 60_000
 const now = useClock(5000)
 const endedAt = (b: Battle) => (b.startedAt ? Date.parse(b.startedAt) + b.rounds.length * b.roundMs : 0)
 const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...byStatus('finished').filter((b) => now.value - endedAt(b) < JUST_ENDED_MS)])
-/** Phones: two columns of compact cards */
+/** Phones: one column of compact cards (the round strip needs the width) */
 // the server and hydration answer at the phone width the ssr-width plugin provides (most players are on phones),
 // so a phone gets its own layout from the first paint instead of the desktop one switching after mount
 const isPhone = useMediaQuery('(max-width: 639.98px)')
@@ -94,9 +98,12 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
         <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:w-48" :active="sort !== 'default'">
           <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
         </UiSelect>
+        <UiSegmented v-model="players" :options="playerOptions" size="s" class="kd-players shrink-0 max-lg:hidden" />
         <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" class="shrink-0" @click="affordable = !affordable"><span class="max-sm:hidden">{{ $t('filters.affordableShort') }}</span></UiChip>
       </div>
       <!-- the numbers on their way: their cells, not zeros -->
+      <!-- phones: the players on their own line, the width of the plate -->
+      <UiSegmented v-model="players" :options="playerOptions" size="s" block class="kd-players lg:hidden" />
       <div class="flex items-center gap-2 max-lg:w-full max-lg:justify-center max-lg:gap-1">
         <template v-if="!data">
           <span v-for="n in 2" :key="n" class="kd-skeleton h-10 w-28 rounded-lg max-lg:flex-1" aria-hidden="true" />
@@ -111,13 +118,13 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
     </div>
       <!-- the battles on their way: a row of card skeletons in the grid's columns -->
       <section v-if="!data" class="flex flex-col gap-4" aria-hidden="true">
-        <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
-          <span v-for="n in 8" :key="n" class="kd-skeleton h-[266px] rounded-5xl lg:h-[342px]" />
+        <div class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:gap-3">
+          <span v-for="n in 6" :key="n" class="kd-skeleton h-[200px] rounded-5xl lg:h-[218px]" />
         </div>
       </section>
       <!-- one grid, no section headers: start your own first, then the open seats, then what is live (a red round on
            the card) and what just ended (Ended, for a minute) — the rows fill however few battles there are -->
-      <TransitionGroup v-if="data" tag="div" name="kd-list" class="relative grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
+      <TransitionGroup v-if="data" tag="div" name="kd-list" class="relative grid grid-cols-1 gap-2 md:grid-cols-2 lg:gap-3">
         <PvpCreateTile key="create" :compact="isPhone" />
         <PvpCard v-for="b in lobby" :key="b.id" :battle="b" :compact="isPhone" />
       </TransitionGroup>
@@ -135,6 +142,10 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
   :deep(.kd-sort > button > :last-child) {
     display: none;
   }
+}
+/* the players: the plate's 40 px controls (the small segmented, its 6 px thumb 4 px in) */
+.kd-players {
+  border-radius: 10px;
 }
 /* a number on the plate: the controls' 40 px height and 8 px corners (16 − 8); phones: plain text on one thin line */
 .kd-stat {

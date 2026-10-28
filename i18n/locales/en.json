@@ -633,6 +633,8 @@
     "replay": "Replay",
     "linkCopied": "Replay link copied",
     "anyMode": "Any mode",
+    "anyPlayers": "Any",
+    "playersN": "{n} players",
     "wonBy": "{name} won",
     "modeName": {
       "classic": "Classic",

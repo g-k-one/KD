@@ -1,20 +1,21 @@
 <script setup lang="ts">
 // Fills the first spot in the open seats with the next thing to do: start your own. Built like a battle card: an empty
 // dashed stage (the plus chip and the title along its top, where the mode and the players sit; one plus where the case
-// would be, the line under it) and the button where Join sits, so the row reads as one.
+// would be, the line under it) and the button where Join sits, so the row reads as one. Its stage is as tall as the
+// battle card's top line and round strip.
 defineProps<{ compact?: boolean }>()
 </script>
 
 <template>
   <NuxtLink to="/pvp/create" class="kd-create kd-press flex min-w-0 flex-col gap-2 rounded-5xl bg-neutral-2 p-2">
     <!-- the dashed stage on the button's edges (16 px in), its 8 px corners concentric with the card's 24 -->
-    <div class="kd-create-stage relative mx-2 mt-2 flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-3" :class="compact ? 'h-42 pt-6' : 'h-58 pt-8'">
+    <div class="kd-create-stage relative mx-2 mt-2 flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-3" :class="compact ? 'h-28 pt-5' : 'h-32 pt-6'">
       <!-- the chip matches the battle cards' mode chip (24 px on phones), so New battle fits on a 360 px screen -->
-      <span class="absolute inset-x-1.5 top-1.5 flex items-center" :class="compact ? 'gap-1.5' : 'gap-2'">
-        <span class="kd-create-chip grid shrink-0 place-items-center text-brand-light" :class="compact ? 'size-6 rounded-md' : 'size-8 rounded-lg'"><UiIcon name="plus" :size="compact ? 14 : 18" /></span>
+      <span class="absolute inset-x-1.5 top-1.5 flex items-center gap-2">
+        <span class="kd-create-chip grid shrink-0 place-items-center size-8 rounded-lg text-brand-light"><UiIcon name="plus" :size="18" /></span>
         <span class="type-12-caps truncate text-brand-light">{{ $t('pvp.newBattle') }}</span>
       </span>
-      <span class="kd-create-plus grid place-items-center rounded-full text-neutral-1" :class="compact ? 'size-10' : 'size-14'"><UiIcon name="plus" :size="compact ? 20 : 24" /></span>
+      <span class="kd-create-plus grid place-items-center rounded-full size-10 text-neutral-1"><UiIcon name="plus" :size="20" /></span>
       <span class="type-12-regular text-center text-neutral-11">{{ $t('pvp.createTileText') }}</span>
     </div>
     <div class="px-2 pb-2">
