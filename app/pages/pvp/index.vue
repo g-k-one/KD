@@ -48,10 +48,10 @@ const modeOptions = computed(() => [{ value: 'all' as const, label: t('pvp.anyMo
 // desktop: the modes and the players as switches in sight, as skin.club's bar (a dropdown hid them)
 const modeSeg = computed(() => [{ value: 'all' as const, label: t('pvp.allShort') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`), icon: PVP_MODE_ICON[m] }))])
 const playerSeg = computed(() => [{ value: 'any' as const, label: t('pvp.allShort') }, ...(['2', '3', '4'] as const).map((n) => ({ value: n, label: n, title: t('pvp.playersN', { n }) }))])
-// what is going on, over the list: battles live (none: no "0 live"), people watching, coins in play
+// what is going on, one quiet line in the list's header: battles live (none: no "0 live"), people watching
 const liveCount = computed(() => (data.value?.battles ?? []).filter((b) => b.status === 'live').length)
 const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a + (b.viewers ?? 0), 0))
-const inPlay = computed(() => (data.value?.battles ?? []).filter((b) => b.status !== 'finished').reduce((a, b) => a + b.cost * b.size, 0))
+
 // the battles come newest first: the default order says so
 const sortOptions = computed(() => (['default', 'priceDesc', 'priceAsc'] as const).map((s) => ({ value: s, label: t(`filters.sortOptions.${s === 'default' ? 'newest' : s}`) })))
 
@@ -92,25 +92,6 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
         <UiButton variant="fair" size="s" icon="shield-check" to="/fairness" class="shrink-0" @click="howOpen = false">{{ $t('case.fairness') }}</UiButton>
       </div>
     </UiModal>
-    <!-- The section's header, as the home page's: the title, what is going on, Create PvP (phones: the numbers under it) -->
-    <div class="flex flex-col gap-2">
-      <UiSectionHeader :title="$t('home.battles')">
-        <template #actions>
-          <span v-if="data" class="flex items-center gap-4 max-lg:hidden">
-            <span v-if="liveCount" class="kd-num type-12-caps"><span class="kd-stat-dot" /><b>{{ liveCount }}</b>{{ $t('pvp.live') }}</span>
-            <span class="kd-num type-12-caps"><UiIcon name="eye" :size="16" /><b>{{ watching }}</b>{{ $t('pvp.watching') }}</span>
-            <span class="kd-num type-12-caps">{{ $t('pvp.inPlay') }}<UiPrice :amount="inPlay" size="s" tone="coin" /></span>
-          </span>
-          <UiButton icon="plus" size="s" to="/pvp/create" class="shrink-0 lg:ml-2">{{ $t('pvp.create') }}</UiButton>
-        </template>
-      </UiSectionHeader>
-      <span v-if="data" class="flex items-center gap-3 lg:hidden">
-        <span v-if="liveCount" class="kd-num type-12-caps"><span class="kd-stat-dot" /><b>{{ liveCount }}</b>{{ $t('pvp.live') }}</span>
-        <span class="kd-num type-12-caps"><UiIcon name="eye" :size="16" /><b>{{ watching }}</b>{{ $t('pvp.watching') }}</span>
-        <span class="kd-num type-12-caps">{{ $t('pvp.inPlay') }}<UiPrice :amount="inPlay" size="s" tone="coin" /></span>
-      </span>
-    </div>
-
     <!-- The filters, on the home page's plate (components/home/CaseFilters.vue). Desktop: the modes and the players as
          switches in sight (skin.club's bar), the "fits my balance" switch, Reset when something is set, the sort on the
          right. Phones: the mode, the wallet one tap away, the filters icon (the players, the switch and the sort in a
@@ -143,6 +124,8 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
       <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:ml-auto lg:w-48" :active="sort !== 'default'">
         <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
       </UiSelect>
+      <!-- the way in at the plate's end, the controls' height (phones: large, across, under the plate) -->
+      <UiButton icon="plus" to="/pvp/create" class="w-48 shrink-0 max-lg:hidden">{{ $t('pvp.create') }}</UiButton>
 
       <UiSheet v-model="sheet" :title="$t('filters.title')">
         <section class="flex flex-col gap-2">
@@ -168,12 +151,19 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
       </UiSheet>
     </div>
 
+    <UiButton icon="plus" size="l" to="/pvp/create" block class="lg:hidden">{{ $t('pvp.create') }}</UiButton>
+
     <!-- The battles, skin.club's list: the header bar, then a row per battle — the open seats first, then what is live
          and what just ended (for a minute) -->
     <div v-if="!data" class="flex flex-col gap-2" aria-hidden="true">
       <span v-for="n in 6" :key="n" class="kd-skeleton h-[236px] rounded-3xl lg:h-[140px] lg:rounded-2xl" />
     </div>
-    <PvpTable v-else :battles="lobby" />
+    <PvpTable v-else :battles="lobby">
+      <!-- what is going on, one quiet line in the header's free column over the buttons -->
+      <template #head>
+        <span class="kd-num type-10-caps"><template v-if="liveCount"><span class="kd-stat-dot" /><b>{{ liveCount }}</b>{{ $t('pvp.live') }}<span class="text-neutral-8">·</span></template><b>{{ watching }}</b>{{ $t('pvp.watching') }}</span>
+      </template>
+    </PvpTable>
 
   </div>
 </template>
@@ -205,17 +195,16 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
 .kd-seg10 {
   border-radius: 10px;
 }
-/* a number over the list: grey caps, the figure white */
 .kd-num {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   color: var(--color-neutral-11);
   white-space: nowrap;
 }
 .kd-num b {
   font-weight: inherit;
-  color: var(--color-neutral-15);
+  color: var(--color-neutral-14);
   font-variant-numeric: tabular-nums;
 }
 .kd-stat-dot {
