@@ -7,8 +7,8 @@
 // Open → Skip (while the reel spins) → Open again — so open, skip, open again is tap, tap, tap in one place.
 // "Sell all" gets a slot of its own (desktop: the middle card of the row under the dock, right below the main
 // button; phones: a row that unfolds under the button), so its arrival never pushes the main button.
-// The page decides what the main button says (open · sign in · top up the shortfall). The demo spin is on the
-// reel's stage (CaseReel), not here. Labels change at once (no letter-by-letter swap: rapid taps made the text
+// The page decides what the main button says (open · sign in · top up the shortfall). The demo spin ("Try free")
+// sits beside the amount, so it is there after a result too and never moves. Labels change at once (no letter-by-letter swap: rapid taps made the text
 // jitter), and every control in the block is 48px high (56px main button on desktop).
 const count = defineModel<1 | 2 | 3 | 4 | 5>('count', { required: true })
 const fast = defineModel<boolean>('fast', { required: true })
@@ -27,7 +27,7 @@ const props = defineProps<{
   /** selling the drops, the server has not answered yet */
   selling?: boolean
 }>()
-const emit = defineEmits<{ open: []; skip: []; sellAll: [] }>()
+const emit = defineEmits<{ open: []; skip: []; sellAll: []; demo: [] }>()
 const main = () => (props.phase === 'spinning' ? emit('skip') : emit('open'))
 const showSell = computed(() => props.phase === 'result' && props.unsoldTotal > 0)
 
@@ -38,8 +38,23 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
 
 <template>
   <div class="kd-dock flex flex-col gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-3">
-    <!-- Amount: the kit's segmented control -->
-    <UiSegmented v-model="count" :options="COUNT_OPTIONS" :disabled="phase === 'spinning'" block class="mb-1 lg:mb-0 lg:w-60" />
+    <!-- Amount (the kit's segmented control) and, beside it, a free demo spin of that amount: in the dock, so it never
+         moves — the same spot idle, after a demo and after a paid result. Narrow desktops (lg) keep only its icon -->
+    <div class="mb-1 flex gap-2 lg:mb-0">
+      <UiSegmented v-model="count" :options="COUNT_OPTIONS" :disabled="phase === 'spinning'" block class="min-w-0 flex-1 lg:w-60 lg:flex-none" />
+      <UiTooltip :text="$t('case.demoBadge')" class="shrink-0">
+        <UiChip
+          size="m"
+          icon="demo"
+          class="!h-12 !rounded-xl px-4"
+          :disabled="phase === 'spinning' || pending"
+          :aria-label="$t('case.tryFree')"
+          @click="emit('demo')"
+        >
+          <span class="lg:max-xl:hidden">{{ $t('case.tryFree') }}</span>
+        </UiChip>
+      </UiTooltip>
+    </div>
 
     <div class="flex flex-col">
       <UiButton size="l" class="kd-main w-full lg:h-14 lg:w-80" :variant="phase === 'spinning' ? 'secondary' : 'primary'" :loading="pending" @click="main">
