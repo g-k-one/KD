@@ -2,13 +2,13 @@
 import type { Battle, Rarity } from '#shared/types/api'
 
 // A battle as a line of the battle table (components/pvp/Table.vue), built like the game history's table
-// (components/history/Table.vue) so the two read the same. Three groups, nothing floating between them: who and what on
-// the left (the mode's icon and name with the rounds under it — the round now, red, while live — and the players), the
-// battle in order in the middle (the one part that stretches), one button on the right — Join with the seat's price in
-// it, as the case page's Open (a guest signs in first), Watch or View. The strip: open seats show the cases in the order
+// (components/history/Table.vue) so the two read the same. On one grid, one gap between every group: the left edge is
+// the rounds on the mode's colour (the round now, red, while live), then the battle in order (the one part that
+// stretches; whole thumbs fill it — 7 on desktop, 5 on phones), then who (the players, the mode under them), then one
+// button — Join with the seat's price in it, as the case page's Open (a guest signs in first), Watch or View. The strip: open seats show the cases in the order
 // they open (a run of one case as one thumb, ×N); live, the rounds played show their best drop on its rarity (the
 // history's thumb), the one opening now is ringed and marked in the mode's colour, and the strip slides along with it;
-// once over, every thumb is a drop. Phones: the mode and the players · the strip · the button across.
+// once over, every thumb is a drop. Phones: the rounds and who · the strip · the button across.
 const props = defineProps<{ battle: Battle }>()
 const now = useClock(1000)
 const { t } = useI18n()
@@ -43,16 +43,16 @@ const tiles = computed<Tile[]>(() => {
   })
 })
 // Live, the strip slides so the round opening now sits second (the last one played stays in sight); it stops once the
-// last thumb is in view. Transform only. The thumbs are the history table's, grown into a stage (the cases are what a
-// battle is): 88 × 76 on desktop, 64 × 56 on phones, 10 px corners. The size is CSS (the server renders at a phone's width); the
-// slide and the fade are worked out once mounted, so the first paint matches the server's.
+// last thumb is in view. Transform only. The thumbs are the history table's grown into a stage: their width is the
+// column's share (CSS: 7 on desktop, 5 on phones, 6 px apart), 76 / 52 px tall, 10 px corners. The slide and the fade are
+// worked out once mounted (the server renders at a phone's width), so the first paint matches the server's.
 const mounted = useMounted()
 const isLg = useMediaQuery('(min-width: 1024px)')
 const THUMB_GAP = 6
-const step = computed(() => (isLg.value ? 88 : 64) + THUMB_GAP)
 const viewport = useTemplateRef<HTMLElement>('viewport')
 const { width: viewW } = useElementSize(viewport)
-const fits = computed(() => (mounted.value ? Math.max(1, Math.floor((viewW.value + THUMB_GAP) / step.value)) : Infinity))
+const fits = computed(() => (mounted.value ? (isLg.value ? 7 : 5) : Infinity))
+const step = computed(() => (Number.isFinite(fits.value) ? (viewW.value - THUMB_GAP * (fits.value - 1)) / fits.value + THUMB_GAP : 0))
 const shift = computed(() => (props.battle.status === 'live' ? Math.min(Math.max(0, landed.value - 1), Math.max(0, tiles.value.length - fits.value)) : 0))
 // more thumbs than fit: the strip's end fades out
 const overflows = computed(() => tiles.value.length - shift.value > fits.value)
@@ -81,28 +81,26 @@ function onClick(e: MouseEvent) {
 
 <template>
   <li class="kd-tr border-b border-neutral-3 last:border-0" :class="[`is-${battle.mode}`, `is-${battle.status}`]">
-    <NuxtLink :to="`/pvp/${battle.id}`" class="kd-tr-hit kd-btr grid w-full items-center gap-x-3 gap-y-1 px-2 py-2.5 lg:gap-x-4 lg:px-3 lg:py-0 lg:h-[104px]" @click.capture="onClick">
-      <!-- the mode: its icon on its colour, its name, the rounds under it -->
-      <span class="kd-btr-mode flex min-w-0 items-center gap-2.5">
-        <UiTooltip :text="modeTip" class="shrink-0">
-          <span class="kd-btr-icon grid size-9 place-items-center rounded-xl" :aria-label="modeTip"><UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="18" /></span>
-        </UiTooltip>
-        <span class="flex min-w-0 flex-col">
-          <span class="type-14 truncate">{{ $t(`pvp.modeName.${battle.mode}`) }}</span>
-          <span class="type-12-regular flex items-center gap-1 truncate text-neutral-11">
-            <template v-if="battle.status === 'live'"><span class="kd-live-dot size-1.5 rounded-full bg-danger" /><span class="text-danger">{{ $t('pvp.roundShort', { n: round, of: battle.rounds.length }) }}</span></template>
-            <template v-else>{{ $t('pvp.roundsN', { n: battle.rounds.length }) }}<template v-if="battle.status === 'finished'"> · {{ $t('pvp.ended') }}</template></template>
-          </span>
+    <NuxtLink :to="`/pvp/${battle.id}`" class="kd-tr-hit kd-btr grid w-full items-center gap-x-4 gap-y-3 p-3 lg:gap-x-6 lg:py-3" @click.capture="onClick">
+      <!-- the left edge: the rounds on the mode's colour (the round now, red, while live; Ended once over) -->
+      <span class="kd-btr-rounds kd-badge flex h-12 w-16 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl lg:h-16 lg:rounded-2xl">
+        <span class="kd-badge-n tabular-nums" :class="battle.status === 'live' ? 'type-14 lg:type-16-caps' : 'type-16-caps lg:type-20-caps'">
+          <template v-if="battle.status === 'live'">{{ round }}/{{ battle.rounds.length }}</template>
+          <template v-else>{{ battle.rounds.length }}</template>
+        </span>
+        <span class="type-10-caps flex items-center gap-1 leading-none" :class="battle.status === 'live' ? 'text-danger' : 'text-neutral-11'">
+          <span v-if="battle.status === 'live'" class="kd-live-dot size-1.5 rounded-full bg-danger" />
+          {{ battle.status === 'live' ? $t('pvp.live') : battle.status === 'finished' ? $t('pvp.ended') : $t('pvp.rounds') }}
         </span>
       </span>
 
-      <!-- the battle in order: a thumb per round -->
-      <span ref="viewport" class="kd-btr-strip relative block min-w-0 overflow-hidden py-2.5 lg:py-3.5">
-        <span class="kd-strip flex" :style="{ gap: `${THUMB_GAP}px`, transform: `translateX(${-shift * step}px)` }">
+      <!-- the battle in order: a thumb per round, sized so whole ones fill the column (7 on desktop, 5 on phones) -->
+      <span ref="viewport" class="kd-btr-strip relative block min-w-0 overflow-hidden py-2">
+        <span class="kd-strip" :style="{ transform: `translateX(${-shift * step}px)` }">
           <span
             v-for="(tl, i) in tiles"
             :key="tl.key"
-            class="kd-thumb relative grid h-14 w-16 shrink-0 place-items-center rounded-[10px] lg:h-[76px] lg:w-[88px]"
+            class="kd-thumb relative grid h-[52px] place-items-center rounded-[10px] lg:h-[76px]"
             :class="`is-${tl.state}`"
             :style="{ '--rc': tl.rarity ? RARITY_COLOR[tl.rarity] : undefined, '--i': i }"
             :title="tl.title"
@@ -110,36 +108,41 @@ function onClick(e: MouseEvent) {
             <Transition name="kd-thumb" mode="out-in">
               <img :key="tl.image" :src="tl.image" alt="" draggable="false" class="kd-thumb-img size-[92%] object-contain" />
             </Transition>
-            <span v-if="tl.qty > 1" class="kd-thumb-qty type-10-caps absolute -right-1 -bottom-1 rounded px-0.5 tabular-nums">×{{ tl.qty }}</span>
+            <span v-if="tl.qty > 1" class="kd-thumb-qty type-10-caps absolute right-1 bottom-1 rounded px-0.5 tabular-nums">×{{ tl.qty }}</span>
             <span v-if="tl.state === 'now'" class="kd-thumb-mark absolute left-1/2 -top-1.5" aria-hidden="true" />
           </span>
         </span>
         <span v-if="overflows" class="kd-strip-fade pointer-events-none absolute inset-y-0 right-0 w-8" aria-hidden="true" />
       </span>
 
-      <!-- the players: a circle per seat, VS between the teams, + on a free one -->
-      <span class="kd-btr-players flex min-w-0 items-center gap-1 max-lg:justify-self-end">
-        <template v-for="(side, k) in sides" :key="k">
-          <span v-if="k > 0" class="type-10-caps mx-0.5 text-neutral-11">{{ $t('pvp.vs') }}</span>
-          <template v-for="s in side" :key="s.slot">
-            <span
-              v-if="s.player"
-              class="kd-av relative size-8 shrink-0"
-              :class="[leaders.includes(s.slot) && 'is-lead', winners.includes(s.slot) && 'is-won', battle.status === 'finished' && !winners.includes(s.slot) && 'is-lost']"
-              :title="s.player.nickname"
-            >
-              <span class="block size-full overflow-hidden rounded-full bg-neutral-7">
-                <img :src="s.player.avatar" alt="" class="size-full object-cover" :class="s.player.bot && 'scale-75 object-contain'" />
+      <!-- who: a circle per seat, VS between the teams, + on a free one; the mode under them -->
+      <span class="kd-btr-who flex min-w-0 flex-col gap-1.5">
+        <span class="flex items-center gap-1">
+          <template v-for="(side, k) in sides" :key="k">
+            <span v-if="k > 0" class="type-10-caps mx-0.5 text-neutral-11">{{ $t('pvp.vs') }}</span>
+            <template v-for="s in side" :key="s.slot">
+              <span
+                v-if="s.player"
+                class="kd-av relative size-7 shrink-0 lg:size-8"
+                :class="[leaders.includes(s.slot) && 'is-lead', winners.includes(s.slot) && 'is-won', battle.status === 'finished' && !winners.includes(s.slot) && 'is-lost']"
+                :title="s.player.nickname"
+              >
+                <span class="block size-full overflow-hidden rounded-full bg-neutral-7">
+                  <img :src="s.player.avatar" alt="" class="size-full object-cover" :class="s.player.bot && 'scale-75 object-contain'" />
+                </span>
+                <UiIcon v-if="leaders.includes(s.slot) || winners.includes(s.slot)" name="crown-fill" :size="14" class="kd-av-crown absolute -top-2.5 left-1/2 -translate-x-1/2" />
               </span>
-              <UiIcon v-if="leaders.includes(s.slot) || winners.includes(s.slot)" name="crown-fill" :size="14" class="kd-av-crown absolute -top-2.5 left-1/2 -translate-x-1/2" />
-            </span>
-            <span v-else class="kd-av kd-av-free grid size-8 shrink-0 place-items-center rounded-full border border-dashed"><UiIcon name="plus" :size="14" /></span>
+              <span v-else class="kd-av kd-av-free grid size-7 shrink-0 place-items-center rounded-full border border-dashed lg:size-8"><UiIcon name="plus" :size="14" /></span>
+            </template>
           </template>
-        </template>
+        </span>
+        <UiTooltip :text="modeTip" class="w-fit">
+          <span class="kd-btr-mode type-10-caps flex items-center gap-1" :aria-label="modeTip"><UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="12" />{{ $t(`pvp.modeName.${battle.mode}`) }}</span>
+        </UiTooltip>
       </span>
 
       <!-- the action: the kit's button — Join the primary with the seat's price in it, Watch and View the secondary -->
-      <span class="kd-btr-action kd-btn type-14-caps inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 lg:w-full" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
+      <span class="kd-btr-action kd-btn type-14-caps inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg px-4" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
         <UiIcon v-if="battle.status !== 'waiting'" name="eye" :size="16" class="shrink-0" />
         {{ $t(action) }}
         <span v-if="battle.status === 'waiting' && !guestJoin" class="btn-value"><UiPrice :amount="battle.cost" size="s" tone="inverse" /></span>
@@ -159,11 +162,11 @@ function onClick(e: MouseEvent) {
 .kd-tr.is-team {
   --mc: var(--color-item-milspec);
 }
-/* phones: the mode and the players · the strip · the button across; desktop: who and what · the strip · the button */
+/* phones: the rounds and who · the strip · the button across; desktop: rounds · strip · who · button */
 .kd-btr {
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   grid-template-areas:
-    'mode players'
+    'rounds who'
     'strip strip'
     'action action';
 }
@@ -171,38 +174,62 @@ function onClick(e: MouseEvent) {
   .kd-btr {
     /* the table's header sets the same columns (components/pvp/Table.vue) */
     grid-template-columns: var(--pvp-cols);
-    grid-template-areas: 'mode players strip action';
+    grid-template-areas: 'rounds strip who action';
   }
 }
-.kd-btr-mode {
-  grid-area: mode;
+.kd-btr-rounds {
+  grid-area: rounds;
 }
 .kd-btr-strip {
   grid-area: strip;
 }
-.kd-btr-players {
-  grid-area: players;
+.kd-btr-who {
+  grid-area: who;
 }
 .kd-btr-action {
   grid-area: action;
 }
-/* the mode's icon on its colour, its light around it (on the icon itself: a light on the line showed the line's edges) */
-.kd-btr-icon {
-  color: var(--mc);
-  background: color-mix(in srgb, var(--mc) 16%, var(--color-neutral-3));
-  box-shadow: 0 0 24px color-mix(in srgb, var(--mc) 30%, transparent);
+/* the rounds' tile: the mode's colour, its edge a shade stronger; red figures while live, grey once over */
+.kd-badge {
+  background: color-mix(in srgb, var(--mc) 14%, var(--color-neutral-3));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mc) 40%, transparent);
 }
-.kd-tr.is-finished .kd-btr-icon {
+.kd-badge-n {
+  color: var(--color-neutral-15);
+}
+.kd-tr.is-live .kd-badge-n {
+  color: var(--color-danger);
+}
+.kd-tr.is-finished .kd-badge {
+  background: var(--color-neutral-3);
   box-shadow: none;
 }
+.kd-tr.is-finished .kd-badge-n {
+  color: var(--color-neutral-11);
+}
+.kd-btr-mode {
+  color: var(--mc);
+}
+
 /* a row is a link: the history's hover */
 .kd-tr-hit {
   border-radius: 12px;
   transition: background-color var(--dur-base) var(--ease-out);
 }
-/* the strip slides with the round (transform only) */
+/* the strip: whole thumbs fill the column (7 on desktop, 5 on phones), the rest run on past it; it slides with the
+   round (transform only) */
 .kd-strip {
+  --k: 5;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - (var(--k) - 1) * 6px) / var(--k));
+  gap: 6px;
   transition: transform var(--dur-slow) var(--ease-out);
+}
+@media (min-width: 64rem) {
+  .kd-strip {
+    --k: 7;
+  }
 }
 /* the history's thumb grown into a stage: a case on grey, its shadow under it; a drop lit from below in its rarity.
    Live: the rounds to come dimmed, the one now ringed and lit in the mode's colour, marked above, rocking as it opens */

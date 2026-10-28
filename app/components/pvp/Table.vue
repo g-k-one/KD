@@ -3,7 +3,7 @@ import type { Battle } from '#shared/types/api'
 
 /*
  * The battle table (the lobby and the home page), built like the game history's (components/history/Table.vue):
- * the column headers on desktop — battle, players, cases — then a line per battle (components/pvp/Card.vue).
+ * the column headers on desktop — rounds, cases, players — then a line per battle (components/pvp/Card.vue).
  * Phones: no headers; each battle in three short lines. Nothing to show: the chicken with the knife waits for a fight.
  */
 defineProps<{ battles: Battle[] }>()
@@ -11,10 +11,10 @@ defineProps<{ battles: Battle[] }>()
 
 <template>
   <div class="kd-pvp-table flex min-w-0 flex-col">
-    <div class="kd-th type-10-caps sticky top-0 z-[1] hidden h-9 items-center gap-4 border-b border-neutral-4 px-3 text-neutral-11 lg:grid">
-      <span>{{ $t('pvp.mode') }}</span>
-      <span>{{ $t('pvp.players') }}</span>
+    <div class="kd-th type-10-caps sticky top-0 z-[1] hidden h-9 items-center gap-6 border-b border-neutral-4 px-3 text-neutral-11 lg:grid">
+      <span class="text-center">{{ $t('pvp.rounds') }}</span>
       <span>{{ $t('pvp.cases') }}</span>
+      <span>{{ $t('pvp.players') }}</span>
       <span />
     </div>
     <UiEmptyState v-if="!battles.length" :text="$t('pvp.noBattles')" art="empty-pvp" class="m-3" />
@@ -25,9 +25,9 @@ defineProps<{ battles: Battle[] }>()
 </template>
 
 <style scoped>
-/* the columns, shared with every line: who and what (the mode, the players) · the cases · the button */
+/* the columns, shared with every line: rounds · cases · who · the button */
 .kd-pvp-table {
-  --pvp-cols: 176px 168px minmax(0, 1fr) 168px;
+  --pvp-cols: 64px minmax(0, 1fr) 176px 168px;
 }
 .kd-th {
   grid-template-columns: var(--pvp-cols);

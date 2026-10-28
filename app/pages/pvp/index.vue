@@ -153,7 +153,7 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
     <!-- The battles, as the profile's Game history card: its header (the title, how many are live, Create PvP), then the
          table — the open seats first, then what is live and what just ended (for a minute) -->
     <section class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
-      <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
+      <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-6 lg:h-18">
         <UiIcon name="pvp" :size="24" class="text-neutral-13" />
         <span class="type-14 lg:type-16-medium">{{ $t('pvp.battles') }}</span>
         <!-- no battle running: no "0 live" -->
