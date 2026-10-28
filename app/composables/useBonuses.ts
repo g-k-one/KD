@@ -20,12 +20,14 @@ export function useBonuses() {
     )
   }
   const now = useClock(1000)
-  const dailyReady = computed(() => !!data.value && !data.value.daily.nextAt)
-  const dailyIn = computed(() => (data.value?.daily.nextAt ? countdown(data.value.daily.nextAt, now.value) : ''))
+  // what the timers and dots read: nothing while switched off, even if a refresh (the debug tools) fetched it anyway
+  const live = computed(() => (FEATURES.bonuses ? data.value : null))
+  const dailyReady = computed(() => !!live.value && !live.value.daily.nextAt)
+  const dailyIn = computed(() => (live.value?.daily.nextAt ? countdown(live.value.daily.nextAt, now.value) : ''))
   /** Welcome cases still to open (free for signing up) */
-  const welcomeLeft = computed(() => data.value?.welcome?.left ?? 0)
+  const welcomeLeft = computed(() => live.value?.welcome?.left ?? 0)
   /** Level cases earned and not opened yet */
-  const levelCount = computed(() => data.value?.level?.levelCases.length ?? 0)
+  const levelCount = computed(() => live.value?.level?.levelCases.length ?? 0)
   /** Free cases waiting right now: the welcome ones and the level ones (the daily case has its own timer) */
   const freeCount = computed(() => welcomeLeft.value + levelCount.value)
   return { data, refresh, dailyReady, dailyIn, welcomeLeft, levelCount, freeCount, now }
