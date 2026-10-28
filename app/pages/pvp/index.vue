@@ -96,8 +96,8 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
          switches in sight (skin.club's bar), the "fits my balance" switch, Reset when something is set, the sort on the
          right. Phones: the mode, the wallet one tap away, the filters icon (the players, the switch and the sort in a
          sheet) and the sort icon -->
-    <!-- the filters' plate and, beside it, Create PvP on its own: the kit's large button, centred on the plate (phones:
-         across, under the plate) -->
+    <!-- the filters' plate and, beside it, Create PvP on its own: the upgrade's CTA (the kit's large button, 56 px on desktop —
+         the plate's height; phones: across, under the plate) -->
     <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
     <div class="kd-filters flex min-w-0 flex-1 items-center gap-2 rounded-3xl bg-neutral-2 p-2 lg:gap-5 lg:pl-5">
       <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="min-w-0 flex-1 lg:hidden" :active="mode !== 'all'">
@@ -160,7 +160,7 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
         </template>
       </UiSheet>
     </div>
-    <UiButton icon="plus" size="l" to="/pvp/create" class="shrink-0 max-lg:w-full lg:w-60">{{ $t('pvp.create') }}</UiButton>
+    <UiButton icon="plus" size="l" to="/pvp/create" class="shrink-0 max-lg:w-full lg:h-14 lg:w-60">{{ $t('pvp.create') }}</UiButton>
     </div>
 
     <!-- The battles, skin.club's list: the header bar, then a row per battle — the open seats first, then what is live
