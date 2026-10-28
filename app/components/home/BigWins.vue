@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { BigWinsResponse } from '#shared/types/api'
+import { FORGE_KEY, type ForgeLayer } from '~/composables/useForge'
 
 // "Big wins today" (player audit D1): the day's best multipliers, so the home page has heat.
 // Each win is a wide card: the skin on the left breaks out over the card's top edge, big and tilted, its rarity's
@@ -8,7 +9,8 @@ import type { BigWinsResponse } from '#shared/types/api'
 // Desktop: #1, #2, #3 in one row, the cards one height, the winner's golden, its multiplier burning.
 // Phones: one line that runs by itself — #1, #2, #3 and again, a seamless loop (the three cards twice, the copies hidden
 // from screen readers); a finger on it holds it still. With reduced motion it is a plain swipe row.
-// Behind each skin a calm fire in its rarity's colour (kdFlame): licks and embers rise slowly from under the skin. Its own Forge layer between the cards' ground and their skin and text; it burns only on screen.
+// Behind each skin a calm fire in its rarity's colour (kdFlame): licks and embers rise slowly from under the skin, on every
+// width. Its Forge layer sits between the cards' ground and their skin and text; it burns only on screen.
 // The room above the cards is only what the skins break out by. Each card links to where the drop came from.
 const { data } = useFetch<BigWinsResponse>('/api/wins/today', { key: 'wins-today', lazy: true, server: false })
 // on its way the block keeps its place, so the cases below don't jump down when the wins arrive
@@ -20,6 +22,20 @@ const artSize = () => (isLg.value ? 106 : 62)
 // the running line on phones: the three cards, then the same three again for the seamless loop
 const rail = computed(() => (isLg.value ? wins.value.map((p) => ({ ...p, copy: false })) : [...wins.value, ...wins.value].map((p, k) => ({ ...p, copy: k >= wins.value.length }))))
 const held = ref(false)
+
+// The fire's canvas. Desktop: the home page's (the cards stand still). Phones: the belt's own, a layer inside the moving
+// track, so the canvas rides with the cards on the compositor and a flame never has to chase its card (Forge measures
+// looping fire only on scroll/resize and twice a second; a flame on a still canvas lagged behind the running belt).
+const homeFx = inject(FORGE_KEY, null)
+const beltFx = provideForge(useTemplateRef<HTMLElement>('fxBelt'))
+const layer = () => (isLg.value && homeFx ? homeFx : beltFx)
+provide(FORGE_KEY, {
+  play: (...a: Parameters<ForgeLayer['play']>) => layer().play(...a),
+  at: (...a: Parameters<ForgeLayer['at']>) => layer().at(...a),
+  stopAll: () => (homeFx?.stopAll(), beltFx.stopAll()),
+  killAll: () => (homeFx?.killAll(), beltFx.killAll()),
+  preload: (atlas: string) => layer().preload(atlas),
+})
 
 
 
@@ -49,7 +65,9 @@ const held = ref(false)
       @pointerleave="held = false"
     >
     <div class="kd-wins-track relative flex gap-3 max-lg:w-max max-lg:pr-3 lg:grid lg:grid-cols-3 lg:gap-4">
-      <!-- the fire draws on the home page's canvas: over the cards' ground (z 1), under their skin and text (z 2) -->
+      <!-- the fire draws over the cards' ground (z 1), under their skin and text (z 2): on the home page's canvas on desktop,
+           on phones on this layer, which runs with the belt and reaches above it for the licks over the skins -->
+      <div ref="fxBelt" class="pointer-events-none absolute inset-x-0 -top-12 bottom-0 z-[1] lg:hidden" aria-hidden="true" />
       <NuxtLink
         v-for="(p, i) in rail"
         :key="`${p.win.id}-${p.copy}`"
@@ -65,10 +83,7 @@ const held = ref(false)
         <div class="kd-win-stage relative z-[2] self-stretch">
           <span class="kd-win-shadow absolute" aria-hidden="true" />
           <!-- the fire: its base line on the skin's lower edge, licks rising behind it -->
-          <!-- phones: the belt moves, and a WebGL flame riding a moving card made the page re-sample its animation every
-               frame; there the warm light breathes in CSS (the same place, the rarity's colour), desktop's still grid burns -->
-          <span class="kd-win-fire absolute"><FxFire effect="kdFlame" :on="isLg" :color="RARITY_HEX[p.win.item.rarity]" :spread="1.7" class="w-full"><span class="block h-2 w-full" /></FxFire></span>
-          <span v-if="!isLg" class="kd-win-heat absolute" aria-hidden="true" />
+          <span class="kd-win-fire absolute"><FxFire effect="kdFlame" :color="RARITY_HEX[p.win.item.rarity]" :spread="1.7" class="w-full"><span class="block h-2 w-full" /></FxFire></span>
           <ItemArt :image="p.win.item.image" :rarity="p.win.item.rarity" :size="artSize()" float class="kd-win-art relative w-full" />
         </div>
         <div class="relative z-[2] flex min-w-0 flex-col items-start gap-1 lg:gap-1.5">
@@ -110,27 +125,6 @@ const held = ref(false)
   left: 8%;
   right: 8%;
   bottom: 22%;
-}
-.kd-win-heat {
-  left: 4%;
-  right: 4%;
-  bottom: 14%;
-  height: 70%;
-  border-radius: 9999px;
-  background: radial-gradient(closest-side at 50% 80%, color-mix(in srgb, var(--rc) 70%, #ffb648), color-mix(in srgb, var(--rc) 24%, transparent) 60%, transparent);
-  transform-origin: 50% 90%;
-  animation: kd-win-heat 1.3s ease-in-out infinite alternate;
-  animation-delay: calc(var(--i) * -0.4s);
-}
-@keyframes kd-win-heat {
-  from {
-    opacity: 0.5;
-    transform: scale(0.92, 0.86);
-  }
-  to {
-    opacity: 0.9;
-    transform: scale(1.04, 1.06);
-  }
 }
 /* the rarity shape stands out from the card's light (same hue, so it needs the contrast) */
 .kd-win :deep(.kd-art-star) {
