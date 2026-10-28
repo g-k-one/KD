@@ -8,10 +8,8 @@ const panel = useTemplateRef<HTMLElement>('panel')
 const scrim = useTemplateRef<HTMLElement>('scrim')
 useSheetDrag(panel, () => (open.value = false), { scrim })
 
-const lock = useScrollLock(import.meta.client ? document.body : null)
-watch(open, (v) => (lock.value = v))
-onKeyStroke('Escape', () => open.value && (open.value = false))
-onBeforeUnmount(() => (lock.value = false))
+// the page lock, Escape for the topmost only, focus kept inside and handed back on close
+useOverlay(() => open.value, () => (open.value = false), { panel })
 </script>
 
 <template>
@@ -24,7 +22,8 @@ onBeforeUnmount(() => (lock.value = false))
           role="dialog"
           aria-modal="true"
           :aria-label="title"
-          class="kd-sheet-panel relative flex max-h-[85dvh] w-full flex-col rounded-t-5xl border-t border-neutral-5 bg-neutral-2 pb-[env(safe-area-inset-bottom)]"
+          tabindex="-1"
+          class="kd-sheet-panel relative outline-none flex max-h-[85dvh] w-full flex-col rounded-t-5xl border-t border-neutral-5 bg-neutral-2 pb-[env(safe-area-inset-bottom)]"
         >
           <span class="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-neutral-7" />
           <div class="flex items-center justify-between px-4 pt-2 pb-3">

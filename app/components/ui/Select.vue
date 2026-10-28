@@ -43,7 +43,8 @@ watch(open, (v) => {
   up.value = props.placement === 'up' || (below < need && r.top > below)
 })
 onClickOutside(root, () => (open.value = false))
-onKeyStroke('Escape', () => (open.value = false))
+// Escape closes the menu only, not a modal it sits in
+useOverlay(() => open.value, () => (open.value = false), { lock: false })
 
 const display = computed(() => {
   if (props.multiple) {

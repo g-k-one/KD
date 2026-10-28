@@ -127,11 +127,10 @@ async function recreate() {
   if (!session.user) return ui.openSignIn()
   recreating.value = true
   try {
-    const qty: Record<string, number> = {}
-    b.value.rounds.forEach((r) => (qty[r.slug] = (qty[r.slug] ?? 0) + 1))
+    // the same mode and the rounds in their order, a case per round, as the create page sends them
     const res = await $fetch<BattleResponse>('/api/battles', {
       method: 'POST',
-      body: { size: b.value.size, cases: Object.entries(qty).map(([slug, n]) => ({ slug, qty: n })) },
+      body: { mode: b.value.mode, size: b.value.size, cases: b.value.rounds.map((r) => ({ slug: r.slug, qty: 1 })) },
     })
     if (res.balance != null) session.user.balance = res.balance
     await navigateTo(`/pvp/${res.battle.id}`)

@@ -737,15 +737,26 @@ export async function getSeeds() {
 
 export async function rotateSeeds(clientSeed?: string) {
   await ensureSeed()
-  state.previousSeed = { ...state.seed }
-  const next = clientSeed?.trim() || randomSeed(5)
-  const now = new Date().toISOString()
-  state.seedHistory.unshift({ ...state.seed, rotatedAt: now, clientChanged: !!clientSeed?.trim() && next !== state.seed.clientSeed })
-  Object.assign(state.seed, await freshServerSeed(), { nonce: 0, clientSeed: next, createdAt: now })
-  return getSeeds()
+  return onSeed(async () => {
+    state.previousSeed = { ...state.seed }
+    const next = clientSeed?.trim() || randomSeed(5)
+    const now = new Date().toISOString()
+    state.seedHistory.unshift({ ...state.seed, rotatedAt: now, clientChanged: !!clientSeed?.trim() && next !== state.seed.clientSeed })
+    Object.assign(state.seed, await freshServerSeed(), { nonce: 0, clientSeed: next, createdAt: now })
+    return getSeeds()
+  })
 }
 
 const publicSeed = () => ({ serverSeedHash: state.seed.serverSeedHash, clientSeed: state.seed.clientSeed, nonce: state.seed.nonce })
+
+// Rolls and a seed rotation take turns on the seed pair: a roll awaits its hashes, and a rotation landing in between
+// wrote the result under a seed it was not rolled on (and reset the nonce under it), so the history failed its own check
+let seedTurn: Promise<unknown> = Promise.resolve()
+function onSeed<T>(fn: () => Promise<T>): Promise<T> {
+  const run = seedTurn.then(fn, fn)
+  seedTurn = run.catch(() => {})
+  return run
+}
 
 // --- Cases: open / sell -----------------------------------------------------
 
@@ -754,7 +765,7 @@ export async function openCase(slug: string, count: number, demo: boolean, kurwa
   if (slug === WELCOME_SLUG) throw new MockError(400, 'Open the welcome cases from Bonuses')
   await ensureSeed()
   const cs = getCase(slug)
-  const n = Math.min(5, Math.max(1, Math.floor(count)))
+  const n = Math.min(5, Math.max(1, Math.floor(count) || 1))
   const price = kurwadrop ? cs.kurwadrop.price : cs.price
   // a limited case: the stock must cover every case of the open (x1…x5); demo spins never spend it
   if (!demo && cs.limited && cs.limited.left < n) throw new MockError(409, cs.limited.left ? `Only ${cs.limited.left} left` : 'Sold out')
@@ -766,7 +777,10 @@ export async function openCase(slug: string, count: number, demo: boolean, kurwa
   return roll(cs, n, demo, kurwadrop, price)
 }
 
-async function roll(cs: CaseDetails, n: number, demo: boolean, kurwadrop: boolean, price: number) {
+function roll(cs: CaseDetails, n: number, demo: boolean, kurwadrop: boolean, price: number) {
+  return onSeed(() => rollNow(cs, n, demo, kurwadrop, price))
+}
+async function rollNow(cs: CaseDetails, n: number, demo: boolean, kurwadrop: boolean, price: number) {
   const slug = cs.slug
 
   const pool = cs.items.filter((i) => cs.kurwadrop.poolIds.includes(i.id))
@@ -1037,9 +1051,11 @@ export function getMarket() {
 
 export async function upgrade(itemUids: string[], balanceAmount: number, targetItemId: string) {
   await ensureSeed()
-  const target = byId(targetItemId)
+  const target = findItem(targetItemId)
   if (!target) throw new MockError(404, 'Item not found')
   const items = ownedItems().filter((i) => itemUids.includes(i.uid))
+  // a whole number of coins, checked before anything moves: NaN passed every comparison below into the balance and XP
+  if (!Number.isSafeInteger(Math.floor(balanceAmount))) throw new MockError(400, 'Enter a whole number of coins')
   const extra = Math.max(0, Math.floor(balanceAmount))
   const input = items.reduce((a, i) => a + i.price, 0) + extra
   if (input <= 0) throw new MockError(400, 'Choose skins or add balance')
@@ -1068,22 +1084,25 @@ export async function upgrade(itemUids: string[], balanceAmount: number, targetI
     'near-lose': (r) => r >= c + 0.6 && r <= c + 2.6,
   }
   const fits = f ? bands[f] : null
-  let nonce = ++state.seed.nonce
-  let { roll } = await pfRoll(state.seed.serverSeed, state.seed.clientSeed, nonce)
-  for (let k = 0; fits && !fits(roll) && k < 20_000; k++) {
-    nonce = ++state.seed.nonce
-    ;({ roll } = await pfRoll(state.seed.serverSeed, state.seed.clientSeed, nonce))
-  }
-  const win = roll * 100 < chance
-  const won = win ? toInventory(target, 'upgrade') : null
-  if (won) {
-    state.inventory.unshift(won)
-    if (target.price >= input * 10) pushBigWin({ slug: 'upgrade', name: 'Upgrade', image: '' }, target, input, state.user)
-    state.queuedDrops.push(makeDrop({ ...target, itemName: target.weapon, skinName: target.skin, caseSlug: 'upgrade', caseName: 'Upgrade', casePrice: input, userNickname: state.user.nickname }))
-  }
-  record({ game: 'upgrade', title: `${target.weapon} | ${target.skin}`, bet: input, payout: win ? target.price : 0, status: win ? 'won' : 'lost', nonce, seedHash: state.seed.serverSeedHash, chance, roll, targetPrice: target.price, stake: items.map(histItem), stakeCoins: extra || undefined, result: histItem(target) })
-  syncSkinsValue()
-  return { win, roll, chance, item: won, balance: state.user.balance, nonce, seed: publicSeed() }
+  // on the seed's turn (see onSeed): the roll and its history line share one seed pair
+  return onSeed(async () => {
+    let nonce = ++state.seed.nonce
+    let { roll } = await pfRoll(state.seed.serverSeed, state.seed.clientSeed, nonce)
+    for (let k = 0; fits && !fits(roll) && k < 20_000; k++) {
+      nonce = ++state.seed.nonce
+      ;({ roll } = await pfRoll(state.seed.serverSeed, state.seed.clientSeed, nonce))
+    }
+    const win = roll * 100 < chance
+    const won = win ? toInventory(target, 'upgrade') : null
+    if (won) {
+      state.inventory.unshift(won)
+      if (target.price >= input * 10) pushBigWin({ slug: 'upgrade', name: 'Upgrade', image: '' }, target, input, state.user)
+      state.queuedDrops.push(makeDrop({ ...target, itemName: target.weapon, skinName: target.skin, caseSlug: 'upgrade', caseName: 'Upgrade', casePrice: input, userNickname: state.user.nickname }))
+    }
+    record({ game: 'upgrade', title: `${target.weapon} | ${target.skin}`, bet: input, payout: win ? target.price : 0, status: win ? 'won' : 'lost', nonce, seedHash: state.seed.serverSeedHash, chance, roll, targetPrice: target.price, stake: items.map(histItem), stakeCoins: extra || undefined, result: histItem(target) })
+    syncSkinsValue()
+    return { win, roll, chance, item: won, balance: state.user.balance, nonce, seed: publicSeed() }
+  })
 }
 
 // --- Deposit ------------------------------------------------------------------
@@ -1118,8 +1137,12 @@ export function quoteDeposit(amount: number, currency: FiatCurrency, methodId: s
 export function deposit(amount: number, currency: FiatCurrency, methodId: string, promoCode?: string) {
   const method = PAYMENT_METHODS.find((m) => m.id === methodId)
   if (!method) throw new MockError(400, 'Choose a payment method')
+  // checked before the wallet moves: an unknown currency or a missing amount came out as NaN coins in the balance
+  if (!Object.hasOwn(FX, currency)) throw new MockError(400, 'Unsupported currency')
+  if (!Number.isFinite(amount) || amount <= 0) throw new MockError(400, 'Enter an amount')
   if (amount < method.min || (method.max && amount > method.max)) throw new MockError(400, 'Amount is outside the method limits')
   const q = quoteDeposit(amount, currency, methodId, promoCode)
+  if (!Number.isSafeInteger(q.total)) throw new MockError(400, 'Amount is outside the method limits')
   state.user.balance += q.total
   record({ game: 'deposit', title: method.name, bet: 0, payout: q.total, status: 'done' })
   return { credited: q.total, balance: state.user.balance }

@@ -7,7 +7,7 @@ const settingsRoot = useTemplateRef<HTMLElement>('settingsRoot')
 const profileRoot = useTemplateRef<HTMLElement>('profileRoot')
 onClickOutside(settingsRoot, () => ui.popover === 'settings' && (ui.popover = null))
 onClickOutside(profileRoot, () => ui.popover === 'profile' && (ui.popover = null))
-onKeyStroke('Escape', () => (ui.popover = null))
+useOverlay(() => !!ui.popover, () => (ui.popover = null), { lock: false })
 
 const desktopNav = MAIN_NAV
 const { data, dailyReady, dailyIn, freeCount } = useBonuses()

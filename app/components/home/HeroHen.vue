@@ -36,6 +36,8 @@ const DOWN = { eyeL: 1, eyeR: 0.25 }
 const MAX_PX = 1400
 
 let stop = () => {}
+// set on unmount: a load that finishes after it (a quick tap away from home, a slow atlas) frees what it made and stops
+let gone = false
 // where the eyes look, in skeleton units: eased toward the target every frame
 const look = { x: 0, y: CENTER_Y + 60 }
 const target = { x: 0, y: CENTER_Y + 60 }
@@ -53,6 +55,7 @@ onMounted(async () => {
   } catch {
     return
   }
+  if (gone) return
   const canvas = document.createElement('canvas')
   canvas.setAttribute('aria-hidden', 'true')
   canvas.className = 'kd-hen-cv'
@@ -63,7 +66,22 @@ onMounted(async () => {
     return
   }
   const renderer = new spine.SceneRenderer(canvas, ctx)
-  const atlas = (await new spine.AssetManager(ctx).loadTextureAtlasAsync(`${base}rig/hen/hen.atlas`)) as InstanceType<Spine['TextureAtlas']>
+  const assets = new spine.AssetManager(ctx)
+  const free = () => {
+    renderer.dispose()
+    assets.dispose()
+  }
+  let atlas: InstanceType<Spine['TextureAtlas']>
+  try {
+    atlas = (await assets.loadTextureAtlasAsync(`${base}rig/hen/hen.atlas`)) as typeof atlas
+  } catch {
+    free()
+    return
+  }
+  if (gone || !host.value) {
+    free()
+    return
+  }
   const data = new spine.SkeletonJson(new spine.AtlasAttachmentLoader(atlas)).readSkeletonData(json)
   const sk = new spine.Skeleton(data)
   const bone = (n: string) => sk.findBone(n)!
@@ -199,11 +217,14 @@ onMounted(async () => {
     ro.disconnect()
     removeEventListener('pointermove', onMove)
     document.removeEventListener('visibilitychange', vis)
-    renderer.dispose()
+    free()
     canvas.remove()
   }
 })
-onBeforeUnmount(() => stop())
+onBeforeUnmount(() => {
+  gone = true
+  stop()
+})
 
 // the hop on the bird's own wrapper: a squash, a jump away from the finger with a stretch, a landing with a wobble;
 // the flustered one puffs up and shakes side to side. Transform only, so it runs on the compositor

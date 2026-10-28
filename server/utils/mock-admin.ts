@@ -123,12 +123,16 @@ export function setAdminCase(slug: string, input: Partial<AdminCaseInput>) {
     delete def.preset
     def.itemIds = picked.map((r) => r.item.id)
   }
-  // pictures: a URL or an uploaded image (data:image/…); a new square picture drops the animation drawn from the old one
+  // pictures: a URL or an uploaded image (data:image/…); a new square picture drops the animation drawn from the old one,
+  // and the case's own picture put back (a reset, a restored snapshot) brings its own animation back with it
   const isPic = (v: unknown): v is string => typeof v === 'string' && (/^data:image\//.test(v) || /^(\/|https?:\/\/)/.test(v))
   if (isPic(input.image) && input.image !== def.image) {
     def.image = input.image
-    delete def.rig
-    delete def.animation
+    const own = BUILT_ART.get(def.artSlug ?? def.slug)
+    if (own?.image === def.image && own.rig) def.rig = clone(own.rig)
+    else delete def.rig
+    if (own?.image === def.image && own.animation) def.animation = own.animation
+    else delete def.animation
   }
   if (input.art && typeof input.art === 'object') {
     def.art ??= {}
@@ -373,4 +377,7 @@ export function importSnapshot(snap: Partial<AdminSnapshot>) {
 
 // What the mock starts with, taken before any change: POST /api/admin/reset goes back to it
 const DEFAULTS = exportSnapshot()
+// Each built-in case's picture with its animation: a snapshot carries only an "animated" flag, so a picture put back
+// takes its rig or video from here (a copy from the case its art comes from)
+const BUILT_ART = new Map(caseDefs.map((d) => [d.slug, { image: d.image, rig: d.rig && clone(d.rig), animation: d.animation }]))
 export const resetAdmin = () => importSnapshot(DEFAULTS)

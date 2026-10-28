@@ -8,9 +8,11 @@ const ui = useUiStore()
 const close = () => (ui.mobileMenuOpen = false)
 watch(() => route.fullPath, close)
 
-// Lock page scroll while the drawer is open
-const lock = useScrollLock(import.meta.client ? document.body : null)
-watch(() => ui.mobileMenuOpen, (v) => (lock.value = v))
+// Lock page scroll while the drawer is open; Escape closes it. The drawer is phones-only (lg:hidden): a window widened
+// past it (a turned tablet) closes it, or the page stayed locked under a menu nobody can see
+const isLg = useMediaQuery('(min-width: 1024px)')
+watch(isLg, (v) => v && close())
+useOverlay(() => ui.mobileMenuOpen && !isLg.value, close)
 
 const settingsEl = useTemplateRef<HTMLElement>('settingsEl')
 const scrollToSettings = () => settingsEl.value?.scrollIntoView({ behavior: 'smooth' })

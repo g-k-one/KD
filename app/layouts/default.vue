@@ -13,6 +13,8 @@ useHead({ htmlAttrs: { class: computed(() => (settings.settings.streamerMode ? '
   <!-- overflow-x clip: effect layers reach past the screen's edge on purpose (sparks are never cut), the page never
        scrolls sideways; clip, not hidden, so the sticky header keeps working -->
   <div class="flex min-h-dvh flex-col overflow-x-clip">
+    <!-- the page itself (contents: no box of its own, the layout is unchanged); a modal makes it inert, see useOverlay -->
+    <div id="kd-page" class="contents">
     <div class="kd-sticky-top sticky top-0 z-30">
       <LayoutDesktopHeader class="hidden lg:flex" />
       <LayoutMobileHeader class="lg:hidden" />
@@ -27,6 +29,7 @@ useHead({ htmlAttrs: { class: computed(() => (settings.settings.streamerMode ? '
     <LayoutAppFooter class="pb-[calc(64px+env(safe-area-inset-bottom))] lg:pb-0" />
 
     <LayoutBottomNav class="lg:hidden" />
+    </div>
     <LayoutMobileMenu />
     <LayoutSignInModal />
     <WalletQuickDeposit />

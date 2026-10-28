@@ -20,14 +20,9 @@ useResizeObserver(body, () => {
   }
   lastH = h
 })
-const lock = useScrollLock(import.meta.client ? document.body : null)
-watch(open, (v) => {
-  lock.value = v
-  lastH = 0
-  if (v) nextTick(() => panel.value?.focus())
-})
-onKeyStroke('Escape', () => open.value && (open.value = false))
-onBeforeUnmount(() => (lock.value = false))
+// the page lock, Escape for the topmost only, focus kept inside and handed back on close
+useOverlay(() => open.value, () => (open.value = false), { panel })
+watch(open, () => (lastH = 0))
 </script>
 
 <template>

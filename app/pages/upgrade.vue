@@ -169,8 +169,9 @@ const isNear = (price: number) => {
 
 // Phones: both pickers live in one bottom sheet, opened from the mini cards
 const sheetOpen = ref(false)
-const sheetLock = useScrollLock(import.meta.client ? document.body : null)
-watch(sheetOpen, (v) => (sheetLock.value = v && !isLg.value))
+// widened to desktop with the sheet open: it closes, or the page stayed locked under panels that are no longer a sheet
+watch(isLg, (v) => v && (sheetOpen.value = false))
+useOverlay(() => sheetOpen.value && !isLg.value, () => (sheetOpen.value = false))
 function openSheet(tab: 'mine' | 'desired') {
   panelTab.value = tab
   sheetOpen.value = true
