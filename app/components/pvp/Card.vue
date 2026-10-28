@@ -5,7 +5,9 @@ import type { Battle } from '#shared/types/api'
 // (the status over a ring that fills in the mode's colour as the rounds are played, the count in it), the battle
 // scenario as case cells (the case big, its name under it; a run of one case as one cell, ×N, while seats are open), the
 // players (how many over the seats — overlapping, so four and VS fit — the mode under them) and one cell with the cost
-// over the button — Join (a guest signs in first), Watch or View — so the button is not an island in the row.
+// over the button — Join (a guest signs in first), Watch or View — so the button is not an island in the row. Desktop:
+// the rounds, the players and the cost are cells of one make — the dark ground, a caps label on top on one line for all
+// three, the thing itself in the middle, the second line at the bottom on one line too.
 // Live, the band shows progress only, as skin.club does: the cases played are dimmed, the one opening now is marked and
 // lifted, and the band slides along with it. No drops here — they are the room's (the lobby gets no results: lighter,
 // and nothing to read ahead of the replay). Phones: skin.club's card — rounds and status, the cost and the mode · the
@@ -75,7 +77,7 @@ function onClick(e: MouseEvent) {
     @click.capture="onClick"
   >
     <!-- rounds: the status, the ring with the count in it, "Rounds" -->
-    <div class="kd-brow-rounds flex items-center gap-2.5 px-2 pt-2 lg:flex-col lg:justify-center lg:gap-1.5 lg:p-0">
+    <div class="kd-brow-rounds kd-cellbg flex items-center gap-2.5 px-2 pt-2 lg:flex-col lg:justify-between lg:gap-0 lg:rounded-xl lg:px-2 lg:py-3">
       <span class="kd-brow-status type-10-caps flex items-center gap-1 max-lg:hidden">
         <span v-if="battle.status === 'live'" class="kd-live-dot size-1.5 rounded-full bg-danger" />{{ $t(status) }}
       </span>
@@ -121,7 +123,7 @@ function onClick(e: MouseEvent) {
 
     <!-- the players: how many over the seats, the mode under them -->
     <div class="kd-brow-who kd-cellbg flex min-w-0 items-center px-2 pb-2 lg:flex-col lg:justify-between lg:rounded-xl lg:px-2 lg:py-3">
-      <span class="type-12 text-neutral-11 tabular-nums max-lg:hidden">{{ battle.mode === 'team' ? '2 vs 2' : `${seated}/${battle.size}` }}</span>
+      <span class="type-10-caps text-neutral-11 tabular-nums max-lg:hidden">{{ battle.mode === 'team' ? $t('pvp.twoVsTwo') : `${seated}/${battle.size}` }}</span>
       <span class="flex items-center gap-1.5">
         <template v-for="(side, k) in sides" :key="k">
           <span v-if="k > 0" class="type-10-caps text-neutral-11">{{ $t('pvp.vs') }}</span>
@@ -144,11 +146,9 @@ function onClick(e: MouseEvent) {
     </div>
 
     <!-- the cost over the button, one cell the row's height (phones: the button alone, the cost is on top) -->
-    <div class="kd-brow-action kd-cellbg flex items-center justify-end px-2 pb-2 lg:flex-col lg:justify-center lg:gap-3 lg:rounded-xl lg:px-4 lg:py-3">
-      <span class="flex flex-col items-center gap-0.5 max-lg:hidden">
-        <span class="type-10-caps text-neutral-11">{{ $t('pvp.cost') }}</span>
-        <UiPrice :amount="battle.cost" size="l" tone="coin" />
-      </span>
+    <div class="kd-brow-action kd-cellbg flex items-center justify-end px-2 pb-2 lg:flex-col lg:justify-between lg:rounded-xl lg:px-4 lg:py-3">
+      <span class="type-10-caps text-neutral-11 max-lg:hidden">{{ $t('pvp.cost') }}</span>
+      <UiPrice :amount="battle.cost" size="l" tone="coin" class="max-lg:hidden" />
       <span class="kd-btn type-14-caps inline-flex h-10 w-32 items-center justify-center gap-1.5 rounded-lg lg:w-full" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
         <UiIcon v-if="battle.status !== 'waiting'" name="eye" :size="16" class="shrink-0" />
         {{ $t(action) }}

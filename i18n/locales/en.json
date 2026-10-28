@@ -639,6 +639,8 @@
     "noBattles": "No battles here yet. Start one and call a bot or a friend",
     "cases": "Cases",
     "scenario": "Battle scenario",
+    "twoVsTwo": "2 vs 2",
+    "allShort": "All",
     "playersN": "{n} players",
     "wonBy": "{name} won",
     "modeName": {
