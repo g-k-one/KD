@@ -30,16 +30,24 @@ const counts = computed(() => {
   const list = data.value?.battles ?? []
   return { all: list.length, waiting: list.filter((b) => b.status === 'waiting').length, live: list.filter((b) => b.status === 'live').length, finished: list.filter((b) => b.status === 'finished').length }
 })
-// The lobby, on the case page's model: sections with a header and a grid of battle cards — open seats first, then
-// what is live, then the finished ones (one row, Show all opens the rest). Filters in one line from the kit: mode, sort
-// by price, and "fits my balance" (seats the player can pay for).
+// The lobby, on the profile's model: the home page's filter plate, then one card with the battle table — open seats
+// first, then what is live, then what just ended. Filters: mode, players, "fits my balance" (seats the player can pay
+// for), sort by price.
 const session = useSessionStore()
 const mode = ref<'all' | BattleMode>('all')
 const sort = ref<'default' | 'priceDesc' | 'priceAsc'>('default')
 const affordable = ref(false)
 // how many players, as skin.club filters (2v2 is the Team mode, so 4 covers it)
-const players = ref<0 | 2 | 3 | 4>(0)
-const playerOptions = computed(() => [{ value: 0 as const, label: t('pvp.anyPlayers') }, ...([2, 3, 4] as const).map((n) => ({ value: n, label: String(n), title: t('pvp.playersN', { n }) }))])
+const players = ref<'any' | '2' | '3' | '4'>('any')
+const playerOptions = computed(() => [{ value: 'any' as const, label: t('pvp.anyPlayers') }, ...(['2', '3', '4'] as const).map((n) => ({ value: n, label: t('pvp.playersN', { n }) }))])
+const dirty = computed(() => mode.value !== 'all' || players.value !== 'any' || affordable.value || sort.value !== 'default')
+const sheet = ref(false)
+function reset() {
+  mode.value = 'all'
+  players.value = 'any'
+  affordable.value = false
+  sort.value = 'default'
+}
 const modeOptions = computed(() => [{ value: 'all' as const, label: t('pvp.anyMode') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`), icon: PVP_MODE_ICON[m], iconColor: PVP_MODE_COLOR[m] }))])
 // the battles come newest first: the default order says so
 const sortOptions = computed(() => (['default', 'priceDesc', 'priceAsc'] as const).map((s) => ({ value: s, label: t(`filters.sortOptions.${s === 'default' ? 'newest' : s}`) })))
@@ -49,7 +57,7 @@ const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a +
 const filtered = computed(() =>
   (data.value?.battles ?? [])
     .filter((b) => mode.value === 'all' || b.mode === mode.value)
-    .filter((b) => !players.value || b.size === players.value)
+    .filter((b) => players.value === 'any' || b.size === Number(players.value))
     .filter((b) => !affordable.value || (b.status === 'waiting' && b.cost <= (session.user?.balance ?? 0)))
     .sort((a, b) => (sort.value === 'priceDesc' ? b.cost - a.cost : sort.value === 'priceAsc' ? a.cost - b.cost : 0)),
 )
@@ -60,7 +68,7 @@ const JUST_ENDED_MS = 60_000
 const now = useClock(5000)
 const endedAt = (b: Battle) => (b.startedAt ? Date.parse(b.startedAt) + b.rounds.length * b.roundMs : 0)
 const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...byStatus('finished').filter((b) => now.value - endedAt(b) < JUST_ENDED_MS)])
-/** Phones: the rows as cards, their tiles smaller */
+/** Phones: the header's button is the small one */
 // the server and hydration answer at the phone width the ssr-width plugin provides (most players are on phones),
 // so a phone gets its own layout from the first paint instead of the desktop one switching after mount
 const isPhone = useMediaQuery('(max-width: 639.98px)')
@@ -87,61 +95,89 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
         <UiButton variant="fair" size="s" icon="shield-check" to="/fairness" class="shrink-0" @click="howOpen = false">{{ $t('case.fairness') }}</UiButton>
       </div>
     </UiModal>
-    <!-- One plate, as the home page's filters: the mode, the sort, the players and the budget on the left; on the right what
-         is going on (battles live when there are any, coins in play; people watching on phones) and Create PvP, as every
-         battle site puts it. Phones: the filters on one line, the players, the numbers, then Create PvP across -->
-    <div class="kd-filters flex flex-wrap items-center gap-2 rounded-3xl bg-neutral-2 p-2">
-      <div class="flex min-w-0 flex-1 items-center gap-2">
-        <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="min-w-0 flex-1 lg:w-48 lg:flex-none" :active="mode !== 'all'">
-          <template #leading><UiIcon :name="mode === 'all' ? 'pvp' : PVP_MODE_ICON[mode]" :size="16" class="text-neutral-11" /></template>
-        </UiSelect>
-        <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:w-48" :active="sort !== 'default'">
-          <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
-        </UiSelect>
-        <UiSegmented v-model="players" :options="playerOptions" size="s" class="kd-players shrink-0 max-lg:hidden" />
-        <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" class="shrink-0" @click="affordable = !affordable"><span class="max-sm:hidden">{{ $t('filters.affordableShort') }}</span></UiChip>
-      </div>
-      <!-- the numbers on their way: their cells, not zeros -->
-      <!-- phones: the players on their own line, the width of the plate -->
-      <UiSegmented v-model="players" :options="playerOptions" size="s" block class="kd-players lg:hidden" />
-      <div class="flex items-center gap-2 max-lg:w-full max-lg:justify-center max-lg:gap-1">
-        <template v-if="!data">
-          <span v-for="n in 2" :key="n" class="kd-skeleton h-10 w-28 rounded-lg max-lg:flex-1" aria-hidden="true" />
+    <!-- The filters, as the home page's plate (components/home/CaseFilters.vue). Desktop: dropdowns — the mode, the
+         players — and the "fits my balance" switch; Reset when something is set; the sort on the right. Phones: the mode,
+         the wallet one tap away, the filters icon (the players, the switch and the sort in a sheet) and the sort icon -->
+    <div class="kd-filters flex items-center gap-2 rounded-3xl bg-neutral-2 p-2">
+      <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="min-w-0 flex-1 lg:w-48 lg:flex-none" :active="mode !== 'all'">
+        <template #leading><UiIcon :name="mode === 'all' ? 'pvp' : PVP_MODE_ICON[mode]" :size="16" class="text-neutral-11" /></template>
+      </UiSelect>
+      <UiSelect v-model="players" :options="playerOptions" menu-width="fixed" class="w-44 shrink-0 max-lg:hidden" :active="players !== 'any'">
+        <template #leading><UiIcon name="user" :size="16" class="text-neutral-11" /></template>
+      </UiSelect>
+      <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" class="shrink-0 max-lg:hidden" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
+      <button
+        v-if="session.user"
+        type="button"
+        :aria-label="$t('filters.affordable')"
+        :aria-pressed="affordable"
+        class="kd-press grid size-10 shrink-0 place-items-center rounded-lg lg:hidden"
+        :class="affordable ? 'bg-brand-base/16 text-brand-light ring-1 ring-brand-base ring-inset' : 'bg-neutral-1 text-neutral-12'"
+        @click="affordable = !affordable"
+      >
+        <UiIcon name="wallet" :size="18" />
+      </button>
+      <button type="button" :aria-label="$t('filters.title')" class="kd-press relative grid size-10 shrink-0 place-items-center rounded-lg bg-neutral-1 lg:hidden" @click="sheet = true">
+        <UiIcon name="sliders" :size="18" class="text-neutral-12" />
+        <span v-if="players !== 'any'" class="type-10-caps absolute -top-1 -right-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand-base px-1 text-neutral-1">1</span>
+      </button>
+      <Transition name="kd-reset">
+        <UiButton v-if="dirty" variant="ghost" size="m" icon="refresh" class="max-lg:hidden" @click="reset">{{ $t('filters.reset') }}</UiButton>
+      </Transition>
+      <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:ml-auto lg:w-48" :active="sort !== 'default'">
+        <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
+      </UiSelect>
+
+      <UiSheet v-model="sheet" :title="$t('filters.title')">
+        <section class="flex flex-col gap-2">
+          <span class="type-12-caps text-neutral-11">{{ $t('pvp.players') }}</span>
+          <div class="flex flex-wrap gap-1.5">
+            <UiChip v-for="o in playerOptions" :key="o.value" size="m" class="normal-case" :active="players === o.value" @click="players = o.value">{{ o.label }}</UiChip>
+          </div>
+        </section>
+        <label class="flex h-12 items-center gap-3 rounded-xl bg-neutral-3 px-3" :class="!session.user && 'opacity-40'">
+          <UiToggle v-model="affordable" :label="$t('filters.affordable')" :disabled="!session.user" />
+          <span class="type-14">{{ $t('filters.affordable') }}</span>
+        </label>
+        <section class="flex flex-col gap-2">
+          <span class="type-12-caps text-neutral-11">{{ $t('filters.sort') }}</span>
+          <div class="flex flex-wrap gap-1.5">
+            <UiChip v-for="o in sortOptions" :key="o.value" size="m" class="normal-case" :active="sort === o.value" @click="sort = o.value">{{ o.label }}</UiChip>
+          </div>
+        </section>
+        <template #actions>
+          <UiButton variant="secondary" size="l" class="flex-1" :disabled="!dirty" @click="reset">{{ $t('filters.reset') }}</UiButton>
+          <UiButton size="l" class="flex-1" @click="sheet = false">{{ $t('upgrade.done') }}</UiButton>
         </template>
-        <template v-else>
-          <!-- no battle running: no "0 live" -->
-          <span v-if="counts.live" class="kd-stat type-12-caps"><span class="kd-stat-dot" /><span class="text-neutral-15 tabular-nums">{{ counts.live }}</span>{{ $t('pvp.live') }}</span>
-          <span class="kd-stat is-phone type-12-caps"><UiIcon name="eye" :size="16" /><span class="text-neutral-15 tabular-nums">{{ watching }}</span>{{ $t('pvp.watching') }}</span>
-          <span class="kd-stat type-12-caps">{{ $t('pvp.inPlay') }}<UiPrice :amount="inPlay" size="s" tone="coin" /></span>
-        </template>
-        <UiButton icon="plus" to="/pvp/create" class="shrink-0 max-lg:hidden">{{ $t('pvp.create') }}</UiButton>
-      </div>
-      <UiButton icon="plus" to="/pvp/create" block class="lg:hidden">{{ $t('pvp.create') }}</UiButton>
+      </UiSheet>
     </div>
-    <!-- The battles as a table, as every battle site lists them: the header names the columns (desktop), a row per battle —
-         the open seats first, then what is live (a red round) and what just ended (Ended, for a minute). Phones: no
-         header, each row a card in three lines -->
-    <section class="kd-pvp-table flex flex-col gap-2">
-      <div class="kd-pvp-head type-10-caps grid items-center gap-x-4 rounded-2xl bg-neutral-2 px-3 py-2.5 text-neutral-11 max-lg:hidden">
-        <span class="text-center">{{ $t('pvp.rounds') }}</span>
-        <span>{{ $t('pvp.cases') }}</span>
-        <span class="text-center">{{ $t('pvp.cost') }}</span>
-        <span class="text-center">{{ $t('pvp.players') }}</span>
-        <span />
+
+    <!-- The battles, as the profile's Game history card: its header (the title, what is going on, Create PvP), then the
+         table — the open seats first, then what is live and what just ended (for a minute) -->
+    <section class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
+      <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
+        <UiIcon name="pvp" :size="24" class="text-neutral-13" />
+        <span class="type-14 lg:type-16-medium">{{ $t('pvp.battles') }}</span>
+        <!-- no battle running: no "0 live" -->
+        <span v-if="counts.live" class="type-12-caps flex items-center gap-1.5 text-neutral-11"><span class="kd-stat-dot" /><span class="text-neutral-15 tabular-nums">{{ counts.live }}</span>{{ $t('pvp.live') }}</span>
+        <span v-if="data" class="type-12-caps flex items-center gap-1.5 text-neutral-11 max-lg:hidden"><UiIcon name="eye" :size="16" /><span class="text-neutral-15 tabular-nums">{{ watching }}</span>{{ $t('pvp.watching') }}</span>
+        <span v-if="data" class="type-12-caps flex items-center gap-1.5 text-neutral-11 max-lg:hidden">{{ $t('pvp.inPlay') }}<UiPrice :amount="inPlay" size="s" tone="coin" /></span>
+        <UiButton icon="plus" :size="isPhone ? 's' : 'm'" to="/pvp/create" class="ml-auto shrink-0">{{ $t('pvp.create') }}</UiButton>
       </div>
-      <!-- the battles on their way: row skeletons -->
-      <template v-if="!data">
-        <span v-for="n in 6" :key="n" class="kd-skeleton h-[188px] rounded-3xl lg:h-[96px] lg:rounded-2xl" aria-hidden="true" />
-      </template>
-      <TransitionGroup v-else tag="div" name="kd-list" class="relative flex flex-col gap-2">
-        <PvpCard v-for="b in lobby" :key="b.id" :battle="b" :compact="isPhone" />
-      </TransitionGroup>
+      <!-- the battles on their way: line skeletons -->
+      <div v-if="!data" class="flex flex-col gap-2 p-3" aria-hidden="true">
+        <span v-for="n in 6" :key="n" class="kd-skeleton h-[124px] rounded-xl lg:h-[62px]" />
+      </div>
+      <div v-else class="p-3">
+        <PvpTable :battles="lobby" />
+      </div>
     </section>
 
   </div>
 </template>
 
 <style scoped>
+/* the home page's filter plate: the sort's menu opens to the left; on phones the sort shrinks to its icon */
 :deep(.kd-sort > ul) {
   left: auto;
   right: 0;
@@ -152,41 +188,16 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
     display: none;
   }
 }
-/* the table's columns, shared by the header and every row (components/pvp/Card.vue) */
-.kd-pvp-table {
-  --pvp-cols: 72px minmax(0, 1fr) 112px 200px 152px;
+.kd-reset-enter-active,
+.kd-reset-leave-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
 }
-.kd-pvp-head {
-  grid-template-columns: var(--pvp-cols);
-}
-/* the players: the plate's 40 px controls (the small segmented, its 6 px thumb 4 px in) */
-.kd-players {
-  border-radius: 10px;
-}
-/* a number on the plate: the controls' 40 px height and 8 px corners (16 − 8); phones: plain text on one thin line */
-.kd-stat {
-  display: inline-flex;
-  height: 40px;
-  align-items: center;
-  gap: 6px;
-  border-radius: 8px;
-  background: var(--color-neutral-1);
-  padding: 0 12px;
-  color: var(--color-neutral-11);
-  white-space: nowrap;
-}
-@media (max-width: 63.999rem) {
-  .kd-stat {
-    height: 24px;
-    background: none;
-    padding-inline: 4px;
-  }
-}
-/* people watching: phones only (the desktop plate has Create PvP there); a class, since the scoped display wins over lg:hidden */
-@media (min-width: 64rem) {
-  .kd-stat.is-phone {
-    display: none;
-  }
+.kd-reset-enter-from,
+.kd-reset-leave-to {
+  opacity: 0;
+  transform: translateX(6px);
 }
 .kd-stat-dot {
   width: 6px;
@@ -199,25 +210,5 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
   50% {
     opacity: 0.3;
   }
-}
-.kd-list-enter-active {
-  transition:
-    opacity var(--dur-slow) var(--ease-out),
-    transform var(--dur-slow) var(--ease-out);
-}
-.kd-list-leave-active {
-  transition: opacity var(--dur-fast) var(--ease-in);
-  position: absolute;
-  width: 100%;
-}
-.kd-list-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-.kd-list-leave-to {
-  opacity: 0;
-}
-.kd-list-move {
-  transition: transform var(--dur-slow) var(--ease-out);
 }
 </style>

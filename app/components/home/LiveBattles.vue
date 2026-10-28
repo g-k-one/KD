@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BattlesResponse } from '#shared/types/api'
 
-// Battles on the home page (#12, Skin.Club): the same battle rows as the lobby — open seats first, then live rooms,
+// Battles on the home page (#12, Skin.Club): the lobby's battle table — open seats first, then live rooms,
 // one tap to join or watch. The lobby's list, fetched and refreshed here on its own; quiet when nothing is going on.
 const { data, refresh } = useFetch<BattlesResponse>('/api/battles', { key: 'home-battles', server: false, lazy: true })
 useIntervalFn(() => document.visibilityState === 'visible' && refresh(), 5000)
@@ -13,9 +13,6 @@ const list = computed(() =>
     .sort((a, b) => ORDER[a.status] - ORDER[b.status] || b.cost - a.cost)
     .slice(0, 4),
 )
-// the server and hydration answer at the phone width the ssr-width plugin provides (most players are on phones),
-// so a phone gets its own layout from the first paint instead of the desktop one switching after mount
-const isPhone = useMediaQuery('(max-width: 639.98px)')
 const liveCount = computed(() => (data.value?.battles ?? []).filter((b) => b.status === 'live').length)
 </script>
 
@@ -27,8 +24,9 @@ const liveCount = computed(() => (data.value?.battles ?? []).filter((b) => b.sta
         <NuxtLink to="/pvp" class="type-12-caps flex h-8 items-center gap-0.5 text-neutral-12 hover:text-neutral-15">{{ $t('home.allBattles') }}<UiIcon name="chevron-right" :size="14" /></NuxtLink>
       </template>
     </UiSectionHeader>
-    <div class="flex flex-col gap-2">
-      <PvpCard v-for="b in list" :key="b.id" :battle="b" :compact="isPhone" />
+    <!-- the lobby's table in a card, as the upgrade page lists its rolls -->
+    <div class="rounded-5xl bg-neutral-2 p-3">
+      <PvpTable :battles="list" />
     </div>
   </section>
 </template>

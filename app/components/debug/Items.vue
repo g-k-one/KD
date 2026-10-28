@@ -137,10 +137,8 @@ const flash = ref(true)
     </section>
 
     <section class="dbg-card">
-      <h2 class="dbg-h">PvP card <span class="dbg-note">PvpCard · the same battle with 1, 2, 3, 5, 6 and 9 rounds</span></h2>
-      <div class="kd-dbg-pvp grid grid-cols-2 gap-3 lg:grid-cols-6">
-        <PvpCard v-for="b in roundsDemo" :key="b.id" :battle="b" />
-      </div>
+      <h2 class="dbg-h">PvP table <span class="dbg-note">PvpTable · the same battle with 1, 2, 3, 5, 6 and 9 rounds</span></h2>
+      <PvpTable :battles="roundsDemo" />
     </section>
 
     <section class="dbg-card">
