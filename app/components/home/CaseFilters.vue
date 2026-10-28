@@ -79,7 +79,8 @@ function reset() {
       <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
     </div>
     <Transition name="kd-reset">
-      <UiButton v-if="dirty" variant="ghost" size="m" icon="refresh" class="max-lg:hidden lg:order-1" @click="reset">{{ $t('filters.reset') }}</UiButton>
+      <!-- Reset is a chip everywhere (the upgrade's, the PvP dock's): Fits my balance's make, the row's height -->
+      <UiChip v-if="dirty" size="m" variant="field" icon="refresh" class="shrink-0 max-lg:hidden lg:order-1" @click="reset">{{ $t('filters.reset') }}</UiChip>
     </Transition>
     <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:order-3 lg:w-48">
       <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
