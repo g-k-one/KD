@@ -410,10 +410,10 @@ function onArtLeave() {
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
 }
 @media (hover: hover) {
-  /* no plate, so hover draws the outline: the same soft white on every case */
+  /* no plate, so hover lays a faint one: white at 4%, no outline, the same on every case */
   .kd-case-card.look-coop:hover {
-    background: none;
-    border-color: var(--color-white-12);
+    background: var(--color-white-4);
+    border-color: transparent;
   }
   .look-coop:hover .kd-case-art {
     transform: translateY(-22%) scale(0.8);
