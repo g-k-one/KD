@@ -620,9 +620,6 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
               >
                 <template v-if="!(compact || isMobile)">{{ $t('share.share') }}</template>
               </UiButton>
-              <!-- a demo drop has no Sell: the empty row keeps its height, so the names sit where a paid result has
-                   them and the stage's Try free (below) has its line -->
-              <span v-if="phase === 'result' && demo && tryFree" class="block" :class="compact ? 'h-10' : 'h-8 max-sm:h-7'" aria-hidden="true" />
               </div>
             </div>
           </Transition>
@@ -683,8 +680,6 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
               <template v-if="!isMobile">{{ $t('share.share') }}</template>
             </UiButton>
           </div>
-          <!-- a demo drop can't be sold: its row is Try free again, on the line the idle stage had it -->
-          <UiButton v-else-if="tryFree" variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
         </div>
       </Transition>
     </div>
@@ -718,10 +713,17 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
       </div>
     </Transition>
 
-    <!-- Demo spin ("Try free", free, nothing is charged): at the stage's bottom centre (the results' buttons line), idle
-         and after a demo, so another free spin is one tap in the same spot. An x1 demo result has it in its own row (above) -->
+    <!-- Demo spin ("Try free", free, nothing is charged): at the stage's top centre, under the marker, idle and after a
+         demo spin — a line no state fills (the drops' names and Sell sit at the bottom), so another free spin is one tap
+         in the same place and every name stays whole. Idle, it comes and goes with the idle stage; after a demo it
+         arrives with the drops' names (as the last reel lands) and leaves with them at once on the next spin -->
     <Transition name="kd-idle">
-      <div v-if="tryFree && !breathing && (phase === 'idle' || (phase === 'result' && demo && !horizontal))" class="absolute inset-x-0 bottom-4 z-10 flex justify-center sm:bottom-5">
+      <div v-if="tryFree && phase === 'idle' && !breathing" class="absolute inset-x-0 top-3.5 z-10 flex justify-center">
+        <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
+      </div>
+    </Transition>
+    <Transition name="kd-result">
+      <div v-if="tryFree && demo && results.length && (phase === 'result' || (!kurwaCols.length && results.every((_, c) => landed[c])))" class="absolute inset-x-0 top-3.5 z-10 flex justify-center">
         <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
       </div>
     </Transition>
