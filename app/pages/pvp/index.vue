@@ -40,9 +40,6 @@ function reset() {
   sort.value = 'default'
 }
 const modeOptions = computed(() => [{ value: 'all' as const, label: t('pvp.anyMode') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`), icon: PVP_MODE_ICON[m], iconColor: PVP_MODE_COLOR[m] }))])
-// desktop: the modes as switches in sight, as skin.club's bar — their icons (the name on hover), compact as the case
-// page's ×1–×5 so Create PvP keeps the middle
-const modeSeg = computed(() => [{ value: 'all' as const, label: t('pvp.allShort') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, icon: PVP_MODE_ICON[m], title: t(`pvp.modeName.${m}`) }))])
 // what is going on, one quiet line in the list's header: battles live (none: no "0 live"), people watching
 const liveCount = computed(() => (data.value?.battles ?? []).filter((b) => b.status === 'live').length)
 const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a + (b.viewers ?? 0), 0))
@@ -86,16 +83,16 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
         <UiButton variant="fair" size="s" icon="shield-check" to="/fairness" class="shrink-0" @click="howOpen = false">{{ $t('case.fairness') }}</UiButton>
       </div>
     </UiModal>
-    <!-- The lobby's dock, the case page's (components/case/OpenControls.vue): one block — desktop, the modes on the left,
-         Create PvP in the middle as the case's Open (56 px, 320 wide), Fits my balance, Reset (when something is set)
-         and the sort on the right, all 48 px; phones, the mode, the wallet and the sort on one line, Create PvP across
-         under them -->
-    <div class="kd-dock flex flex-col gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-3">
+    <!-- The lobby's dock, the case page's (components/case/OpenControls.vue): one block — desktop, the filters on the left
+         (the mode, Fits my balance), Create PvP in the middle as the case's Open (56 px, 320 wide), Reset (when something
+         is set) and the sort on the right, all 48 px; the side columns are equal and fixed, so the button never moves.
+         Phones: the mode, the wallet and the sort on one line, Create PvP across under them -->
+    <div class="kd-dock flex flex-col gap-2 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center lg:gap-3">
       <div class="flex min-w-0 items-center gap-2">
-        <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="min-w-0 flex-1 lg:hidden" :active="mode !== 'all'">
+        <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="kd-sort48 min-w-0 flex-1 lg:w-48 lg:flex-none" :active="mode !== 'all'">
           <template #leading><UiIcon :name="mode === 'all' ? 'pvp' : PVP_MODE_ICON[mode]" :size="16" class="text-neutral-11" /></template>
         </UiSelect>
-        <UiSegmented v-model="mode" :options="modeSeg" class="shrink-0 max-lg:hidden" />
+        <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" class="!h-12 !rounded-xl shrink-0 max-lg:hidden lg:px-4" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
         <button
           v-if="session.user"
           type="button"
@@ -118,7 +115,6 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
         <Transition name="kd-reset">
           <UiButton v-if="dirty" variant="ghost" size="l" icon="refresh" @click="reset">{{ $t('filters.reset') }}</UiButton>
         </Transition>
-        <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" class="!h-12 !rounded-xl shrink-0 lg:px-4" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
         <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort kd-sort48 w-48 shrink-0" :active="sort !== 'default'">
           <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
         </UiSelect>
@@ -176,10 +172,12 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
     border-radius: 28px;
   }
 }
-/* the sort at the dock's 48 px, its 12 px corners */
-:deep(.kd-sort48 > button) {
-  height: 48px;
-  border-radius: 12px;
+/* the mode and the sort at the dock's 48 px (desktop), their 12 px corners */
+@media (min-width: 64rem) {
+  :deep(.kd-sort48 > button) {
+    height: 48px;
+    border-radius: 12px;
+  }
 }
 .kd-num {
   display: inline-flex;
