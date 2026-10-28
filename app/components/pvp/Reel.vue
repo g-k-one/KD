@@ -26,7 +26,7 @@ const sfx = useSfx()
 const root = useTemplateRef<HTMLElement>('root')
 const track = useTemplateRef<HTMLElement>('track')
 const { height } = useElementSize(root)
-const cell = computed(() => (props.compact ? 84 : 150))
+const cell = computed(() => (props.compact ? 72 : 150))
 
 // Filler items come from the case being opened this round
 const caseItems = ref<CaseItem[]>([])
@@ -145,7 +145,7 @@ watch([height, cell], () => {
           :data-win="(landed && i === WIN) || undefined"
         >
           <!-- the drop lands as in a case: the rarity shape pops in and its waves spread (more the rarer), then it floats -->
-          <ItemArt :image="it.image" :rarity="it.rarity" :size="compact ? 60 : 108" eager :reveal="landed && i === WIN && !instant ? RARITY_TIER[it.rarity] || 1 : 0" class="relative w-full" />
+          <ItemArt :image="it.image" :rarity="it.rarity" :size="compact ? 48 : 108" eager :reveal="landed && i === WIN && !instant ? RARITY_TIER[it.rarity] || 1 : 0" class="relative w-full" />
         </div>
       </div>
       <div class="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-neutral-1 to-transparent" :class="compact ? 'h-12' : 'h-20'" />

@@ -276,7 +276,10 @@ const roundLine = computed(() => {
 
 
     <!-- Meta line: who is watching and the round · the battle's cases (the current one lit, spent ones dim) · what a
-         seat costs and what is in the pot (the money on the right, as in the lobby's plate) -->
+         seat costs and what is in the pot (the money on the right, as in the lobby's plate). Once the battle is over it
+         folds away: the result in the arena says the pot, Recreate the cost -->
+    <div class="kd-fold" :class="done && 'is-gone'">
+    <div class="min-h-0">
     <section class="kd-dock flex flex-wrap items-center justify-between gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
       <div class="type-12-caps flex gap-2 tabular-nums max-lg:w-full">
         <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center"><UiIcon name="eye" :size="16" /><span class="text-neutral-15">{{ b.viewers }}</span></span>
@@ -293,6 +296,8 @@ const roundLine = computed(() => {
         <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" class="kd-pot tabular-nums" /></span>
       </div>
     </section>
+    </div>
+    </div>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
     <section class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
@@ -330,25 +335,30 @@ const roundLine = computed(() => {
 
       <!-- The result, inside the arena: who took the pot, how much, and the same battle again -->
       <Transition name="kd-result">
-        <div v-if="done && b.winnerSlot != null" class="kd-arena-result absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 px-4 text-center">
+        <div v-if="done && b.winnerSlot != null" class="kd-arena-result absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-4 text-center lg:gap-4">
           <!-- who took it: their face(s) under a crown, the name, the pot -->
           <div class="kd-result-title flex flex-col items-center gap-2">
-            <span class="flex -space-x-3">
+            <span v-if="!isMobile" class="flex -space-x-3">
               <span v-for="w in winners" :key="w" class="kd-result-face relative block overflow-hidden rounded-full bg-neutral-7" :class="isMobile ? 'size-12' : 'size-16'">
                 <img :src="b.slots[w]?.player?.avatar" alt="" class="size-full object-cover" :class="b.slots[w]?.player?.bot && 'scale-75 object-contain'" />
               </span>
             </span>
-            <span class="type-12-caps text-success">{{ winners.length > 1 ? $t('pvp.battleWonTeam') : $t('pvp.battleWon') }}</span>
+            <span class="type-12-caps text-success max-lg:-mb-1">{{ winners.length > 1 ? $t('pvp.battleWonTeam') : $t('pvp.battleWon') }}</span>
             <span class="text-[22px] leading-7 font-extrabold uppercase lg:type-28">{{ winners.map(nameOf).join(' & ') }}</span>
           </div>
-          <UiPrice :amount="pot" size="xl" tone="coin" class="kd-result-pot" />
+          <UiPrice :amount="pot" :size="isMobile ? 'l' : 'xl'" tone="coin" class="kd-result-pot" />
           <div class="kd-result-pot flex flex-wrap justify-center gap-2">
             <UiButton size="m" icon="refresh" :loading="recreating" @click="recreate">
               {{ $t('pvp.recreate') }}
               <span class="btn-value"><UiPrice :amount="b.cost" size="s" tone="inverse" /></span>
             </UiButton>
-            <UiButton v-if="data!.battle.status === 'finished'" variant="secondary" size="m" icon="refresh" @click="replay">{{ $t('pvp.replay') }}</UiButton>
-            <UiButton variant="fair" size="m" icon="shield-check" @click="verifyOpen = true">{{ $t('pvp.checkBattle') }}</UiButton>
+            <!-- phones: Replay and Check as icons, so the row fits the arena -->
+            <UiButton v-if="data!.battle.status === 'finished'" variant="secondary" size="m" icon="demo" :icon-only="isMobile" :aria-label="$t('pvp.replay')" @click="replay">
+              <template v-if="!isMobile">{{ $t('pvp.replay') }}</template>
+            </UiButton>
+            <UiButton variant="fair" size="m" icon="shield-check" :icon-only="isMobile" :aria-label="$t('pvp.checkBattle')" @click="verifyOpen = true">
+              <template v-if="!isMobile">{{ $t('pvp.checkBattle') }}</template>
+            </UiButton>
           </div>
         </div>
       </Transition>
@@ -379,7 +389,7 @@ const roundLine = computed(() => {
     <section v-if="revealed > 0" class="-mt-1">
       <div class="grid gap-2 md:gap-4" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
         <!-- once it is over, the losers' drops step back: they go to the winner -->
-        <TransitionGroup v-for="seat in b.slots" :key="seat.slot" tag="div" name="kd-drop" class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(110px,1fr))] content-start gap-2" :class="done && !winners.includes(seat.slot) && 'is-lost'">
+        <TransitionGroup v-for="seat in b.slots" :key="seat.slot" tag="div" name="kd-drop" class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-2 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]" :class="done && !winners.includes(seat.slot) && 'is-lost'">
           <ItemTile v-for="ri in Array.from({ length: revealed }, (_, k) => revealed - 1 - k)" :key="ri" :item="b.results![ri]!.drops[seat.slot]!" readonly />
         </TransitionGroup>
       </div>
@@ -398,6 +408,28 @@ const roundLine = computed(() => {
 }
 .kd-seat-drops.is-lost {
   opacity: 0.4;
+}
+/* the meta line folds away when the battle is over (rows to 0 and the column's gap taken back) */
+.kd-fold {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows var(--dur-slow) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out),
+    margin var(--dur-slow) var(--ease-out);
+}
+.kd-fold > div {
+  overflow: hidden;
+}
+.kd-fold.is-gone {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-bottom: -16px;
+}
+@media (min-width: 64rem) {
+  .kd-fold.is-gone {
+    margin-bottom: -20px;
+  }
 }
 /* the plate is the case page's dock: 24px radius, 12px padding; its chips are 48px high with a 12px radius (24 − 12) */
 .kd-dock {
