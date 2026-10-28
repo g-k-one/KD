@@ -9,7 +9,9 @@ import type { InventoryItem } from '#shared/types/api'
  * Motion (docs/motion.md): going to slots, the pieces deal into place one by one; a new piece flies up
  * from the inventory and lands with a flash of the slot rim; a removed one drops back down. The next free
  * slot breathes. The total counts up, the coin flips when the amount changes; while the upgrade runs the
- * pieces stay put and pulse in turn, a loss drains them to grey.
+ * pieces stay put and pulse in turn, a loss drains them to grey. A win feeds the whole stake into the won skin: every
+ * piece winds up, then flies across the dial into the target card, shrinking and fading as it lands (flyTo gives the
+ * target's box); the empty slots fade with them, so nothing is left behind piece by piece.
  */
 const props = defineProps<{
   items: InventoryItem[]
@@ -17,6 +19,10 @@ const props = defineProps<{
   total: number
   state: 'idle' | 'spinning' | 'win' | 'lose'
   disabled?: boolean
+  /** where a won stake flies to: the target card's box on screen */
+  flyTo?: () => DOMRect | undefined
+  /** Fast mode: the result holds half as long, so the flight is quicker too */
+  fast?: boolean
 }>()
 const emit = defineEmits<{ remove: [uid: string]; clearCoins: [] }>()
 
@@ -67,6 +73,37 @@ watch(
     })
   },
   { flush: 'pre' },
+)
+
+// Won: each piece winds up (a small pull back and swell), then arcs over the dial into the target's centre, shrinking
+// to a third and fading out as it lands; one after another, 45 ms apart, all inside the result's hold. The pieces stay
+// gone (fill forwards) until the page clears the stake in one swap.
+watch(
+  () => props.state,
+  (s) => {
+    if (s !== 'win' || !root.value) return
+    const to = props.flyTo?.()
+    const els = [...root.value.querySelectorAll<HTMLElement>('.kd-piece, .kd-single-art')]
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches
+    const dur = props.fast ? 300 : 460
+    els.forEach((el, i) => {
+      const from = el.getBoundingClientRect()
+      const dx = to ? to.left + to.width / 2 - (from.left + from.width / 2) : 48
+      const dy = to ? to.top + to.height / 2 - (from.top + from.height / 2) : 0
+      const opts = { duration: still ? 200 : dur, delay: still ? 0 : i * (props.fast ? 25 : 45), easing: 'cubic-bezier(.55,0,1,.45)', fill: 'forwards' as const }
+      if (still) return el.animate([{ opacity: 1 }, { opacity: 0 }], opts)
+      el.animate(
+        [
+          { transform: 'none', opacity: 1, offset: 0 },
+          { transform: `translate(${-dx * 0.04}px, ${-dy * 0.04 + 4}px) scale(1.06)`, opacity: 1, offset: 0.2 },
+          { transform: `translate(${dx * 0.5}px, ${dy * 0.5 - 130}px) scale(0.7)`, opacity: 1, offset: 0.65 },
+          { transform: `translate(${dx}px, ${dy}px) scale(0.3)`, opacity: 0, offset: 1 },
+        ],
+        opts,
+      )
+    })
+  },
+  { flush: 'post' },
 )
 
 function removePiece(p: Piece) {
@@ -124,7 +161,7 @@ function removePiece(p: Piece) {
 
         <!-- 2+: slots. Empty slots are a fixed layer underneath; pieces deal in on top. -->
         <div v-else class="relative flex-1">
-          <div class="grid h-full grid-cols-3 gap-2.5 p-4 lg:grid-rows-2">
+          <div class="kd-slots grid h-full grid-cols-3 gap-2.5 p-4 lg:grid-rows-2">
             <div
               v-for="n in SLOTS"
               :key="n"
@@ -342,7 +379,7 @@ function removePiece(p: Piece) {
 }
 
 /* Upgrade running: the pieces stay where they are and float in turn — no outlines, no flashing.
-   Won: they are spent — they slide towards the target and fade, the won skin takes their place.
+   Won: they are spent — they fly into the target card (script), the won skin takes their place.
    Lost: they drain to grey and sink a little. */
 .is-spinning .kd-piece,
 .is-spinning .kd-single-art {
@@ -354,17 +391,16 @@ function removePiece(p: Piece) {
     translate: 0 -4px;
   }
 }
-.is-win .kd-piece,
-.is-win .kd-single-art {
-  animation: kd-piece-spent 650ms var(--ease-in) both;
-  animation-delay: calc(var(--i, 0) * 60ms);
+/* Won: the pieces fly into the target (script, above); the empty slots under them fade out at the same time */
+.kd-slots {
+  transition: opacity 300ms var(--ease-out);
 }
-@keyframes kd-piece-spent {
-  to {
-    translate: 48px 0;
-    scale: 0.7;
-    opacity: 0;
-  }
+.is-win .kd-slots {
+  opacity: 0;
+}
+/* the flight passes over the dial, so the card rises above it while the pieces are in the air */
+.kd-stake.is-win {
+  z-index: 30;
 }
 .is-lose .kd-piece,
 .is-lose .kd-single-art {

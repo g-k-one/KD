@@ -352,13 +352,14 @@ async function runUpgrade() {
     // No toast: the dial already says it. The stake clears as soon as its own animation has played (spent
     // pieces slide out / lost ones sink grey); the verdict stays on the dial until the player changes something
     await new Promise((r) => setTimeout(r, fast.value ? 350 : 700))
-    extra.value = 0
     historyVersion.value++
     session.refresh()
     await loadInventory()
     // The stake is spent either way. Won: the result stays on screen and the orange button offers
     // "Upgrade the win" — one tap puts the new skin into the stake (never automatically).
+    // skins and coins leave together, in one swap of the card (coins first left a lone piece behind)
     selected.value = []
+    extra.value = 0
     won.value = res.win && res.item && inventory.value.some((i) => i.uid === res.item!.uid) ? res.item : null
     settling.value = false
   } catch (e) {
@@ -429,6 +430,8 @@ async function runUpgrade() {
         :coins="extra"
         :total="inputValue"
         :state="state"
+        :fast="fast"
+        :fly-to="() => targetEl()?.getBoundingClientRect()"
         :disabled="state === 'spinning' || !session.user"
         @remove="toggle"
         @clear-coins="(extra = 0), resetResult()"
