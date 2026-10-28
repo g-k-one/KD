@@ -377,8 +377,8 @@ async function runUpgrade() {
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
     <!-- the logo in the middle, as on the case page: players record short videos of this screen -->
-    <!-- phones: 16 px down to the content, as under the case page's bar -->
-    <UiPageBar logo :left="barLeft" :right="barRight" class="max-lg:-mb-2" />
+    <!-- 16 px down to the content on every width, as under the case page's bar -->
+    <UiPageBar logo :left="barLeft" :right="barRight" class="-mb-2" />
 
     <!-- How it works: an upgrade in four plain steps, with the real numbers it plays by -->
     <UiModal v-model="howOpen" :title="$t('upgrade.howTitle')" :width="520">
