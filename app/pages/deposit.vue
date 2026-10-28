@@ -88,9 +88,11 @@ async function pay() {
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
     <UiPageBar :title="$t('deposit.title')" :left="[{ label: $t('case.allCases'), icon: 'arrow-left', to: '/' }]" />
 
-    <div class="grid items-start gap-4 lg:grid-cols-[1fr_440px] lg:gap-5">
+    <!-- Phones: methods, the amount, then the notices at the bottom (they used to sit between the methods and the
+         amount, a long scroll to the field); desktop keeps them under the methods, the summary spanning both rows -->
+    <div class="grid items-start gap-4 lg:grid-cols-[1fr_440px] lg:grid-rows-[auto_1fr] lg:gap-5">
       <!-- Methods -->
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4 lg:col-start-1 lg:row-start-1">
         <div class="rounded-5xl bg-neutral-2">
           <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
             <UiIcon name="wallet" :size="20" class="text-neutral-13 lg:!size-6" />
@@ -100,25 +102,29 @@ async function pay() {
               <template #leading><img src="/img/brand/flag-en.svg" alt="" class="h-3 w-4 shrink-0" /></template>
             </UiSelect>
           </div>
-          <div class="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 lg:gap-3 lg:p-4" role="radiogroup" :aria-label="$t('deposit.paymentMethod')">
-            <span v-for="n in methodsData ? 0 : 6" :key="`s${n}`" class="kd-skeleton h-[130px] rounded-xl lg:h-34 lg:rounded-lg" aria-hidden="true" />
+          <!-- phones: three small cards a row, so every method shows without a long scroll -->
+          <div class="grid grid-cols-3 gap-2 p-3 lg:gap-3 lg:p-4" role="radiogroup" :aria-label="$t('deposit.paymentMethod')">
+            <span v-for="n in methodsData ? 0 : 6" :key="`s${n}`" class="kd-skeleton h-[88px] rounded-xl sm:h-[130px] lg:h-34 lg:rounded-lg" aria-hidden="true" />
             <button
               v-for="m in methods"
               :key="m.id"
               type="button"
               role="radio"
               :aria-checked="methodId === m.id"
-              class="kd-method kd-press group relative flex flex-col items-center justify-center gap-4 rounded-xl border px-3 py-5 lg:h-34 lg:rounded-lg"
+              class="kd-method kd-press group relative flex flex-col items-center justify-center gap-2 rounded-xl border px-2 py-3 sm:gap-4 sm:px-3 sm:py-5 lg:h-34 lg:rounded-lg"
               @click="methodId = m.id"
             >
-              <span class="grid h-14 w-full max-w-32 place-items-center rounded-sm bg-white-8 transition-transform duration-300 group-hover:-translate-y-0.5 lg:h-16">
-                <img :src="m.logo" :alt="m.name" class="h-8 w-12" />
+              <span class="grid h-10 w-full max-w-32 place-items-center rounded-sm bg-white-8 transition-transform duration-300 group-hover:-translate-y-0.5 sm:h-14 lg:h-16">
+                <img :src="m.logo" :alt="m.name" class="h-6 w-10 sm:h-8 sm:w-12" />
               </span>
-              <span class="type-12-regular" :class="methodId === m.id ? 'text-neutral-15' : 'text-neutral-12'">{{ limits(m) }}</span>
-              <span v-if="m.bonusBp" class="type-12 absolute top-[7px] right-[7px] rounded-sm bg-neutral-15 px-2 py-0.5 text-neutral-1">+{{ m.bonusBp / 100 }}%</span>
+              <span class="type-12-regular max-sm:text-[11px] max-sm:leading-4" :class="methodId === m.id ? 'text-neutral-15' : 'text-neutral-12'">{{ limits(m) }}</span>
+              <span v-if="m.bonusBp" class="type-12 absolute top-[7px] right-[7px] rounded-sm bg-neutral-15 px-2 py-0.5 text-neutral-1 max-sm:top-1 max-sm:right-1 max-sm:px-1 max-sm:py-0 max-sm:text-[10px]">+{{ m.bonusBp / 100 }}%</span>
             </button>
           </div>
         </div>
+      </div>
+
+      <div class="flex flex-col gap-4 max-lg:order-last lg:col-start-1 lg:row-start-2">
         <p class="type-14-regular rounded-2xl bg-neutral-2 px-4 py-3 text-neutral-12">
           <i18n-t keypath="deposit.sharedWarning" scope="global">
             <template #notAllow><span class="text-danger">{{ $t('deposit.notAllow') }}</span></template>
@@ -131,7 +137,7 @@ async function pay() {
       </div>
 
       <!-- Amount & summary -->
-      <div class="flex flex-col gap-4 rounded-5xl bg-neutral-2 lg:sticky lg:top-24">
+      <div class="flex flex-col gap-4 rounded-5xl bg-neutral-2 lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1">
         <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
           <UiIcon name="coins" :size="20" class="text-neutral-13 lg:!size-6" />
           <span class="type-14 lg:type-16-medium flex-1">{{ $t('deposit.amount') }}</span>

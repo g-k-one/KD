@@ -67,7 +67,7 @@
     "soundHint": "Case spins, drops and wins.",
     "volume": "Volume",
     "streamerMode": "Streamer mode",
-    "streamerModeHint": "Shows coins instead of real currency and hides sensitive info on stream.",
+    "streamerModeHint": "Hides your Steam ID and blurs your trade link until you hover or tap it, so nothing private shows on stream.",
     "haptics": "Vibration",
     "hapticsHint": "A short buzz on drops and wins. Android only.",
     "liveFeed": "Live drops",

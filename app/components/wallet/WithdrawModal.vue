@@ -96,11 +96,11 @@ const left = computed(() => {
           <span class="type-12-caps text-neutral-11">{{ $t('withdraw.tradeLink') }}</span>
           <div v-if="!editing && saved" class="flex h-12 items-center gap-3 rounded-xl bg-neutral-3 px-4">
             <UiIcon name="steam" :size="18" class="text-neutral-12" />
-            <span class="type-14 min-w-0 flex-1 truncate font-mono text-neutral-13">{{ shortLink }}</span>
+            <span class="kd-private type-14 min-w-0 flex-1 truncate font-mono text-neutral-13" tabindex="-1">{{ shortLink }}</span>
             <UiButton variant="ghost" size="s" @click="editing = true">{{ $t('withdraw.change') }}</UiButton>
           </div>
           <template v-else>
-            <UiInput id="trade-link" v-model="link" size="l" icon="steam" inputmode="url" clearable :error="!!link && !valid" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…" />
+            <UiInput id="trade-link" v-model="link" size="l" icon="steam" class="kd-private" inputmode="url" clearable :error="!!link && !valid" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…" />
             <span class="type-12-regular text-neutral-11">
               {{ $t('withdraw.whereLink') }}
               <a href="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" target="_blank" rel="noopener" class="text-brand-light underline-offset-2 hover:underline">{{ $t('withdraw.openSteam') }}</a>

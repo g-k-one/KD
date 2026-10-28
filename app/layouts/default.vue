@@ -5,6 +5,8 @@ const route = useRoute()
 // Debug dock: dev server and the prototype build; a production build sets NUXT_PUBLIC_DEBUG=false
 const debug = useRuntimeConfig().public.debug
 watch(() => route.fullPath, () => (ui.popover = null))
+// Streamer mode: private bits (.kd-private — the trade link, the Steam ID) blur until hovered or focused
+useHead({ htmlAttrs: { class: computed(() => (settings.settings.streamerMode ? 'is-streamer' : '')) } })
 </script>
 
 <template>

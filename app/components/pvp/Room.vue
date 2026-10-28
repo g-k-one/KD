@@ -263,11 +263,11 @@ const roundLine = computed(() => {
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-5 lg:px-0 lg:pt-10">
+    <!-- the bar's shield is the general fairness page, as on every page; this battle's own check is Check PvP in the result -->
     <UiPageBar
       :title="$t(`pvp.modeName.${b.mode}`)"
       :subtitle="`${$t(`pvp.modeRule.${b.mode}`)} · #${b.id}`"
       fixed-sides
-      :right="[{ label: $t('pvp.checkBattle'), icon: 'shield', onClick: () => (verifyOpen = true) }]"
       :left="[
         { label: $t('pvp.back'), icon: 'arrow-left', to: '/pvp' },
         { label: $t('case.share'), icon: 'share', onClick: shareBattle },

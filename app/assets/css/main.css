@@ -593,3 +593,12 @@ html body {
     animation: none !important;
   }
 }
+
+/* Streamer mode (Settings): the trade link and other private bits blur on screen until the player hovers or focuses them */
+.is-streamer .kd-private {
+  filter: blur(6px);
+}
+.is-streamer .kd-private:hover,
+.is-streamer .kd-private:focus-within {
+  filter: none;
+}
