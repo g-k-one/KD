@@ -641,6 +641,7 @@
     "scenario": "Battle scenario",
     "twoVsTwo": "2 vs 2",
     "allShort": "All",
+    "anyShort": "Any",
     "playersN": "{n} players",
     "wonBy": "{name} won",
     "modeName": {

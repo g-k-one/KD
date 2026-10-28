@@ -72,7 +72,7 @@ function onClick(e: MouseEvent) {
 <template>
   <NuxtLink
     :to="`/pvp/${battle.id}`"
-    class="kd-brow grid min-w-0 gap-1 rounded-3xl p-1 lg:h-[140px] lg:rounded-2xl"
+    class="kd-brow grid min-w-0 gap-1 rounded-3xl p-1 lg:h-[140px] lg:gap-1.5 lg:rounded-2xl"
     :class="[`is-${battle.mode}`, `is-${battle.status}`]"
     @click.capture="onClick"
   >

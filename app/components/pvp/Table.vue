@@ -10,15 +10,15 @@ defineProps<{ battles: Battle[] }>()
 </script>
 
 <template>
-  <div class="kd-pvp-table flex min-w-0 flex-col gap-2">
-    <div class="kd-th type-10-caps hidden h-8 items-center gap-1 px-1 text-neutral-11 lg:grid">
+  <div class="kd-pvp-table flex min-w-0 flex-col gap-2 lg:gap-3">
+    <div class="kd-th type-10-caps hidden h-8 items-center gap-1.5 px-1 text-neutral-11 lg:grid">
       <span class="text-center">{{ $t('pvp.rounds') }}</span>
       <span class="text-center">{{ $t('pvp.scenario') }}</span>
       <span class="text-center">{{ $t('pvp.players') }}</span>
       <span class="flex justify-center"><slot name="head" /></span>
     </div>
     <UiEmptyState v-if="!battles.length" :text="$t('pvp.noBattles')" art="empty-pvp" class="rounded-3xl bg-neutral-2 p-3" />
-    <TransitionGroup v-else tag="div" name="kd-list" class="relative flex flex-col gap-2">
+    <TransitionGroup v-else tag="div" name="kd-list" class="relative flex flex-col gap-2 lg:gap-3">
       <PvpCard v-for="b in battles" :key="b.id" :battle="b" />
     </TransitionGroup>
   </div>

@@ -45,9 +45,9 @@ function reset() {
   sort.value = 'default'
 }
 const modeOptions = computed(() => [{ value: 'all' as const, label: t('pvp.anyMode') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`), icon: PVP_MODE_ICON[m], iconColor: PVP_MODE_COLOR[m] }))])
-// desktop: the modes and the players as switches in sight, as skin.club's bar (a dropdown hid them)
-const modeSeg = computed(() => [{ value: 'all' as const, label: t('pvp.allShort') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`), icon: PVP_MODE_ICON[m] }))])
-const playerSeg = computed(() => [{ value: 'any' as const, label: t('pvp.allShort') }, ...(['2', '3', '4'] as const).map((n) => ({ value: n, label: n, title: t('pvp.playersN', { n }) }))])
+// desktop: the modes (their icons, the name on hover) and the players as switches in sight, as skin.club's bar
+const modeSeg = computed(() => [{ value: 'all' as const, label: t('pvp.allShort') }, ...(['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, icon: PVP_MODE_ICON[m], title: t(`pvp.modeName.${m}`) }))])
+const playerSeg = computed(() => [{ value: 'any' as const, label: t('pvp.anyShort') }, ...(['2', '3', '4'] as const).map((n) => ({ value: n, label: n, title: t('pvp.playersN', { n }) }))])
 // what is going on, one quiet line in the list's header: battles live (none: no "0 live"), people watching
 const liveCount = computed(() => (data.value?.battles ?? []).filter((b) => b.status === 'live').length)
 const watching = computed(() => (data.value?.battles ?? []).reduce((a, b) => a + (b.viewers ?? 0), 0))
@@ -96,15 +96,24 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
          switches in sight (skin.club's bar), the "fits my balance" switch, Reset when something is set, the sort on the
          right. Phones: the mode, the wallet one tap away, the filters icon (the players, the switch and the sort in a
          sheet) and the sort icon -->
-    <!-- the filters' plate and, beside it, Create PvP as a block of its own: the plate's height and corners (phones: large,
+    <!-- the filters' plate and, beside it, Create PvP on its own: the kit's large button, centred on the plate (phones:
          across, under the plate) -->
-    <div class="flex flex-col gap-2 lg:flex-row lg:gap-3">
-    <div class="kd-filters flex min-w-0 flex-1 items-center gap-2 rounded-3xl bg-neutral-2 p-2">
+    <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
+    <div class="kd-filters flex min-w-0 flex-1 items-center gap-2 rounded-3xl bg-neutral-2 p-2 lg:gap-5 lg:pl-5">
       <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="min-w-0 flex-1 lg:hidden" :active="mode !== 'all'">
         <template #leading><UiIcon :name="mode === 'all' ? 'pvp' : PVP_MODE_ICON[mode]" :size="16" class="text-neutral-11" /></template>
       </UiSelect>
-      <UiSegmented v-model="mode" :options="modeSeg" size="s" class="kd-seg10 shrink-0 max-lg:hidden" />
-      <UiSegmented v-model="players" :options="playerSeg" size="s" class="kd-seg10 shrink-0 max-lg:hidden" />
+      <!-- desktop: each group named (skin.club's bar), the groups apart with a rule between -->
+      <span class="flex shrink-0 items-center gap-3 max-lg:hidden">
+        <span class="type-10-caps text-neutral-11">{{ $t('pvp.mode') }}</span>
+        <UiSegmented v-model="mode" :options="modeSeg" size="s" class="kd-seg10" />
+      </span>
+      <span class="kd-rule max-lg:hidden" aria-hidden="true" />
+      <span class="flex shrink-0 items-center gap-3 max-lg:hidden">
+        <span class="type-10-caps text-neutral-11">{{ $t('pvp.players') }}</span>
+        <UiSegmented v-model="players" :options="playerSeg" size="s" class="kd-seg10" />
+      </span>
+      <span class="kd-rule max-lg:hidden" aria-hidden="true" />
       <UiChip size="m" variant="field" icon="wallet" :active="affordable" :disabled="!session.user" class="shrink-0 max-lg:hidden" @click="affordable = !affordable">{{ $t('filters.affordableShort') }}</UiChip>
       <button
         v-if="session.user"
@@ -151,7 +160,7 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
         </template>
       </UiSheet>
     </div>
-    <UiButton icon="plus" size="l" to="/pvp/create" class="kd-create shrink-0 max-lg:w-full lg:w-[280px]">{{ $t('pvp.create') }}</UiButton>
+    <UiButton icon="plus" size="l" to="/pvp/create" class="shrink-0 max-lg:w-full lg:w-60">{{ $t('pvp.create') }}</UiButton>
     </div>
 
     <!-- The battles, skin.club's list: the header bar, then a row per battle — the open seats first, then what is live
@@ -208,13 +217,12 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
   color: var(--color-neutral-14);
   font-variant-numeric: tabular-nums;
 }
-/* Create PvP beside the plate: its 56 px and 24 px corners, a size up in type */
-@media (min-width: 64rem) {
-  .kd-create {
-    height: 56px;
-    border-radius: 24px;
-    font-size: 16px;
-  }
+/* a thin rule between the plate's groups */
+.kd-rule {
+  width: 1px;
+  height: 24px;
+  flex-shrink: 0;
+  background: var(--color-neutral-5);
 }
 .kd-stat-dot {
   width: 6px;
