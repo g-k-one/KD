@@ -180,18 +180,15 @@ function onArtLeave() {
 
 <style scoped>
 /* Quiet next to the badges: a glass chip that lights up on hover */
+/* the same dark glass as Try free on the reel's stage (no outline): hover only brightens the text */
 .kd-try {
   color: var(--color-neutral-14);
-  background: rgb(12 13 16 / 0.64);
-  box-shadow: inset 0 0 0 1px var(--color-neutral-6);
+  background: rgb(12 13 16 / 0.7);
   backdrop-filter: blur(6px);
-  transition:
-    color var(--dur-base) var(--ease-out),
-    box-shadow var(--dur-base) var(--ease-out);
+  transition: color var(--dur-base) var(--ease-out);
 }
 .kd-try:hover {
   color: var(--color-neutral-15);
-  box-shadow: inset 0 0 0 1px var(--color-brand-base);
 }
 /* Badges, three different voices: HOT is fire (orange → red, burning on Forge), a big win today is
    gold like the coin, new is a cool white sheen */
