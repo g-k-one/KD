@@ -30,12 +30,14 @@ const props = defineProps<{
   results: InventoryItem[]
   soldUids: string[]
   demo?: boolean
+  /** Offer a demo spin on the idle stage ("Try free"); the case page only */
+  tryFree?: boolean
   /** KURWADROP on: the Golden Chicken shows up on the reel at its real odds */
   kurwadrop?: boolean
   /** Fast open: no breath, no tease */
   fast?: boolean
 }>()
-const emit = defineEmits<{ sell: [uid: string]; share: [item: InventoryItem] }>()
+const emit = defineEmits<{ sell: [uid: string]; demo: []; share: [item: InventoryItem] }>()
 
 const sfx = useSfx()
 const haptics = useHaptics()
@@ -711,6 +713,14 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
       </div>
     </Transition>
 
+    <!-- Demo spin ("Try free", free, nothing is charged): on the idle stage only, at its bottom centre (the x1 result's
+         buttons line). A result screen shows the drops alone: no Try free there at any amount -->
+    <Transition name="kd-idle">
+      <div v-if="tryFree && phase === 'idle' && !breathing" class="absolute inset-x-0 bottom-4 z-10 flex justify-center sm:bottom-5">
+        <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>
+      </div>
+    </Transition>
+
     <div v-if="!grid" class="pointer-events-none absolute inset-0 overflow-hidden" :class="markerClass">
       <img src="/img/fx/marker-top.svg" alt="" class="kd-marker-a absolute" />
       <img src="/img/fx/marker-top.svg" alt="" class="kd-marker-b absolute" />
@@ -759,6 +769,10 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   background: linear-gradient(180deg, var(--color-neutral-1) 2%, transparent 30%, transparent 70%, var(--color-neutral-1) 98%);
 }
 /* Glass over the stage so the case art behind stays readable */
+.kd-try-stage {
+  background: rgb(12 13 16 / 0.7);
+  backdrop-filter: blur(6px);
+}
 /* Phone grid: the outer frame steps aside and every mini reel gets its own */
 .kd-reel.is-grid {
   border: 0;

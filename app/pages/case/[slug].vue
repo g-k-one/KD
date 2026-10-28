@@ -240,6 +240,8 @@ if (import.meta.client) {
           :kurwadrop="kurwadrop"
           :fast="fast"
           @sell="(uid) => sell([uid])"
+          try-free
+          @demo="open(true)"
           @share="(it) => ((shareItem = it), (shareOpen = true))"
         />
         <CaseOpenControls
@@ -255,7 +257,6 @@ if (import.meta.client) {
           :pending="pending"
           :selling="selling"
           @open="open()"
-          @demo="open(true)"
           @skip="reel?.skip()"
           @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"
         />
