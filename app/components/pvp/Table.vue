@@ -2,36 +2,36 @@
 import type { Battle } from '#shared/types/api'
 
 /*
- * The battle table (the lobby and the home page), built like the game history's (components/history/Table.vue):
- * the column headers on desktop — rounds, cases, players — then a line per battle (components/pvp/Card.vue).
- * Phones: no headers; each battle in three short lines. Nothing to show: the chicken with the knife waits for a fight.
+ * The battle list (the lobby and the home page), skin.club's: a header bar naming the columns on desktop — rounds, the
+ * battle scenario, cost, players — then a row per battle (components/pvp/Card.vue), each its own block. Phones: no
+ * header; each battle a card. Nothing to show: the chicken with the knife waits for a fight.
  */
 defineProps<{ battles: Battle[] }>()
 </script>
 
 <template>
-  <div class="kd-pvp-table flex min-w-0 flex-col">
-    <div class="kd-th type-10-caps sticky top-0 z-[1] hidden h-9 items-center gap-6 border-b border-neutral-4 px-3 text-neutral-11 lg:grid">
+  <div class="kd-pvp-table flex min-w-0 flex-col gap-2">
+    <div class="kd-th type-10-caps hidden h-8 items-center gap-1 px-1 text-neutral-11 lg:grid">
       <span class="text-center">{{ $t('pvp.rounds') }}</span>
-      <span>{{ $t('pvp.cases') }}</span>
-      <span>{{ $t('pvp.players') }}</span>
+      <span class="text-center">{{ $t('pvp.scenario') }}</span>
+      <span class="text-center">{{ $t('pvp.cost') }}</span>
+      <span class="text-center">{{ $t('pvp.players') }}</span>
       <span />
     </div>
-    <UiEmptyState v-if="!battles.length" :text="$t('pvp.noBattles')" art="empty-pvp" class="m-3" />
-    <TransitionGroup v-else tag="ul" name="kd-list" class="relative flex flex-col">
+    <UiEmptyState v-if="!battles.length" :text="$t('pvp.noBattles')" art="empty-pvp" class="rounded-3xl bg-neutral-2 p-3" />
+    <TransitionGroup v-else tag="div" name="kd-list" class="relative flex flex-col gap-2">
       <PvpCard v-for="b in battles" :key="b.id" :battle="b" />
     </TransitionGroup>
   </div>
 </template>
 
 <style scoped>
-/* the columns, shared with every line: rounds · cases · who · the button */
+/* skin.club's columns, shared with every row: rounds · the battle scenario · cost · players · the button */
 .kd-pvp-table {
-  --pvp-cols: 64px minmax(0, 1fr) 176px 168px;
+  --pvp-cols: 112px minmax(0, 1fr) 112px 152px 184px;
 }
 .kd-th {
   grid-template-columns: var(--pvp-cols);
-  background: var(--color-neutral-2);
 }
 .kd-list-enter-active {
   transition:

@@ -26,11 +26,7 @@ if (import.meta.server) await req
 const { data, refresh } = req
 useIntervalFn(() => document.visibilityState === 'visible' && refresh(), 3000)
 
-const counts = computed(() => {
-  const list = data.value?.battles ?? []
-  return { all: list.length, waiting: list.filter((b) => b.status === 'waiting').length, live: list.filter((b) => b.status === 'live').length, finished: list.filter((b) => b.status === 'finished').length }
-})
-// The lobby, on the profile's model: the home page's filter plate, then one card with the battle table — open seats
+// The lobby, skin.club's: the home page's filter plate (Create PvP at its end), then the battle list — open seats
 // first, then what is live, then what just ended. Filters: mode, players, "fits my balance" (seats the player can pay
 // for), sort by price.
 const session = useSessionStore()
@@ -66,10 +62,6 @@ const JUST_ENDED_MS = 60_000
 const now = useClock(5000)
 const endedAt = (b: Battle) => (b.startedAt ? Date.parse(b.startedAt) + b.rounds.length * b.roundMs : 0)
 const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...byStatus('finished').filter((b) => now.value - endedAt(b) < JUST_ENDED_MS)])
-/** Phones: the header's button is the small one */
-// the server and hydration answer at the phone width the ssr-width plugin provides (most players are on phones),
-// so a phone gets its own layout from the first paint instead of the desktop one switching after mount
-const isPhone = useMediaQuery('(max-width: 639.98px)')
 </script>
 
 <template>
@@ -125,6 +117,8 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
       <UiSelect v-model="sort" :options="sortOptions" menu-width="fixed" class="kd-sort w-11 shrink-0 lg:ml-auto lg:w-48" :active="sort !== 'default'">
         <template #leading><UiIcon name="sort" :size="16" class="text-neutral-11" /></template>
       </UiSelect>
+      <!-- Create PvP at the plate's end, as skin.club's battle bar has it (phones: across, under the plate) -->
+      <UiButton icon="plus" to="/pvp/create" class="shrink-0 max-lg:hidden">{{ $t('pvp.create') }}</UiButton>
 
       <UiSheet v-model="sheet" :title="$t('filters.title')">
         <section class="flex flex-col gap-2">
@@ -150,24 +144,14 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
       </UiSheet>
     </div>
 
-    <!-- The battles, as the profile's Game history card: its header (the title, how many are live, Create PvP), then the
-         table — the open seats first, then what is live and what just ended (for a minute) -->
-    <section class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
-      <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-6 lg:h-18">
-        <UiIcon name="pvp" :size="24" class="text-neutral-13" />
-        <span class="type-14 lg:type-16-medium">{{ $t('pvp.battles') }}</span>
-        <!-- no battle running: no "0 live" -->
-        <span v-if="counts.live" class="type-12-caps flex items-center gap-1.5 text-neutral-11"><span class="kd-stat-dot" /><span class="text-neutral-15 tabular-nums">{{ counts.live }}</span>{{ $t('pvp.live') }}</span>
-        <UiButton icon="plus" :size="isPhone ? 's' : 'm'" to="/pvp/create" class="ml-auto shrink-0">{{ $t('pvp.create') }}</UiButton>
-      </div>
-      <!-- the battles on their way: line skeletons -->
-      <div v-if="!data" class="flex flex-col gap-2 p-3" aria-hidden="true">
-        <span v-for="n in 6" :key="n" class="kd-skeleton h-[124px] rounded-xl lg:h-[62px]" />
-      </div>
-      <div v-else class="p-3">
-        <PvpTable :battles="lobby" />
-      </div>
-    </section>
+    <UiButton icon="plus" to="/pvp/create" block class="lg:hidden">{{ $t('pvp.create') }}</UiButton>
+
+    <!-- The battles, skin.club's list: the header bar, then a row per battle — the open seats first, then what is live
+         and what just ended (for a minute) -->
+    <div v-if="!data" class="flex flex-col gap-2" aria-hidden="true">
+      <span v-for="n in 6" :key="n" class="kd-skeleton h-[236px] rounded-3xl lg:h-[140px] lg:rounded-2xl" />
+    </div>
+    <PvpTable v-else :battles="lobby" />
 
   </div>
 </template>

@@ -638,6 +638,7 @@
     "mode": "Mode",
     "noBattles": "No battles here yet. Start one and call a bot or a friend",
     "cases": "Cases",
+    "scenario": "Battle scenario",
     "playersN": "{n} players",
     "wonBy": "{name} won",
     "modeName": {

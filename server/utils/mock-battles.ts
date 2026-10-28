@@ -167,12 +167,15 @@ function ensureSeeded() {
   return seeded
 }
 
+// The lobby's list is a summary: no results (the lobby shows the rounds' progress by the clock, the drops are the room's —
+// and the rolls of a battle still replaying stay out of anyone's reach until its room shows them) and no odds (the
+// fairness check is the room's). The Go backend: the same, or the summary pushed over the lobby's WebSocket.
 export async function listBattles(loggedIn: boolean) {
   await ensureSeeded()
   const order = { waiting: 0, live: 1, finished: 2 }
   return {
     battles: battles
-      .map((b) => publicBattle(b, loggedIn))
+      .map((b) => ({ ...publicBattle(b, loggedIn), results: null, odds: {} }))
       .sort((a, b) => order[a.status] - order[b.status] || b.createdAt.localeCompare(a.createdAt)),
   }
 }

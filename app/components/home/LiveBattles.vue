@@ -24,10 +24,7 @@ const liveCount = computed(() => (data.value?.battles ?? []).filter((b) => b.sta
         <NuxtLink to="/pvp" class="type-12-caps flex h-8 items-center gap-0.5 text-neutral-12 hover:text-neutral-15">{{ $t('home.allBattles') }}<UiIcon name="chevron-right" :size="14" /></NuxtLink>
       </template>
     </UiSectionHeader>
-    <!-- the lobby's table in a card, as the upgrade page lists its rolls -->
-    <div class="rounded-5xl bg-neutral-2 p-3">
-      <PvpTable :battles="list" />
-    </div>
+    <PvpTable :battles="list" />
   </section>
 </template>
 
