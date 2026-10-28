@@ -77,18 +77,23 @@ async function copy(v: string) {
 
 <template>
   <UiModal v-model="open" :title="$t('fair.verifier')" :description="$t('fair.verifierHint')" :width="640">
-    <!-- what is being checked: the case or the upgrade, what went in and what came out, the roll's number -->
-    <div v-if="initial?.entry" class="flex items-center gap-3 rounded-2xl bg-neutral-3 p-3">
-      <span class="grid size-12 shrink-0 place-items-center rounded-xl bg-neutral-4 text-neutral-13">
-        <img v-if="initial.entry.caseImage" :src="initial.entry.caseImage" alt="" class="size-10 object-contain" />
-        <UiIcon v-else name="upgrade" :size="20" />
-      </span>
-      <span class="flex min-w-0 flex-1 flex-col gap-1">
-        <span class="type-14 truncate">{{ $t(`account.games.${initial.entry.game}`) }} · <span class="text-neutral-12">{{ initial.entry.title }}</span></span>
-        <span class="type-12-regular truncate text-neutral-11">{{ $t('fair.nonce') }} {{ initial.entry.nonce }} · {{ timeAgo(initial.entry.at) }}</span>
-      </span>
-      <HistoryItems :entry="initial.entry" class="shrink-0" />
-      <UiPrice :amount="initial.entry.payout" :tone="initial.entry.status === 'lost' ? 'muted' : 'success'" class="shrink-0 max-sm:hidden" />
+    <!-- what is being checked, the game on top; under it, on a line of its own, what went in → what came out and the payout (an upgrade's six pieces fit) -->
+    <div v-if="initial?.entry" class="flex flex-col gap-3 rounded-2xl bg-neutral-3 p-3">
+      <div class="flex items-center gap-3">
+        <span class="grid size-12 shrink-0 place-items-center rounded-xl bg-neutral-4 text-neutral-13">
+          <!-- the same picture as the row in the history: the case, or the upgrade / PvP art -->
+          <img v-if="historyArt(initial.entry)" :src="historyArt(initial.entry)" alt="" class="size-10 object-contain" :class="initial.entry.game === 'upgrade' || isPvpEntry(initial.entry) ? 'p-1' : ''" />
+          <UiIcon v-else name="upgrade" :size="20" />
+        </span>
+        <span class="flex min-w-0 flex-1 flex-col gap-1">
+          <span class="type-14 truncate">{{ $t(`account.games.${initial.entry.game}`) }} · <span class="text-neutral-12">{{ initial.entry.title }}</span></span>
+          <span class="type-12-regular truncate text-neutral-11">{{ $t('fair.nonce') }} {{ initial.entry.nonce }} · {{ timeAgo(initial.entry.at) }}</span>
+        </span>
+      </div>
+      <div class="flex items-center justify-between gap-3">
+        <HistoryItems :entry="initial.entry" class="min-w-0" />
+        <UiPrice :amount="initial.entry.payout" :tone="initial.entry.status === 'lost' ? 'muted' : 'success'" class="shrink-0" />
+      </div>
     </div>
     <form class="flex flex-col gap-3" @submit.prevent="calculate">
       <label class="flex flex-col gap-2">

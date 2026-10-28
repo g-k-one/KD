@@ -23,11 +23,11 @@ const props = defineProps<{
 const emit = defineEmits<{ pick: [e: HistoryEntry] }>()
 const { t } = useI18n()
 
-const isPvp = (e: HistoryEntry) => e.title.startsWith('PvP')
+const isPvp = isPvpEntry
 const played = (e: HistoryEntry) => e.game === 'case' || e.game === 'upgrade'
 const GAME_ICON = { deposit: 'plus', sell: 'wallet', withdraw: 'steam' } as const
 const gameName = (e: HistoryEntry) => (e.game === 'case' ? e.title : e.game === 'upgrade' ? t('account.games.upgrade') : `${t(`account.games.${e.game}`)} · ${e.title}`)
-const gameArt = (e: HistoryEntry) => (isPvp(e) ? SOURCE_ART.pvp : e.game === 'upgrade' ? SOURCE_ART.upgrade : e.caseImage)
+const gameArt = historyArt
 const parts = (name: string) => {
   const [weapon, ...rest] = name.split(' | ')
   return { weapon: weapon!, skin: rest.join(' | ') }
