@@ -430,8 +430,6 @@ async function runUpgrade() {
         :coins="extra"
         :total="inputValue"
         :state="state"
-        :fast="fast"
-        :fly-to="() => targetEl()?.getBoundingClientRect()"
         :disabled="state === 'spinning' || !session.user"
         @remove="toggle"
         @clear-coins="(extra = 0), resetResult()"
