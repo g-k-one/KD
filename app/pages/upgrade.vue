@@ -355,12 +355,13 @@ async function runUpgrade() {
     await new Promise((r) => setTimeout(r, fast.value ? 350 : 700))
     historyVersion.value++
     session.refresh()
-    await loadInventory()
     // The stake is spent either way. Won: the result stays on screen and the orange button offers
     // "Upgrade the win" — one tap puts the new skin into the stake (never automatically).
-    // skins and coins leave together, in one swap of the card (coins first left a lone piece behind)
+    // skins and coins leave together, in one swap of the card, before the inventory reloads: the reload drops the
+    // spent skins first, and the coins left behind flashed up as a big one-piece "Coins" card
     selected.value = []
     extra.value = 0
+    await loadInventory()
     won.value = res.win && res.item && inventory.value.some((i) => i.uid === res.item!.uid) ? res.item : null
     settling.value = false
   } catch (e) {

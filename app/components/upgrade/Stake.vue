@@ -186,9 +186,12 @@ function removePiece(p: Piece) {
 
       <!-- the total centred at the bottom, the same place as the target's price across the dial: the two read as a pair -->
       <!-- empty: no "0" — the card reads exactly like the empty target card across the dial -->
-      <div v-if="layout !== 'empty'" class="kd-stake-spent flex items-center justify-center px-4 pb-6">
-        <UiPrice :amount="Math.round(totalShown)" size="xxl" />
-      </div>
+      <!-- it leaves with the pieces (one fade), not a frame before them -->
+      <Transition name="kd-stake-swap">
+        <div v-if="layout !== 'empty'" class="kd-stake-spent flex items-center justify-center px-4 pb-6">
+          <UiPrice :amount="Math.round(totalShown)" size="xxl" />
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
