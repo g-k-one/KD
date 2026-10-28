@@ -60,7 +60,7 @@ const JUST_ENDED_MS = 60_000
 const now = useClock(5000)
 const endedAt = (b: Battle) => (b.startedAt ? Date.parse(b.startedAt) + b.rounds.length * b.roundMs : 0)
 const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...byStatus('finished').filter((b) => now.value - endedAt(b) < JUST_ENDED_MS)])
-/** Phones: one column of compact cards (the round strip needs the width) */
+/** Phones: the rows as cards, their tiles smaller */
 // the server and hydration answer at the phone width the ssr-width plugin provides (most players are on phones),
 // so a phone gets its own layout from the first paint instead of the desktop one switching after mount
 const isPhone = useMediaQuery('(max-width: 639.98px)')
@@ -87,9 +87,9 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
         <UiButton variant="fair" size="s" icon="shield-check" to="/fairness" class="shrink-0" @click="howOpen = false">{{ $t('case.fairness') }}</UiButton>
       </div>
     </UiModal>
-    <!-- One plate, as the home page's filters: the mode, the sort and the budget on the left; on the right what is going on —
-         battles live (when there are any), people watching, coins in play. Phones: the filters on one line, the numbers
-         under them. Starting a battle is the first tile of the open seats -->
+    <!-- One plate, as the home page's filters: the mode, the sort, the players and the budget on the left; on the right what
+         is going on (battles live when there are any, coins in play; people watching on phones) and Create PvP, as every
+         battle site puts it. Phones: the filters on one line, the players, the numbers, then Create PvP across -->
     <div class="kd-filters flex flex-wrap items-center gap-2 rounded-3xl bg-neutral-2 p-2">
       <div class="flex min-w-0 flex-1 items-center gap-2">
         <UiSelect v-model="mode" :options="modeOptions" menu-width="fixed" class="min-w-0 flex-1 lg:w-48 lg:flex-none" :active="mode !== 'all'">
@@ -111,23 +111,32 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
         <template v-else>
           <!-- no battle running: no "0 live" -->
           <span v-if="counts.live" class="kd-stat type-12-caps"><span class="kd-stat-dot" /><span class="text-neutral-15 tabular-nums">{{ counts.live }}</span>{{ $t('pvp.live') }}</span>
-          <span class="kd-stat type-12-caps"><UiIcon name="eye" :size="16" /><span class="text-neutral-15 tabular-nums">{{ watching }}</span>{{ $t('pvp.watching') }}</span>
+          <span class="kd-stat is-phone type-12-caps"><UiIcon name="eye" :size="16" /><span class="text-neutral-15 tabular-nums">{{ watching }}</span>{{ $t('pvp.watching') }}</span>
           <span class="kd-stat type-12-caps">{{ $t('pvp.inPlay') }}<UiPrice :amount="inPlay" size="s" tone="coin" /></span>
         </template>
+        <UiButton icon="plus" to="/pvp/create" class="shrink-0 max-lg:hidden">{{ $t('pvp.create') }}</UiButton>
       </div>
+      <UiButton icon="plus" to="/pvp/create" block class="lg:hidden">{{ $t('pvp.create') }}</UiButton>
     </div>
-      <!-- the battles on their way: a row of card skeletons in the grid's columns -->
-      <section v-if="!data" class="flex flex-col gap-4" aria-hidden="true">
-        <div class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:gap-3">
-          <span v-for="n in 6" :key="n" class="kd-skeleton h-[200px] rounded-5xl lg:h-[218px]" />
-        </div>
-      </section>
-      <!-- one grid, no section headers: start your own first, then the open seats, then what is live (a red round on
-           the card) and what just ended (Ended, for a minute) — the rows fill however few battles there are -->
-      <TransitionGroup v-if="data" tag="div" name="kd-list" class="relative grid grid-cols-1 gap-2 md:grid-cols-2 lg:gap-3">
-        <PvpCreateTile key="create" :compact="isPhone" />
+    <!-- The battles as a table, as every battle site lists them: the header names the columns (desktop), a row per battle —
+         the open seats first, then what is live (a red round) and what just ended (Ended, for a minute). Phones: no
+         header, each row a card in three lines -->
+    <section class="kd-pvp-table flex flex-col gap-2">
+      <div class="kd-pvp-head type-10-caps grid items-center gap-x-4 rounded-2xl bg-neutral-2 px-3 py-2.5 text-neutral-11 max-lg:hidden">
+        <span class="text-center">{{ $t('pvp.rounds') }}</span>
+        <span>{{ $t('pvp.cases') }}</span>
+        <span class="text-center">{{ $t('pvp.cost') }}</span>
+        <span class="text-center">{{ $t('pvp.players') }}</span>
+        <span />
+      </div>
+      <!-- the battles on their way: row skeletons -->
+      <template v-if="!data">
+        <span v-for="n in 6" :key="n" class="kd-skeleton h-[188px] rounded-3xl lg:h-[96px] lg:rounded-2xl" aria-hidden="true" />
+      </template>
+      <TransitionGroup v-else tag="div" name="kd-list" class="relative flex flex-col gap-2">
         <PvpCard v-for="b in lobby" :key="b.id" :battle="b" :compact="isPhone" />
       </TransitionGroup>
+    </section>
 
   </div>
 </template>
@@ -142,6 +151,13 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
   :deep(.kd-sort > button > :last-child) {
     display: none;
   }
+}
+/* the table's columns, shared by the header and every row (components/pvp/Card.vue) */
+.kd-pvp-table {
+  --pvp-cols: 72px minmax(0, 1fr) 112px 200px 152px;
+}
+.kd-pvp-head {
+  grid-template-columns: var(--pvp-cols);
 }
 /* the players: the plate's 40 px controls (the small segmented, its 6 px thumb 4 px in) */
 .kd-players {
@@ -164,6 +180,12 @@ const isPhone = useMediaQuery('(max-width: 639.98px)')
     height: 24px;
     background: none;
     padding-inline: 4px;
+  }
+}
+/* people watching: phones only (the desktop plate has Create PvP there); a class, since the scoped display wins over lg:hidden */
+@media (min-width: 64rem) {
+  .kd-stat.is-phone {
+    display: none;
   }
 }
 .kd-stat-dot {

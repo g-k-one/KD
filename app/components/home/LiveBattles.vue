@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BattlesResponse } from '#shared/types/api'
 
-// Battles on the home page (#12, Skin.Club): the same battle cards as the lobby — open seats first, then live rooms,
+// Battles on the home page (#12, Skin.Club): the same battle rows as the lobby — open seats first, then live rooms,
 // one tap to join or watch. The lobby's list, fetched and refreshed here on its own; quiet when nothing is going on.
 const { data, refresh } = useFetch<BattlesResponse>('/api/battles', { key: 'home-battles', server: false, lazy: true })
 useIntervalFn(() => document.visibilityState === 'visible' && refresh(), 5000)
@@ -27,10 +27,8 @@ const liveCount = computed(() => (data.value?.battles ?? []).filter((b) => b.sta
         <NuxtLink to="/pvp" class="type-12-caps flex h-8 items-center gap-0.5 text-neutral-12 hover:text-neutral-15">{{ $t('home.allBattles') }}<UiIcon name="chevron-right" :size="14" /></NuxtLink>
       </template>
     </UiSectionHeader>
-    <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
+    <div class="flex flex-col gap-2">
       <PvpCard v-for="b in list" :key="b.id" :battle="b" :compact="isPhone" />
-      <!-- fewer than four open: the free spot invites to start one -->
-      <PvpCreateTile v-if="data && list.length < 4" :compact="isPhone" />
     </div>
   </section>
 </template>

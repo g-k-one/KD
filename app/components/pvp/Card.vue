@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import type { Battle, Rarity } from '#shared/types/api'
 
-// A battle as a block with its rounds in a line (version 5, the hybrid: our card, skin.club's round strip). One line
-// along the top — the mode's chip on the left (its rule in a tooltip), the players in the middle (a stack per side, VS
-// between the teams, + on a free seat; the leader ringed with a crown while live, the winners in green once over), the
-// pot on the right (Ended once over). Under it the battle in order: how many rounds, then the strip — open seats show the
-// cases in the order they open (a run of one case as one tile, ×N); live, every round has its tile, the ones played show
-// their best drop, the one opening now is marked and lit in the mode's colour, and the strip slides along with it; once
-// over, every tile is a drop. The button says what to do: Join with the seat's price (a guest signs in first), Watch, or
-// View. Compact: the same card at a phone's width.
+// A battle as a row of the lobby's table (version 6, the classic list of skin.club, casehug, key-drop, drop.skin): the
+// rounds (the count in the mode's colour; the round now, red, while live), the battle in order, what a seat costs, the
+// players (a circle per seat, VS between the teams, + on a free one; the leader crowned while live, the winners in green
+// once over) with the mode under them (its rule in a tooltip), and the button: Join (a guest signs in first), Watch or
+// View. The strip: open seats show the cases in the order they open (a run of one case as one tile, ×N); live, every
+// round has its tile, the ones played show their best drop, the one opening now is marked and lit in the mode's colour,
+// and the strip slides along with it; once over, every tile is a drop. Phones: the same row as a card in three lines.
 const props = defineProps<{ battle: Battle; compact?: boolean }>()
 const now = useClock(1000)
 const { onPointerMove } = useSpotlight()
@@ -16,7 +15,6 @@ const { t } = useI18n()
 const session = useSessionStore()
 const ui = useUiStore()
 
-const pot = computed(() => props.battle.cost * props.battle.size)
 const clock = computed(() => battleClock(props.battle, now.value))
 const round = computed(() => Math.min(props.battle.rounds.length, Math.max(1, clock.value.round + 1)))
 // rounds whose drops are out: the same moment the room shows them (every round is rolled when the last seat fills)
@@ -47,7 +45,7 @@ const tiles = computed<Tile[]>(() => {
 // Live, the strip slides so the round opening now sits second (the last one played stays in sight); it stops once the
 // last tile is in view. Transform only.
 const TILE_GAP = 6
-const tileSize = computed(() => (props.compact ? 56 : 72))
+const tileSize = computed(() => (props.compact ? 56 : 64))
 const step = computed(() => tileSize.value + TILE_GAP)
 const viewport = useTemplateRef<HTMLElement>('viewport')
 const { width: viewW } = useElementSize(viewport)
@@ -79,97 +77,95 @@ function onClick(e: MouseEvent) {
 </script>
 
 <template>
+  <!-- phones: a card in three lines (rounds and price · the strip · players and the button); desktop: one row of the
+       lobby's table, in its columns (the header's widths in pages/pvp/index.vue) -->
   <NuxtLink
     :to="`/pvp/${battle.id}`"
-    class="kd-bcard kd-spotlight group relative flex min-w-0 flex-col gap-2 rounded-5xl border p-2"
+    class="kd-brow kd-spotlight group relative grid min-w-0 items-center gap-x-4 gap-y-2 rounded-3xl border p-3 lg:rounded-2xl lg:py-2"
     :class="[`is-${battle.mode}`, `is-${battle.status}`]"
     @pointermove="onPointerMove"
     @click.capture="onClick"
   >
-    <!-- the stage: the mode's light behind the strip, its lines 16 px in, on the button's edges -->
-    <div class="kd-bcard-stage relative flex flex-col gap-2 px-2 pt-2">
-      <!-- along the top: the mode, the players, the pot -->
-      <div class="flex items-center justify-between" :class="compact ? 'gap-1' : 'gap-2'">
-        <UiTooltip :text="modeTip" class="shrink-0">
-          <span class="kd-mode grid place-items-center size-8 rounded-lg" :aria-label="modeTip">
-            <UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="18" />
-          </span>
-        </UiTooltip>
-        <div class="flex min-w-0 items-center gap-1.5">
-          <template v-for="(side, k) in sides" :key="k">
-            <span v-if="k > 0" class="type-10-caps text-neutral-11">{{ $t('pvp.vs') }}</span>
-            <span class="flex items-center">
-              <template v-for="s in side" :key="s.slot">
-                <span
-                  v-if="s.player"
-                  class="kd-bcard-av relative first:ml-0"
-                  :class="['-ml-1.5 size-7', leaders.includes(s.slot) && 'is-lead', winners.includes(s.slot) && 'is-won', battle.status === 'finished' && !winners.includes(s.slot) && 'is-lost']"
-                  :title="s.player.nickname"
-                >
-                  <span class="block size-full overflow-hidden rounded-full bg-neutral-7">
-                    <img :src="s.player.avatar" alt="" class="size-full object-cover" :class="s.player.bot && 'scale-75 object-contain'" />
-                  </span>
-                  <UiIcon v-if="leaders.includes(s.slot) || winners.includes(s.slot)" name="crown-fill" :size="12" class="kd-bcard-crown absolute -top-2.5 left-1/2 -translate-x-1/2" />
-                </span>
-                <span v-else class="kd-bcard-av relative grid place-items-center rounded-full border border-dashed border-neutral-8 bg-neutral-2 -ml-1.5 size-7 text-neutral-11 first:ml-0">
-                  <UiIcon name="plus" :size="12" />
-                </span>
-              </template>
-            </span>
-          </template>
-        </div>
-        <span class="kd-bcard-pill flex shrink-0 items-center gap-1 tabular-nums h-8 rounded-lg px-2 type-14">
-          <span v-if="battle.status === 'finished'" class="type-12-caps text-neutral-12">{{ $t('pvp.ended') }}</span>
-          <UiPrice v-else :amount="pot" size="s" tone="coin" compact :title="$t('pvp.pot')" />
-        </span>
-      </div>
-
-      <!-- the battle in order: how many rounds (the round now, red, while live), then a tile per round -->
-      <div class="flex items-center gap-3">
-        <span class="flex w-12 shrink-0 flex-col items-center gap-0.5 text-center">
-          <template v-if="battle.status === 'live'">
-            <span class="type-16-caps text-danger tabular-nums">{{ round }}/{{ battle.rounds.length }}</span>
-            <span class="type-10-caps flex items-center gap-1 text-danger"><span class="kd-live-dot size-1.5 rounded-full bg-danger" />{{ $t('pvp.round') }}</span>
-          </template>
-          <template v-else>
-            <span class="type-16-caps text-neutral-15 tabular-nums">{{ battle.rounds.length }}</span>
-            <span class="type-10-caps text-neutral-11">{{ $t('pvp.rounds') }}</span>
-          </template>
-        </span>
-        <div ref="viewport" class="relative min-w-0 flex-1 overflow-hidden py-2">
-          <div class="kd-strip flex" :style="{ gap: `${TILE_GAP}px`, transform: `translateX(${-shift * step}px)` }">
-            <span
-              v-for="tl in tiles"
-              :key="tl.key"
-              class="kd-tile relative grid shrink-0 place-items-center rounded-xl"
-              :class="`is-${tl.state}`"
-              :style="{ width: `${tileSize}px`, height: `${tileSize}px`, '--rc': tl.rarity ? RARITY_COLOR[tl.rarity] : undefined }"
-              :title="tl.title"
-            >
-              <Transition name="kd-tile" mode="out-in">
-                <img :key="tl.image" :src="tl.image" alt="" draggable="false" class="kd-tile-img size-[86%] object-contain" />
-              </Transition>
-              <span v-if="tl.qty > 1" class="kd-bcard-qty type-10-caps absolute right-1 bottom-1 rounded px-0.5 tabular-nums">×{{ tl.qty }}</span>
-              <span v-if="tl.state === 'now'" class="kd-tile-mark absolute left-1/2 -top-2" aria-hidden="true" />
-            </span>
-          </div>
-          <span v-if="overflows" class="kd-strip-fade pointer-events-none absolute inset-y-0 right-0 w-10" aria-hidden="true" />
-        </div>
-      </div>
+    <!-- rounds: the count in the mode's colour (the round now, red, while live), the status under it -->
+    <div class="kd-brow-rounds flex items-center gap-2.5 lg:flex-col lg:gap-1">
+      <span class="kd-brow-count type-16-caps grid size-11 shrink-0 place-items-center rounded-xl tabular-nums lg:size-12">
+        <template v-if="battle.status === 'live'">{{ round }}/{{ battle.rounds.length }}</template>
+        <template v-else>{{ battle.rounds.length }}</template>
+      </span>
+      <span v-if="battle.status === 'live'" class="type-10-caps flex items-center gap-1 text-danger"><span class="kd-live-dot size-1.5 rounded-full bg-danger" />{{ $t('pvp.live') }}</span>
+      <span v-else-if="battle.status === 'finished'" class="type-10-caps text-neutral-11">{{ $t('pvp.ended') }}</span>
+      <span v-else class="type-10-caps text-neutral-11">{{ $t('pvp.rounds') }}</span>
     </div>
 
-    <!-- the action, its 8 px corners 16 px in from the card's 24 -->
-    <div class="px-2 pb-2">
-      <span class="kd-btn inline-flex w-full items-center justify-center gap-1.5 rounded-lg" :class="[battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary', compact ? 'type-12-caps h-10' : 'type-14-caps h-12']">
+    <!-- the battle in order: a tile per round -->
+    <div ref="viewport" class="kd-brow-strip relative min-w-0 overflow-hidden py-2">
+      <div class="kd-strip flex" :style="{ gap: `${TILE_GAP}px`, transform: `translateX(${-shift * step}px)` }">
+        <span
+          v-for="tl in tiles"
+          :key="tl.key"
+          class="kd-tile relative grid shrink-0 place-items-center rounded-xl"
+          :class="`is-${tl.state}`"
+          :style="{ width: `${tileSize}px`, height: `${tileSize}px`, '--rc': tl.rarity ? RARITY_COLOR[tl.rarity] : undefined }"
+          :title="tl.title"
+        >
+          <Transition name="kd-tile" mode="out-in">
+            <img :key="tl.image" :src="tl.image" alt="" draggable="false" class="kd-tile-img size-[86%] object-contain" />
+          </Transition>
+          <span v-if="tl.qty > 1" class="kd-bcard-qty type-10-caps absolute right-1 bottom-1 rounded px-0.5 tabular-nums">×{{ tl.qty }}</span>
+          <span v-if="tl.state === 'now'" class="kd-tile-mark absolute left-1/2 -top-2" aria-hidden="true" />
+        </span>
+      </div>
+      <span v-if="overflows" class="kd-strip-fade pointer-events-none absolute inset-y-0 right-0 w-10" aria-hidden="true" />
+    </div>
+
+    <!-- what a seat costs (phones: top right, beside the rounds) -->
+    <div class="kd-brow-cost flex justify-end lg:justify-center">
+      <UiPrice :amount="battle.cost" size="m" tone="coin" :title="$t('pvp.cost')" />
+    </div>
+
+    <!-- the players: a circle per seat, VS between the teams, + on a free one; the mode under them -->
+    <div class="kd-brow-players flex min-w-0 flex-col gap-1.5 lg:items-center">
+      <div class="flex items-center gap-1">
+        <template v-for="(side, k) in sides" :key="k">
+          <span v-if="k > 0" class="type-10-caps mx-0.5 text-neutral-11">{{ $t('pvp.vs') }}</span>
+          <template v-for="s in side" :key="s.slot">
+            <span
+              v-if="s.player"
+              class="kd-bcard-av relative size-8"
+              :class="[leaders.includes(s.slot) && 'is-lead', winners.includes(s.slot) && 'is-won', battle.status === 'finished' && !winners.includes(s.slot) && 'is-lost']"
+              :title="s.player.nickname"
+            >
+              <span class="block size-full overflow-hidden rounded-full bg-neutral-7">
+                <img :src="s.player.avatar" alt="" class="size-full object-cover" :class="s.player.bot && 'scale-75 object-contain'" />
+              </span>
+              <UiIcon v-if="leaders.includes(s.slot) || winners.includes(s.slot)" name="crown-fill" :size="12" class="kd-bcard-crown absolute -top-2.5 left-1/2 -translate-x-1/2" />
+            </span>
+            <span v-else class="kd-bcard-av kd-brow-free relative grid size-8 place-items-center rounded-full border border-dashed">
+              <UiIcon name="plus" :size="14" />
+            </span>
+          </template>
+        </template>
+      </div>
+      <UiTooltip :text="modeTip" class="w-fit">
+        <span class="kd-brow-mode type-10-caps flex items-center gap-1" :aria-label="modeTip">
+          <UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="12" />{{ $t(`pvp.modeName.${battle.mode}`) }}
+        </span>
+      </UiTooltip>
+    </div>
+
+    <!-- the action: Join (phones: with the seat's price), Watch or View -->
+    <div class="kd-brow-action">
+      <span class="kd-btn inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg px-4 type-14-caps" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
+        <UiIcon v-if="battle.status !== 'waiting'" name="eye" :size="16" />
         {{ $t(action) }}
-        <span v-if="battle.status === 'waiting' && !guestJoin" class="btn-value"><UiPrice :amount="battle.cost" :size="compact ? 's' : 'm'" tone="inverse" /></span>
+        <span v-if="battle.status === 'waiting' && !guestJoin" class="btn-value lg:hidden"><UiPrice :amount="battle.cost" size="s" tone="inverse" /></span>
       </span>
     </div>
   </NuxtLink>
 </template>
 
 <style scoped>
-.kd-bcard {
+.kd-brow {
   --mc: var(--color-coin);
   background: var(--color-neutral-2);
   border-color: var(--color-neutral-2);
@@ -178,22 +174,73 @@ function onClick(e: MouseEvent) {
     transform var(--dur-base) var(--ease-spring);
 }
 /* the mode's colour: gold for Classic (the most wins), pink for Crazy (the least wins), blue for the teams */
-.kd-bcard.is-crazy {
+.kd-brow.is-crazy {
   --mc: var(--color-item-classified);
 }
-.kd-bcard.is-team {
+.kd-brow.is-team {
   --mc: var(--color-item-milspec);
 }
-/* the mode chip: the mode's colour, solid and bright, the icon dark on it */
-.kd-mode {
-  color: var(--color-neutral-1);
-  background: var(--mc);
+/* phones: rounds and price on top, the strip, then players and the button; desktop: the table's five columns */
+.kd-brow {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'rounds cost'
+    'strip strip'
+    'players action';
 }
-/* the mode's light from behind the strip's start, soft, on the whole card (a box of its own showed its edge) */
-.kd-bcard:not(.is-finished) {
+@media (min-width: 64rem) {
+  .kd-brow {
+    /* the lobby's header sets the same columns (pages/pvp/index.vue) */
+    grid-template-columns: var(--pvp-cols, 72px minmax(0, 1fr) 112px 200px 152px);
+    grid-template-areas: 'rounds strip cost players action';
+  }
+}
+.kd-brow-rounds {
+  grid-area: rounds;
+}
+.kd-brow-strip {
+  grid-area: strip;
+}
+.kd-brow-cost {
+  grid-area: cost;
+}
+.kd-brow-players {
+  grid-area: players;
+}
+.kd-brow-action {
+  grid-area: action;
+}
+/* the mode's light from behind the rounds, soft, on the whole row */
+.kd-brow:not(.is-finished) {
   background:
-    radial-gradient(38% 46% at 18% 46%, color-mix(in srgb, var(--mc) 14%, transparent), transparent),
+    radial-gradient(22% 90% at 0% 50%, color-mix(in srgb, var(--mc) 14%, transparent), transparent),
     var(--color-neutral-2);
+}
+/* the rounds' count: a tile in the mode's colour; red while live */
+.kd-brow-count {
+  color: var(--color-neutral-15);
+  background: color-mix(in srgb, var(--mc) 16%, var(--color-neutral-3));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mc) 45%, transparent);
+}
+.kd-brow.is-live .kd-brow-count {
+  color: var(--color-danger);
+}
+.kd-brow.is-finished .kd-brow-count {
+  background: var(--color-neutral-3);
+  box-shadow: none;
+  color: var(--color-neutral-11);
+}
+.kd-brow-mode {
+  color: var(--mc);
+}
+.kd-brow-free {
+  border-color: var(--color-neutral-8);
+  background: var(--color-neutral-3);
+  color: var(--color-neutral-11);
+}
+.kd-brow.is-waiting:hover .kd-brow-free {
+  border-color: var(--color-brand-base);
+  color: var(--color-brand-light);
 }
 /* the strip slides with the round (transform only) */
 .kd-strip {
@@ -211,7 +258,7 @@ function onClick(e: MouseEvent) {
 .kd-tile.is-next .kd-tile-img {
   opacity: 0.55;
 }
-.kd-bcard:not(.is-live) .kd-tile.is-next .kd-tile-img {
+.kd-brow:not(.is-live) .kd-tile.is-next .kd-tile-img {
   opacity: 1;
 }
 .kd-tile.is-now {
@@ -241,7 +288,7 @@ function onClick(e: MouseEvent) {
   background: color-mix(in srgb, var(--rc) 14%, transparent);
   box-shadow: inset 0 -2px 0 var(--rc);
 }
-.kd-bcard.is-finished .kd-tile {
+.kd-brow.is-finished .kd-tile {
   opacity: 0.75;
 }
 /* a round lands: the case gives way to its drop */
@@ -272,9 +319,6 @@ function onClick(e: MouseEvent) {
   color: var(--color-neutral-14);
   line-height: 12px;
 }
-.kd-bcard-pill {
-  background: var(--color-neutral-3);
-}
 .kd-bcard-av {
   border-radius: 9999px;
   box-shadow: 0 0 0 2px var(--color-neutral-2);
@@ -303,20 +347,20 @@ function onClick(e: MouseEvent) {
   color: var(--color-success);
 }
 @media (hover: hover) {
-  .kd-bcard:hover {
+  .kd-brow:hover {
     border-color: var(--color-neutral-6);
   }
-  .kd-bcard:hover .kd-tile:not(.is-now) .kd-tile-img {
+  .kd-brow:hover .kd-tile:not(.is-now) .kd-tile-img {
     transform: translateY(-2px) scale(1.05);
   }
-  .kd-bcard:hover .kd-btn-primary {
+  .kd-brow:hover .kd-btn-primary {
     background-position: 100% 0;
   }
-  .kd-bcard:hover .kd-btn-secondary {
+  .kd-brow:hover .kd-btn-secondary {
     background: var(--color-neutral-7);
   }
 }
-.kd-bcard:active {
+.kd-brow:active {
   transform: scale(0.99);
 }
 .kd-live-dot {
