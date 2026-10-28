@@ -209,7 +209,8 @@ function askSell(item: InventoryItem) {
 /** Multi-open: the column with the most valuable drop (it gets the Share button) */
 const bestCol = computed(() => (props.results.length > 1 ? props.results.reduce((b, r, i, a) => (r.price > a[b]!.price ? i : b), 0) : -1))
 
-// Clicking the reel while it spins jumps straight to the result (Key-Drop's fast-forward)
+// Clicking the reel (or Skip) while it spins jumps straight to the result (Key-Drop's fast-forward). With KURWADROP a skip
+// ends only the roll it was pressed in: the chicken and its respin still play in full, and a second tap skips those
 let skipping = false
 let active: Animation[] = []
 function skip() {
@@ -420,6 +421,10 @@ async function spin(winners: Item[], fast: boolean, kurwa: boolean[] = []) {
   await run(winners.map((w, i) => (kurwa[i] ? chicken.value : w)), fast, all)
 
   if (hits.length) {
+    // The chicken and its respin are the peak: a skip of the first roll does not reach them (a second tap does), and they
+    // always play at full length, Fast or not (Fast speeds up only the roll that leads to them)
+    skipping = false
+    fast = false
     // The chicken comes out of the gold logo, screams and pops (henShow), then the respin starts among the expensive items
     chickenHit.value = all.map((i) => kurwa[i]!)
     haptics.jackpot()
