@@ -173,3 +173,194 @@ frame with a clear margin. Landscape 3:2.
 
 ### Как соберу
 По глубине, от дальнего к ближнему: пыль за санями → основной слой (курица с башней) → скины (AWP дальше, нож и перчатки ближе) → монеты. Курсор сдвигает слои на разную величину. Скины медленно кувыркаются, верхушка башни покачивается. Если ткнуть в курицу, она дёргает верёвку, башня вздрагивает и с неё слетает ещё один скин.
+
+---
+
+## 8. Моковые кейсы: 30 штук, 6 линеек
+
+Новые кейсы для витрины, по пять в линейке. Линейки идут от дешёвых к хайроллерским, у каждой своя тема и своя палитра, чтобы ряд из пяти карточек читался как набор. Картинка — квадратная карточка кейса (как `public/img/cases/*.webp`): курица в образе, **один жест и один предмет, крупно**, прозрачный фон. На сайте карточка от 96–112 px (лента, история, телефон) до 240 px (каталог), поэтому всё мелкое пропадёт: никаких надписей, тонких деталей и предметов в кадре сверх одного.
+
+### Как генерировать
+
+1. **Образец стиля:** прикрепи `public/img/cases/vodka-drop.webp` (глянцевая 3D-курица в полный рост, один крупный предмет, чистый прозрачный фон). Когда первая картинка линейки одобрена, прикладывай её вторым образцом ко всем остальным той же линейки: так держатся палитра и масштаб.
+2. **Промпт** собирается из трёх кусков: **общий блок кейсов** (ниже) → **палитра линейки** → **промпт кейса**.
+3. **Сначала пробы**, по одной на 4 линейки: `zapiekanka`, `maluch`, `perun`, `husaria`. Весь набор — после одобрения стиля.
+4. **Файл:** PNG, 1024×1024, прозрачный фон (в ChatGPT: «transparent background, PNG»). Сохраняй как `<slug>.png` в `public/img/_new/cases/`.
+5. **Конвертация:** `python scripts/case-art.py` — обрежет пустые поля, поставит предмет по центру квадрата, сожмёт в `public/img/cases/<slug>.webp` (480×480, WebP, прозрачный) и соберёт `public/img/_new/cases/_preview.png`: все кейсы в 104 px на тёмном фоне сайта — проверка, что читается. Картинку, где ChatGPT нарисовал шашечку вместо прозрачности, скрипт пропустит и скажет об этом.
+   Если захочешь быстрее, листами 2×2 (четыре кейса линейки на листе, пятый отдельно): `python scripts/case-art.py лист.png slug1 slug2 slug3 slug4` (порядок: верх-лево, верх-право, низ-лево, низ-право). Клетка листа выходит около 512 px — впритык для карточки в 240 px, поэтому по умолчанию по одной картинке.
+6. Широкие, высокие и полные кадры (`wide/`, `tall/`, `full/`) для моков не нужны: при подключении кейсу ставится `art: { wide: null, tall: null, full: null }`, и карточка остаётся квадратной.
+
+### Общий блок кейсов (в начало каждого промпта)
+
+```
+Style: the attached image is the exact style reference for a loot-case card of a CS2 case-opening site. Same mascot:
+glossy 3D cartoon render, a white fluffy chicken with a big spiky orange-red crest, huge round eyes with small black
+pupils, a wide orange beak, orange feet, chunky proportions. Soft studio light from the top left, a warm orange rim
+light, crisp edges, saturated colours. Loud, bold and game-like, like a mobile-game shop icon; not realistic, not flat,
+no anime. CS2 weapons or knives, if any, look like real CS2 skins.
+Composition: one character, one clear gesture, one big prop. The chicken and its prop fill about 80% of the square,
+centred, with a clear margin on every side. Nothing thin or tiny that would vanish at 100 px. A strong silhouette that
+reads on a near-black background: no dark parts along the outer edge.
+Background: fully transparent (real alpha, not a painted checkerboard). No ground, no cast shadow, no glow ring, no
+light rays or sunburst behind the subject. No text, letters, numbers, logos or brand names anywhere, no UI, no frame.
+Square 1:1, 1024×1024, PNG.
+```
+
+Потом строка палитры линейки, потом промпт кейса.
+
+### Сводка
+
+Цена — поле `price` в моке, в сотых долях монеты (`29` = 0,29 монеты, `249900` = 2499 монет). Риск — поле `risk`. Файл у всех: `public/img/_new/cases/<slug>.png` (1024×1024, PNG, прозрачный) → `public/img/cases/<slug>.webp` (480×480, WebP).
+
+| Линейка | Тема | Цена, монет | Риск | Кейсы |
+|---|---|---|---|---|
+| 1. Nocny Sklep | ночной ларёк: еда за копейки | 0,29–2,49 | low | Zapiekanka, Kebab na Cienkim, Oranżada, Parówa, Bar Mleczny |
+| 2. Ryzyk-Fizyk | дёшево, но всё или ничего | 1,99–9,99 | high–extreme | Złote Jajo, Muchomor, Sylwester, Cienki Lód, Va Banque |
+| 3. PRL | ностальгия по 70-м | 5,90–24,90 | medium | Papier Gold, Maluch, Trzepak, Kaseta, Kartki |
+| 4. Sport Narodowy | польский спорт, всё в прыжке | 19,90–79,90 | high | Skoki, Żużel, Siłacz, Przewrotka, Atak |
+| 5. Słowiańskie Mity | славянские легенды | 99–399 | high–extreme | Smok Wawelski, Perun, Kwiat Paproci, Baba Jaga, Leszy |
+| 6. Złoty Wiek | золотой век Речи Посполитой, хайроллер | 499–2499 | extreme | Husaria, Szczerbiec, Bursztyn, Solny Tron, Hetman |
+
+---
+
+### Линейка 1. Nocny Sklep — бюджетные, low
+
+Палитра линейки:
+```
+Line palette: ketchup red, mustard yellow and warm fluorescent-white highlights; the food looks hot, greasy and delicious.
+```
+
+| slug | Имя | Цена | Риск | Файл |
+|---|---|---|---|---|
+| `zapiekanka` | Zapiekanka | 29 | low | `zapiekanka.png` → `zapiekanka.webp` |
+| `kebab-na-cienkim` | Kebab na Cienkim | 49 | low | `kebab-na-cienkim.png` → `kebab-na-cienkim.webp` |
+| `oranzada` | Oranżada | 79 | low | `oranzada.png` → `oranzada.webp` |
+| `parowa` | Parówa | 149 | low | `parowa.png` → `parowa.webp` |
+| `bar-mleczny` | Bar Mleczny | 249 | low | `bar-mleczny.png` → `bar-mleczny.webp` |
+
+- **zapiekanka:** `The mascot lifting a huge half-metre open-faced baguette pizza (melted cheese, mushrooms, a thick zigzag of ketchup) high above its head with both wings like a trophy, a long string of melted cheese stretching down into its open beak, eyes squeezed shut in bliss. Full body.`
+- **kebab-na-cienkim:** `The mascot biting into a giant kebab wrap in thin flatbread, stuffed with lettuce and red cabbage, a big splash of white garlic sauce bursting out of the other end, eyes popping wide in shock at how good it is. Full body, the wrap held in both wings, almost as big as the chicken.`
+- **oranzada:** `The mascot chugging an orange fizzy soda straight from a big swing-top glass bottle tipped vertically, orange bubbles fountaining out of the corners of its beak, its crest shot straight up from the sugar rush. Full body.`
+- **parowa:** `The mascot in a fencing lunge, thrusting a giant hot dog like a sword: a long baguette with a pink sausage sticking far out of its end, a drop of mustard flying off the tip. Full body, side three-quarter view, fierce face.`
+- **bar-mleczny:** `The mascot balancing one overloaded canteen tray on one wing above its head: a bowl of bright red borscht, a plate of dumplings and a glass of fruit compote, all wobbling, the chicken on one foot with its tongue out in concentration. Full body.`
+
+---
+
+### Линейка 2. Ryzyk-Fizyk — дёшево, но риск на максимум
+
+Палитра линейки:
+```
+Line palette: hazard yellow and black, toxic green accents and hot red sparks; dangerous, but funny.
+```
+
+| slug | Имя | Цена | Риск | Файл |
+|---|---|---|---|---|
+| `zlote-jajo` | Złote Jajo | 199 | extreme | `zlote-jajo.png` → `zlote-jajo.webp` |
+| `muchomor` | Muchomor | 299 | extreme | `muchomor.png` → `muchomor.webp` |
+| `sylwester` | Sylwester | 499 | high | `sylwester.png` → `sylwester.webp` |
+| `cienki-lod` | Cienki Lód | 699 | extreme | `cienki-lod.png` → `cienki-lod.webp` |
+| `va-banque` | Va Banque | 999 | extreme | `va-banque.png` → `va-banque.webp` |
+
+- **zlote-jajo:** `The mascot hugging a golden egg as big as itself that it has just laid, staring at a fresh crack running across the shell, golden light leaking out of the crack, one big nervous sweat drop on its forehead. Full body.`
+- **muchomor:** `The mascot proudly holding up a giant red fly agaric mushroom with white spots in both wings, like a prize catch, cross-eyed with a wide goofy grin. Full body; the mushroom cap as big as the chicken's body.`
+- **sylwester:** `The mascot holding a giant red firecracker at arm's length with one wing, its fuse fizzing with bright sparks, the other wing covering its eyes, peeking through its feathers. Full body.`
+- **cienki-lod:** `The mascot tiptoeing on a small floating slab of blue ice, wings spread wide for balance, a jagged crack zigzagging across the ice right toward its feet, eyes huge, beak clenched. Full body, the ice slab under it is its only prop.`
+- **va-banque:** `The mascot leaning in with its whole body to push a tall tower of gold coins forward with both wings (each coin stamped with a star in a circle), the tower tilting toward the viewer, the chicken's eyes glittering with madness. Full body.`
+
+---
+
+### Линейка 3. PRL — средние, medium
+
+Палитра линейки:
+```
+Line palette: faded 1970s mustard, olive, brown and tomato orange, a light film grain; retro, but still glossy 3D.
+```
+
+| slug | Имя | Цена | Риск | Файл |
+|---|---|---|---|---|
+| `papier-gold` | Papier Gold | 590 | medium | `papier-gold.png` → `papier-gold.webp` |
+| `maluch` | Maluch | 890 | medium | `maluch.png` → `maluch.webp` |
+| `trzepak` | Trzepak | 1290 | medium | `trzepak.png` → `trzepak.webp` |
+| `kaseta` | Kaseta | 1690 | medium | `kaseta.png` → `kaseta.webp` |
+| `kartki` | Kartki | 2490 | medium | `kartki.png` → `kartki.webp` |
+
+- **papier-gold:** `The mascot wearing a long necklace of grey toilet-paper rolls strung on a rope, draped over its chest like heavy gold chains, one wing up in a proud "I made it" rapper pose, chin raised. Full body.`
+- **maluch:** `The mascot squeezed into a tiny cream-coloured 1970s two-door boxy car with round headlights (no badges, no plates), driving straight at the viewer, its crest sticking out of the open sunroof and both wings poking out of the side windows. Front three-quarter view, the car and chicken as one big shape.`
+- **trzepak:** `The mascot swinging a big wicker carpet beater like a tennis racket in a full backhand, a big puff of grey dust exploding where it hits, a fierce determined face. Full body.`
+- **kaseta:** `The mascot holding a big audio cassette up to its face and rewinding it by spinning a yellow pencil in one of the reels, its tongue out in concentration, a loop of brown tape spilling down. Chest-up, the cassette big in the frame, no writing on its label.`
+- **kartki:** `The mascot fanning out a hand of five old paper ration coupons like a winning poker hand, a smug half-closed-eye grin. The coupons are pale green and pink with stamped grid squares and no readable text. Chest-up, the fan of coupons big in the frame.`
+
+---
+
+### Линейка 4. Sport Narodowy — высокий риск
+
+Палитра линейки:
+```
+Line palette: Polish red and white with bold speed streaks, sweat drops and bright stadium-light highlights.
+```
+
+| slug | Имя | Цена | Риск | Файл |
+|---|---|---|---|---|
+| `skoki` | Skoki | 1990 | high | `skoki.png` → `skoki.webp` |
+| `zuzel` | Żużel | 2990 | high | `zuzel.png` → `zuzel.webp` |
+| `silacz` | Siłacz | 3990 | high | `silacz.png` → `silacz.webp` |
+| `przewrotka` | Przewrotka | 4990 | high | `przewrotka.png` → `przewrotka.webp` |
+| `atak` | Atak | 7990 | high | `atak.png` → `atak.webp` |
+
+- **skoki:** `The mascot as a ski jumper in full flight: leaning far forward over a pair of red skis spread in a V, wings pressed back along its sides, a red-white helmet and big goggles, crest streaming in the wind. Side three-quarter view, diagonal from bottom left to top right.`
+- **zuzel:** `The mascot as a speedway rider sliding a brakeless red-white dirt-track motorbike sideways into a turn, one foot down, a big fan of cinder dirt spraying from the back wheel, red-white leathers and helmet. Three-quarter view, the bike leaning hard.`
+- **silacz:** `The mascot as a strongman lifting a huge round grey stone above its head with both wings, legs trembling, veins and sweat drops, a red-white wrestling singlet and a lifting belt, face screaming red with effort. Full body.`
+- **przewrotka:** `The mascot upside down in mid-air doing an overhead bicycle kick, one foot striking a red-and-white football, feathers flying off, a red-white football shirt. Full body, the whole body diagonal, the ball at the top.`
+- **atak:** `The mascot leaping high and smashing a red-and-white volleyball downward with one wing, the ball squashed flat from the hit, the other wing back for balance, a red-white jersey, a battle-cry face. Full body.`
+
+---
+
+### Линейка 5. Słowiańskie Mity — дорогие, high–extreme
+
+Палитра линейки:
+```
+Line palette: deep forest green, storm blue and ember orange, old carved wood and bronze details; a soft magical glow on the prop only.
+```
+
+| slug | Имя | Цена | Риск | Файл |
+|---|---|---|---|---|
+| `smok-wawelski` | Smok Wawelski | 9900 | high | `smok-wawelski.png` → `smok-wawelski.webp` |
+| `perun` | Perun | 14900 | extreme | `perun.png` → `perun.webp` |
+| `kwiat-paproci` | Kwiat Paproci | 19900 | extreme | `kwiat-paproci.png` → `kwiat-paproci.webp` |
+| `baba-jaga` | Baba Jaga | 29900 | high | `baba-jaga.png` → `baba-jaga.webp` |
+| `leszy` | Leszy | 39900 | extreme | `leszy.png` → `leszy.webp` |
+
+- **smok-wawelski:** `The mascot in a fluffy green dragon onesie with small horns, a spiky tail and little bat wings, breathing a big blast of orange fire forward out of its beak, fists clenched. Full body, three-quarter view, the flame going off to one side but inside the frame.`
+- **perun:** `The mascot as a thunder god in a bronze helmet, raising a heavy bronze war axe high overhead with both wings, blue lightning crackling around the axe head, a furious shout. Full body.`
+- **kwiat-paproci:** `The mascot cupping a legendary glowing fern flower in both wings, a fiery red-gold blossom on a curled fern stem, its warm light shining up on the chicken's awed face, eyes wide and sparkling. Chest-up, the flower big in the frame.`
+- **baba-jaga:** `The mascot as a forest witch with a ragged black headscarf, flying in a big wooden mortar and steering with a long wooden pestle, a crooked toothy grin, leaning into a turn. Full body, three-quarter view.`
+- **leszy:** `The mascot as a forest spirit: a crown of mossy antlers, bark and leaves on its shoulders, eyes glowing green, holding a gnarled wooden staff with a mushroom growing on top, a mischievous grin. Full body.`
+
+---
+
+### Линейка 6. Złoty Wiek — хайроллер, extreme
+
+Палитра линейки:
+```
+Line palette: polished gold, crimson velvet and deep amber, rich sparkle on metal; the most expensive-looking line.
+```
+
+| slug | Имя | Цена | Риск | Файл |
+|---|---|---|---|---|
+| `husaria` | Husaria | 49900 | extreme | `husaria.png` → `husaria.webp` |
+| `szczerbiec` | Szczerbiec | 79900 | extreme | `szczerbiec.png` → `szczerbiec.webp` |
+| `bursztyn` | Bursztyn | 99900 | extreme | `bursztyn.png` → `bursztyn.webp` |
+| `solny-tron` | Solny Tron | 149900 | extreme | `solny-tron.png` → `solny-tron.webp` |
+| `hetman` | Hetman | 249900 | extreme | `hetman.png` → `hetman.webp` |
+
+- **husaria:** `The mascot as a winged hussar in polished steel-and-gold armour, two tall arcs of white feathers rising from its back, charging toward the viewer with a long red-white lance lowered, its crest bursting out of the helmet, a battle scream. Full body, three-quarter view.`
+- **szczerbiec:** `The mascot raising a glowing golden coronation sword straight up overhead with both wings, a gold hilt set with red gems, a crimson velvet cape flowing, a proud victorious face. Full body.`
+- **bursztyn:** `The mascot hugging a giant glowing chunk of honey-coloured amber, and frozen inside the amber like a prehistoric insect is a tiny CS2 karambit knife with a fade finish, the chicken pressing its face to the amber with greedy wide eyes. Full body, the amber as big as the chicken's body.`
+- **solny-tron:** `The mascot lounging on a throne carved from glowing pink rock-salt crystal, one leg thrown over the armrest, a gold crown tilted on its crest, a bored, filthy-rich half-lidded look. Full body, the throne and chicken as one big shape.`
+- **hetman:** `The mascot as a grand hetman in an ermine-trimmed crimson coat, resting a heavy golden mace studded with rubies on its shoulder, a menacing smirk, chin up. Full body.`
+
+---
+
+### Как подключу
+
+Когда картинки лежат в `public/img/cases/`, кейсы добавляются в `CASE_DEFS` в `server/utils/mock-db.ts` (slug, имя, картинка, цена, риск и `art: { wide: null, tall: null, full: null }`), а на главную — шесть рядов, по ряду на линейку, в порядке сводки.
