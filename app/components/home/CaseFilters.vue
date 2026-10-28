@@ -43,8 +43,8 @@ function reset() {
 </script>
 
 <template>
-  <!-- phones: 40 px controls, 8 in; desktop: the PvP and case docks' 48 px controls with 12 px corners, 12 in (24 around) -->
-  <div class="kd-filters flex items-center gap-2 rounded-3xl bg-neutral-2 p-2 lg:p-3">
+  <!-- phones: 40 px controls, 8 in (16 around); desktop: the PvP and case docks' 48 px controls with 12 px corners, 12 in (24 around, the cards' corners) -->
+  <div class="kd-filters flex items-center gap-2 rounded-3xl bg-neutral-2 p-2 lg:rounded-5xl lg:p-3">
     <!-- Search: the row's flexible part on phones, a fixed field after the dropdowns on desktop -->
     <UiInput v-model="query" icon="search" clearable inputmode="search" :placeholder="$t('filters.search')" class="kd-fsearch min-w-0 flex-1 lg:order-2 lg:w-56 lg:flex-none" />
     <!-- Phones: "fits my balance" one tap away (players only), the rest behind the filters icon -->

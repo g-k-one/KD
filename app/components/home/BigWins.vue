@@ -45,7 +45,7 @@ provide(FORGE_KEY, {
   <section v-if="!data" class="flex flex-col gap-2 lg:gap-3" aria-hidden="true">
     <div class="flex h-6 items-center gap-2"><span class="kd-skeleton h-5 w-40 rounded-md lg:h-6" /></div>
     <div class="flex gap-3 pt-2 max-lg:-mx-4 max-lg:overflow-hidden max-lg:pl-4 lg:grid lg:grid-cols-3 lg:gap-4 lg:pt-4">
-      <span v-for="n in 3" :key="n" class="kd-skeleton h-[122px] rounded-3xl max-lg:w-[296px] max-lg:shrink-0 lg:h-44" />
+      <span v-for="n in 3" :key="n" class="kd-skeleton h-[122px] rounded-3xl max-lg:w-[296px] max-lg:shrink-0 lg:h-44 lg:rounded-5xl" />
     </div>
   </section>
   <section v-else-if="wins.length" class="flex flex-col gap-2 lg:gap-3">
@@ -74,7 +74,7 @@ provide(FORGE_KEY, {
         :to="sourceLink(p.win.caseSlug)"
         :aria-hidden="p.copy || undefined"
         :tabindex="p.copy ? -1 : undefined"
-        class="kd-win kd-press kd-press-wide group relative grid min-w-0 grid-cols-[112px_minmax(0,1fr)] items-center gap-2 rounded-3xl py-2.5 pr-4 pl-1 max-lg:w-[296px] max-lg:shrink-0 lg:grid-cols-[50%_minmax(0,1fr)] lg:gap-2 lg:py-4 lg:pr-5 lg:pl-2"
+        class="kd-win kd-press kd-press-wide group relative grid min-w-0 grid-cols-[112px_minmax(0,1fr)] items-center gap-2 rounded-3xl py-2.5 pr-4 pl-1 lg:rounded-5xl max-lg:w-[296px] max-lg:shrink-0 lg:grid-cols-[50%_minmax(0,1fr)] lg:gap-2 lg:py-4 lg:pr-5 lg:pl-2"
         :class="p.rank === 1 ? 'is-first' : ''"
         :style="{ '--rc': RARITY_COLOR[p.win.item.rarity], '--i': i % 3 }"
         :data-rank="p.rank"
