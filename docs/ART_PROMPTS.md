@@ -367,3 +367,137 @@ Line palette: polished gold, crimson velvet and deep amber, rich sparkle on meta
 ### Как подключу
 
 Когда картинки лежат в `public/img/cases/`, кейсы добавляются в `CASE_DEFS` в `server/utils/mock-db.ts` (slug, имя, картинка, цена, риск и `art: { wide: null, tall: null, full: null }`), а на главную — шесть рядов, по ряду на линейку, в порядке сводки.
+
+---
+
+## 9. CS-кейсы: 20 штук, 4 линейки
+
+Кейсы про сам Counter-Strike: карты и 1.6, мемы, про-сцена, легендарные скины. Карточка та же, что в разделе 8: квадрат, курица в образе, один жест и один предмет, прозрачный фон, читается в 104 px.
+
+FACEIT и NAVI здесь только намёком: цвета и настроение, без логотипов и названий (это чужие бренды). Имена кейсов тоже намёки, на настоящие поменяешь сам, если будет можно.
+
+### Как генерировать
+
+1. **Образец стиля:** `public/img/_new/ref-chicken.png` (курица в панике: выпученные глаза без бровей, клюв нараспашку). Она не злая, поэтому `vodka-drop.webp` больше не прикладывать: злое лицо шло от него. Первую одобренную картинку линейки прикладывать вторым образцом к остальным.
+2. **Промпт:** общий блок CS-кейсов → палитра линейки → промпт кейса.
+3. **Пробы:** по одной на линейку: `one-six`, `rush-b`, `yellow-army`, `asiimov`.
+4. **Файл и конвертация** — как в разделе 8: `public/img/_new/cases/<slug>.png` (1024×1024, прозрачный) → `python scripts/case-art.py` → `public/img/cases/<slug>.webp`.
+5. **Через fal** (Claude делает сам): `openai/gpt-image-2.5/sunburst/edit`, `quality: medium`, `background: transparent`, 1024×1024, образец в `image_urls`.
+
+### Общий блок CS-кейсов (в начало каждого промпта)
+
+```
+Create a NEW image of the same character in a new pose. Style: the attached chicken is the brand mascot and the exact
+character and style reference for a loot-case card of a CS2 case-opening site: glossy 3D cartoon render, a white
+fluffy chicken with a big spiky orange-red crest, huge round googly eyes with thin pink rims and small black pupils,
+NO eyebrows and never a frown, a wide glossy orange beak, chunky orange feet, chunky round proportions. Its face is
+silly, goofy and over-the-top emotional, never angry or mean. Soft studio light from the top left, a warm orange rim
+light, crisp edges, saturated colours. Loud, bold and game-like, like a mobile-game shop icon; not realistic, not
+flat, no anime. CS2 weapons, knives and gear, if any, look like real CS2 items with their real finishes.
+Composition: one character, one clear gesture, one big prop. The chicken and its prop fill about 80% of the square,
+centred, with a clear margin on every side. Nothing thin or tiny that would vanish at 100 px. A strong silhouette that
+reads on a near-black background: no dark parts along the outer edge.
+Background: fully transparent (real alpha). No ground, no cast shadow, no glow ring, no light rays or sunburst behind
+the subject. No text, letters, numbers, logos or brand names anywhere, no UI, no frame. Square 1:1.
+```
+
+### Сводка
+
+| Линейка | Тема | Цена, монет | Риск | Кейсы |
+|---|---|---|---|---|
+| 7. Memy | мемы комьюнити | 0,99–7,99 | high | Rush B, Flashbang, Ninja Defuse, Eco Round, 360 Noscope |
+| 8. Old School | карты и 1.6 | 4,90–29,90 | medium | Dust II, 1.6, Banana, Planted, Nuke |
+| 9. Pro Scene | киберспорт: FACEIT, NAVI, мейджоры | 39–199 | high | Level 10, Yellow Army, Major, Ace, Tryhard |
+| 10. Skiny | легендарные скины | 299–1999 | extreme | Asiimov, Dragon Lore, Howl, Fade, Hyper Beast |
+
+---
+
+### Линейка 7. Memy — дёшево, high
+
+Палитра линейки:
+```
+Line palette: flashbang white, toxic chat-green and alarm red accents; chaotic and funny.
+```
+
+| slug | Имя | Цена | Риск |
+|---|---|---|---|
+| `rush-b` | Rush B | 99 | high |
+| `flashbang` | Flashbang | 199 | high |
+| `ninja-defuse` | Ninja Defuse | 299 | high |
+| `eco-round` | Eco Round | 499 | high |
+| `noscope` | 360 Noscope | 799 | high |
+
+- **rush-b:** `The mascot sprinting flat-out toward the viewer in a reckless all-in rush, holding a P90 submachine gun out in front with both wings, legs spinning into a cartoon blur, crest and feathers blown back, beak wide open in a screaming yell of pure joy, a small puff of sand kicked up behind its feet. Full body, three-quarter view.`
+- **flashbang:** `The mascot blinded by a flashbang: its googly eyes turned glowing pure white, wings flailing wildly in the air, beak wide open in a squawk, one leg up, a CS2 flashbang grenade spinning right in front of its face with a bright white flash. Full body.`
+- **ninja-defuse:** `The mascot as a ninja in a black headband with long trailing ends, crouched on tiptoe over a big CS2 C4 bomb brick with a blinking red light, biting through one thick red wire with its beak, googly eyes sideways, one big sweat drop. Full body, the bomb as big as the chicken's body.`
+- **eco-round:** `The mascot in baggy shorts pulling both pockets inside out to show they are empty, a single tiny pistol tucked under one wing, one gold coin bouncing away, googly eyes looking at the coin with a broke, sheepish grin. Full body.`
+- **noscope:** `The mascot spinning in mid-air in a full 360° turn, an AWP sniper rifle held out at arm's length, a big swirl of motion streaks around it, feathers flying off, googly eyes rolling in different directions, beak open in a show-off scream. Full body, the whole body tilted.`
+
+---
+
+### Линейка 8. Old School — средние, medium
+
+Палитра линейки:
+```
+Line palette: sun-bleached desert sand, dusty terracotta and faded sky blue, a hint of chunky early-2000s game charm; still glossy 3D.
+```
+
+| slug | Имя | Цена | Риск |
+|---|---|---|---|
+| `dust-ii` | Dust II | 490 | medium |
+| `one-six` | 1.6 | 990 | medium |
+| `banana` | Banana | 1490 | medium |
+| `planted` | Planted | 1990 | medium |
+| `nuke` | Nuke | 2990 | medium |
+
+- **dust-ii:** `The mascot peeking out from behind one half of a big weathered wooden double door with iron studs, sand-coloured stone around the frame, only its head, crest and one wing holding a Desert Eagle showing round the edge, googly eyes huge. The door and the chicken as one big shape.`
+- **one-six:** `The mascot half-turned into an early-2000s low-poly game model: the left half of its body is the usual glossy fluffy 3D render, the right half is built from chunky flat-shaded polygons with a blurry low-resolution texture, the split running straight down the middle of its face. It holds a blocky low-poly AK-47 across its chest, both googly eyes bulging in surprise as it stares at its own polygonal wing. Full body.`
+- **banana:** `The mascot aiming a giant ripe yellow banana like a rifle, one eye closed and its tongue out in concentration, crouched in a combat stance. Full body, side three-quarter view.`
+- **planted:** `The mascot hugging a big CS2 C4 bomb brick with a blinking red light to its chest, frozen mid-step, googly eyes bulging at the blinking light, feathers standing on end. Full body.`
+- **nuke:** `The mascot in a baggy yellow hazmat suit with the hood down, hugging a big glowing yellow-green radioactive barrel, its crest glowing at the tips, a wide goofy grin. Full body.`
+
+---
+
+### Линейка 9. Pro Scene — дорогие, high
+
+Палитра линейки:
+```
+Line palette: esports stage: electric yellow, black and hot orange, glossy LED-stage highlights.
+```
+
+| slug | Имя | Цена | Риск | Намёк на |
+|---|---|---|---|---|
+| `level-10` | Level 10 | 3900 | high | FACEIT |
+| `yellow-army` | Yellow Army | 5900 | high | NAVI |
+| `major` | Major | 9900 | high | мейджор |
+| `ace` | Ace | 14900 | high | эйс |
+| `tryhard` | Tryhard | 19900 | high | тряхард |
+
+- **level-10:** `The mascot in an orange-and-black gaming jersey with no logos or text, proudly holding up with both wings a huge glowing orange-red round rank medal, a thick ring of ten glowing segments around its rim, googly eyes shining with pride. Full body.`
+- **yellow-army:** `The mascot as a die-hard esports fan in a yellow-and-black striped team jersey with no logos or text, stretching a long chunky yellow-and-black knitted fan scarf high above its head with both wings, beak wide open in an ecstatic cheer, googly eyes shining, a few big yellow and black confetti pieces around. Full body.`
+- **major:** `The mascot lifting a giant shining silver trophy cup high above its head with both wings, legs wobbling under the weight, beak wide open, big tears of joy flying from its googly eyes, a few big gold confetti pieces. Full body.`
+- **ace:** `The mascot blowing smoke from the barrel of a gold Desert Eagle like a cowboy, the other wing on its hip, chest puffed out, a smug half-lidded grin. Full body.`
+- **tryhard:** `The mascot in a huge glowing RGB gaming headset, leaning far forward, tongue out in extreme focus, hammering a big glowing RGB keyboard held in front of it with both wings, keycaps flying off. Full body, three-quarter view.`
+
+---
+
+### Линейка 10. Skiny — хайроллер, extreme
+
+Палитра линейки:
+```
+Line palette: polished real CS2 skin finishes, each weapon is the hero; crisp metal and lacquer highlights, the most expensive-looking CS line.
+```
+
+| slug | Имя | Цена | Риск |
+|---|---|---|---|
+| `asiimov` | Asiimov | 29900 | extreme |
+| `dragon-lore` | Dragon Lore | 49900 | extreme |
+| `howl` | Howl | 79900 | extreme |
+| `fade` | Fade | 119900 | extreme |
+| `hyper-beast` | Hyper Beast | 199900 | extreme |
+
+- **asiimov:** `The mascot wearing a sleek white sci-fi armour chest plate and shoulder pads with orange and black panels in the AWP Asiimov style, hugging an AWP sniper rifle with the real Asiimov finish (white body, orange and black sci-fi panels) held diagonally across its body, the rifle almost as long as the square is wide, googly eyes sparkling with greed, a big happy open-beak grin. Full body.`
+- **dragon-lore:** `The mascot as a little king in a gold crown and a short green velvet cape, holding an AWP with the real Dragon Lore finish (a gold-and-green dragon on light beige) upright like a royal sceptre, chin up, googly eyes half-closed in royal pride. Full body.`
+- **howl:** `The mascot howling at the sky like a wolf, head thrown back, beak wide open, an M4A4 with the real Howl finish (a red-orange snarling wolf) held across its chest, its crest flaming red-orange to match. Full body.`
+- **fade:** `The mascot spinning a Karambit knife with the real Fade finish (pink, purple and gold gradient) on one wing feather, its own tail feathers fading pink to purple to gold to match the knife, googly eyes following the spin. Full body.`
+- **hyper-beast:** `The mascot splattered head to toe with neon green, pink and blue graffiti paint, holding an M4A1-S with the real Hyper Beast finish, beak wide open in a wild crazy grin, paint drops flying. Full body.`
