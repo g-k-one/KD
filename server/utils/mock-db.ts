@@ -192,6 +192,30 @@ const CASE_DEFS: CaseDef[] = [
   { id: 'c10', slug: 'high-roller', name: 'High Roller', image: '/img/cases/high-roller.webp', price: 29900, risk: 'high', tag: 'hot', targetRtp: 9150, createdAt: '2026-02-01', limited: { total: 100, left: 12 } },
 ]
 
+// CS cases in three lines, each line in its own look (docs/ART_PROMPTS.md, section 9). Only the square picture so far:
+// no wide, tall or full-scene art
+const CS_ART = { wide: null, tall: null, full: null }
+const csCase = (n: number, slug: string, name: string, price: number, risk: CaseSummary['risk'], tag?: CaseSummary['tag']): CaseDef => ({
+  id: `cs${n}`, slug, name, image: `/img/cases/${slug}.webp`, price, risk, ...(tag && { tag }), targetRtp: 9200, createdAt: '2026-10-29', art: CS_ART,
+})
+const CS_DEFS: CaseDef[] = [
+  csCase(1, 'ping-999', 'Ping 999', 99, 'high', 'new'),
+  csCase(2, 'flashbang', 'Flashbang', 199, 'high'),
+  csCase(3, 'vac', 'VAC', 299, 'high', 'hot'),
+  csCase(4, 'negev', 'Negev', 499, 'high'),
+  csCase(5, 'zeus', 'Zeus', 799, 'high'),
+  csCase(6, 'dust-ii', 'Dust II', 490, 'medium', 'new'),
+  csCase(7, 'stuck', 'Stuck', 990, 'medium'),
+  csCase(8, 'banana', 'Banana', 1490, 'medium'),
+  csCase(9, 'bhop', 'Bhop', 1990, 'medium'),
+  csCase(10, 'one-six', '1.6', 2990, 'medium'),
+  csCase(11, 'level-10', 'Level 10', 3900, 'high', 'new'),
+  csCase(12, 'yellow-army', 'Yellow Army', 5900, 'high'),
+  csCase(13, 'smurf', 'Smurf', 9900, 'high'),
+  csCase(14, 'tryhard', 'Tryhard', 14900, 'high'),
+  csCase(15, 'major', 'Major', 19900, 'high', 'hot'),
+]
+
 /**
  * Builds the odds table like the admin panel would: weights ∝ price^-α, with α solved so the
  * expected value hits the target RTP. Tickets are then rounded and the real RTP recomputed,
@@ -306,7 +330,7 @@ const GEM_LOOK: Record<string, Omit<CaseDef, 'price' | 'targetRtp' | 'preset'>> 
 const GEM_DEFS: CaseDef[] = (GEM_CASES as GemCase[]).map((g) => ({ ...GEM_LOOK[g.slug]!, price: g.price, targetRtp: 9200, preset: g.items }))
 
 /** Every case as the admin set it, and what it builds into (same order) */
-export const caseDefs: CaseDef[] = [...CASE_DEFS, ...GEM_DEFS]
+export const caseDefs: CaseDef[] = [...CASE_DEFS, ...CS_DEFS, ...GEM_DEFS]
 const CASES: CaseDetails[] = caseDefs.map(buildCase)
 
 /** Builds a def again after an admin change. Opens and today's best stay: they are what happened, not settings */
@@ -407,6 +431,9 @@ const DEFAULT_HOME_LAYOUT: HomeLayout = {
     { id: AUTO_ROW, title: 'Weekly picks', theme: 'coop' },
     { id: 'featured', title: 'Featured cases', cases: ['zloty-rush', 'warsaw-nights', 'pierogi-pack', 'kurwa-classic', 'babcias-box', 'vodka-drop', 'golden-kielbasa', 'budget-boom'] },
     { id: 'polish-classics', title: 'Polish classics', cases: ['babcias-box', 'vodka-drop', 'golden-kielbasa', 'kurwa-classic', 'pierogi-pack'] },
+    { id: 'cs-memes', title: 'CS memes', cases: ['ping-999', 'flashbang', 'vac', 'negev', 'zeus'] },
+    { id: 'old-school', title: 'Old school', cases: ['dust-ii', 'stuck', 'banana', 'bhop', 'one-six'] },
+    { id: 'pro-scene', title: 'Pro scene', cases: ['level-10', 'yellow-army', 'smurf', 'tryhard', 'major'] },
   ],
   cards: { pieklo: 'wide', 'zloty-rush': 'tall', 'warsaw-nights': 'wide', mafia: 'full', 'babcias-box': 'full', 'vodka-drop': 'full' },
 }
