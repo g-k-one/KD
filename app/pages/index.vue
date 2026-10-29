@@ -46,8 +46,9 @@ const allCases = computed(() => (data.value?.sections ?? []).flatMap((s) => s.ca
 // Bento cells from the home layout (desktop): a case set to wide takes a 2×1 cell, tall a 1×2 cell, each showing its
 // shaped picture; they go first so the rows fill. Phones keep the even grid; a themed row keeps its scene's look.
 // A tall cell needs a second row to stretch into: a one-row section (5 cases or fewer) keeps it square.
+// Sorted or filtered, every card is standard: the cells keep the chosen order instead of the shaped ones jumping first
 const shapeOf = (c: CaseSummary, s: CaseSection) =>
-  s.theme ? undefined : c.card === 'wide' && c.art?.wide ? ('wide' as const) : c.card === 'tall' && c.art?.tall && s.cases.length > 5 ? ('tall' as const) : undefined
+  s.theme || filters.isActive.value ? undefined : c.card === 'wide' && c.art?.wide ? ('wide' as const) : c.card === 'tall' && c.art?.tall && s.cases.length > 5 ? ('tall' as const) : undefined
 const SHAPE_CELL = { wide: 'lg:order-first lg:col-span-2', tall: 'lg:order-first lg:row-span-2' } as const
 // Phones: every row is the two-column grid, no sideways swiping. A short row (one desktop row or less) with an odd
 // count drops its last card there, so no case stands alone on a line; the big catalog below still has every case

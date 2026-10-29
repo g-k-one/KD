@@ -404,11 +404,12 @@ const toSummary = ({ items: _i, odds: _o, oddsVersion: _v, kurwadrop: _k, ...s }
 
 /** The row that fills itself: five cases a week, none of them from the first row */
 export const AUTO_ROW = 'weekly'
-// One row per CS line, closing on the 5-column desktop grid: CS memes is eight cases with Negev wide and Zeus tall
-// (10 cells, two rows), the other two are five standard cards (one row)
+// One row per CS line, cheapest first (on desktop the wide and tall cells still go first), closing on the 5-column
+// grid: CS memes is eight cases with Negev wide and Zeus tall (10 cells, two rows), the other two are five standard
+// cards (one row)
 const DEFAULT_HOME_LAYOUT: HomeLayout = {
   sections: [
-    { id: 'cs-memes', title: 'CS memes', cases: ['negev', 'zeus', 'eco-round', 'ping-999', 'flashbang', 'vac', 'rush-b', 'noscope'] },
+    { id: 'cs-memes', title: 'CS memes', cases: ['eco-round', 'ping-999', 'flashbang', 'vac', 'rush-b', 'negev', 'zeus', 'noscope'] },
     { id: AUTO_ROW, title: 'Weekly picks', theme: 'coop' },
     { id: 'old-school', title: 'Old school', cases: ['dust-ii', 'stuck', 'banana', 'bhop', 'one-six'] },
     { id: 'pro-scene', title: 'Pro scene', cases: ['rank-10', 'yellow-army', 'smurf', 'tryhard', 'major'] },
