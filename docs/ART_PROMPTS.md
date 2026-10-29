@@ -370,9 +370,9 @@ Line palette: polished gold, crimson velvet and deep amber, rich sparkle on meta
 
 ---
 
-## 9. CS-кейсы: 20 штук, 4 линейки, у каждой свой стиль
+## 9. CS-кейсы: 15 штук, 3 линейки, у каждой свой стиль
 
-Кейсы про сам Counter-Strike: мемы, карты и 1.6, про-сцена, легендарные скины. Карточка та же, что в разделе 8: квадрат, одна идея и один крупный предмет, прозрачный фон, читается в 104 px.
+Кейсы про сам Counter-Strike: мемы, карты и 1.6, про-сцена. Линейку со скинами (Skiny) GK убрал 2026-10-29: копии настоящих скинов не встают в ряд с остальными; пробы лежат в `_ARCHIVE/old_versions_2026-10-29/skiny-dropped/`. Карточка та же, что в разделе 8: квадрат, одна идея и один крупный предмет, прозрачный фон, читается в 104 px.
 
 Главное отличие от раздела 8: **у каждой линейки свой мини-стиль**, а курица не обязательна. Ряд на главной узнаётся по стилю с первого взгляда, бренд держится на одной и той же курице (глаза навыкате, без бровей, никогда не злая), которая появляется в стиле своей линейки.
 
@@ -385,7 +385,7 @@ FACEIT и NAVI здесь только намёком: цвета и настр�
 
 ### Как генерировать
 
-1. **Образцы:** первым всегда `public/img/_new/ref-chicken.png` (курица в панике); он задаёт только характер курицы, не стиль. Вторым — одобренная проба своей линейки: `vac`, `one-six`, `major`, `asiimov`. Она держит стиль внутри линейки.
+1. **Образцы:** первым всегда `public/img/_new/ref-chicken.png` (курица в панике); он задаёт только характер курицы, не стиль. Вторым — одобренная проба своей линейки: `vac`, `one-six`, `major`. Она держит стиль внутри линейки.
 2. **Промпт:** общий блок → блок курицы (один из двух) → стиль линейки → сцена кейса → палитра линейки.
 3. **Файл и конвертация** — как в разделе 8: `public/img/_new/cases/<slug>.png` (1024×1024, прозрачный) → `python scripts/case-art.py` → `public/img/cases/<slug>.webp`.
 4. **Через fal** (Claude делает сам): `openai/gpt-image-2.5/sunburst/edit`, `quality: medium`, `background: transparent`, 1024×1024, оба образца в `image_urls`.
@@ -429,7 +429,6 @@ style. The second attached image is the approved style reference for this line: 
 | 7. Memy | стикер | 0,99–7,99 | high | Ping 999, Flashbang, VAC, Negev, Zeus |
 | 8. Old School | low-poly 2003 | 4,90–29,90 | medium | Dust II, Stuck, Banana, Bhop, 1.6 |
 | 9. Pro Scene | хром на сцене | 39–199 | high | Level 10, Yellow Army, Smurf, Tryhard, Major |
-| 10. Skiny | мотив скина | 299–1999 | extreme | Hyper Beast, Asiimov, Howl, Fade, Dragon Lore |
 
 ---
 
@@ -517,34 +516,3 @@ Palette: chrome, gold, electric blue, magenta stage light.
 - **smurf:** `Scene: the chicken mascot, full body, standing in a relaxed three-quarter pose in a cheap disguise: black plastic glasses with a fake nose and moustache and a backwards cap; it rests a gold-plated AK-47 casually on its shoulder, gripped firmly by one wing, and waves hello with the other wing, trying to look innocent.`
 - **tryhard:** `Scene: a compact glowing RGB mechanical gaming keyboard seen at an angle, smoking from overuse, a few keycaps flying off, a big RGB gaming headset lying on top of it. The whole keyboard, both of its ends, fully inside the frame.`
 - **major** (стиль линейки взят с него): `Scene: a huge gleaming championship trophy cup; the chicken mascot has dived head-first into the cup, only its yellow feet and tail feathers stick out of the top, kicking in panic.`
-
----
-
-### Линейка 10. Skiny — мотив скина, хайроллер, extreme
-
-Без бархата и подставок: каждый кейс нарисован языком своего скина, мотив скина собран вокруг оружия в компактную эмблему. **Оружие обязано выглядеть как настоящий скин** — в промпте подробно описывается его раскраска и что нельзя (например, «не красить AWP в золото»). Второй образец — `asiimov`.
-
-Стиль:
-```
-Style: the icon is drawn in the design language of the weapon skin itself, as if the skin's artwork came alive
-around the weapon. Bold graphic illustration with crisp clean shapes, rich gradients and glossy highlights on the
-weapon; the skin's motif wraps around and behind the weapon as one compact emblem. No cushion, no velvet, no display
-stand, no box.
-```
-Палитра — своя у каждого кейса (в конце промпта).
-
-| slug | Имя | Цена | Риск | Курица |
-|---|---|---|---|---|
-| `hyper-beast` | Hyper Beast | 29900 | extreme | нет |
-| `asiimov` | Asiimov | 49900 | extreme | нет |
-| `howl` | Howl | 79900 | extreme | нет |
-| `fade` | Fade | 119900 | extreme | перо |
-| `dragon-lore` | Dragon Lore | 199900 | extreme | нет |
-
-- **hyper-beast:** `The weapon must look EXACTLY like the real CS:GO / CS2 skin 'M4A1-S | Hyper Beast': the rifle with its long silencer is covered in a wild psychedelic graffiti monster: a grinning beast face with big sharp white teeth and red eyes on the receiver, swirling shapes in neon cyan-teal, hot pink, lime-yellow and purple with bold black outlines all along the body, stock and silencer. Scene: that M4A1-S angled diagonally; behind it the same grinning graffiti beast bursts out as a big face with sharp teeth, surrounded by a few compact neon paint splashes and drips. Palette: neon cyan, hot pink, lime yellow, purple, black ink.`
-- **asiimov** (стиль линейки взят с него): `Scene: an AWP sniper rifle with the real Asiimov finish (white body with orange and black sci-fi panels), angled diagonally; around and behind it float abstract geometric shapes in the same Asiimov look: hard-edged triangles, hexagon grid fragments, thin concentric circles and angular armour-panel pieces, arranged tightly around the rifle. Palette: clean white, signal orange, matte black, a touch of cool grey.`
-- **howl:** `The weapon must look EXACTLY like the real CS:GO / CS2 skin 'M4A4 | Howl' (the famous contraband skin): at least 70% of the rifle's surface is painted a BRIGHT, saturated cherry red, clearly red at a glance, not black and not dark. On the side of the receiver and magazine well a big stylised snarling wolf head in cream-white and orange with bold black outlines, like an old-school tattoo; thin orange-yellow flame swirls on the red handguard. Only the grip, the tip of the barrel and small details are black. Scene: that bright red M4A4 angled diagonally on top; behind it a big snarling cream-and-orange tattoo-style wolf head howling, framed by a few compact orange flames that stay close to it. The red rifle stays the brightest, most readable shape. Palette: bright cherry red, orange, cream white, black ink.`
-- **fade:** `Scene: a karambit knife with the real Fade finish (a pink, purple and gold gradient), blade curving up, wrapped in flowing liquid ribbons of the same gradient, like ink swirling in water; one chicken feather caught in the ribbons, also fading from pink to purple to gold. Palette: hot pink, violet, molten gold.` (блок курицы: «only ONE of its white feathers appears in this image»)
-- **dragon-lore** — в два шага, по образцам GK: `public/img/_new/ref-dragon-lore-weapon.png` (настоящая AWP) и `ref-dragon-lore-emblem.png` (эмблема скина). Без них модель рисует не тот скин.
-  1. Сцена (образцы: оружие, эмблема, `asiimov`): `Attached images: (1) the real AWP skin: copy this rifle's paint job EXACTLY: pale cream-yellow body and stock covered in a golden Celtic knotwork dragon whose head breathes fire towards the front, a red-orange fire gradient on the front of the body, yellow-black-orange harlequin diamond pattern on the barrel, the scope and the butt plate, dark olive parts in between. (2) the skin's emblem: a golden Celtic knotwork dragon roaring and breathing a stream of golden fire, surrounded by orange flames. (3) the line's style reference. Scene: the AWP from image 1, complete and angled diagonally; the golden Celtic knotwork dragon from image 2 comes alive off the paint job and coils around the rifle, its knotted body wrapping the stock and body, its roaring head rising above the scope and breathing a stream of golden fire along the barrel; a few compact orange flames and harlequin diamond shapes around them. No rhombus frame. Palette: cream yellow, antique gold, harlequin yellow and black, fire orange and red.`
-  2. Объёмное оружие (образцы: результат шага 1, оружие, `asiimov`, `howl`): `Edit image 1. Keep its composition, the dragon, the flames and the diamond shapes exactly as they are. Re-render ONLY the AWP as a glossy 3D model render, the same way the rifles are rendered in images 3 and 4: real volume and thickness, bevelled edges, metallic reflections on the barrel, scope and bolt, soft studio key light from the top left, a warm rim light, crisp specular highlights. The paint job must match image 2 EXACTLY.`
