@@ -102,7 +102,7 @@ KD-монеты с перьями (`goldBurst`) — только у KURWADROP (�
 
 **Кит контролов** — всегда переиспользуем: `UiInput` (все поля), `UiSelect`, `UiSegmented` (×1…×5, плитка/линии), `UiChip` (пресеты и переключатели; `variant="field"` в ряду полей, тона coin/gold для ⚡ и KURWADROP), `UiButton`. Выставленный фильтр = `kd-field-set`.
 
-Компоненты: `FxBurst` (CSS, на месте дропа), `useForge` / `FxFire` (WebGL-частицы), `useExtrude` (Объём — объёмный текст, `public/vendor/extrude`; собирается из pawn: `node tools/extrude-lab.mjs --vendor`, описание — pawn `docs/EXTRUDE.md`), `useSfx`, `useHaptics`.
+Компоненты: `FxBurst` (CSS, на месте дропа), `useForge` / `FxFire` (WebGL-частицы), `useExtrude` (Слиток, бывш. «Объём» — объёмный текст, `public/vendor/extrude`; собирается из pawn: `node tools/ingot-lab.mjs --vendor` (раньше `extrude-lab.mjs`), описание — pawn `docs/INGOT.md`), `useSfx`, `useHaptics`.
 
 ## Рулетка кейса (case/Reel.vue)
 
