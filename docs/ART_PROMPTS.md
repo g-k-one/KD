@@ -465,7 +465,7 @@ Palette: alarm red, toxic chat-green, flashbang white, black ink.
 - **rush-b:** `Scene: the chicken mascot sprinting flat out towards the viewer in a reckless all-in rush, seen three-quarter from the front, gripping a P90 submachine gun with both wings, legs spinning into a cartoon blur of motion lines, crest and feathers blown back, beak wide open in a joyful yell, a small puff of sand kicked up behind its feet.`
 - **noscope:** `Scene: an AWP sniper rifle caught mid-spin in a full 360-degree turn, drawn complete and kept compact, surrounded by one big round swirl of motion lines that circles it; its scope has popped off and flies away with a little comic pop, a small red X mark on the empty scope rail; a bright comic muzzle flash kept well inside the frame.` (прицел модель всё равно оставила на месте)
 
-Фигурные карточки ряда (`public/img/cases/wide/negev.webp` 800×450, `tall/zeus.webp` 360×640): квадратная картинка — первый образец, в промпте «Redraw image 1 as a WIDE landscape picture (16:9)» / «as a TALL portrait picture (9:16)», размер 1536×864 / 864×1536; ряд из 8 кейсов с одной широкой и одной высокой закрывает две строки по 5.
+Фигурные карточки ряда (`public/img/cases/wide/negev.webp` 968×440, `tall/zeus.webp` 468×1152 — ровно пропорции области картинки в карточке на десктопе, 2,2:1 и 0,41:1, иначе по краям пусто): первая широкая/высокая версия — образец, в промпте «re-fit it so the whole sticker silhouette has the SAME proportions as this frame (about 2.2 wide to 1 high)» / «(about 1 wide to 2.4 high)», размер 1536×704 / 640×1536, по 2 варианта и берётся тот, у которого пропорции ближе (слова «very wide / very tall» дают перебор); ряд из 8 кейсов с одной широкой и одной высокой закрывает две строки по 5.
 
 ---
 
