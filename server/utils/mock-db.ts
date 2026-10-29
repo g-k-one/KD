@@ -180,9 +180,9 @@ function contentsFor(def: CaseDef): string[] {
 
 
 // CS cases in five lines, each line in its own look (docs/ART_PROMPTS.md, sections 9 to 11). The square picture, plus a
-// wide or tall one where the home layout gives the case a bento cell; no full-scene art
+// wide or tall one where the home layout gives the case a bento cell, or a 2:3 scene for a full-art card (FACEIT)
 const CS_ART = { wide: null, tall: null, full: null }
-const csCase = (n: number, slug: string, name: string, price: number, risk: CaseSummary['risk'], tag?: CaseSummary['tag'], shaped?: 'wide' | 'tall'): CaseDef => ({
+const csCase = (n: number, slug: string, name: string, price: number, risk: CaseSummary['risk'], tag?: CaseSummary['tag'], shaped?: 'wide' | 'tall' | 'full'): CaseDef => ({
   id: `cs${n}`, slug, name, image: `/img/cases/${slug}.webp`, price, risk, ...(tag && { tag }), targetRtp: 9200, createdAt: '2026-10-29',
   art: shaped ? { ...CS_ART, [shaped]: `/img/cases/${shaped}/${slug}.webp` } : CS_ART,
 })
@@ -217,11 +217,11 @@ const CS_DEFS: CaseDef[] = [
   csCase(27, 'vitality', 'Vitality', 6900, 'medium', 'new'),
   csCase(28, 'navi', 'NAVI', 9900, 'medium', 'hot'),
   // FACEIT: the brand's glossy 3D chicken in FACEIT orange (section 11), the risk climbing with the level
-  csCase(29, 'faceit-level-1', 'FACEIT Lvl 1', 149, 'low', 'new'),
-  csCase(30, 'match-found', 'Match Found', 390, 'medium'),
-  csCase(31, 'anti-cheat', 'Anti-Cheat', 690, 'medium', 'hot'),
-  csCase(32, 'elo-climb', 'ELO Climb', 1290, 'high'),
-  csCase(33, 'faceit-level-10', 'FACEIT Lvl 10', 2490, 'extreme', 'new'),
+  csCase(29, 'faceit-level-1', 'FACEIT Lvl 1', 149, 'low', 'new', 'full'),
+  csCase(30, 'match-found', 'Match Found', 390, 'medium', undefined, 'full'),
+  csCase(31, 'anti-cheat', 'Anti-Cheat', 690, 'medium', 'hot', 'full'),
+  csCase(32, 'elo-climb', 'ELO Climb', 1290, 'high', undefined, 'full'),
+  csCase(33, 'faceit-level-10', 'FACEIT Lvl 10', 2490, 'extreme', 'new', 'full'),
 ]
 
 /**
@@ -433,7 +433,8 @@ const DEFAULT_HOME_LAYOUT: HomeLayout = {
     { id: 'cs-memes', title: 'CS memes', cases: ['eco-round', 'ping-999', 'flashbang', 'vac', 'rush-b', 'negev', 'zeus', 'noscope'] },
     { id: 'old-school', title: 'Old school', cases: ['dust-ii', 'stuck', 'banana', 'bhop', 'one-six'] },
   ],
-  cards: { negev: 'wide', zeus: 'tall' },
+  // FACEIT: every card is a full-art scene
+  cards: { negev: 'wide', zeus: 'tall', ...Object.fromEntries(['faceit-level-1', 'match-found', 'anti-cheat', 'elo-climb', 'faceit-level-10'].map((s) => [s, 'full' as const])) },
 }
 let homeLayout: HomeLayout = structuredClone(DEFAULT_HOME_LAYOUT)
 export function setCaseCard(slug: string, kind: HomeCardKind) {
