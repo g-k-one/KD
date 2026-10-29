@@ -426,24 +426,26 @@ style. The second attached image is the approved style reference for this line: 
 
 | Линейка | Стиль | Цена, монет | Риск | Кейсы |
 |---|---|---|---|---|
-| 7. Memy | стикер | 0,49–9,99 | high | Eco Round, Ping 999, Flashbang, VAC, Rush B, Negev, Zeus, 360 Noscope |
+| 7. Memy | чистый мем-мультик | 0,49–9,99 | high | Eco Round, Ping 999, Flashbang, VAC, Rush B, Negev, Zeus, 360 Noscope |
 | 8. Old School | low-poly 2003 | 4,90–29,90 | medium | Dust II, Stuck, Banana, Bhop, 1.6 |
 | 9. Pro Scene | хром на сцене | 39–199 | high | Ace, Clutch, Smurf, Tryhard, Major |
 
 ---
 
-### Линейка 7. Memy — стикер, дёшево, high
+### Линейка 7. Memy — чистый мем-мультик, дёшево, high
 
-Стиль:
+Стиль перерисован 2026-10-29. Раньше был стикер с толстой белой обводкой, звёздочками и линиями движения: в ряду из восьми на тёмном сайте белого выходило 25–38% картинки, и GK сказал «тяжело смотрится». Срезать обводку программно пробовали, вышло грязно. Старые картинки лежат в `_ARCHIVE/old_versions_2026-10-29/memes-sticker/`. Сейчас белого 0–9%.
+
+Стиль (образцы: `vac` для предметов, `flashbang` для курицы):
 ```
-Style: die-cut meme sticker. Flat 2D cartoon, thick black ink outlines, bold flat colours with one hard cel shadow,
-oversaturated 'deep-fried' colours, comic motion lines and impact stars, and a thick white sticker border running
-around the whole silhouette. Like a chat sticker pack.
+Style: clean bold meme cartoon, like a premium chat sticker but WITHOUT any white sticker border or outline around
+the silhouette: the silhouette ends directly in a thick dark charcoal ink outline against the transparent background.
+Flat bold colours with one soft cel shadow, a little glossy highlight, crisp and clean. The chicken's feathers are
+warm cream, not pure white. Minimal effects: no stars, no sparkles, no confetti, no scattered motion lines, no
+flying debris; at most one clean effect that IS the gag (the lightning on Zeus, the swooshes on 360 Noscope).
+Lots of breathing room around the subject.
 ```
-Палитра:
-```
-Palette: alarm red, toxic chat-green, flashbang white, black ink.
-```
+Палитра у каждого кейса своя: строка `Palette:` в конце промпта, белый только внутри символов.
 
 | slug | Имя | Цена | Риск | Курица |
 |---|---|---|---|---|
@@ -463,9 +465,9 @@ Palette: alarm red, toxic chat-green, flashbang white, black ink.
 - **zeus:** `Scene: the chicken mascot, full body, holding a small yellow Zeus taser in its own wing and accidentally zapping itself: its whole body flashing with electric-blue lightning, a cartoon x-ray showing its skeleton through the feathers, feathers standing on end, googly eyes spinning, beak wide open. The taser is fully visible in its wing.`
 - **eco-round:** `Scene: a big brown leather wallet flung wide open and completely empty, a cartoon moth fluttering out of it, a single small pistol lying in the open wallet as the only thing left, one lonely coin rolling away; a broke, funny 'eco round' mood. Palette: worn brown leather, toxic chat-green, alarm red accents, flashbang white, black ink.`
 - **rush-b:** `Scene: the chicken mascot sprinting flat out towards the viewer in a reckless all-in rush, seen three-quarter from the front, gripping a P90 submachine gun with both wings, legs spinning into a cartoon blur of motion lines, crest and feathers blown back, beak wide open in a joyful yell, a small puff of sand kicked up behind its feet.`
-- **noscope:** `Scene: an AWP sniper rifle caught mid-spin in a full 360-degree turn, drawn complete and kept compact, surrounded by one big round swirl of motion lines that circles it; its scope has popped off and flies away with a little comic pop, a small red X mark on the empty scope rail; a bright comic muzzle flash kept well inside the frame.` (прицел модель всё равно оставила на месте)
+- **noscope:** `Scene: an AWP sniper rifle caught mid-spin in a full 360-degree turn, drawn complete and kept compact, surrounded by one big round swirl of motion lines that circles it; its scope has popped off and flies away with a little comic pop, a small red X mark on the empty scope rail; a bright comic muzzle flash kept well inside the frame.` (прицел модель всё равно оставила на месте). В чистом стиле: `two bold thick curved motion swooshes in red and orange wrapping fully around it`, с одним росчерком вращение не читалось.
 
-Фигурные карточки ряда (`public/img/cases/wide/negev.webp` 968×440, `tall/zeus.webp` 468×1152 — ровно пропорции области картинки в карточке на десктопе, 2,2:1 и 0,41:1, иначе по краям пусто): первая широкая/высокая версия — образец, в промпте «re-fit it so the whole sticker silhouette has the SAME proportions as this frame (about 2.2 wide to 1 high)» / «(about 1 wide to 2.4 high)», размер 1536×704 / 640×1536, по 2 варианта и берётся тот, у которого пропорции ближе (слова «very wide / very tall» дают перебор); ряд из 8 кейсов с одной широкой и одной высокой закрывает две строки по 5.
+Фигурные карточки ряда (`public/img/cases/wide/negev.webp` 968×440, `tall/zeus.webp` 468×1152 — ровно пропорции области картинки в карточке на десктопе, 2,2:1 и 0,41:1, иначе по краям пусто): первая широкая/высокая версия — образец, в промпте «re-fit it so the whole sticker silhouette has the SAME proportions as this frame (about 2.2 wide to 1 high)» / «(about 1 wide to 2.4 high)», размер 1536×704 / 640×1536, по 2 варианта и берётся тот, у которого пропорции ближе (слова «very wide / very tall» дают перебор); ряд из 8 кейсов с одной широкой и одной высокой закрывает две строки по 5. Фигурные версии рисуются правкой уже одобренной квадратной картинки; в webp рисунок обрезается по контуру и вписывается в рамку с полем 3%.
 
 ---
 
