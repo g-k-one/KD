@@ -179,18 +179,19 @@ function contentsFor(def: CaseDef): string[] {
 }
 
 
-// CS cases in three lines, each line in its own look (docs/ART_PROMPTS.md, section 9). Only the square picture so far:
-// no wide, tall or full-scene art
+// CS cases in three lines, each line in its own look (docs/ART_PROMPTS.md, section 9). The square picture, plus a
+// wide or tall one where the home layout gives the case a bento cell; no full-scene art
 const CS_ART = { wide: null, tall: null, full: null }
-const csCase = (n: number, slug: string, name: string, price: number, risk: CaseSummary['risk'], tag?: CaseSummary['tag']): CaseDef => ({
-  id: `cs${n}`, slug, name, image: `/img/cases/${slug}.webp`, price, risk, ...(tag && { tag }), targetRtp: 9200, createdAt: '2026-10-29', art: CS_ART,
+const csCase = (n: number, slug: string, name: string, price: number, risk: CaseSummary['risk'], tag?: CaseSummary['tag'], shaped?: 'wide' | 'tall'): CaseDef => ({
+  id: `cs${n}`, slug, name, image: `/img/cases/${slug}.webp`, price, risk, ...(tag && { tag }), targetRtp: 9200, createdAt: '2026-10-29',
+  art: shaped ? { ...CS_ART, [shaped]: `/img/cases/${shaped}/${slug}.webp` } : CS_ART,
 })
 const CS_DEFS: CaseDef[] = [
   csCase(1, 'ping-999', 'Ping 999', 99, 'high', 'new'),
   csCase(2, 'flashbang', 'Flashbang', 199, 'high'),
   csCase(3, 'vac', 'VAC', 299, 'high', 'hot'),
-  csCase(4, 'negev', 'Negev', 499, 'high'),
-  csCase(5, 'zeus', 'Zeus', 799, 'high'),
+  csCase(4, 'negev', 'Negev', 499, 'high', undefined, 'wide'),
+  csCase(5, 'zeus', 'Zeus', 799, 'high', undefined, 'tall'),
   csCase(6, 'dust-ii', 'Dust II', 490, 'medium', 'new'),
   csCase(7, 'stuck', 'Stuck', 990, 'medium'),
   csCase(8, 'banana', 'Banana', 1490, 'medium'),
@@ -201,6 +202,9 @@ const CS_DEFS: CaseDef[] = [
   csCase(13, 'smurf', 'Smurf', 9900, 'high'),
   csCase(14, 'tryhard', 'Tryhard', 14900, 'high'),
   csCase(15, 'major', 'Major', 19900, 'high', 'hot'),
+  csCase(16, 'eco-round', 'Eco Round', 49, 'high'),
+  csCase(17, 'rush-b', 'Rush B', 349, 'high', 'new'),
+  csCase(18, 'noscope', '360 Noscope', 999, 'high'),
 ]
 
 /**
@@ -400,16 +404,16 @@ const toSummary = ({ items: _i, odds: _o, oddsVersion: _v, kurwadrop: _k, ...s }
 
 /** The row that fills itself: five cases a week, none of them from the first row */
 export const AUTO_ROW = 'weekly'
-// One row per CS line, five cases each so a row closes on the 5-column desktop grid. All standard cards: the CS cases
-// only have their square picture so far
+// One row per CS line, closing on the 5-column desktop grid: CS memes is eight cases with Negev wide and Zeus tall
+// (10 cells, two rows), the other two are five standard cards (one row)
 const DEFAULT_HOME_LAYOUT: HomeLayout = {
   sections: [
-    { id: 'cs-memes', title: 'CS memes', cases: ['ping-999', 'flashbang', 'vac', 'negev', 'zeus'] },
+    { id: 'cs-memes', title: 'CS memes', cases: ['negev', 'zeus', 'eco-round', 'ping-999', 'flashbang', 'vac', 'rush-b', 'noscope'] },
     { id: AUTO_ROW, title: 'Weekly picks', theme: 'coop' },
     { id: 'old-school', title: 'Old school', cases: ['dust-ii', 'stuck', 'banana', 'bhop', 'one-six'] },
     { id: 'pro-scene', title: 'Pro scene', cases: ['rank-10', 'yellow-army', 'smurf', 'tryhard', 'major'] },
   ],
-  cards: {},
+  cards: { negev: 'wide', zeus: 'tall' },
 }
 let homeLayout: HomeLayout = structuredClone(DEFAULT_HOME_LAYOUT)
 export function setCaseCard(slug: string, kind: HomeCardKind) {

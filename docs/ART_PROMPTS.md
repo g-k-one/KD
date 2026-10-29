@@ -370,7 +370,7 @@ Line palette: polished gold, crimson velvet and deep amber, rich sparkle on meta
 
 ---
 
-## 9. CS-кейсы: 15 штук, 3 линейки, у каждой свой стиль
+## 9. CS-кейсы: 18 штук, 3 линейки, у каждой свой стиль
 
 Кейсы про сам Counter-Strike: мемы, карты и 1.6, про-сцена. Линейку со скинами (Skiny) GK убрал 2026-10-29: копии настоящих скинов не встают в ряд с остальными; пробы лежат в `_ARCHIVE/old_versions_2026-10-29/skiny-dropped/`. Карточка та же, что в разделе 8: квадрат, одна идея и один крупный предмет, прозрачный фон, читается в 104 px.
 
@@ -426,7 +426,7 @@ style. The second attached image is the approved style reference for this line: 
 
 | Линейка | Стиль | Цена, монет | Риск | Кейсы |
 |---|---|---|---|---|
-| 7. Memy | стикер | 0,99–7,99 | high | Ping 999, Flashbang, VAC, Negev, Zeus |
+| 7. Memy | стикер | 0,49–9,99 | high | Eco Round, Ping 999, Flashbang, VAC, Rush B, Negev, Zeus, 360 Noscope |
 | 8. Old School | low-poly 2003 | 4,90–29,90 | medium | Dust II, Stuck, Banana, Bhop, 1.6 |
 | 9. Pro Scene | хром на сцене | 39–199 | high | Level 10, Yellow Army, Smurf, Tryhard, Major |
 
@@ -447,17 +447,25 @@ Palette: alarm red, toxic chat-green, flashbang white, black ink.
 
 | slug | Имя | Цена | Риск | Курица |
 |---|---|---|---|---|
+| `eco-round` | Eco Round | 49 | high | нет |
 | `ping-999` | Ping 999 | 99 | high | нет |
 | `flashbang` | Flashbang | 199 | high | главная |
 | `vac` | VAC | 299 | high | мелькает |
+| `rush-b` | Rush B | 349 | high | главная |
 | `negev` | Negev | 499 | high | нет |
 | `zeus` | Zeus | 799 | high | главная |
+| `noscope` | 360 Noscope | 999 | high | нет |
 
 - **ping-999:** `Scene: a home Wi-Fi router on fire: its antennas melted and drooping, flames and black smoke puffing out of the top, its little status lights blinking red, a pair of big panicked googly eyes on its front.`
 - **flashbang:** `Scene: the chicken mascot, full body, standing coolly with huge black sunglasses on, totally unbothered, holding up a CS2 flashbang grenade with the pin pulled in one wing, the pin ring hanging off its other wing; the grenade glows bright white. A smug closed-beak grin.`
 - **vac** (стиль линейки взят с него): `Scene: a red ban hammer with a SHORT stubby wooden handle, the whole hammer drawn complete and angled diagonally, slamming down; only the chicken's two yellow feet stick out from under the hammer head, feathers flying; a white circle-slash 'prohibited' symbol on the hammer head. The end of the handle is fully visible inside the frame.`
 - **negev:** `Scene: a Negev light machine gun on its bipod, angled diagonally and drawn complete from stock to muzzle, standing on a huge heap of shiny brass shell casings; a compact comic muzzle flash at the barrel tip, kept well inside the frame; a few casings flying.`
 - **zeus:** `Scene: the chicken mascot, full body, holding a small yellow Zeus taser in its own wing and accidentally zapping itself: its whole body flashing with electric-blue lightning, a cartoon x-ray showing its skeleton through the feathers, feathers standing on end, googly eyes spinning, beak wide open. The taser is fully visible in its wing.`
+- **eco-round:** `Scene: a big brown leather wallet flung wide open and completely empty, a cartoon moth fluttering out of it, a single small pistol lying in the open wallet as the only thing left, one lonely coin rolling away; a broke, funny 'eco round' mood. Palette: worn brown leather, toxic chat-green, alarm red accents, flashbang white, black ink.`
+- **rush-b:** `Scene: the chicken mascot sprinting flat out towards the viewer in a reckless all-in rush, seen three-quarter from the front, gripping a P90 submachine gun with both wings, legs spinning into a cartoon blur of motion lines, crest and feathers blown back, beak wide open in a joyful yell, a small puff of sand kicked up behind its feet.`
+- **noscope:** `Scene: an AWP sniper rifle caught mid-spin in a full 360-degree turn, drawn complete and kept compact, surrounded by one big round swirl of motion lines that circles it; its scope has popped off and flies away with a little comic pop, a small red X mark on the empty scope rail; a bright comic muzzle flash kept well inside the frame.` (прицел модель всё равно оставила на месте)
+
+Фигурные карточки ряда (`public/img/cases/wide/negev.webp` 800×450, `tall/zeus.webp` 360×640): квадратная картинка — первый образец, в промпте «Redraw image 1 as a WIDE landscape picture (16:9)» / «as a TALL portrait picture (9:16)», размер 1536×864 / 864×1536; ряд из 8 кейсов с одной широкой и одной высокой закрывает две строки по 5.
 
 ---
 
