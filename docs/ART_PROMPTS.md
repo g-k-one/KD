@@ -534,49 +534,50 @@ Level 10 (намёк на FACEIT) и Yellow Army (намёк на NAVI) заме
 
 ## 10. Команды: 10 кейсов, настоящие логотипы
 
-Линейка Teams: логотипы топ-команд CS2 в виде вышитых шевронов. В отличие от раздела 9, здесь **настоящие логотипы и названия** (GK, 2026-10-29). Для прототипа это нормально, а перед запуском живого сайта нужно разрешение команд. Курицы нет.
+Линейка Teams: настоящие логотипы топ-команд CS2 и их названия (GK, 2026-10-29). Для прототипа это нормально, а перед запуском живого сайта нужно разрешение команд. Курицы нет.
+
+**Как сейчас (2026-10-30):** логотип — гладкая глянцевая 3D-эмблема, мягкая, как пластиковая игрушка, в нашем стиле курицы и FACEIT. Она наклонена и выскакивает на зрителя. Вокруг одна-две крупные вещи из атрибутики, сзади простой мягкий градиент в цветах команды с крупными пятнами света. Контраст умеренный, без шершавой фактуры. Первый 3D-вариант был «кинематографичным»: резкий контраст, детальные арены и грозы. GK его отклонил («не наш стиль, нужен более гладкий, меньше контраста»), он лежит в `_ARCHIVE/old_versions_2026-10-30/teams-3d-contrast/`. Карточка вида «full», как у FACEIT: сцена 2:3 на всю карточку, `public/img/cases/full/<slug>.webp` 480×720. Квадратная версия без фона (`<slug>.webp`: тот же 3D-логотип и немного атрибутики, вырезано) нужна для барабана, истории и страницы кейса.
+
+Раньше были вышитые шевроны, их GK отклонил. У шевронов выходили разные скругления и разные по толщине канты, а их углы не шли параллельно краям карточки: у карточки скругление 24 px, а шеврон стоит с отступами 9 px сверху и 16 px по бокам. Шевроны и проба «вышивка на всю карточку» лежат в `_ARCHIVE/old_versions_2026-10-30/teams-patches/`, ещё более ранние пробы — в `_ARCHIVE/old_versions_2026-10-29/teams-*`.
 
 ### Как генерировать
 
-1. **Образцы:** первым идёт настоящий логотип команды с Liquipedia (версия для тёмной темы или общая), на сером фоне 1024×1024 с логотипом ~80% кадра. По памяти модель рисует логотипы неточно: G2 и Vitality выходили с ошибками. Вторым образцом идёт одобренный шеврон этой линейки. Пробы по памяти и вырезанные по контуру версии лежат в `_ARCHIVE/old_versions_2026-10-29/teams-from-memory/` и `teams-diecut/`.
-2. **Форма:** квадрат со скруглёнными углами на весь кадр. Вырезанный по контуру шеврон заполнял квадрат только на 50–70%, GK сказал «пустовато». Атрибутика команды заполняет все четыре угла. У каждой команды свой цвет основы и канта.
-3. **Через fal:** `openai/gpt-image-2.5/sunburst/edit`, `quality: medium`, `background: transparent`, 1024×1024. Конвертация та же: `python scripts/case-art.py`.
+1. **Образцы:** первым идёт настоящий логотип команды с Liquipedia (версия для тёмной темы или общая), на сером фоне 1024×1024 с логотипом ~80% кадра. Логотипы лежат в scratchpad сессии, при необходимости их можно скачать заново через Liquipedia API. По памяти модель рисует логотипы неточно. Вторым образцом идёт одобренная гладкая сцена этой линейки (`navi`), для первой пробы ещё `match-found` и `vodka-drop`.
+2. **Сцена:** `image_size` 1024×1536, `background: opaque`. Логотип в верхних 55% кадра, нижние 40% спокойные и тёмные: там лежат название и цена.
+3. **Квадрат:** правка готовой сцены, 1024×1024, `background: transparent`: «тот же 3D-логотип, тот же ракурс, немного атрибутики вплотную, без фона, поля 8%». Конвертация обычная: `python scripts/case-art.py`.
 
-### Промпт (общий, меняются только сцена и палитра)
+### Промпт сцены (общий, меняются логотип, атрибутика и фон)
 
 ```
-Square icon for a loot case card on a dark website, transparent background outside the badge, must read at 100 px.
-No text or letters other than what is part of the team's own logo. No characters, no rotating rays or sunburst.
+Full-bleed vertical 2:3 background art for a loot-case card, filling the whole canvas edge to edge: no frame, no
+border, no rounded corners, no transparency.
 
-The FIRST attached image is the team's real official logo on a plain grey backdrop: reproduce its exact silhouette,
-proportions, letters and colours faithfully. Do not redesign, simplify, mirror or add anything to the logo; only render
-it as embroidery. Ignore the grey backdrop. The SECOND attached image is the previous version of this exact patch:
-keep its embroidery rendering, thread sheen and team attribute, but recompose it as described below.
+The FIRST attached image is the team's real official logo (<team>) on a grey backdrop: reproduce its exact shape,
+letters, proportions and colours faithfully, do not redesign or mirror it. The SECOND attached image is an approved
+card of this same line: match its style exactly: a smooth glossy 3D cartoon render like a premium mobile-game shop
+icon, soft rounded forms, clean smooth plastic-toy materials, soft studio lighting with gentle gradients and a warm
+rim light, moderate contrast, no gritty texture, no harsh black shadows, not cinematic, not photoreal.
 
-Style: an embroidered esports fan patch. Everything is stitched in thick glossy satin thread: long satin-stitch rows
-following each form, dense fill stitches, a raised puffy 3D embroidery look. Soft studio light shows the thread sheen.
-Like a premium official team merch patch photographed flat from above.
+Scene: the logo as a chunky, soft, rounded 3D toy emblem in smooth glossy <colour>, tilted dynamically and popping
+towards the viewer. Around it, a few big smooth team attributes: <one or two attributes>. Background: a simple soft
+gradient glow in <team colour> fading to deep charcoal, a few large soft bokeh circles, nothing busy.
 
-Composition: the patch is a ROUNDED-SQUARE badge that fills the whole square frame almost edge to edge (only a thin 3%
-transparent margin all round), with corners rounded about 12%. It is finished with a thick raised merrowed border in
-<border> thread. The twill base is <base>. Inside, the logo is as large as possible, and the team attribute fills all
-the remaining space and all four corners so almost no plain twill is left: <attribute>.
+Layout: the logo sits large in the UPPER 55% of the frame, centred, fully visible; the LOWER 40% is calmer and darker,
+because the card's name and price are printed there. No text, no light rays, beams or sunburst.
 ```
 
-| slug | Имя | Цена | Риск | Атрибутика | Кант / основа |
+| slug | Имя | Цена | Риск | Атрибутика | Цвет фона |
 |---|---|---|---|---|---|
-| `mongolz` | The MongolZ | 1290 | low | степь: синее небо, облака, холмы, юрта | золото |
-| `falcons` | Falcons | 1490 | low | перчатка сокольника и веер перьев | золото / тёмно-зелёная |
-| `mouz` | MOUZ | 1990 | low | глитч: смещённые неоновые красно-розовые копии логотипа и полосы помех | красный / чёрная |
-| `furia` | FURIA | 2490 | low | следы когтей через весь шеврон | белый / графит |
-| `astralis` | Astralis | 2990 | low | ночное небо: красно-фиолетовая туманность, несколько звёзд по углам | серебро / тёмно-синяя |
-| `g2` | G2 | 3490 | medium | катаны крестом и лепестки сакуры | белый / чёрная |
-| `spirit` | Spirit | 3990 | medium | тело дракона кольцами | серебро / тёмно-синяя |
-| `faze` | FaZe | 4990 | medium | шеврон — чёрная джерси с красными полосами | красный |
-| `vitality` | Vitality | 6900 | medium | фон — соты, сверху капает мёд | жёлтый |
-| `navi` | NAVI | 9900 | medium | вязаный шарф из угла в угол | жёлтый / чёрная |
-
-MOUZ и Astralis перерисованы 2026-10-29. Сыр и россыпь золотых звёзд GK не понравились, компьютерная мышка тоже. Лучше всего работает тёмная основа и логотип с белой обводкой, а атрибутика не должна перетягивать внимание. Отклонённые варианты лежат в `_ARCHIVE/old_versions_2026-10-29/teams-redo/`.
+| `mongolz` | The MongolZ | 1290 | low | стрелы, конский бунчук | синий и золотой |
+| `falcons` | Falcons | 1490 | low | изумрудные и золотые перья | изумрудный |
+| `mouz` | MOUZ | 1990 | low | мягкий глитч: розовая копия контура, неоновые крошки | красный и розовый |
+| `furia` | FURIA | 2490 | low | три белых следа когтей, листья | серый и зелёный |
+| `astralis` | Astralis | 2990 | low | звёздная пыль, две планетки, звёзды | красно-фиолетовый |
+| `g2` | G2 | 3490 | medium | катаны крестом, лепестки сакуры | тёмно-красный |
+| `spirit` | Spirit | 3990 | medium | ледяное облачко, кристаллы | ледяной синий |
+| `faze` | FaZe | 4990 | medium | красно-чёрные осколки, искры | красный |
+| `vitality` | Vitality | 6900 | medium | соты, капли мёда | янтарный |
+| `navi` | NAVI | 9900 | medium | фанатские шарфы, конфетти | тёплый жёлтый |
 
 Yellow Army из Pro Scene повторял кейс NAVI, поэтому заменён на Clutch.
 

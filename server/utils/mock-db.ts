@@ -205,17 +205,17 @@ const CS_DEFS: CaseDef[] = [
   csCase(16, 'eco-round', 'Eco Round', 49, 'high'),
   csCase(17, 'rush-b', 'Rush B', 349, 'high', 'new'),
   csCase(18, 'noscope', '360 Noscope', 999, 'high'),
-  // Teams: the real team logos as embroidered patches (section 10), the cheapest teams the safest
-  csCase(19, 'mongolz', 'The MongolZ', 1290, 'low', 'new'),
-  csCase(20, 'falcons', 'Falcons', 1490, 'low'),
-  csCase(21, 'mouz', 'MOUZ', 1990, 'low'),
-  csCase(22, 'furia', 'FURIA', 2490, 'low'),
-  csCase(23, 'astralis', 'Astralis', 2990, 'low'),
-  csCase(24, 'g2', 'G2', 3490, 'medium'),
-  csCase(25, 'spirit', 'Spirit', 3990, 'medium', 'hot'),
-  csCase(26, 'faze', 'FaZe', 4990, 'medium'),
-  csCase(27, 'vitality', 'Vitality', 6900, 'medium', 'new'),
-  csCase(28, 'navi', 'NAVI', 9900, 'medium', 'hot'),
+  // Teams: the real team logos as expressive glossy 3D emblems in a full-art scene (section 10), the cheapest teams the safest
+  csCase(19, 'mongolz', 'The MongolZ', 1290, 'low', 'new', 'full'),
+  csCase(20, 'falcons', 'Falcons', 1490, 'low', undefined, 'full'),
+  csCase(21, 'mouz', 'MOUZ', 1990, 'low', undefined, 'full'),
+  csCase(22, 'furia', 'FURIA', 2490, 'low', undefined, 'full'),
+  csCase(23, 'astralis', 'Astralis', 2990, 'low', undefined, 'full'),
+  csCase(24, 'g2', 'G2', 3490, 'medium', undefined, 'full'),
+  csCase(25, 'spirit', 'Spirit', 3990, 'medium', 'hot', 'full'),
+  csCase(26, 'faze', 'FaZe', 4990, 'medium', undefined, 'full'),
+  csCase(27, 'vitality', 'Vitality', 6900, 'medium', 'new', 'full'),
+  csCase(28, 'navi', 'NAVI', 9900, 'medium', 'hot', 'full'),
   // FACEIT: the brand's glossy 3D chicken in FACEIT orange (section 11), the risk climbing with the level
   csCase(29, 'faceit-level-1', 'FACEIT Lvl 1', 149, 'low', 'new', 'full'),
   csCase(30, 'match-found', 'Match Found', 390, 'medium', undefined, 'full'),
@@ -433,8 +433,14 @@ const DEFAULT_HOME_LAYOUT: HomeLayout = {
     { id: 'cs-memes', title: 'CS memes', cases: ['eco-round', 'ping-999', 'flashbang', 'vac', 'rush-b', 'negev', 'zeus', 'noscope'] },
     { id: 'old-school', title: 'Old school', cases: ['dust-ii', 'stuck', 'banana', 'bhop', 'one-six'] },
   ],
-  // FACEIT: every card is a full-art scene
-  cards: { negev: 'wide', zeus: 'tall', ...Object.fromEntries(['faceit-level-1', 'match-found', 'anti-cheat', 'elo-climb', 'faceit-level-10'].map((s) => [s, 'full' as const])) },
+  // FACEIT and Teams: every card is a full-art scene
+  cards: {
+    negev: 'wide',
+    zeus: 'tall',
+    ...Object.fromEntries(
+      ['faceit-level-1', 'match-found', 'anti-cheat', 'elo-climb', 'faceit-level-10', 'mongolz', 'falcons', 'mouz', 'furia', 'astralis', 'g2', 'spirit', 'faze', 'vitality', 'navi'].map((s) => [s, 'full' as const]),
+    ),
+  },
 }
 let homeLayout: HomeLayout = structuredClone(DEFAULT_HOME_LAYOUT)
 export function setCaseCard(slug: string, kind: HomeCardKind) {
