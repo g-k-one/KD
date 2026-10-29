@@ -524,3 +524,51 @@ Palette: chrome, gold, electric blue, magenta stage light.
 - **smurf:** `Scene: the chicken mascot, full body, standing in a relaxed three-quarter pose in a cheap disguise: black plastic glasses with a fake nose and moustache and a backwards cap; it rests a gold-plated AK-47 casually on its shoulder, gripped firmly by one wing, and waves hello with the other wing, trying to look innocent.`
 - **tryhard:** `Scene: a compact glowing RGB mechanical gaming keyboard seen at an angle, smoking from overuse, a few keycaps flying off, a big RGB gaming headset lying on top of it. The whole keyboard, both of its ends, fully inside the frame.`
 - **major** (стиль линейки взят с него): `Scene: a huge gleaming championship trophy cup; the chicken mascot has dived head-first into the cup, only its yellow feet and tail feathers stick out of the top, kicking in panic.`
+
+---
+
+## 10. Команды: 10 кейсов, настоящие логотипы
+
+Линейка Teams: логотипы топ-команд CS2 в виде вышитых шевронов. В отличие от раздела 9, здесь **настоящие логотипы и названия** (GK, 2026-10-29). Для прототипа это нормально, а перед запуском живого сайта нужно разрешение команд. Курицы нет.
+
+### Как генерировать
+
+1. **Образцы:** первым идёт настоящий логотип команды с Liquipedia (версия для тёмной темы или общая), на сером фоне 1024×1024 с логотипом ~80% кадра. По памяти модель рисует логотипы неточно: G2 и Vitality выходили с ошибками. Вторым образцом идёт одобренный шеврон этой линейки. Пробы по памяти и вырезанные по контуру версии лежат в `_ARCHIVE/old_versions_2026-10-29/teams-from-memory/` и `teams-diecut/`.
+2. **Форма:** квадрат со скруглёнными углами на весь кадр. Вырезанный по контуру шеврон заполнял квадрат только на 50–70%, GK сказал «пустовато». Атрибутика команды заполняет все четыре угла. У каждой команды свой цвет основы и канта.
+3. **Через fal:** `openai/gpt-image-2.5/sunburst/edit`, `quality: medium`, `background: transparent`, 1024×1024. Конвертация та же: `python scripts/case-art.py`.
+
+### Промпт (общий, меняются только сцена и палитра)
+
+```
+Square icon for a loot case card on a dark website, transparent background outside the badge, must read at 100 px.
+No text or letters other than what is part of the team's own logo. No characters, no rotating rays or sunburst.
+
+The FIRST attached image is the team's real official logo on a plain grey backdrop: reproduce its exact silhouette,
+proportions, letters and colours faithfully. Do not redesign, simplify, mirror or add anything to the logo; only render
+it as embroidery. Ignore the grey backdrop. The SECOND attached image is the previous version of this exact patch:
+keep its embroidery rendering, thread sheen and team attribute, but recompose it as described below.
+
+Style: an embroidered esports fan patch. Everything is stitched in thick glossy satin thread: long satin-stitch rows
+following each form, dense fill stitches, a raised puffy 3D embroidery look. Soft studio light shows the thread sheen.
+Like a premium official team merch patch photographed flat from above.
+
+Composition: the patch is a ROUNDED-SQUARE badge that fills the whole square frame almost edge to edge (only a thin 3%
+transparent margin all round), with corners rounded about 12%. It is finished with a thick raised merrowed border in
+<border> thread. The twill base is <base>. Inside, the logo is as large as possible, and the team attribute fills all
+the remaining space and all four corners so almost no plain twill is left: <attribute>.
+```
+
+| slug | Имя | Цена | Риск | Атрибутика | Кант / основа |
+|---|---|---|---|---|---|
+| `mongolz` | The MongolZ | 1290 | low | степь: синее небо, облака, холмы, юрта | золото |
+| `falcons` | Falcons | 1490 | low | перчатка сокольника и веер перьев | золото / тёмно-зелёная |
+| `mouz` | MOUZ | 1990 | low | фон — сыр с дырками | красный |
+| `furia` | FURIA | 2490 | low | следы когтей через весь шеврон | белый / графит |
+| `astralis` | Astralis | 2990 | low | созвездие золотых звёзд | золото / тёмно-бордовая |
+| `g2` | G2 | 3490 | medium | катаны крестом и лепестки сакуры | белый / чёрная |
+| `spirit` | Spirit | 3990 | medium | тело дракона кольцами | серебро / тёмно-синяя |
+| `faze` | FaZe | 4990 | medium | шеврон — чёрная джерси с красными полосами | красный |
+| `vitality` | Vitality | 6900 | medium | фон — соты, сверху капает мёд | жёлтый |
+| `navi` | NAVI | 9900 | medium | вязаный шарф из угла в угол | жёлтый / чёрная |
+
+Yellow Army в Pro Scene — намёк на NAVI, теперь повторяет кейс NAVI. Что с ним делать, решает GK.

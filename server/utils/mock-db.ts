@@ -179,7 +179,7 @@ function contentsFor(def: CaseDef): string[] {
 }
 
 
-// CS cases in three lines, each line in its own look (docs/ART_PROMPTS.md, section 9). The square picture, plus a
+// CS cases in four lines, each line in its own look (docs/ART_PROMPTS.md, sections 9 and 10). The square picture, plus a
 // wide or tall one where the home layout gives the case a bento cell; no full-scene art
 const CS_ART = { wide: null, tall: null, full: null }
 const csCase = (n: number, slug: string, name: string, price: number, risk: CaseSummary['risk'], tag?: CaseSummary['tag'], shaped?: 'wide' | 'tall'): CaseDef => ({
@@ -205,6 +205,17 @@ const CS_DEFS: CaseDef[] = [
   csCase(16, 'eco-round', 'Eco Round', 49, 'high'),
   csCase(17, 'rush-b', 'Rush B', 349, 'high', 'new'),
   csCase(18, 'noscope', '360 Noscope', 999, 'high'),
+  // Teams: the real team logos as embroidered patches (section 10), the cheapest teams the safest
+  csCase(19, 'mongolz', 'The MongolZ', 1290, 'low', 'new'),
+  csCase(20, 'falcons', 'Falcons', 1490, 'low'),
+  csCase(21, 'mouz', 'MOUZ', 1990, 'low'),
+  csCase(22, 'furia', 'FURIA', 2490, 'low'),
+  csCase(23, 'astralis', 'Astralis', 2990, 'low'),
+  csCase(24, 'g2', 'G2', 3490, 'medium'),
+  csCase(25, 'spirit', 'Spirit', 3990, 'medium', 'hot'),
+  csCase(26, 'faze', 'FaZe', 4990, 'medium'),
+  csCase(27, 'vitality', 'Vitality', 6900, 'medium', 'new'),
+  csCase(28, 'navi', 'NAVI', 9900, 'medium', 'hot'),
 ]
 
 /**
@@ -405,13 +416,14 @@ const toSummary = ({ items: _i, odds: _o, oddsVersion: _v, kurwadrop: _k, ...s }
 /** The row that fills itself: five cases a week, none of them from the first row */
 export const AUTO_ROW = 'weekly'
 // One row per CS line, cheapest first (on desktop the wide and tall cells still go first), closing on the 5-column
-// grid: CS memes is eight cases with Negev wide and Zeus tall (10 cells, two rows), the other two are five standard
-// cards (one row)
+// grid: CS memes is eight cases with Negev wide and Zeus tall (10 cells, two rows), Teams is ten standard cards (two
+// rows), the other two are five standard cards (one row)
 const DEFAULT_HOME_LAYOUT: HomeLayout = {
   sections: [
     { id: 'cs-memes', title: 'CS memes', cases: ['eco-round', 'ping-999', 'flashbang', 'vac', 'rush-b', 'negev', 'zeus', 'noscope'] },
     { id: AUTO_ROW, title: 'Weekly picks', theme: 'coop' },
     { id: 'old-school', title: 'Old school', cases: ['dust-ii', 'stuck', 'banana', 'bhop', 'one-six'] },
+    { id: 'teams', title: 'Teams', cases: ['mongolz', 'falcons', 'mouz', 'furia', 'astralis', 'g2', 'spirit', 'faze', 'vitality', 'navi'] },
     { id: 'pro-scene', title: 'Pro scene', cases: ['rank-10', 'yellow-army', 'smurf', 'tryhard', 'major'] },
   ],
   cards: { negev: 'wide', zeus: 'tall' },
