@@ -8,9 +8,14 @@ import ARTIFACT_ASSETS from './artifact-assets.json'
 // path without the leading slash -> store URL. Every response hands the UI the store URL instead of the path.
 // The GitHub Pages build (KD_PAGES) ships the pictures beside the page, so it has no store.
 const STORE = (import.meta.env.VITE_KD_PAGES ? {} : ARTIFACT_ASSETS) as Record<string, string>
-const hasStore = Object.keys(STORE).length > 0
+// Pages instead gives every picture its content hash (?v=…), so a redrawn one is not served from an old cache
+const VERSION = import.meta.env.VITE_KD_IMAGE_V as unknown as Record<string, string>
+const hasStore = Object.keys(STORE).length > 0 || Object.keys(VERSION).length > 0
 function toStore(v: unknown): unknown {
-  if (typeof v === 'string') return STORE[v.replace(/^\//, '')] ?? v
+  if (typeof v === 'string') {
+    const key = v.replace(/^\//, '')
+    return STORE[key] ?? (VERSION[key] ? `${v}?v=${VERSION[key]}` : v)
+  }
   if (Array.isArray(v)) return v.map(toStore)
   if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, toStore(x)]))
   return v

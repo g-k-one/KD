@@ -1,8 +1,24 @@
+import { createHash } from 'node:crypto'
+import { readdirSync, readFileSync } from 'node:fs'
+import { join, relative } from 'node:path'
+
 // KD_ARTIFACT=1 → static SPA for the claude.ai artifact: no server, hash routes,
 // relative asset paths, in-browser mock API (app/plugins/00.client-mock.client.ts).
 const artifact = !!process.env.KD_ARTIFACT
 // KD_PAGES=1 (with KD_ARTIFACT) → the same SPA for GitHub Pages: pictures beside the page instead of the artifact's store
 const pages = !!process.env.KD_PAGES
+// Pages: a short content hash per public picture, added to its URL (?v=…) so a redrawn picture under the same name
+// reaches browsers that cached the old one; an unchanged picture keeps its cached copy
+const imageVersions = (dir = 'public/img'): Record<string, string> =>
+  Object.fromEntries(
+    readdirSync(dir, { recursive: true, withFileTypes: true })
+      .filter((e) => e.isFile() && /\.(webp|png|jpg|svg)$/.test(e.name))
+      .map((e) => {
+        const p = join(e.parentPath, e.name)
+        // keyed without the leading slash, as the pages build leaves picture paths (scripts/build-artifact.mjs)
+        return [relative('public', p).replaceAll('\\', '/'), createHash('md5').update(readFileSync(p)).digest('hex').slice(0, 8)]
+      }),
+  )
 
 export default defineNuxtConfig({
   ...(artifact && {
@@ -34,7 +50,10 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   vite: {
-    define: { 'import.meta.env.VITE_KD_PAGES': JSON.stringify(pages ? '1' : '') },
+    define: {
+      'import.meta.env.VITE_KD_PAGES': JSON.stringify(pages ? '1' : ''),
+      'import.meta.env.VITE_KD_IMAGE_V': JSON.stringify(pages ? imageVersions() : {}),
+    },
     // The artifact host caps a version at 511 files: one stylesheet instead of one per component
     ...(artifact && { build: { cssCodeSplit: false } }),
     // and small client JS chunks merged into their neighbours (the skin pictures alone take ~360 of the files)
