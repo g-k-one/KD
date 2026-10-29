@@ -179,7 +179,7 @@ function contentsFor(def: CaseDef): string[] {
 }
 
 
-// CS cases in four lines, each line in its own look (docs/ART_PROMPTS.md, sections 9 and 10). The square picture, plus a
+// CS cases in five lines, each line in its own look (docs/ART_PROMPTS.md, sections 9 to 11). The square picture, plus a
 // wide or tall one where the home layout gives the case a bento cell; no full-scene art
 const CS_ART = { wide: null, tall: null, full: null }
 const csCase = (n: number, slug: string, name: string, price: number, risk: CaseSummary['risk'], tag?: CaseSummary['tag'], shaped?: 'wide' | 'tall'): CaseDef => ({
@@ -216,6 +216,12 @@ const CS_DEFS: CaseDef[] = [
   csCase(26, 'faze', 'FaZe', 4990, 'medium'),
   csCase(27, 'vitality', 'Vitality', 6900, 'medium', 'new'),
   csCase(28, 'navi', 'NAVI', 9900, 'medium', 'hot'),
+  // FACEIT: the brand's glossy 3D chicken in FACEIT orange (section 11), the risk climbing with the level
+  csCase(29, 'faceit-level-1', 'FACEIT Lvl 1', 149, 'low', 'new'),
+  csCase(30, 'match-found', 'Match Found', 390, 'medium'),
+  csCase(31, 'anti-cheat', 'Anti-Cheat', 690, 'medium', 'hot'),
+  csCase(32, 'elo-climb', 'ELO Climb', 1290, 'high'),
+  csCase(33, 'faceit-level-10', 'FACEIT Lvl 10', 2490, 'extreme', 'new'),
 ]
 
 /**
@@ -417,12 +423,13 @@ const toSummary = ({ items: _i, odds: _o, oddsVersion: _v, kurwadrop: _k, ...s }
 export const AUTO_ROW = 'weekly'
 // One row per CS line, cheapest first (on desktop the wide and tall cells still go first), closing on the 5-column
 // grid: CS memes is eight cases with Negev wide and Zeus tall (10 cells, two rows), Teams is ten standard cards (two
-// rows), the other two are five standard cards (one row)
+// rows), the other three are five standard cards (one row)
 const DEFAULT_HOME_LAYOUT: HomeLayout = {
   sections: [
     { id: 'cs-memes', title: 'CS memes', cases: ['eco-round', 'ping-999', 'flashbang', 'vac', 'rush-b', 'negev', 'zeus', 'noscope'] },
     { id: AUTO_ROW, title: 'Weekly picks', theme: 'coop' },
     { id: 'old-school', title: 'Old school', cases: ['dust-ii', 'stuck', 'banana', 'bhop', 'one-six'] },
+    { id: 'faceit', title: 'FACEIT', cases: ['faceit-level-1', 'match-found', 'anti-cheat', 'elo-climb', 'faceit-level-10'] },
     { id: 'teams', title: 'Teams', cases: ['mongolz', 'falcons', 'mouz', 'furia', 'astralis', 'g2', 'spirit', 'faze', 'vitality', 'navi'] },
     { id: 'pro-scene', title: 'Pro scene', cases: ['rank-10', 'yellow-army', 'smurf', 'tryhard', 'major'] },
   ],
