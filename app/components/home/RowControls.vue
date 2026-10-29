@@ -13,7 +13,7 @@ const theme = computed({
 })
 const THEMES = [
   { value: 'none' as const, label: 'No scene', title: 'Plain row' },
-  { value: 'coop' as const, label: 'Coop', title: 'Chicken coop: cards sit in nests' },
+  { value: 'coop' as const, label: 'Coop', title: 'Chicken coop: cases on wooden pedestals' },
 ]
 </script>
 

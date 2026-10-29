@@ -5,7 +5,7 @@ import type { RigPlayback } from '~/utils/spineStage'
 // Figma "CaseCard" states: Default → Hover (surface lifts to neutral-4, art settles 232→220,
 // price becomes the brand-gradient button, risk reveals its label) → Active (80% opacity).
 /** shape: the bento cell this card fills — wide 2×1 or tall 1×2 shows the matching picture (desktop) */
-/** look: a themed row's look — coop drops the plate and sits the case in a nest */
+/** look: a themed row's look — coop drops the plate and stands the case on a low wooden pedestal */
 const props = defineProps<{ item: CaseSummary; shape?: 'wide' | 'tall'; look?: 'coop' }>()
 const shaped = computed(() => (props.shape ? props.item.art?.[props.shape] : undefined))
 /** A full-art card (the layout says so and the art is there): the scene fills the card; a themed row and a bento cell keep their own art */
@@ -86,8 +86,8 @@ function onArtLeave() {
     <img v-if="full" :src="full" :alt="item.name" loading="lazy" draggable="false" class="kd-case-full" />
     <span v-if="full" class="kd-case-scrim" aria-hidden="true" />
     <div ref="artBox" class="kd-case-art-box relative aspect-square w-full lg:aspect-auto" :class="shape === 'tall' ? 'lg:min-h-55 lg:flex-1' : 'lg:h-55'">
-      <!-- coop: the nest's back half sits behind the case, its front rim over it, so the case sits inside -->
-      <img v-if="look === 'coop'" src="/img/coop/nest-back.webp" alt="" aria-hidden="true" draggable="false" class="kd-nest is-back" />
+      <!-- coop: a low wooden pedestal under the case, drawn in CSS (its side, its lit top), behind the art -->
+      <span v-if="look === 'coop'" class="kd-pedestal" aria-hidden="true" />
       <img
         :src="item.image"
         :alt="item.name"
@@ -116,7 +116,6 @@ function onArtLeave() {
         :class="[{ invisible: !animReady }, shaped && 'lg:hidden']"
         @load="animReady = true"
       />
-      <img v-if="look === 'coop'" src="/img/coop/nest-front.webp" alt="" aria-hidden="true" draggable="false" class="kd-nest is-front" />
       <!-- a limited case: a burning plate on the art's foot. The plate is its own gauge: the fire-coloured part is
            what is left of the stock, the rest is burnt-out ember. Sold out, it goes cold and grey. -->
       <span v-if="stock" class="absolute bottom-1 left-1/2 z-[2] -translate-x-1/2">
@@ -377,7 +376,7 @@ function onArtLeave() {
     transform: scale(1.05);
   }
 }
-/* --- coop: no plate; the case sits low in a straw nest and hops up out of it on hover --- */
+/* --- coop: no plate; the case stands on a low wooden pedestal and hops up off it on hover --- */
 .kd-case-card.look-coop {
   background: none;
   border-color: transparent;
@@ -385,22 +384,31 @@ function onArtLeave() {
 .look-coop .kd-case-art-box {
   isolation: isolate;
 }
-.kd-nest {
+/* the pedestal: a wooden disc — its darker side with a soft shadow under it, the lit top over it */
+.kd-pedestal {
   position: absolute;
+  z-index: -1;
   left: 50%;
-  bottom: 0;
-  width: 70%;
+  bottom: 6%;
+  width: 66%;
+  height: 16%;
   translate: -50% 0;
+  border-radius: 50%;
+  background: linear-gradient(#5a3a1e, #2c1a0c);
+  box-shadow: 0 14px 24px rgb(0 0 0 / 0.55);
   pointer-events: none;
 }
-.kd-nest.is-back {
-  z-index: -1;
-}
-.kd-nest.is-front {
-  z-index: 1;
+.kd-pedestal::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 31% 0;
+  height: 88%;
+  border-radius: 50%;
+  background: radial-gradient(70% 90% at 50% 30%, #a8743f, #6b4422 70%, #4e3018);
+  box-shadow: inset 0 1px 0 rgb(255 214 150 / 0.45);
 }
 .look-coop .kd-case-art {
-  transform: translateY(-15%) scale(0.78);
+  transform: translateY(-6%) scale(0.86);
   transition: transform var(--dur-slow) var(--ease-spring);
 }
 .look-coop h3 {
@@ -413,7 +421,7 @@ function onArtLeave() {
     border-color: transparent;
   }
   .look-coop:hover .kd-case-art {
-    transform: translateY(-22%) scale(0.8);
+    transform: translateY(-12%) scale(0.88);
   }
 }
 .kd-case-card:active {

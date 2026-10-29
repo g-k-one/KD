@@ -24,7 +24,7 @@ const caseOf = (slug: string) => casesData.value?.cases.find((c) => c.slug === s
 const AUTO = 'weekly'
 const THEMES: Array<{ value: SectionTheme | 'none'; label: string; title: string }> = [
   { value: 'none', label: 'No scene', title: 'Plain row' },
-  { value: 'coop', label: 'Coop', title: 'Chicken coop: cards sit in nests' },
+  { value: 'coop', label: 'Coop', title: 'Chicken coop: cases on wooden pedestals' },
 ]
 const setTheme = (i: number, t: SectionTheme | 'none') => draft.value && (draft.value.sections[i]!.theme = t === 'none' ? null : t)
 const toggle = (i: number) => draft.value && (draft.value.sections[i]!.hidden = !draft.value.sections[i]!.hidden || undefined)

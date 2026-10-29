@@ -183,16 +183,18 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
   width: 100vw;
   translate: -50% 0;
   pointer-events: none;
-  mask-image: linear-gradient(180deg, transparent, #000 20%, #000 50%, transparent 92%), linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  /* the wall only: it fades out before the straw floor, the pedestals stand against the boards */
+  mask-image: linear-gradient(180deg, transparent, #000 18%, #000 46%, transparent 74%), linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
   mask-composite: intersect;
 }
 .kd-row-scene img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* the straw floor under the nests */
-  object-position: 50% 100%;
-  opacity: 0.85;
+  /* the boards and the rail, not the straw floor */
+  object-position: 50% 30%;
+  filter: brightness(0.7);
+  opacity: 0.8;
 }
 
 /* Phones: stuck 8 px under the header, only the filters' own card shows, nothing behind it */
