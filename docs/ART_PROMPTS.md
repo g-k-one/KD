@@ -385,7 +385,7 @@ FACEIT и NAVI здесь только намёком: цвета и настр�
 
 ### Как генерировать
 
-1. **Образцы:** первым всегда `public/img/_new/ref-chicken.png` (курица в панике); он задаёт только характер курицы, не стиль. Вторым — одобренная проба своей линейки: `vac-sticker`, `one-six`, `major`, `dragon-lore`. Она держит стиль внутри линейки.
+1. **Образцы:** первым всегда `public/img/_new/ref-chicken.png` (курица в панике); он задаёт только характер курицы, не стиль. Вторым — одобренная проба своей линейки: `vac`, `one-six`, `major`, `asiimov`. Она держит стиль внутри линейки.
 2. **Промпт:** общий блок → блок курицы (один из двух) → стиль линейки → сцена кейса → палитра линейки.
 3. **Файл и конвертация** — как в разделе 8: `public/img/_new/cases/<slug>.png` (1024×1024, прозрачный) → `python scripts/case-art.py` → `public/img/cases/<slug>.webp`.
 4. **Через fal** (Claude делает сам): `openai/gpt-image-2.5/sunburst/edit`, `quality: medium`, `background: transparent`, 1024×1024, оба образца в `image_urls`.
@@ -429,7 +429,7 @@ style. The second attached image is the approved style reference for this line: 
 | 7. Memy | стикер | 0,99–7,99 | high | Ping 999, Flashbang, VAC, Negev, Zeus |
 | 8. Old School | low-poly 2003 | 4,90–29,90 | medium | Dust II, Stuck, Banana, Bhop, 1.6 |
 | 9. Pro Scene | хром на сцене | 39–199 | high | Level 10, Yellow Army, Smurf, Tryhard, Major |
-| 10. Skiny | живопись, витрина | 299–1999 | extreme | Blue Again, Asiimov, Howl, Fade, Dragon Lore |
+| 10. Skiny | мотив скина | 299–1999 | extreme | Hyper Beast, Asiimov, Howl, Fade, Dragon Lore |
 
 ---
 
@@ -520,28 +520,31 @@ Palette: chrome, gold, electric blue, magenta stage light.
 
 ---
 
-### Линейка 10. Skiny — живопись, витрина, хайроллер, extreme
+### Линейка 10. Skiny — мотив скина, хайроллер, extreme
+
+Без бархата и подставок: каждый кейс нарисован языком своего скина, мотив скина собран вокруг оружия в компактную эмблему. **Оружие обязано выглядеть как настоящий скин** — в промпте подробно описывается его раскраска и что нельзя (например, «не красить AWP в золото»). Второй образец — `asiimov`.
 
 Стиль:
 ```
-Style: hand-painted digital illustration with visible brush strokes and painterly texture, rich warm oil-painting
-light, gilded ornament details. Like fantasy collector's card art. Real CS2 weapons with their real skin finishes.
+Style: the icon is drawn in the design language of the weapon skin itself, as if the skin's artwork came alive
+around the weapon. Bold graphic illustration with crisp clean shapes, rich gradients and glossy highlights on the
+weapon; the skin's motif wraps around and behind the weapon as one compact emblem. No cushion, no velvet, no display
+stand, no box.
 ```
-Палитра:
-```
-Palette: deep velvet red, antique gold, jade green, warm candle light.
-```
+Палитра — своя у каждого кейса (в конце промпта).
 
 | slug | Имя | Цена | Риск | Курица |
 |---|---|---|---|---|
-| `blue-again` | Blue Again | 29900 | extreme | главная |
-| `asiimov` | Asiimov | 49900 | extreme | главная |
+| `hyper-beast` | Hyper Beast | 29900 | extreme | нет |
+| `asiimov` | Asiimov | 49900 | extreme | нет |
 | `howl` | Howl | 79900 | extreme | нет |
-| `fade` | Fade | 119900 | extreme | мелькает |
+| `fade` | Fade | 119900 | extreme | перо |
 | `dragon-lore` | Dragon Lore | 199900 | extreme | нет |
 
-- **blue-again:** `Scene: a compact ornate open loot case, its lid thrown back, cold disappointing blue light pouring out of it onto a single plain blue-grey pistol lying inside; the chicken mascot stands behind the case, both wings resting on its rim, leaning over to look in, googly eyes wide in disappointment. The whole case, including its bottom, fully inside the frame.` (мем: опять синька)
-- **asiimov:** `Scene: an AWP sniper rifle with the real Asiimov finish (white body, orange and black sci-fi panels) standing upright on a gilded display stand; the chicken mascot hugs the rifle with both wings, cheek pressed to it, googly eyes sparkling with greed.`
-- **howl:** `Scene: an M4A4 assault rifle with the real Howl finish (a red-orange snarling wolf) lying diagonally on a deep-red velvet cushion with gold tassels, wreathed in compact painted flames that stay close to the rifle. The rifle's stock and muzzle are fully inside the frame.`
-- **fade:** `Scene: a karambit knife with the real Fade finish (a pink, purple and gold gradient) standing tip-down in a deep-red velvet cushion; one white chicken feather beside it, also fading from pink to purple to gold.`
-- **dragon-lore** (стиль линейки взят с него): `Scene: a sniper rifle lying diagonally on a plump deep-red velvet cushion with gold tassels; the rifle's stock and body are covered in a medieval-style golden-green dragon painting with ornate gold filigree; a few small gold sparkles.`
+- **hyper-beast:** `The weapon must look EXACTLY like the real CS:GO / CS2 skin 'M4A1-S | Hyper Beast': the rifle with its long silencer is covered in a wild psychedelic graffiti monster: a grinning beast face with big sharp white teeth and red eyes on the receiver, swirling shapes in neon cyan-teal, hot pink, lime-yellow and purple with bold black outlines all along the body, stock and silencer. Scene: that M4A1-S angled diagonally; behind it the same grinning graffiti beast bursts out as a big face with sharp teeth, surrounded by a few compact neon paint splashes and drips. Palette: neon cyan, hot pink, lime yellow, purple, black ink.`
+- **asiimov** (стиль линейки взят с него): `Scene: an AWP sniper rifle with the real Asiimov finish (white body with orange and black sci-fi panels), angled diagonally; around and behind it float abstract geometric shapes in the same Asiimov look: hard-edged triangles, hexagon grid fragments, thin concentric circles and angular armour-panel pieces, arranged tightly around the rifle. Palette: clean white, signal orange, matte black, a touch of cool grey.`
+- **howl:** `The weapon must look EXACTLY like the real CS:GO / CS2 skin 'M4A4 | Howl' (the famous contraband skin): at least 70% of the rifle's surface is painted a BRIGHT, saturated cherry red, clearly red at a glance, not black and not dark. On the side of the receiver and magazine well a big stylised snarling wolf head in cream-white and orange with bold black outlines, like an old-school tattoo; thin orange-yellow flame swirls on the red handguard. Only the grip, the tip of the barrel and small details are black. Scene: that bright red M4A4 angled diagonally on top; behind it a big snarling cream-and-orange tattoo-style wolf head howling, framed by a few compact orange flames that stay close to it. The red rifle stays the brightest, most readable shape. Palette: bright cherry red, orange, cream white, black ink.`
+- **fade:** `Scene: a karambit knife with the real Fade finish (a pink, purple and gold gradient), blade curving up, wrapped in flowing liquid ribbons of the same gradient, like ink swirling in water; one chicken feather caught in the ribbons, also fading from pink to purple to gold. Palette: hot pink, violet, molten gold.` (блок курицы: «only ONE of its white feathers appears in this image»)
+- **dragon-lore**, раскраска (общая для обоих вариантов): `The weapon must look EXACTLY like the real CS:GO / CS2 skin 'AWP | Dragon Lore': the whole rifle is painted in a pale cream-ivory parchment colour; along the stock and body a large coiled green European medieval dragon with golden-yellow belly scales and a spread wing, outlined in dark brown like an illuminated manuscript; dark brown accents on the barrel and a dark scope. Do NOT paint the rifle gold or green all over.`
+  - вариант A, китайский дракон вокруг: `Scene: that AWP angled diagonally; behind and around it coils a long Chinese dragon in gold and jade green with flowing whiskers, its head rising above the scope, tail curling back inside the frame, with stylised Chinese auspicious clouds. Palette: ivory, jade green, imperial gold, cinnabar red accents.`
+  - вариант B, дракон сходит с раскраски: `Scene: that AWP angled diagonally; the very same green-and-gold medieval dragon from its paint job comes alive and climbs off the rifle: it wraps around the gun, wings spread behind it, head rearing above the scope breathing a small puff of fire, all in the same illuminated-manuscript look on parchment tones. Palette: ivory parchment, dragon green, golden yellow, dark brown ink, a touch of red fire.`
