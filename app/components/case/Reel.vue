@@ -761,18 +761,19 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   contain: layout style;
 }
 /* Figma: grey frame that warms up to brand orange where the markers sit */
-/* The frame warms up towards the markers (a soft gradient that anchors them), no glow around it */
+/* The frame warms up towards the markers (a soft gradient that anchors them), no glow around it; its centre is opaque
+   and the markers' base colour (#ff5a1f), so a marker and the line read as one piece, no seam */
 .kd-reel {
   border: 4px solid transparent;
   background:
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
-    linear-gradient(90deg, var(--color-neutral-4) 15%, rgb(255 95 31 / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
+    linear-gradient(90deg, var(--color-neutral-4) 15%, #ff5a1f 50%, var(--color-neutral-4) 85%) border-box;
   transition: box-shadow var(--dur-slow) var(--ease-out);
 }
 .kd-reel.is-v {
   background:
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
-    linear-gradient(180deg, var(--color-neutral-4) 15%, rgb(255 95 31 / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
+    linear-gradient(180deg, var(--color-neutral-4) 15%, #ff5a1f 50%, var(--color-neutral-4) 85%) border-box;
 }
 .kd-depth.is-h {
   background: linear-gradient(90deg, var(--color-neutral-1) 2%, transparent 30%, transparent 70%, var(--color-neutral-1) 98%);
@@ -795,7 +796,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   border: 2px solid transparent;
   background:
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
-    linear-gradient(180deg, var(--color-neutral-4) 15%, rgb(255 95 31 / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
+    linear-gradient(180deg, var(--color-neutral-4) 15%, #ff5a1f 50%, var(--color-neutral-4) 85%) border-box;
 }
 /* the drop screen: the frames go plain grey — the orange that leads the eye to the markers is for picking and the spin */
 .kd-reel.result:not(.is-grid, .is-kurwa),
