@@ -505,13 +505,13 @@ Palette: chrome, gold, electric blue, magenta stage light.
 
 | slug | Имя | Цена | Риск | Курица | Намёк на |
 |---|---|---|---|---|---|
-| `level-10` | Level 10 | 3900 | high | нет | FACEIT |
+| `rank-10` | Level 10 | 3900 | high | нет | FACEIT |
 | `yellow-army` | Yellow Army | 5900 | high | главная | NAVI |
 | `smurf` | Smurf | 9900 | high | главная | смурф |
 | `tryhard` | Tryhard | 14900 | high | нет | тряхард |
 | `major` | Major | 19900 | high | мелькает | мейджор |
 
-- **level-10:** `Scene: a huge glowing orange-and-black round rank medal, a thick ring of ten glowing orange segments around its rim, a chrome star in the middle.`
+- **rank-10:** `Scene: a huge glowing orange-and-black round rank medal, a thick ring of ten glowing orange segments around its rim, a chrome star in the middle.`
 - **yellow-army:** `Scene: the chicken mascot as a die-hard esports fan in a yellow-and-black striped jersey with no logos or text, stretching a chunky yellow-and-black fan scarf high above its head, beak wide open in an ecstatic cheer, a few big yellow and black confetti pieces.`
 - **smurf:** `Scene: the chicken mascot, full body, standing in a relaxed three-quarter pose in a cheap disguise: black plastic glasses with a fake nose and moustache and a backwards cap; it rests a gold-plated AK-47 casually on its shoulder, gripped firmly by one wing, and waves hello with the other wing, trying to look innocent.`
 - **tryhard:** `Scene: a compact glowing RGB mechanical gaming keyboard seen at an angle, smoking from overuse, a few keycaps flying off, a big RGB gaming headset lying on top of it. The whole keyboard, both of its ends, fully inside the frame.`

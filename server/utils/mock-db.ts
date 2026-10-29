@@ -179,19 +179,6 @@ function contentsFor(def: CaseDef): string[] {
 }
 
 
-const CASE_DEFS: CaseDef[] = [
-  { id: 'c1', slug: 'pierogi-pack', name: 'Pierogi Pack', image: '/img/cases/pierogi-pack.webp', price: 99, risk: 'low', tag: 'new', targetRtp: 9350, createdAt: '2026-10-10' },
-  { id: 'c2', slug: 'kurwa-classic', name: 'Kurwa Classic', image: '/img/cases/kurwa-chicken.webp', rig: { skeleton: '/img/cases/rig/kurwa-chicken.json', atlas: '/img/cases/rig/kurwa-chicken.atlas', hover: 'hover', look: { bone: 'look', range: 60 } }, price: 1250, risk: 'medium', targetRtp: 9240, createdAt: '2026-08-01' },
-  { id: 'c3', slug: 'zloty-rush', name: 'Zloty Rush', image: '/img/cases/zloty-rush.webp', rig: { skeleton: '/img/cases/rig/zloty-rush.json', atlas: '/img/cases/rig/zloty-rush.atlas' }, price: 490, risk: 'high', tag: 'new', targetRtp: 9100, createdAt: '2026-10-12', limited: { total: 1000, left: 214 } },
-  { id: 'c4', slug: 'babcias-box', name: 'Babcia’s Box', image: '/img/cases/babcias-box.webp', price: 750, risk: 'medium', targetRtp: 9300, createdAt: '2026-07-15' },
-  { id: 'c5', slug: 'warsaw-nights', name: 'Warsaw Nights', image: '/img/cases/warsaw-nights.webp', price: 1250, risk: 'extreme', tag: 'new', targetRtp: 9240, createdAt: '2026-10-14', limited: { total: 500, left: 37 } },
-  { id: 'c6', slug: 'vodka-drop', name: 'Vodka Drop', image: '/img/cases/vodka-drop.webp', price: 2900, risk: 'medium', targetRtp: 9200, createdAt: '2026-06-02' },
-  { id: 'c7', slug: 'krakow-knife', name: 'Krakow Knife', image: '/img/cases/krakow-agent.webp', animation: '/img/cases/krakow-knife-loop.webp', price: 4900, risk: 'high', targetRtp: 9050, createdAt: '2026-05-20' },
-  { id: 'c8', slug: 'golden-kielbasa', name: 'Golden Kielbasa', image: '/img/cases/golden-kielbasa.webp', price: 9900, risk: 'extreme', targetRtp: 9000, createdAt: '2026-04-11' },
-  { id: 'c9', slug: 'budget-boom', name: 'Budget Boom', image: '/img/cases/budget-boom.webp', price: 14900, risk: 'low', targetRtp: 9400, createdAt: '2026-03-08' },
-  { id: 'c10', slug: 'high-roller', name: 'High Roller', image: '/img/cases/high-roller.webp', price: 29900, risk: 'high', tag: 'hot', targetRtp: 9150, createdAt: '2026-02-01', limited: { total: 100, left: 12 } },
-]
-
 // CS cases in three lines, each line in its own look (docs/ART_PROMPTS.md, section 9). Only the square picture so far:
 // no wide, tall or full-scene art
 const CS_ART = { wide: null, tall: null, full: null }
@@ -209,7 +196,7 @@ const CS_DEFS: CaseDef[] = [
   csCase(8, 'banana', 'Banana', 1490, 'medium'),
   csCase(9, 'bhop', 'Bhop', 1990, 'medium'),
   csCase(10, 'one-six', '1.6', 2990, 'medium'),
-  csCase(11, 'level-10', 'Level 10', 3900, 'high', 'new'),
+  csCase(11, 'rank-10', 'Level 10', 3900, 'high', 'new'),
   csCase(12, 'yellow-army', 'Yellow Army', 5900, 'high'),
   csCase(13, 'smurf', 'Smurf', 9900, 'high'),
   csCase(14, 'tryhard', 'Tryhard', 14900, 'high'),
@@ -320,17 +307,8 @@ function finishCase(def: CaseDef, withTickets: Array<Item & { tickets: number }>
   }
 }
 
-// Three cases with contents and odds modelled on CSGOGem (scripts/import-gem-cases.py), under our own names
-type GemCase = { slug: string; price: number; items: Array<Item & { tickets: number }> }
-const GEM_LOOK: Record<string, Omit<CaseDef, 'price' | 'targetRtp' | 'preset'>> = {
-  hades: { id: 'g1', slug: 'pieklo', name: 'Piekło', image: '/img/cases/pieklo.webp', risk: 'extreme', tag: 'hot', createdAt: '2026-10-18' },
-  spring: { id: 'g2', slug: 'wiosna', name: 'Wiosna', image: '/img/cases/wiosna.webp', risk: 'high', createdAt: '2026-10-19' },
-  mobster: { id: 'g3', slug: 'mafia', name: 'Mafia', image: '/img/cases/mafia.webp', risk: 'extreme', tag: 'new', createdAt: '2026-10-20' },
-}
-const GEM_DEFS: CaseDef[] = (GEM_CASES as GemCase[]).map((g) => ({ ...GEM_LOOK[g.slug]!, price: g.price, targetRtp: 9200, preset: g.items }))
-
 /** Every case as the admin set it, and what it builds into (same order) */
-export const caseDefs: CaseDef[] = [...CASE_DEFS, ...CS_DEFS, ...GEM_DEFS]
+export const caseDefs: CaseDef[] = [...CS_DEFS]
 const CASES: CaseDetails[] = caseDefs.map(buildCase)
 
 /** Builds a def again after an admin change. Opens and today's best stay: they are what happened, not settings */
@@ -422,20 +400,16 @@ const toSummary = ({ items: _i, odds: _o, oddsVersion: _v, kurwadrop: _k, ...s }
 
 /** The row that fills itself: five cases a week, none of them from the first row */
 export const AUTO_ROW = 'weekly'
-// Mixed sizes out of the box, counted for the 5-column desktop grid so every row closes: Hot is four cases with Piekło
-// wide (5 cells, one row); Featured is eight with Złoty Rush tall and Warsaw Nights wide (10 cells, two rows). A card
-// kind belongs to the case, not the row, so the big ones sit in one row each (High Roller stays in the full catalog)
+// One row per CS line, five cases each so a row closes on the 5-column desktop grid. All standard cards: the CS cases
+// only have their square picture so far
 const DEFAULT_HOME_LAYOUT: HomeLayout = {
   sections: [
-    { id: 'hot', title: 'Hot right now', cases: ['pieklo', 'mafia', 'wiosna', 'krakow-knife'] },
-    { id: AUTO_ROW, title: 'Weekly picks', theme: 'coop' },
-    { id: 'featured', title: 'Featured cases', cases: ['zloty-rush', 'warsaw-nights', 'pierogi-pack', 'kurwa-classic', 'babcias-box', 'vodka-drop', 'golden-kielbasa', 'budget-boom'] },
-    { id: 'polish-classics', title: 'Polish classics', cases: ['babcias-box', 'vodka-drop', 'golden-kielbasa', 'kurwa-classic', 'pierogi-pack'] },
     { id: 'cs-memes', title: 'CS memes', cases: ['ping-999', 'flashbang', 'vac', 'negev', 'zeus'] },
+    { id: AUTO_ROW, title: 'Weekly picks', theme: 'coop' },
     { id: 'old-school', title: 'Old school', cases: ['dust-ii', 'stuck', 'banana', 'bhop', 'one-six'] },
-    { id: 'pro-scene', title: 'Pro scene', cases: ['level-10', 'yellow-army', 'smurf', 'tryhard', 'major'] },
+    { id: 'pro-scene', title: 'Pro scene', cases: ['rank-10', 'yellow-army', 'smurf', 'tryhard', 'major'] },
   ],
-  cards: { pieklo: 'wide', 'zloty-rush': 'tall', 'warsaw-nights': 'wide', mafia: 'full', 'babcias-box': 'full', 'vodka-drop': 'full' },
+  cards: {},
 }
 let homeLayout: HomeLayout = structuredClone(DEFAULT_HOME_LAYOUT)
 export function setCaseCard(slug: string, kind: HomeCardKind) {
@@ -470,9 +444,9 @@ export function setHomeLayout(next: Partial<HomeLayout>) {
   return getHomeLayout()
 }
 
-/** The cases the lobby's own battles are made of: the cheaper ones (up to 30 coins) of the catalogue, not the hot
- * three. From the catalogue, not the home rows: a row hidden in the admin panel must not break the lobby. */
-export const lobbyCaseSlugs = () => CASES.filter((c) => c.price <= 3000 && !['pieklo', 'mafia', 'wiosna'].includes(c.slug)).map((c) => c.slug)
+/** The cases the lobby's own battles are made of: the cheaper ones (up to 30 coins) of the catalogue. From the
+ * catalogue, not the home rows: a row hidden in the admin panel must not break the lobby. */
+export const lobbyCaseSlugs = () => CASES.filter((c) => c.price <= 3000).map((c) => c.slug)
 /** Every case, for the admin panel's row editor */
 export const caseOptions = () => CASES.map((c) => ({ slug: c.slug, name: c.name, image: c.image, price: c.price }))
 
@@ -677,12 +651,12 @@ async function ensureSeed() {
       const c = catalogItem(name)
       return c ? { ...histItem(c), price } : undefined
     }
-    const classic = CASES.find((c) => c.slug === 'kurwa-classic')?.image
+    const opened = CASES.find((c) => c.slug === 'stuck')?.image
     const stakeSkin = nearestPriced(6300)
     state.history.push(
       { id: 'h-s1', at: ago(12), game: 'upgrade', title: 'AWP | Asiimov', bet: 6300, payout: 12000, status: 'won', nonce: 3, seedHash, roll: (await pfRoll(serverSeed, clientSeed, 3)).roll, stake: [{ ...histItem(stakeSkin), price: 6300 }], result: named('AWP | Asiimov', 12000) },
-      { id: 'h-s2', at: ago(40), game: 'case', title: 'Kurwa Classic', bet: 1250, payout: 420, status: 'lost', nonce: 2, seedHash, ticket: await ticket(2), drop: 'P250 | Asiimov', caseImage: classic, result: named('P250 | Asiimov', 420) },
-      { id: 'h-s3', at: ago(41), game: 'case', title: 'Kurwa Classic', bet: 1250, payout: 2200, status: 'won', nonce: 1, seedHash, ticket: await ticket(1), drop: 'AK-47 | Redline', caseImage: classic, result: named('AK-47 | Redline', 2200) },
+      { id: 'h-s2', at: ago(40), game: 'case', title: 'Stuck', bet: 990, payout: 420, status: 'lost', nonce: 2, seedHash, ticket: await ticket(2), drop: 'P250 | Asiimov', caseImage: opened, result: named('P250 | Asiimov', 420) },
+      { id: 'h-s3', at: ago(41), game: 'case', title: 'Stuck', bet: 990, payout: 2200, status: 'won', nonce: 1, seedHash, ticket: await ticket(1), drop: 'AK-47 | Redline', caseImage: opened, result: named('AK-47 | Redline', 2200) },
       { id: 'h-s4', at: ago(65), game: 'deposit', title: 'BLIK', bet: 0, payout: 5727, status: 'done' },
     )
     state.seed.nonce = 3

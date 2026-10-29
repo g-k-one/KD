@@ -92,7 +92,7 @@ const invLoaded = async () => {
 }
 const burst = () => state({ feedBurst: 12 }, '12 drops queued in the feed')
 async function newBattle(live: boolean) {
-  const slugs = ['pierogi-pack', 'babcias-box', 'kurwa-classic']
+  const slugs = ['ping-999', 'vac', 'stuck']
   const res = await $fetch<{ battle: { id: string } }>('/api/battles', { method: 'POST', body: { size: 2, cases: slugs.map((slug) => ({ slug, qty: 1 })) } })
   if (live) await $fetch(`/api/battles/${res.battle.id}/bot`, { method: 'POST', body: {} })
   open.value = false

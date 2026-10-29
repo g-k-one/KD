@@ -88,13 +88,13 @@ const BATTLE = [
   { v: 'other', label: 'You lose' },
 ]
 async function newBattle(size: number, live: boolean) {
-  const slugs = ['pierogi-pack', 'babcias-box', 'kurwa-classic']
+  const slugs = ['ping-999', 'vac', 'stuck']
   const res = await $fetch<{ battle: { id: string } }>('/api/battles', { method: 'POST', body: { size, cases: slugs.map((slug) => ({ slug, qty: 1 })) } })
   if (live) await $fetch(`/api/battles/${res.battle.id}/bot`, { method: 'POST', body: {} })
   await navigateTo(`/pvp/${res.battle.id}`)
 }
 
-const ENDPOINTS = ['/api/me', '/api/cases', '/api/cases/warsaw-nights', '/api/feed', '/api/wins/today', '/api/inventory', '/api/market', '/api/history', '/api/battles', '/api/bonuses', '/api/seeds', '/api/deposit/methods', '/api/debug/force']
+const ENDPOINTS = ['/api/me', '/api/cases', '/api/cases/major', '/api/feed', '/api/wins/today', '/api/inventory', '/api/market', '/api/history', '/api/battles', '/api/bonuses', '/api/seeds', '/api/deposit/methods', '/api/debug/force']
 async function callApi(url: string) {
   try {
     apiOut.value = JSON.stringify(await $fetch(url), null, 2)
