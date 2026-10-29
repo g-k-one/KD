@@ -390,12 +390,21 @@ FACEIT и NAVI здесь только намёком: цвета и настр�
 3. **Файл и конвертация** — как в разделе 8: `public/img/_new/cases/<slug>.png` (1024×1024, прозрачный) → `python scripts/case-art.py` → `public/img/cases/<slug>.webp`.
 4. **Через fal** (Claude делает сам): `openai/gpt-image-2.5/sunburst/edit`, `quality: medium`, `background: transparent`, 1024×1024, оба образца в `image_urls`.
 
+### Правила приёмки (GK, 2026-10-29)
+
+- **Ничего не обрезано** ни с одной из четырёх сторон: ручка, ствол, вспышка, хвост, подставка целиком в кадре. `case-art.py` такие картинки не пропускает (`SKIP … cut off`).
+- **Нет повторов:** два кейса не держатся на одном гэге или одной позе (лапы из-под чего-то, курица с раскинутыми крыльями на плитке).
+- **Естественные позы:** крылья держат предмет, ничего не висит в воздухе и не выгнуто странно.
+
 ### Общий блок (в начало каждого промпта)
 
 ```
-Square icon for a loot case card on a dark website. Transparent background, one clear idea, one big hero object
-filling about 85% of the frame, must read at 100 px. No text, no letters, no numbers, no logos, no rotating rays
-or sunburst.
+Square icon for a loot case card on a dark website. Transparent background, one clear idea, one big hero object,
+must read at 100 px. Framing: the WHOLE subject sits inside the square with a clear empty margin of at least 8% on
+all four sides; no part of it (handles, barrels, muzzle flashes, tails, stands, floor slabs) touches or is cut by
+the edge. Long objects are angled diagonally and kept short enough to fit. Natural, believable pose: characters
+stand or move the way a cartoon character really would, wings actually grip what they hold, nothing floats or bends
+unnaturally. No text, no letters, no numbers, no logos, no rotating rays or sunburst.
 ```
 
 ### Блок курицы (один из двух)
@@ -440,16 +449,16 @@ Palette: alarm red, toxic chat-green, flashbang white, black ink.
 | slug | Имя | Цена | Риск | Курица |
 |---|---|---|---|---|
 | `ping-999` | Ping 999 | 99 | high | нет |
-| `flashbang` | Flashbang | 199 | high | мелькает |
+| `flashbang` | Flashbang | 199 | high | главная |
 | `vac` | VAC | 299 | high | мелькает |
 | `negev` | Negev | 499 | high | нет |
 | `zeus` | Zeus | 799 | high | главная |
 
 - **ping-999:** `Scene: a home Wi-Fi router on fire: its antennas melted and drooping, flames and black smoke puffing out of the top, its little status lights blinking red, a pair of big panicked googly eyes on its front.`
-- **flashbang:** `Scene: a CS2 flashbang grenade going off in a huge round white flash cloud with jagged comic edges; only the chicken's two yellow feet and a few feathers stick out of the bottom of the flash.`
-- **vac** (одобрен, файл `vac-sticker`): `Scene: a huge red ban hammer slamming down; only the chicken's two yellow feet stick out from under the hammer head, feathers flying everywhere; a white circle-slash 'prohibited' symbol on the hammer head.`
-- **negev:** `Scene: a Negev light machine gun spraying wildly, half buried in a huge heap of shiny brass shell casings, a comic muzzle flash at the barrel, casings flying.`
-- **zeus:** `Scene: the chicken mascot being zapped by a Zeus taser: its whole body flashing with electric-blue lightning, a cartoon x-ray showing its skeleton through the feathers, feathers standing on end, googly eyes spinning, beak wide open.`
+- **flashbang:** `Scene: the chicken mascot, full body, standing coolly with huge black sunglasses on, totally unbothered, holding up a CS2 flashbang grenade with the pin pulled in one wing, the pin ring hanging off its other wing; the grenade glows bright white. A smug closed-beak grin.`
+- **vac** (стиль линейки взят с него): `Scene: a red ban hammer with a SHORT stubby wooden handle, the whole hammer drawn complete and angled diagonally, slamming down; only the chicken's two yellow feet stick out from under the hammer head, feathers flying; a white circle-slash 'prohibited' symbol on the hammer head. The end of the handle is fully visible inside the frame.`
+- **negev:** `Scene: a Negev light machine gun on its bipod, angled diagonally and drawn complete from stock to muzzle, standing on a huge heap of shiny brass shell casings; a compact comic muzzle flash at the barrel tip, kept well inside the frame; a few casings flying.`
+- **zeus:** `Scene: the chicken mascot, full body, holding a small yellow Zeus taser in its own wing and accidentally zapping itself: its whole body flashing with electric-blue lightning, a cartoon x-ray showing its skeleton through the feathers, feathers standing on end, googly eyes spinning, beak wide open. The taser is fully visible in its wing.`
 
 ---
 
@@ -477,8 +486,8 @@ Palette: dusty sand, olive green, faded orange, muted early-2000s colours.
 - **dust-ii:** `Scene: a big weathered wooden double door with iron studs set in a chunky sand-coloured stone wall block; through the gap between the doors only the chicken's orange beak and one googly eye peek out.`
 - **stuck:** `Scene: a big wooden supply crate; the chicken mascot is glitched halfway into it, its front half sunk into the crate wall, only its back half, tail feathers and two kicking feet stick out of the side.`
 - **banana:** `Scene: a giant ripe yellow banana with a sniper scope strapped on top, lying like a rifle on a small chunky slab of sandy floor tile.`
-- **bhop:** `Scene: the chicken mascot mid-air in a big bunny hop, wearing tall pink bunny ears, legs tucked, wings out for balance, beak open in joy, a small slab of sandy floor tile below it.`
-- **one-six** (одобрен): `Scene: the chicken mascot standing proud, ENTIRELY low-poly: body, head, wings, feet and comb all faceted; its googly eyes are a flat low-res texture. It stands on a small chunky square slab of sandy floor tile.`
+- **bhop:** `Scene: seen strictly from the SIDE in profile: the low-poly chicken mascot in a long flying leap from one small chunky stone block to another, body stretched forward horizontally, legs stretched back, wings swept back, tall pink low-poly bunny ears streaming backwards, a little puff of sand at the take-off block. Both blocks fully inside the frame.`
+- **one-six** (стиль линейки взят с него): `Scene: the chicken mascot standing proud, ENTIRELY low-poly: body, head, wings, feet and comb all faceted; its googly eyes are a flat low-res texture. It stands on a small chunky square slab of sandy floor tile; the whole slab, including its front and bottom edges, is fully visible with empty space below it.`
 
 ---
 
@@ -505,9 +514,9 @@ Palette: chrome, gold, electric blue, magenta stage light.
 
 - **level-10:** `Scene: a huge glowing orange-and-black round rank medal, a thick ring of ten glowing orange segments around its rim, a chrome star in the middle.`
 - **yellow-army:** `Scene: the chicken mascot as a die-hard esports fan in a yellow-and-black striped jersey with no logos or text, stretching a chunky yellow-and-black fan scarf high above its head, beak wide open in an ecstatic cheer, a few big yellow and black confetti pieces.`
-- **smurf:** `Scene: the chicken mascot in a cheap disguise: black plastic glasses with a fake nose and moustache and a pulled-down cap, trying to look innocent, hiding a gold-plated AK-47 behind its back.`
-- **tryhard:** `Scene: a glowing RGB mechanical gaming keyboard smoking from overuse, keycaps flying off, a huge RGB gaming headset lying on top of it.`
-- **major** (одобрен): `Scene: a huge gleaming championship trophy cup; the chicken mascot has dived head-first into the cup, only its yellow feet and tail feathers stick out of the top, kicking in panic.`
+- **smurf:** `Scene: the chicken mascot, full body, standing in a relaxed three-quarter pose in a cheap disguise: black plastic glasses with a fake nose and moustache and a backwards cap; it rests a gold-plated AK-47 casually on its shoulder, gripped firmly by one wing, and waves hello with the other wing, trying to look innocent.`
+- **tryhard:** `Scene: a compact glowing RGB mechanical gaming keyboard seen at an angle, smoking from overuse, a few keycaps flying off, a big RGB gaming headset lying on top of it. The whole keyboard, both of its ends, fully inside the frame.`
+- **major** (стиль линейки взят с него): `Scene: a huge gleaming championship trophy cup; the chicken mascot has dived head-first into the cup, only its yellow feet and tail feathers stick out of the top, kicking in panic.`
 
 ---
 
@@ -525,14 +534,14 @@ Palette: deep velvet red, antique gold, jade green, warm candle light.
 
 | slug | Имя | Цена | Риск | Курица |
 |---|---|---|---|---|
-| `blue-again` | Blue Again | 29900 | extreme | мелькает |
+| `blue-again` | Blue Again | 29900 | extreme | главная |
 | `asiimov` | Asiimov | 49900 | extreme | главная |
 | `howl` | Howl | 79900 | extreme | нет |
 | `fade` | Fade | 119900 | extreme | мелькает |
 | `dragon-lore` | Dragon Lore | 199900 | extreme | нет |
 
-- **blue-again:** `Scene: an open loot case on a velvet cushion, its lid thrown back, cold disappointing blue light pouring out of it onto a single plain blue-grey pistol lying inside; one white chicken feather resting on the rim of the case.` (мем: опять синька)
+- **blue-again:** `Scene: a compact ornate open loot case, its lid thrown back, cold disappointing blue light pouring out of it onto a single plain blue-grey pistol lying inside; the chicken mascot stands behind the case, both wings resting on its rim, leaning over to look in, googly eyes wide in disappointment. The whole case, including its bottom, fully inside the frame.` (мем: опять синька)
 - **asiimov:** `Scene: an AWP sniper rifle with the real Asiimov finish (white body, orange and black sci-fi panels) standing upright on a gilded display stand; the chicken mascot hugs the rifle with both wings, cheek pressed to it, googly eyes sparkling with greed.`
-- **howl:** `Scene: an M4A4 assault rifle with the real Howl finish (a red-orange snarling wolf) lying diagonally on a deep-red velvet cushion with gold tassels, wreathed in painted flames.`
+- **howl:** `Scene: an M4A4 assault rifle with the real Howl finish (a red-orange snarling wolf) lying diagonally on a deep-red velvet cushion with gold tassels, wreathed in compact painted flames that stay close to the rifle. The rifle's stock and muzzle are fully inside the frame.`
 - **fade:** `Scene: a karambit knife with the real Fade finish (a pink, purple and gold gradient) standing tip-down in a deep-red velvet cushion; one white chicken feather beside it, also fading from pink to purple to gold.`
-- **dragon-lore** (одобрен): `Scene: a sniper rifle lying diagonally on a plump deep-red velvet cushion with gold tassels; the rifle's stock and body are covered in a medieval-style golden-green dragon painting with ornate gold filigree; a few small gold sparkles.`
+- **dragon-lore** (стиль линейки взят с него): `Scene: a sniper rifle lying diagonally on a plump deep-red velvet cushion with gold tassels; the rifle's stock and body are covered in a medieval-style golden-green dragon painting with ornate gold filigree; a few small gold sparkles.`
