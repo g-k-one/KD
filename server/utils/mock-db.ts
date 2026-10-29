@@ -197,8 +197,8 @@ const CS_DEFS: CaseDef[] = [
   csCase(8, 'banana', 'Banana', 1490, 'medium'),
   csCase(9, 'bhop', 'Bhop', 1990, 'medium'),
   csCase(10, 'one-six', '1.6', 2990, 'medium'),
-  csCase(11, 'rank-10', 'Level 10', 3900, 'high', 'new'),
-  csCase(12, 'yellow-army', 'Yellow Army', 5900, 'high'),
+  csCase(11, 'ace', 'Ace', 3900, 'high', 'new'),
+  csCase(12, 'clutch', 'Clutch', 5900, 'high'),
   csCase(13, 'smurf', 'Smurf', 9900, 'high'),
   csCase(14, 'tryhard', 'Tryhard', 14900, 'high'),
   csCase(15, 'major', 'Major', 19900, 'high', 'hot'),
@@ -421,17 +421,17 @@ const toSummary = ({ items: _i, odds: _o, oddsVersion: _v, kurwadrop: _k, ...s }
 
 /** The row that fills itself: five cases a week, none of them from the first row */
 export const AUTO_ROW = 'weekly'
-// One row per CS line, cheapest first (on desktop the wide and tall cells still go first), closing on the 5-column
+// One row per CS line, FACEIT, Pro scene and Teams on top (GK's order), each row closing on the 5-column
 // grid: CS memes is eight cases with Negev wide and Zeus tall (10 cells, two rows), Teams is ten standard cards (two
 // rows), the other three are five standard cards (one row)
 const DEFAULT_HOME_LAYOUT: HomeLayout = {
   sections: [
+    { id: 'faceit', title: 'FACEIT', cases: ['faceit-level-1', 'match-found', 'anti-cheat', 'elo-climb', 'faceit-level-10'] },
+    { id: 'pro-scene', title: 'Pro scene', cases: ['ace', 'clutch', 'smurf', 'tryhard', 'major'] },
+    { id: 'teams', title: 'Teams', cases: ['mongolz', 'falcons', 'mouz', 'furia', 'astralis', 'g2', 'spirit', 'faze', 'vitality', 'navi'] },
     { id: 'cs-memes', title: 'CS memes', cases: ['eco-round', 'ping-999', 'flashbang', 'vac', 'rush-b', 'negev', 'zeus', 'noscope'] },
     { id: AUTO_ROW, title: 'Weekly picks', theme: 'coop' },
     { id: 'old-school', title: 'Old school', cases: ['dust-ii', 'stuck', 'banana', 'bhop', 'one-six'] },
-    { id: 'faceit', title: 'FACEIT', cases: ['faceit-level-1', 'match-found', 'anti-cheat', 'elo-climb', 'faceit-level-10'] },
-    { id: 'teams', title: 'Teams', cases: ['mongolz', 'falcons', 'mouz', 'furia', 'astralis', 'g2', 'spirit', 'faze', 'vitality', 'navi'] },
-    { id: 'pro-scene', title: 'Pro scene', cases: ['rank-10', 'yellow-army', 'smurf', 'tryhard', 'major'] },
   ],
   cards: { negev: 'wide', zeus: 'tall' },
 }

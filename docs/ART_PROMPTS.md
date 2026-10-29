@@ -381,7 +381,7 @@ Line palette: polished gold, crimson velvet and deep amber, rich sparkle on meta
 - **мелькает** — видны только лапы, клюв или перо (из-под бан-хаммера, из кубка);
 - **главная** — курица и есть гэг (бьёт тазером, прыгает в заячьих ушах).
 
-FACEIT и NAVI здесь только намёком: цвета и настроение, без логотипов и названий (это чужие бренды). Имена кейсов тоже намёки, на настоящие поменяешь сам, если будет можно.
+Чужих брендов в этих трёх линейках нет. FACEIT и команды с настоящими логотипами вынесены в свои линейки, разделы 11 и 10.
 
 ### Как генерировать
 
@@ -428,7 +428,7 @@ style. The second attached image is the approved style reference for this line: 
 |---|---|---|---|---|
 | 7. Memy | стикер | 0,49–9,99 | high | Eco Round, Ping 999, Flashbang, VAC, Rush B, Negev, Zeus, 360 Noscope |
 | 8. Old School | low-poly 2003 | 4,90–29,90 | medium | Dust II, Stuck, Banana, Bhop, 1.6 |
-| 9. Pro Scene | хром на сцене | 39–199 | high | Level 10, Yellow Army, Smurf, Tryhard, Major |
+| 9. Pro Scene | хром на сцене | 39–199 | high | Ace, Clutch, Smurf, Tryhard, Major |
 
 ---
 
@@ -513,14 +513,16 @@ Palette: chrome, gold, electric blue, magenta stage light.
 
 | slug | Имя | Цена | Риск | Курица | Намёк на |
 |---|---|---|---|---|---|
-| `rank-10` | Level 10 | 3900 | high | нет | FACEIT |
-| `yellow-army` | Yellow Army | 5900 | high | главная | NAVI |
+| `ace` | Ace | 3900 | high | нет | эйс |
+| `clutch` | Clutch | 5900 | high | главная | клатч |
 | `smurf` | Smurf | 9900 | high | главная | смурф |
 | `tryhard` | Tryhard | 14900 | high | нет | тряхард |
 | `major` | Major | 19900 | high | мелькает | мейджор |
 
-- **rank-10:** `Scene: a huge glowing orange-and-black round rank medal, a thick ring of ten glowing orange segments around its rim, a chrome star in the middle.`
-- **yellow-army:** `Scene: the chicken mascot as a die-hard esports fan in a yellow-and-black striped jersey with no logos or text, stretching a chunky yellow-and-black fan scarf high above its head, beak wide open in an ecstatic cheer, a few big yellow and black confetti pieces.`
+- **ace:** `Scene: a huge thick playing card made of polished chrome with gold bevelled edges, standing upright at a slight angle, a big gold spade symbol in its centre and small gold spades in two corners, no letters; five clean bullet holes punched through the card in a tight group, each with a little curl of smoke.`
+- **clutch:** `Scene: the chicken mascot, kneeling over a chunky chrome-and-gold C4 bomb with a blinking red light, a pro gaming headset on its head, cutting the last wire with a gold wire cutter gripped in one wing at the very last second; one big drop of sweat flying off its head, beak clenched, eyes huge with focus. The whole bomb and the chicken fully inside the frame.`
+
+Level 10 (намёк на FACEIT) и Yellow Army (намёк на NAVI) заменены 2026-10-29: они повторяли линейки FACEIT и Teams. Старые картинки лежат в `_ARCHIVE/old_versions_2026-10-29/pro-replaced/`.
 - **smurf:** `Scene: the chicken mascot, full body, standing in a relaxed three-quarter pose in a cheap disguise: black plastic glasses with a fake nose and moustache and a backwards cap; it rests a gold-plated AK-47 casually on its shoulder, gripped firmly by one wing, and waves hello with the other wing, trying to look innocent.`
 - **tryhard:** `Scene: a compact glowing RGB mechanical gaming keyboard seen at an angle, smoking from overuse, a few keycaps flying off, a big RGB gaming headset lying on top of it. The whole keyboard, both of its ends, fully inside the frame.`
 - **major** (стиль линейки взят с него): `Scene: a huge gleaming championship trophy cup; the chicken mascot has dived head-first into the cup, only its yellow feet and tail feathers stick out of the top, kicking in panic.`
@@ -571,7 +573,7 @@ the remaining space and all four corners so almost no plain twill is left: <attr
 | `vitality` | Vitality | 6900 | medium | фон — соты, сверху капает мёд | жёлтый |
 | `navi` | NAVI | 9900 | medium | вязаный шарф из угла в угол | жёлтый / чёрная |
 
-Yellow Army в Pro Scene — намёк на NAVI, теперь повторяет кейс NAVI. Что с ним делать, решает GK.
+Yellow Army из Pro Scene повторял кейс NAVI, поэтому заменён на Clutch.
 
 ---
 
@@ -593,4 +595,4 @@ Yellow Army в Pro Scene — намёк на NAVI, теперь повторяе
 | `elo-climb` | ELO Climb | 1290 | high | лезет по оранжевой стрелке графика вверх, как альпинист |
 | `faceit-level-10` | FACEIT Lvl 10 | 2490 | extreme | держит над головой значок 10 уровня, как кубок |
 
-`rank-10` (Level 10) в Pro Scene — тоже намёк на FACEIT. Он остался там, что с ним делать, решает GK.
+`rank-10` (Level 10) из Pro Scene повторял FACEIT Lvl 10, поэтому заменён на Ace. На главной FACEIT стоит первым рядом, за ним Pro Scene, потом Teams.
