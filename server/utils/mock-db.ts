@@ -421,16 +421,16 @@ const toSummary = ({ items: _i, odds: _o, oddsVersion: _v, kurwadrop: _k, ...s }
 
 /** The row that fills itself: five cases a week, none of them from the first row */
 export const AUTO_ROW = 'weekly'
-// One row per CS line, FACEIT, Pro scene and Teams on top (GK's order), each row closing on the 5-column
+// One row per CS line, FACEIT and Pro scene on top, then the weekly picks and Teams (GK's order), each row closing on the 5-column
 // grid: CS memes is eight cases with Negev wide and Zeus tall (10 cells, two rows), Teams is ten standard cards (two
 // rows), the other three are five standard cards (one row)
 const DEFAULT_HOME_LAYOUT: HomeLayout = {
   sections: [
     { id: 'faceit', title: 'FACEIT', cases: ['faceit-level-1', 'match-found', 'anti-cheat', 'elo-climb', 'faceit-level-10'] },
     { id: 'pro-scene', title: 'Pro scene', cases: ['ace', 'clutch', 'smurf', 'tryhard', 'major'] },
+    { id: AUTO_ROW, title: 'Weekly picks', theme: 'coop' },
     { id: 'teams', title: 'Teams', cases: ['mongolz', 'falcons', 'mouz', 'furia', 'astralis', 'g2', 'spirit', 'faze', 'vitality', 'navi'] },
     { id: 'cs-memes', title: 'CS memes', cases: ['eco-round', 'ping-999', 'flashbang', 'vac', 'rush-b', 'negev', 'zeus', 'noscope'] },
-    { id: AUTO_ROW, title: 'Weekly picks', theme: 'coop' },
     { id: 'old-school', title: 'Old school', cases: ['dust-ii', 'stuck', 'banana', 'bhop', 'one-six'] },
   ],
   cards: { negev: 'wide', zeus: 'tall' },
