@@ -731,8 +731,9 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     </Transition>
 
     <!-- above the stage (z 2): the case winding up after the press rose over the top marker, then the marker over it.
-         While Try free sits at the top centre the x1 top marker steps out (as on a result) and glides in on the press -->
-    <div v-if="!grid" class="pointer-events-none absolute inset-0 z-[2] overflow-hidden" :class="[markerClass, tryFree && phase === 'idle' && 'no-top']">
+         While Try free sits at the top centre the x1 top marker steps out (as on a result) and glides in on the press.
+         Keyed by the layout: x1 ↔ x2–x5 puts fresh markers in place, so the old ones don't fly across while they fade -->
+    <div v-if="!grid" :key="markerClass" class="pointer-events-none absolute inset-0 z-[2] overflow-hidden" :class="[markerClass, tryFree && phase === 'idle' && 'no-top']">
       <img src="/img/fx/marker-top.svg" alt="" class="kd-marker-a absolute" />
       <img src="/img/fx/marker-top.svg" alt="" class="kd-marker-b absolute" />
       <img src="/img/fx/marker-top-gold.svg" alt="" class="kd-marker-a kd-marker-gold absolute" />

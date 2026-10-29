@@ -87,7 +87,7 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
           <span class="type-12-caps flex items-center gap-1.5 text-neutral-11"><UiIcon name="trophy" :size="14" class="text-coin" />{{ $t('case.topDrops') }}</span>
           <span class="type-12-regular text-neutral-11">{{ $t('case.topDropsWindow') }}</span>
         </span>
-        <div class="scrollbar-none flex min-w-0 flex-1 gap-1.5 overflow-x-auto rounded-lg mask-r-from-85% sm:mask-none">
+        <div class="scrollbar-none flex min-w-0 flex-1 gap-1.5 overflow-x-auto rounded-2xl mask-r-from-85% sm:mask-none">
           <div v-for="(d, i) in top" :key="i" class="kd-top-drop" :style="{ '--rc': RARITY_COLOR[d.item.rarity], '--i': i }" :title="`${d.item.weapon} | ${d.item.skin} · ${d.nickname} · ${timeAgo(d.at)}`">
             <ItemArt :image="d.item.image" :rarity="d.item.rarity" :size="34" class="w-12 shrink-0" />
             <span class="flex min-w-0 flex-col gap-0.5">
@@ -118,7 +118,8 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
   gap: 12px;
   overflow: hidden;
   padding: 0 16px 0 8px;
-  border-radius: 16px;
+  /* the reel's, the dock's and the odds' 24 px */
+  border-radius: 24px;
   background: var(--color-neutral-2);
   transition: background-color var(--dur-slow) var(--ease-out);
 }
@@ -146,16 +147,16 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
   background: rgb(18 183 106 / 0.14);
   color: var(--color-success);
 }
-/* a 48px icon tile 8px in from the 64px card's 16px corners: 16 − 8 = 8 (concentric, as the top drops) */
+/* a 48px icon tile 8px in from the 64px card's 24px corners: 24 − 8 = 16 (concentric, as the top drops) */
 .kd-hc-ic {
   display: grid;
   width: 48px;
   height: 48px;
   flex-shrink: 0;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 16px;
 }
-/* 48px tiles in a 64px card: 8px inset, 16 − 8 = 8 radius (concentric) */
+/* 48px tiles in a 64px card: 8px inset, 24 − 8 = 16 radius (concentric) */
 .kd-top-drop {
   display: flex;
   height: 48px;
@@ -163,7 +164,7 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
   align-items: center;
   gap: 2px;
   padding-right: 10px;
-  border-radius: 8px;
+  border-radius: 16px;
   background: linear-gradient(90deg, color-mix(in srgb, var(--rc) 14%, var(--color-neutral-3)), var(--color-neutral-3) 70%);
 }
 .kd-top-x {

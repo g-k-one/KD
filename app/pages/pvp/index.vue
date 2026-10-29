@@ -168,12 +168,6 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
   background: var(--color-neutral-2);
   padding: 12px;
 }
-@media (min-width: 64rem) {
-  .kd-dock {
-    padding-inline: 16px;
-    border-radius: 28px;
-  }
-}
 /* the mode and the sort at the dock's 48 px (desktop), their 12 px corners */
 @media (min-width: 64rem) {
   :deep(.kd-sort48 > button) {

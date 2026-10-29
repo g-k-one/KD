@@ -223,12 +223,12 @@ if (import.meta.client) {
             </NuxtLink>
           </div>
         </UiPageBar>
-        <CaseTransparency :data="cs" />
       </div>
 
-      <!-- phones: one 12 px step between the odds, the reel, the controls and the next hook (the page gap of 24 above it
-           pulled up to match); desktop keeps its 40 / 16 -->
-      <section ref="reelSection" class="flex scroll-mt-24 flex-col gap-3 max-lg:-mt-3 lg:gap-4">
+      <!-- one stage: the odds, the reel, the controls and the next hook, one step apart (12 px phones, 16 desktop),
+           its top pulled up to the bar's 16 px instead of the page gap -->
+      <section ref="reelSection" class="-mt-2 flex scroll-mt-24 flex-col gap-3 lg:-mt-6 lg:gap-4">
+        <CaseTransparency :data="cs" />
         <CaseReel
           ref="reel"
           :data="cs"

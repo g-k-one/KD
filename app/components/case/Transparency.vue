@@ -42,7 +42,7 @@ const isLg = useMediaQuery('(min-width: 1024px)')
 <template>
   <div
     ref="root"
-    class="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-3 rounded-3xl bg-neutral-2 px-4 py-3 lg:flex lg:gap-12 lg:py-[5px]"
+    class="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-3 rounded-5xl bg-neutral-2 px-4 py-3 lg:flex lg:gap-12 lg:py-[5px]"
   >
     <div class="relative order-1 flex items-center gap-2 lg:gap-3">
       <span class="text-xl leading-7 font-bold text-neutral-11 lg:type-28">{{ $t('case.rtp') }}</span>

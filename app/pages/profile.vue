@@ -350,13 +350,6 @@ async function saveTrade() {
   background: var(--color-neutral-2);
   padding: 12px;
 }
-@media (min-width: 64rem) {
-  .kd-dock {
-    padding-inline: 16px;
-    /* its 12px chips stand 16px in: 12 + 16 */
-    border-radius: 28px;
-  }
-}
 .kd-dock-stat {
   display: inline-flex;
   height: 48px;
