@@ -311,10 +311,11 @@ const canReset = computed(() => !!(props.input || props.target))
     transform: translateX(3px);
   }
 }
+/* 24 px like every panel of the page (stake, target, inventory), 16 px in from every side */
 .kd-panel {
-  border-radius: 16px;
+  border-radius: 24px;
   background: var(--color-neutral-2);
-  padding: 10px 14px 12px;
+  padding: 16px;
 }
 /* A fixed-height pill, so the percentage never makes the button taller */
 /* Phones: sticks above the bottom nav on a fade of the page ground */

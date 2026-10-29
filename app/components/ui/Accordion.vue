@@ -6,7 +6,7 @@ const id = useId()
 </script>
 
 <template>
-  <div class="rounded-3xl bg-neutral-2 transition-colors duration-200" :class="open && 'bg-neutral-3'">
+  <div class="rounded-5xl bg-neutral-2 transition-colors duration-200" :class="open && 'bg-neutral-3'">
     <button
       type="button"
       class="type-14 flex min-h-14 w-full items-center gap-4 px-4 text-left hover:text-neutral-15"

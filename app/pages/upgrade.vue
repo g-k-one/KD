@@ -724,7 +724,7 @@ async function runUpgrade() {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  border-radius: 20px;
+  border-radius: 24px;
   background: var(--color-neutral-2);
   padding: 10px;
   transition:

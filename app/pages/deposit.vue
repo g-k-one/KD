@@ -126,7 +126,7 @@ async function pay() {
       </div>
 
       <div class="flex flex-col gap-4 max-lg:order-last lg:col-start-1 lg:row-start-2">
-        <p class="type-14-regular rounded-2xl bg-neutral-2 px-4 py-3 text-neutral-12">
+        <p class="type-14-regular rounded-5xl bg-neutral-2 px-4 py-3 text-neutral-12">
           <!-- one line and the rules (the long version lives in the AML policy) -->
           <i18n-t keypath="deposit.sharedWarning" scope="global">
             <template #notAllow><span class="text-danger">{{ $t('deposit.notAllow') }}</span></template>
