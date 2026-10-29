@@ -350,6 +350,12 @@ async function saveTrade() {
   background: var(--color-neutral-2);
   padding: 12px;
 }
+/* desktop: 16 px on all sides around the 48 px stats (the 56 px Deposit sets the height) */
+@media (min-width: 64rem) {
+  .kd-dock {
+    padding-inline: 16px;
+  }
+}
 .kd-dock-stat {
   display: inline-flex;
   height: 48px;

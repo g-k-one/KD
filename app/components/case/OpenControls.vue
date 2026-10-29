@@ -82,7 +82,12 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
   background: var(--color-neutral-2);
   padding: 12px;
 }
-/* the reel's 24 px; its 12 px chips stand 12 px in from the sides (24 − 12), centred on the 56 px Open button */
+/* desktop: the 48 px controls sit centred on the 56 px Open button, 16 px from the top and bottom, so the sides are 16 too */
+@media (min-width: 64rem) {
+  .kd-dock {
+    padding-inline: 16px;
+  }
+}
 .kd-kurwa-word {
   background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light) 45%, var(--color-item-gold));
   background-clip: text;
