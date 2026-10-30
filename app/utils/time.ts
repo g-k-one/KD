@@ -15,6 +15,13 @@ export function countdown(iso: string | null, now = Date.now()) {
   return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`
 }
 
+/** A time-limited case: "11D 12:45:00", the seconds always running; "12:45:00" on the last day */
+export function countdownDays(iso: string, now = Date.now()) {
+  const days = Math.floor(Math.max(0, Date.parse(iso) - now) / 86_400_000)
+  const rest = countdown(new Date(Date.parse(iso) - days * 86_400_000).toISOString(), now)
+  return days ? `${days}D ${rest}` : rest
+}
+
 /** Long countdowns (the weekly race): "3d 04:12" from a day out, "04:12:05" on the last day */
 export function countdownLong(iso: string | null, now = Date.now()) {
   if (!iso) return ''

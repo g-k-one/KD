@@ -24,6 +24,9 @@ const badge = computed(() => {
 
 const RISK_TEXT = { low: 'text-success', medium: 'text-coin', high: 'text-brand-light', extreme: 'text-danger' } as const
 
+const clock = useClock(1000)
+/** A case limited by time, past its end: it reads like one sold out */
+const ended = computed(() => !!props.item.endsAt && clock.value >= Date.parse(props.item.endsAt))
 /** A limited case: what is left, and how full the bar is; low stock turns hot */
 const stock = computed(() => {
   const l = props.item.limited
@@ -78,7 +81,7 @@ function onArtLeave() {
   <NuxtLink
     :to="`/case/${item.slug}`"
     class="kd-case-card kd-spotlight group relative flex h-full flex-col items-center gap-2 rounded-5xl border max-sm:rounded-4xl"
-    :class="[stock?.out && 'is-sold-out', shape && `is-${shape}`, look && `look-${look}`, full && 'is-full']"
+    :class="[(stock?.out || ended) && 'is-sold-out', shape && `is-${shape}`, look && `look-${look}`, full && 'is-full']"
     @pointermove="onArtPointer"
     @pointerleave="onArtLeave"
   >
@@ -127,6 +130,7 @@ function onArtLeave() {
           </span>
         </FxFire>
       </span>
+      <CaseEndsPlate v-else-if="item.endsAt" :ends-at="item.endsAt" class="absolute bottom-1 left-1/2 z-[2] -translate-x-1/2" />
     </div>
 
     <div class="flex w-full flex-col items-center gap-2 px-3 pb-3 lg:gap-3 lg:px-4 lg:pb-[14px]">

@@ -32,6 +32,8 @@ const props = defineProps<{
   demo?: boolean
   /** Offer a demo spin on the idle stage ("Try free"); the case page only */
   tryFree?: boolean
+  /** A case limited by time: its clock in the idle stage's corner */
+  endsAt?: string
   /** KURWADROP on: the Golden Chicken shows up on the reel at its real odds */
   kurwadrop?: boolean
   /** Fast open: no breath, no tease */
@@ -719,6 +721,9 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
          every amount: 8 inside the 4 px frame, 12 on the phone grid (no frame of its own). Idle, it comes and goes with
          the idle stage; after a demo it arrives with the drops' names (as the last reel lands) and leaves with them at
          once on the next spin -->
+    <Transition name="kd-idle">
+      <CaseEndsPlate v-if="endsAt && phase === 'idle' && !breathing" :ends-at="endsAt" class="absolute left-4 z-10" :class="grid ? 'top-4' : 'top-3'" />
+    </Transition>
     <Transition name="kd-idle">
       <div v-if="tryFree && phase === 'idle' && !breathing" class="absolute inset-x-0 z-10 flex justify-center" :class="grid ? 'top-3' : 'top-2'">
         <UiButton variant="secondary" size="s" icon="demo" class="kd-try-stage" @click.stop="emit('demo')">{{ $t('case.tryFree') }}</UiButton>

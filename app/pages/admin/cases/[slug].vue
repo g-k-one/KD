@@ -57,6 +57,10 @@ const limitedOn = computed({
     draft.value.limited = on ? (saved.value?.limited ?? { total: 500, left: 500 }) : null
   },
 })
+const endsAtText = computed({
+  get: () => draft.value?.endsAt ?? '',
+  set: (v: string) => draft.value && (draft.value.endsAt = v.trim() || null),
+})
 /** Auto odds go stale once the price, RTP or contents change: the solver runs on save */
 const stale = computed(() => {
   const d = draft.value
@@ -107,6 +111,10 @@ async function duplicate() {
             <AdminField label="Left"><UiInput v-model.number="draft.limited.left" lazy align="right" inputmode="numeric" /></AdminField>
           </div>
           <p v-else class="type-14-regular text-neutral-11">Unlimited</p>
+        </AdminPanel>
+
+        <AdminPanel title="Limited time" icon="history" hint="It can be opened until then; empty keeps it on for good">
+          <AdminField label="Ends at" hint="UTC, like 2026-11-11T18:00:00Z"><UiInput v-model="endsAtText" lazy clearable placeholder="No end" @clear="endsAtText = ''" /></AdminField>
         </AdminPanel>
 
         <AdminPanel title="Card on home" icon="view-grid" hint="The same in every row; 2×1 and 1×2 show on desktop">

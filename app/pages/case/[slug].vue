@@ -62,10 +62,13 @@ watch(count, () => {
 // What the main button says: open, sign in (guests), or top up the shortfall (GGDrop) — the tap does the same
 const total = computed(() => openPrice.value * count.value)
 const shortBy = computed(() => (session.user ? Math.max(0, total.value - session.user.balance) : 0))
+const clock = useClock(1000)
+const ended = computed(() => !!cs.value?.endsAt && clock.value >= Date.parse(cs.value.endsAt))
 const cta = computed(() => {
   // waiting for the server there is nothing to skip yet
   if (pending.value) return { label: t('case.opening'), amount: total.value, short: false }
   if (phase.value === 'spinning') return { label: t('case.skip'), amount: total.value, short: false }
+  if (ended.value) return { label: t('cases.ended'), amount: total.value, short: false }
   if (!session.user) return { label: t('case.signInToOpen'), amount: total.value, short: false }
   if (shortBy.value > 0) return { label: t('case.topUp'), amount: shortBy.value, short: true }
   // the same words before and after a drop: the button that opens again should not change its text
@@ -94,7 +97,7 @@ const unsoldTotal = computed(() =>
 )
 
 async function open(asDemo = false) {
-  if (phase.value === 'spinning') return
+  if (phase.value === 'spinning' || (ended.value && !asDemo)) return
   if (!asDemo && !session.user) return ui.openSignIn()
   if (!asDemo && session.user && session.user.balance < openPrice.value * count.value) {
     // Top up over the case instead of leaving it
@@ -242,6 +245,7 @@ if (import.meta.client) {
           :demo="demo"
           :kurwadrop="kurwadrop"
           :fast="fast"
+          :ends-at="cs.endsAt"
           @sell="(uid) => sell([uid])"
           try-free
           @demo="open(true)"
@@ -260,6 +264,7 @@ if (import.meta.client) {
           :unsold-total="unsoldTotal"
           :pending="pending"
           :selling="selling"
+          :ended="ended"
           @open="open()"
           @skip="reel?.skip()"
           @sell-all="sell(results.filter((r) => !sold.includes(r.uid)).map((r) => r.uid))"
@@ -288,9 +293,9 @@ if (import.meta.client) {
         >
           <img :src="cs.image" alt="" class="size-10 object-contain" />
           <span class="type-12-caps min-w-0 flex-1 truncate">{{ cs.name }} · x{{ count }}</span>
-          <UiButton :variant="phase === 'spinning' ? 'secondary' : 'primary'" class="min-w-36 shrink-0" @click="phase === 'spinning' ? reel?.skip() : (open(), scrollToReel())">
+          <UiButton :variant="phase === 'spinning' || ended ? 'secondary' : 'primary'" :disabled="ended && phase !== 'spinning'" class="min-w-36 shrink-0" @click="phase === 'spinning' ? reel?.skip() : (open(), scrollToReel())">
             <span>{{ cta.label }}</span>
-            <span v-if="phase !== 'spinning'" class="btn-value">
+            <span v-if="phase !== 'spinning' && !ended" class="btn-value">
               <span v-if="cta.short" class="type-14">+</span>
               <UiPrice :amount="cta.amount" size="m" tone="inverse" />
             </span>

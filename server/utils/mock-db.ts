@@ -186,17 +186,20 @@ const csCase = (n: number, slug: string, name: string, price: number, risk: Case
   id: `cs${n}`, slug, name, image: `/img/cases/${slug}.webp`, price, risk, ...(tag && { tag }), targetRtp: 9200, createdAt: '2026-10-29',
   art: shaped ? { ...CS_ART, [shaped]: `/img/cases/${shaped}/${slug}.webp` } : CS_ART,
 })
+// Old school is back for a limited time: the whole line closes on a real date, nothing restarts the clock
+const OLD_SCHOOL_ENDS = '2026-11-11T18:00:00.000Z'
+const oldSchool = (def: CaseDef): CaseDef => ({ ...def, endsAt: OLD_SCHOOL_ENDS })
 const CS_DEFS: CaseDef[] = [
   csCase(1, 'ping-999', 'Ping 999', 99, 'high', 'new'),
   csCase(2, 'flashbang', 'Flashbang', 199, 'high'),
   csCase(3, 'vac', 'VAC', 299, 'high', 'hot'),
   csCase(4, 'negev', 'Negev', 499, 'high', undefined, 'wide'),
   csCase(5, 'zeus', 'Zeus', 799, 'high', undefined, 'tall'),
-  csCase(6, 'dust-ii', 'Dust II', 490, 'medium', 'new'),
-  csCase(7, 'stuck', 'Stuck', 990, 'medium'),
-  csCase(8, 'banana', 'Banana', 1490, 'medium'),
-  csCase(9, 'bhop', 'Bhop', 1990, 'medium'),
-  csCase(10, 'one-six', '1.6', 2990, 'medium'),
+  oldSchool(csCase(6, 'dust-ii', 'Dust II', 490, 'medium', 'new')),
+  oldSchool(csCase(7, 'stuck', 'Stuck', 990, 'medium')),
+  oldSchool(csCase(8, 'banana', 'Banana', 1490, 'medium')),
+  oldSchool(csCase(9, 'bhop', 'Bhop', 1990, 'medium')),
+  oldSchool(csCase(10, 'one-six', '1.6', 2990, 'medium')),
   csCase(11, 'ace', 'Ace', 3900, 'high', 'new'),
   csCase(12, 'clutch', 'Clutch', 5900, 'high'),
   csCase(13, 'smurf', 'Smurf', 9900, 'high'),
@@ -799,6 +802,7 @@ export async function openCase(slug: string, count: number, demo: boolean, kurwa
   const cs = getCase(slug)
   const n = Math.min(5, Math.max(1, Math.floor(count) || 1))
   const price = kurwadrop ? cs.kurwadrop.price : cs.price
+  if (!demo && cs.endsAt && Date.now() >= Date.parse(cs.endsAt)) throw new MockError(409, 'This case has ended')
   // a limited case: the stock must cover every case of the open (x1…x5); demo spins never spend it
   if (!demo && cs.limited && cs.limited.left < n) throw new MockError(409, cs.limited.left ? `Only ${cs.limited.left} left` : 'Sold out')
   if (!demo) spend(price * n)

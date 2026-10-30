@@ -72,6 +72,7 @@ function toAdminCase(def: CaseDef): AdminCase {
     tag: def.tag ?? null,
     // the built case keeps the stock as opens spend it
     limited: c.limited ? { ...c.limited } : null,
+    endsAt: c.endsAt ?? null,
     card: getHomeLayout().layout.cards[def.slug] ?? 'standard',
     art: { ...c.art },
     animated: !!(def.rig || def.animation),
@@ -116,6 +117,9 @@ export function setAdminCase(slug: string, input: Partial<AdminCaseInput>) {
     const total = clamp(input.limited.total, 1, 1_000_000)
     def.limited = { total, left: clamp(input.limited.left, 0, total) }
   } else delete def.limited
+  const endsAt = input.endsAt ? Date.parse(input.endsAt) : NaN
+  if (Number.isNaN(endsAt)) delete def.endsAt
+  else def.endsAt = new Date(endsAt).toISOString()
   if (input.odds === 'manual') {
     def.preset = scaleTickets(picked)
     delete def.itemIds
@@ -166,6 +170,7 @@ function copyCase(from: string, slug?: string) {
     copyOf: def.slug,
     createdAt: new Date().toISOString().slice(0, 10),
     ...(built.limited && { limited: { ...built.limited } }),
+    ...(built.endsAt && { endsAt: built.endsAt }),
   }
   // contents picked by the slug would change with it: name them
   if (!copy.preset) copy.itemIds = built.items.map((i) => i.id)

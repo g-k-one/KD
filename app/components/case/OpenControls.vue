@@ -26,6 +26,8 @@ const props = defineProps<{
   pending?: boolean
   /** selling the drops, the server has not answered yet */
   selling?: boolean
+  /** a case limited by time, past its end: the button says so and stays shut */
+  ended?: boolean
 }>()
 const emit = defineEmits<{ open: []; skip: []; sellAll: [] }>()
 const main = () => (props.phase === 'spinning' ? emit('skip') : emit('open'))
@@ -42,14 +44,14 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
     <UiSegmented v-model="count" :options="COUNT_OPTIONS" :disabled="phase === 'spinning'" block class="mb-1 lg:mb-0 lg:w-60" />
 
     <div class="flex flex-col">
-      <UiButton size="l" class="kd-main w-full lg:h-14 lg:w-80" :variant="phase === 'spinning' ? 'secondary' : 'primary'" :loading="pending" @click="main">
+      <UiButton size="l" class="kd-main w-full lg:h-14 lg:w-80" :variant="phase === 'spinning' || ended ? 'secondary' : 'primary'" :loading="pending" :disabled="ended && phase !== 'spinning'" @click="main">
         <span>{{ label }}</span>
-        <span v-if="phase !== 'spinning'" class="btn-value">
+        <span v-if="phase !== 'spinning' && !ended" class="btn-value">
           <span v-if="short" class="type-14">+</span>
           <UiPrice :amount="amount" size="m" tone="inverse" />
         </span>
-        <UiIcon v-else-if="!pending" name="chevron-right" :size="18" class="kd-skip-icon" />
-        <span v-if="phase === 'idle'" class="kd-shine" />
+        <UiIcon v-else-if="phase === 'spinning' && !pending" name="chevron-right" :size="18" class="kd-skip-icon" />
+        <span v-if="phase === 'idle' && !ended" class="kd-shine" />
       </UiButton>
       <!-- Phones: Sell all unfolds under the main button instead of squeezing it -->
       <div class="kd-unfold lg:hidden" :class="showSell && 'is-open'">

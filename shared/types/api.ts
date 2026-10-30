@@ -35,6 +35,8 @@ export interface CaseSummary {
   art?: { wide?: string; tall?: string; full?: string }
   /** A limited case: how many there were and how many are left. Every open spends one; at 0 it is sold out. */
   limited?: { total: number; left: number }
+  /** A case limited by time: it can be opened until then, ISO */
+  endsAt?: string
   createdAt: string
 }
 
@@ -655,6 +657,8 @@ export interface AdminCase {
   tag: CaseTag | null
   /** A limited case: every open spends one, at 0 it is sold out */
   limited: { total: number; left: number } | null
+  /** A case limited by time: its end, ISO */
+  endsAt: string | null
   /** Its card on home (the same as HomeLayout.cards) */
   card: HomeCardKind
   /** The art it has; a card kind needs its art */
@@ -679,6 +683,7 @@ export interface AdminCaseInput {
   risk: RiskLevel
   tag: CaseTag | null
   limited: { total: number; left: number } | null
+  endsAt: string | null
   card: HomeCardKind
   odds: AdminOddsMode
   items: Array<{ id: string; tickets: number }>
