@@ -49,6 +49,11 @@ const guestJoin = computed(() => props.battle.status === 'waiting' && !session.u
 const action = computed(() => (guestJoin.value ? 'pvp.signInToJoin' : { waiting: 'pvp.join', live: 'pvp.watch', finished: 'pvp.view' }[props.battle.status]))
 const roundsTip = computed(() => (props.battle.status === 'live' ? t('pvp.roundShort', { n: round.value, of: props.battle.rounds.length }) : `${props.battle.rounds.length} ${t('pvp.rounds')}`))
 const modeTip = computed(() => t(`pvp.modeTip.${props.battle.mode}`))
+// every row's circle has its own place in the turn and its own way round, so a list of them never moves in step
+const circle = computed(() => {
+  const n = Number(String(props.battle.id).replace(/\D/g, '')) || 0
+  return { '--phase': ((n * 0.618) % 1).toFixed(3), '--way': n % 2 ? 'reverse' : 'normal' }
+})
 // a guest's Join opens the sign-in instead of a room they cannot sit in
 function onClick(e: MouseEvent) {
   if (!guestJoin.value) return
@@ -66,7 +71,7 @@ function onClick(e: MouseEvent) {
   >
     <!-- rounds: the count in a circle -->
     <div class="kd-brow-rounds flex items-center px-2 pt-2 lg:justify-center lg:p-0">
-      <span class="kd-rounds grid size-11 shrink-0 place-items-center rounded-full lg:size-19" :title="roundsTip">
+      <span class="kd-rounds grid size-11 shrink-0 place-items-center rounded-full lg:size-19" :style="circle" :title="roundsTip">
         <span class="kd-rounds-n tabular-nums" :class="battle.status === 'live' ? 'type-12-caps lg:type-20-caps' : 'type-20-caps lg:type-28'">{{ battle.status === 'live' ? `${round}/${battle.rounds.length}` : battle.rounds.length }}</span>
       </span>
     </div>
@@ -206,7 +211,7 @@ function onClick(e: MouseEvent) {
   inset: -25%;
   z-index: -2;
   background: conic-gradient(from 0deg, transparent 0 15%, var(--glow) 42%, transparent 62%, color-mix(in srgb, var(--glow) 50%, transparent) 86%, transparent);
-  animation: kd-rounds-turn var(--turn) linear infinite;
+  animation: kd-rounds-turn var(--turn) linear calc(var(--phase) * var(--turn) * -1) infinite var(--way);
 }
 .kd-rounds::after {
   content: '';
@@ -216,8 +221,8 @@ function onClick(e: MouseEvent) {
   border-radius: inherit;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 24%, var(--cell)), var(--cell));
   animation:
-    kd-rounds-rim var(--rim) linear infinite,
-    kd-rounds-breath calc(var(--rim) * 0.7) ease-in-out infinite alternate;
+    kd-rounds-rim var(--rim) linear calc(var(--phase) * var(--rim) * -2) infinite var(--way),
+    kd-rounds-breath calc(var(--rim) * 0.7) ease-in-out calc(var(--phase) * var(--rim) * -1) infinite alternate;
 }
 /* 0.75 px off the edge at the same share on both sizes of the circle */
 @media (min-width: 64rem) {
@@ -232,8 +237,8 @@ function onClick(e: MouseEvent) {
 }
 .kd-brow.is-live .kd-rounds::before {
   animation:
-    kd-rounds-turn var(--turn) linear infinite,
-    kd-rounds-pulse 1.4s ease-in-out infinite alternate;
+    kd-rounds-turn var(--turn) linear calc(var(--phase) * var(--turn) * -1) infinite var(--way),
+    kd-rounds-pulse 1.4s ease-in-out calc(var(--phase) * -1.4s) infinite alternate;
 }
 .kd-brow.is-finished .kd-rounds {
   --glow: var(--color-neutral-5);
