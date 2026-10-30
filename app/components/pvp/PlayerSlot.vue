@@ -51,13 +51,14 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
         <UiPrice v-if="result || playing" :amount="Math.round(totalShown)" :size="compact ? 's' : 'm'" :tone="winner ? 'success' : result ? 'default' : 'coin'" class="tabular-nums" />
       </span>
       <!-- the chance to win, from the first second to the last round -->
-      <span v-if="!result && chance != null" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end pl-1'">
+      <span v-if="!result && chance != null" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end gap-1 pl-1'">
         <span class="tabular-nums" :class="[compact ? 'type-14' : 'type-20-caps', lead ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15']">{{ Math.round(chanceShown) }}%</span>
         <span v-if="!compact" class="type-10-caps whitespace-nowrap text-neutral-11">{{ $t('pvp.toWin') }}</span>
       </span>
       <!-- once it is over: what happened, not a 100% / 0% -->
-      <span v-if="result" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end'">
+      <span v-if="result" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end gap-1'">
         <span :class="[compact ? 'type-12-caps' : 'type-20-caps', result === 'won' ? 'text-success' : 'text-neutral-11']">{{ result === 'won' ? $t('pvp.won') : $t('pvp.lost') }}</span>
+        <span v-if="!compact" class="type-10-caps text-neutral-11">{{ $t('pvp.result') }}</span>
       </span>
     </template>
     <template v-else>
