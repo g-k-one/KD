@@ -231,13 +231,13 @@ function runCount() {
   countTimers = []
   countHome.value = true
   prepareCount()
-  at(4200, () => countBeat(3))
-  at(3200, () => countBeat(2))
-  at(2200, () => countBeat(1))
-  at(1200, () => countBeat(0))
-  at(700, () => (countSink.value = true))
-  at(350, () => (countHome.value = false))
-  at(280, countLanded)
+  at(4000, () => countBeat(3))
+  at(3000, () => countBeat(2))
+  at(2000, () => countBeat(1))
+  at(1000, () => countBeat(0))
+  at(620, () => (countSink.value = true))
+  at(270, () => (countHome.value = false))
+  at(200, countLanded)
 }
 watch(countdown, (n, old) => n > 0 && !old && nextTick(runCount))
 onMounted(() => {
@@ -560,7 +560,7 @@ const roundLine = computed(() => {
           <span class="kd-team-name truncate" :class="[isMobile ? 'type-12-caps' : 'type-16-caps', `is-${TEAM_SIDE[gi]}`]">{{ $t(`pvp.team.${TEAM_SIDE[gi]}${isMobile ? 'Short' : ''}`) }}</span>
           <UiPrice :amount="groupTotal(g)" :size="isMobile ? 's' : 'm'" :tone="teamState(g) === 'lost' ? 'muted' : teamState(g) === 'won' ? 'default' : 'coin'" class="kd-fade tabular-nums" :class="revealed > 0 && 'is-on'" />
         </span>
-        <span class="flex shrink-0 flex-col items-end gap-1">
+        <span v-if="b.status !== 'waiting'" class="flex shrink-0 flex-col items-end gap-1">
           <span :class="[isMobile ? 'type-14-caps' : 'type-20-caps', done ? (teamState(g) === 'won' ? 'text-success' : 'text-neutral-11') : teamState(g) === 'lead' ? 'text-success' : 'text-neutral-15', !done && 'tabular-nums']">{{ done ? $t(teamState(g) === 'won' ? 'pvp.won' : 'pvp.lost') : `${Math.round(chances[g[0]!.slot] ?? 0)}%` }}</span>
           <span v-if="!isMobile" class="type-10-caps" :class="teamState(g) === 'won' ? 'text-success' : 'text-neutral-11'">{{ done ? $t('pvp.result') : $t('pvp.toWin') }}</span>
         </span>
@@ -573,7 +573,7 @@ const roundLine = computed(() => {
         :total="totals[s.slot]"
         :winner="done && winners.includes(s.slot)"
         :lead="leaders.includes(s.slot)"
-        :chance="s.player && !done ? chances[s.slot] : undefined"
+        :chance="s.player && !done && b.status !== 'waiting' ? chances[s.slot] : undefined"
         :result="s.player && done ? (winners.includes(s.slot) ? 'won' : 'lost') : undefined"
         :compact="isMobile"
         :can-join="!s.player && b.status === 'waiting' && !youIn"

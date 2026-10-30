@@ -21,7 +21,7 @@ import { RARITY_HEX } from './rarity'
  *               (the label's middle sits at y ≈ 300)
  *   kdBlaze   — kdBurn turned up for a small plate that must read as on fire (a limited case's stock): tall licks
  *               that clear the plate's top edge, a denser shower of embers, a hotter glow; same base line
- *   kdPuff    — one-shot: white clubs of smoke roll out low and flat from the middle, stop short and hang as they thin
+ *   kdPuff    — one-shot: a faint wave leaves the middle while white clubs of smoke roll out, stop short and thin away
  *   kdRank    — Forge's rank reveal (motion pack, `tier`: base → luck → mega → ultra → jackpot) in the rarity's own
  *               colour, one burst on the drop's rarity shape; opts { color: '#hex', level: 0…4 }
  */
@@ -404,12 +404,13 @@ export function defineKdEffects(engine: Engine) {
     },
   }))
 
+  // A few clubs, not big: the cost of smoke is the area of its squares, not their number (each is overdrawn).
   // Fast out, then almost still: the air stops the smoke. Flattened in y, so a floor lies under it. Normal blending: smoke is
   // matter, not light
   const SMOKE: Rgb = [1, 1, 1]
   engine.define('kdPuff', (h) => ({
     atlas: 'kd',
-    period: 2,
+    period: 1.4,
     init: (s) => Object.assign(s, { fired: false, sp: [] as Particle[] }),
     update(s, dt, at) {
       const { R, pick } = h
@@ -418,15 +419,17 @@ export function defineKdEffects(engine: Engine) {
         s.fired = true
         const clubs = [at.map.smoke1, at.map.smoke2, at.map.smoke3, at.map.smoke4]
         const first = R(0, 6.28)
-        for (let i = 0; i < 14; i++) {
-          const a = first + (i / 14) * 6.28 + R(-0.2, 0.2)
-          const v = R(130, 400)
-          h.spawn(sp, { x: 180 + Math.cos(a) * 34, y: 196 + Math.sin(a) * 12, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.32 - R(6, 26), drag: 3.8, size: R(90, 170), sc: [[0, 0.45], [0.25, 0.9], [1, 1.6]], life: R(1, 1.7), rot: R(0, 6.28), vr: R(-0.35, 0.35), cells: [pick(clubs)], add: 0, alpha: 0.46, tint: SMOKE, fadeIn: 0.05, fadeOut: 0.8 })
+        for (let i = 0; i < 9; i++) {
+          const a = first + (i / 9) * 6.28 + R(-0.2, 0.2)
+          const v = R(150, 320)
+          h.spawn(sp, { x: 180 + Math.cos(a) * 34, y: 172 + Math.sin(a) * 12, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.4 - R(24, 60), drag: 3.2, size: R(110, 160), sc: [[0, 0.5], [0.3, 0.9], [1, 1.4]], life: R(0.9, 1.3), rot: R(0, 6.28), vr: R(-0.35, 0.35), cells: [pick(clubs)], add: 0, alpha: 0.46, tint: SMOKE, fadeIn: 0.05, fadeOut: 0.8 })
         }
       }
       h.step(sp, dt)
     },
     render(s, c) {
+      const k = s.t / 0.6
+      if (k < 1) h.sprite(c, 180, 172, 70 + 330 * h.easeOut(k), 0, (1 - k) * 0.16, 1, c.at.map.ring!, 0.72, SMOKE)
       h.draw(c, s.sp as Particle[])
     },
   }))
