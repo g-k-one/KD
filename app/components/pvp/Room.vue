@@ -14,8 +14,6 @@ const session = useSessionStore()
 const ui = useUiStore()
 const toast = useToast()
 const sfx = useSfx()
-const ex = useExtrude()
-const fx = useForge()
 
 const { data, refresh, error } = await useFetch<BattleResponse>(() => `/api/battles/${id.value}`, { key: `battle-${id.value}` })
 if (error.value) {
@@ -128,97 +126,24 @@ watch(done, (d) => {
   }
 })
 
-// the seconds before the first round, counted down big over the dimmed arena
+// the seconds before the first round (the page's clock ticks late, so a fresh start would read 4: never above 3)
 const countdown = computed(() =>
-  b.value.status !== 'waiting' && b.value.startedAt && clock.value.round < 0 ? Math.max(0, Math.ceil((Date.parse(b.value.startedAt) - now.value) / 1000)) : 0,
+  b.value.status !== 'waiting' && b.value.startedAt && clock.value.round < 0 ? Math.min(3, Math.max(0, Math.ceil((Date.parse(b.value.startedAt) - now.value) / 1000))) : 0,
 )
-// The numbers are 3D metal (Extrude): the 3 spins in, each next flips out of the one before it while the whole number
-// swings to the other side, and every beat lands with the case reel's sparks (Forge's kdReveal) in the mode's colour,
-// stronger from 3 to 1. The 1 flips into a big VS, which shrinks into the arena's VS badge as the first round spins up. The
-// label is mounted ahead, while the seats fill, so the first number does not pay for the shader; its small canvas keeps
-// the ray marching light. No WebGL or reduced motion: the plain number
-const COUNT_LOOK = {
-  font: '800 {s}px Rubik, ui-sans-serif, system-ui, sans-serif',
-  charset: '0123456789VS',
-  face: ['#fff6e0', '#ffc46b', '#ff7a1a'],
-  side: ['#d9480f', '#2a0e00'],
-  metal: 0.35,
-  gloss: 0.7,
-  bevel: 2.5,
-  depth: 18,
-  strokes: [{ color: '#2a1400', width: 1.4, inset: 0 }],
-  yaw: -12,
-  pitch: 10,
-  persp: 700,
-  drag: false,
-}
-const countEl = useTemplateRef<HTMLElement>('countEl')
-// the i beside the title: what this mode is
+// The countdown is the arena's VS badge itself: it grows out of its place on the line, the numbers roll inside it, it turns
+// back into VS and shrinks home, where the real badge takes over. Plain DOM, transform and opacity only.
 const howOpen = ref(false)
-let countLabel: ExtrudeHandle | null = null
-let countReady: Promise<void> | null = null
-let countFresh = true
-let countSide = 1
-const COUNT_YAW = 12
-const MODE_RGB = { classic: [1, 0.72, 0.25], crazy: [0.9, 0.3, 0.95], team: [0.4, 0.5, 1] }
-function countSparks(level: number) {
-  fx.at('kdReveal', countEl.value, 1.3).then((h) => {
-    h?.set('tint', MODE_RGB[b.value.mode])
-    h?.set('level', level)
-  })
-}
-const count3d = ref(false)
-const countFade = ref(false)
-function dropCountLabel() {
-  countLabel?.destroy()
-  countLabel = null
-  countReady = null
-  countFresh = true
-  count3d.value = false
-  countFade.value = false
-}
-function prepareCount() {
-  countReady ??= (async () => {
-    if (!countEl.value) return
-    countLabel = await ex.mount(countEl.value, { ...COUNT_LOOK, size: isMobile.value ? 104 : 150, quality: isMobile.value ? 'low' : 'auto', text: '3' })
-    await countLabel?.ready
-    count3d.value = !!countLabel
-  })()
-  return countReady
-}
-watch(countEl, (el) => el && prepareCount())
-async function countBeat(n: number) {
-  await prepareCount()
-  if (!countLabel) return
-  countSide = -countSide
-  countLabel.set({ yaw: COUNT_YAW * countSide })
-  if (countFresh) {
-    countFresh = false
-    if (countLabel.text !== String(n)) countLabel.set({ text: String(n) })
-    countLabel.play('spin')
-  } else {
-    countLabel.swap(String(n), { style: 'flip' })
-    countLabel.rotate(320 * countSide, 0, true)
-  }
-  countSparks(4 - n)
-}
-async function countEnd() {
-  if (!countLabel) return
-  countFade.value = true
-  countLabel.swap('VS', { style: 'flip' })
-  countLabel.rotate(420, 0, true)
-  countSparks(3)
-  setTimeout(dropCountLabel, 750)
-}
+const countHome = ref(false)
+let countTimer: ReturnType<typeof setTimeout> | undefined
 watch(countdown, (n, old) => {
-  if (n > 0 && n !== old) {
-    sfx.count(n === 1)
-    countBeat(n)
-  } else if (n === 0 && old > 0) countEnd()
+  if (n > 0 && n !== old) sfx.count(n === 1)
+  else if (n === 0 && old > 0) {
+    countHome.value = true
+    clearTimeout(countTimer)
+    countTimer = setTimeout(() => (countHome.value = false), 800)
+  }
 })
-// the sparks' engine ready before the first number too
-onMounted(() => done.value || fx.preload('kd'))
-onBeforeUnmount(dropCountLabel)
+onBeforeUnmount(() => clearTimeout(countTimer))
 
 // Same cases and seats in one click once the battle is over (Skin.club "Recreate")
 const recreating = ref(false)
@@ -433,18 +358,21 @@ const laneCols = computed(() => {
       <!-- VS between the seats (between the two teams in Team 2v2); it beats on every new round -->
       <div class="pointer-events-none absolute inset-0 z-[3] grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }" aria-hidden="true">
         <span v-for="s in b.slots" :key="s.slot" class="relative">
-          <span v-if="countdown <= 0 && !countFade && s.slot > 0 && (!isTeam || s.slot === 2)" :key="`${clock.round}`" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="isTeam && 'is-team'">{{ $t('pvp.vs') }}</span>
+          <span v-if="countdown <= 0 && !countHome && s.slot > 0 && (!isTeam || s.slot === 2)" :key="`${clock.round}`" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="isTeam && 'is-team'">{{ $t('pvp.vs') }}</span>
         </span>
       </div>
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 left-0 -rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 right-0 rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
 
-      <!-- The countdown: the arena dims and the number stands in its middle. The stage stays in the page while seats fill,
-           unseen, so its 3D label is ready before the first second -->
-      <div v-if="b.status === 'waiting' || countdown > 0 || countFade" class="kd-countdown pointer-events-none absolute inset-0 z-10 grid place-items-center" :class="[countdown > 0 && 'is-on', countFade && 'is-fade']">
-        <div class="kd-count-stage relative grid size-44 place-items-center lg:size-60">
-          <div ref="countEl" class="absolute inset-0" />
-          <span v-if="!count3d && countdown > 0" :key="countdown" class="kd-count text-[56px] leading-none font-extrabold tabular-nums lg:text-[80px]">{{ countdown }}</span>
+      <!-- The countdown: the VS badge, big, in the middle of the dimmed arena; three seats have no badge there, so it fades -->
+      <div v-if="countdown > 0 || countHome" class="kd-countdown pointer-events-none absolute inset-0 z-10 grid place-items-center" :class="[countHome && 'is-home', b.size === 3 && 'is-off-line']" :style="{ '--mc': PVP_MODE_COLOR[b.mode] }">
+        <div class="kd-count relative rounded-full">
+          <span v-if="countdown > 0" :key="countdown" class="kd-count-ping absolute inset-0 rounded-full" />
+          <span class="absolute inset-0 overflow-hidden rounded-full">
+            <Transition name="kd-count-roll">
+              <span :key="countdown" class="kd-count-n absolute inset-0 grid place-items-center tabular-nums" :class="!countdown && 'is-vs'">{{ countdown || $t('pvp.vs') }}</span>
+            </Transition>
+          </span>
         </div>
       </div>
 
@@ -727,59 +655,130 @@ const laneCols = computed(() => {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgb(12 13 16 / 0.72);
+  background: rgb(12 13 16 / 0.6);
+  animation: kd-count-dim 300ms var(--ease-out) both;
+}
+.kd-countdown.is-home::before {
+  animation: kd-count-undim 500ms var(--ease-out) 200ms both;
+}
+@keyframes kd-count-dim {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes kd-count-undim {
+  to {
+    opacity: 0;
+  }
+}
+/* the VS badge at its big size: home is the scale that makes it exactly the 36 px one on the line */
+.kd-count {
+  --home: 0.409;
+  --vs-font: 29.3px;
+  width: 88px;
+  height: 88px;
+  background: var(--color-neutral-2);
+  box-shadow: inset 0 0 0 1px var(--color-neutral-5);
+  animation: kd-count-out 460ms var(--ease-spring) both;
+}
+@media (min-width: 64rem) {
+  .kd-count {
+    --home: 0.3;
+    --vs-font: 40px;
+    width: 120px;
+    height: 120px;
+  }
+}
+/* its rim in the mode's colour, gone by the time it is home */
+.kd-count::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 2px var(--mc);
+  transition: opacity 400ms var(--ease-out);
+}
+.kd-countdown.is-home .kd-count::before {
   opacity: 0;
-  transition: opacity var(--dur-base) var(--ease-out);
 }
-.kd-countdown.is-on::before {
-  opacity: 1;
+.kd-countdown.is-home .kd-count {
+  animation: kd-count-home 720ms var(--ease-in-out) both;
 }
-.kd-count-stage {
-  opacity: 0;
+.kd-countdown.is-home.is-off-line .kd-count {
+  animation-name: kd-count-home-fade;
 }
-.kd-countdown.is-on .kd-count-stage,
-.kd-countdown.is-fade .kd-count-stage {
-  opacity: 1;
+@keyframes kd-count-out {
+  from {
+    transform: scale(var(--home));
+  }
 }
-/* the VS holds a beat, then drops into the badge's place */
-.kd-countdown.is-fade .kd-count-stage {
-  animation: kd-count-vs 750ms var(--ease-in) both;
-}
-@keyframes kd-count-vs {
+@keyframes kd-count-home {
   0%,
-  55% {
+  40% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(var(--home));
+  }
+}
+@keyframes kd-count-home-fade {
+  0%,
+  40% {
     opacity: 1;
     transform: scale(1);
   }
   100% {
-    opacity: 0.4;
-    transform: scale(0.2);
+    opacity: 0;
+    transform: scale(var(--home));
   }
 }
-/* the end: one soft wave of warm light from the middle, the arena back under it */
-.kd-countdown.is-fade::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 640px;
-  height: 640px;
-  margin: -320px;
-  border-radius: 9999px;
-  background: radial-gradient(closest-side, rgb(255 190 110 / 0.4), rgb(255 120 40 / 0.14) 55%, transparent);
-  animation: kd-count-light 700ms var(--ease-out) both;
+/* every second, one ring leaves the badge */
+.kd-count-ping {
+  box-shadow: inset 0 0 0 2px var(--mc);
+  animation: kd-count-ping 800ms var(--ease-out) both;
 }
-@keyframes kd-count-light {
+@keyframes kd-count-ping {
   from {
-    opacity: 1;
-    transform: scale(0.3);
+    opacity: 0.7;
   }
   to {
     opacity: 0;
-    transform: scale(1.5);
+    transform: scale(1.6);
   }
 }
-/* lands fast and big, holds, gets out of the way of the next one */
+.kd-count-n {
+  color: var(--color-neutral-15);
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+}
+@media (min-width: 64rem) {
+  .kd-count-n {
+    font-size: 64px;
+  }
+}
+.kd-count-n.is-vs {
+  color: var(--color-neutral-13);
+  font-size: var(--vs-font);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+/* the next number rolls up into the badge as the last one leaves through its top */
+.kd-count-roll-enter-active,
+.kd-count-roll-leave-active {
+  transition:
+    transform 340ms var(--ease-out),
+    opacity 240ms var(--ease-out);
+}
+.kd-count-roll-enter-from {
+  opacity: 0;
+  transform: translateY(65%);
+}
+.kd-count-roll-leave-to {
+  opacity: 0;
+  transform: translateY(-65%);
+}
 /* phones: two equal chips, the label on the left edge, the money on the right */
 @media (max-width: 63.98rem) {
   .kd-dock-stat {
@@ -787,28 +786,6 @@ const laneCols = computed(() => {
     min-width: 0;
     justify-content: space-between;
     padding: 0 12px;
-  }
-}
-.kd-count {
-  color: var(--color-neutral-15);
-  animation: kd-count-beat 950ms var(--ease-out) both;
-}
-@keyframes kd-count-beat {
-  0% {
-    opacity: 0;
-    transform: scale(1.7);
-  }
-  18% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  80% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.9);
   }
 }
 .kd-arena {

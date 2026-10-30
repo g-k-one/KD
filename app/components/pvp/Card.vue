@@ -186,29 +186,39 @@ function onClick(e: MouseEvent) {
 .kd-brow-mode {
   color: var(--mc);
 }
-/* the rounds' circle: a disc lit softly from the middle in the mode's colour, and a slow conic gradient turning as its rim.
-   The hole in the rim sits a little off-centre, so it is thick where the light is and hair-thin across from it. Only
-   transform and opacity move. Live, red, faster, breathing; still and grey once over */
+/* the rounds' circle: a slow conic gradient turns behind a disc lit softly from the middle in the mode's colour. The disc
+   circles a hair off-centre on its own beat, so the rim's thickness runs round it: thin here, thick there, never quite
+   with the light. Only transform and opacity move. Live, red, faster, breathing; still and grey once over */
 .kd-rounds {
   --glow: var(--mc);
   --turn: 7s;
+  --rim: 4.6s;
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 24%, var(--cell)), var(--cell));
+  background: var(--cell);
 }
 .kd-rounds::before {
   content: '';
   position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: conic-gradient(from -151deg, transparent 0 15%, var(--glow) 42%, transparent 62%, color-mix(in srgb, var(--glow) 50%, transparent) 86%, transparent);
-  mask-image: radial-gradient(46.5% 46.5% at 50% 52.5%, transparent 97%, #000 100%);
+  inset: -25%;
+  z-index: -2;
+  background: conic-gradient(from 0deg, transparent 0 15%, var(--glow) 42%, transparent 62%, color-mix(in srgb, var(--glow) 50%, transparent) 86%, transparent);
   animation: kd-rounds-turn var(--turn) linear infinite;
+}
+.kd-rounds::after {
+  content: '';
+  position: absolute;
+  inset: 4%;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 24%, var(--cell)), var(--cell));
+  animation: kd-rounds-rim var(--rim) linear infinite;
 }
 .kd-brow.is-live .kd-rounds {
   --glow: var(--color-danger);
   --turn: 2.4s;
+  --rim: 1.7s;
 }
 .kd-brow.is-live .kd-rounds::before {
   animation:
@@ -218,12 +228,21 @@ function onClick(e: MouseEvent) {
 .kd-brow.is-finished .kd-rounds {
   --glow: var(--color-neutral-5);
 }
-.kd-brow.is-finished .kd-rounds::before {
+.kd-brow.is-finished .kd-rounds::before,
+.kd-brow.is-finished .kd-rounds::after {
   animation: none;
 }
 @keyframes kd-rounds-turn {
   to {
     transform: rotate(1turn);
+  }
+}
+@keyframes kd-rounds-rim {
+  from {
+    transform: rotate(0) translateY(2.8%);
+  }
+  to {
+    transform: rotate(-1turn) translateY(2.8%);
   }
 }
 @keyframes kd-rounds-pulse {
@@ -236,6 +255,7 @@ function onClick(e: MouseEvent) {
 }
 @media (prefers-reduced-motion: reduce) {
   .kd-rounds::before,
+  .kd-rounds::after,
   .kd-brow.is-live .kd-rounds::before {
     animation: none;
   }
