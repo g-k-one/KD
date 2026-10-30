@@ -42,8 +42,8 @@
   "drawer": {
     "title": "Your skins",
     "skins": "1 skin worth | {n} skins worth",
-    "all": "Actions apply to all skins · tap to pick",
-    "selected": "{n} selected",
+    "sellAll": "Sell all",
+    "sellSome": "Sell {n}",
     "full": "Open the full inventory"
   },
   "sell": {

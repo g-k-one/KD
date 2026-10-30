@@ -4,7 +4,8 @@ import type { InventoryItem, InventoryResponse, SellResponse } from '#shared/typ
 /*
  * Inventory drawer (docs/ux-research-v3.md #2): opened from the balance chip in the header, over whatever page
  * the player is on — the loop open → sell / upgrade / withdraw never leaves the case. A tray on phones, a card on
- * desktop (UiModal). Nothing selected = the actions take every skin; tap skins to narrow it down.
+ * desktop (UiModal). Nothing selected = the actions take every skin; tap skins to narrow it down. Sell and Withdraw are
+ * steps of this one window, not modals over it: the content changes, the height glides, Back returns to the skins.
  */
 const ui = useUiStore()
 const session = useSessionStore()
@@ -26,8 +27,10 @@ async function load() {
     loading.value = false
   }
 }
+const step = ref<'list' | 'sell' | 'withdraw'>('list')
 watch(open, (v) => {
   if (!v) return
+  step.value = 'list'
   selected.value = []
   load()
 })
@@ -44,14 +47,13 @@ const target = computed(() => (selected.value.length ? items.value.filter((i) =>
 const total = computed(() => items.value.reduce((a, i) => a + i.price, 0))
 const targetValue = computed(() => target.value.reduce((a, i) => a + i.price, 0))
 
-const sellOpen = ref(false)
 const selling = ref(false)
 async function sell() {
   selling.value = true
   try {
     const res = await $fetch<SellResponse>('/api/inventory/sell', { method: 'POST', body: { uids: target.value.map((i) => i.uid) } })
     if (session.user) session.user.balance = res.balance
-    sellOpen.value = false
+    step.value = 'list'
     selected.value = []
     await load()
   } catch (e) {
@@ -61,7 +63,6 @@ async function sell() {
   }
 }
 
-const withdrawOpen = ref(false)
 function onWithdrawn() {
   selected.value = []
   load()
@@ -72,40 +73,69 @@ const upgradeTo = computed(() => `/upgrade?item=${target.value.slice(0, 6).map((
 </script>
 
 <template>
-  <UiModal v-model="open" :title="$t('drawer.title')" :width="560">
-    <div class="-mt-3 flex items-center justify-center gap-2">
-      <span class="type-14-regular text-neutral-12">{{ $t('drawer.skins', { n: items.length }, items.length) }}</span>
-      <UiPrice :amount="total" size="l" tone="coin" />
-    </div>
+  <UiModal v-model="open" :label="$t('drawer.title')" :width="560">
+    <Transition :name="step === 'list' ? 'kd-step-back' : 'kd-step'" mode="out-in">
+      <UiModal v-if="step === 'list'" key="list" :model-value="true" inline :title="$t('drawer.title')">
+        <!-- the total leads to the full inventory -->
+        <NuxtLink to="/profile?tab=inventory" :aria-label="$t('drawer.full')" class="kd-press kd-icon-nudge -mt-3 flex items-center justify-center gap-2 text-neutral-12 hover:text-neutral-15" @click="open = false">
+          <span class="type-14-regular">{{ $t('drawer.skins', { n: items.length }, items.length) }}</span>
+          <UiPrice :amount="total" size="l" tone="coin" />
+          <UiIcon name="chevron-right" :size="16" class="kd-icon" />
+        </NuxtLink>
 
-    <div v-if="loading && !items.length" class="grid grid-cols-3 gap-2 sm:grid-cols-4">
-      <span v-for="n in 8" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-[4/5]" />
-    </div>
-    <UiEmptyState v-else-if="!items.length" :text="$t('account.emptyInventory')" art="empty-inventory">
-      <UiButton to="/" icon="cases" @click="open = false">{{ $t('account.openCases') }}</UiButton>
-    </UiEmptyState>
-    <div v-else class="grid max-h-[40dvh] grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">
-      <ItemTile v-for="it in items" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
-    </div>
-
-    <template v-if="items.length" #actions>
-      <div class="flex w-full flex-col gap-2">
-        <span class="type-12-caps text-center text-neutral-11">
-          {{ selected.length ? $t('drawer.selected', { n: selected.length }) : $t('drawer.all') }}
-        </span>
-        <!-- the same block as the case dock: the main action across, two equal ones under it -->
-        <UiButton size="l" block @click="sellOpen = true">
-          {{ $t('wallet.sell') }}
-          <span class="btn-value"><UiPrice :amount="targetValue" size="m" tone="inverse" /></span>
-        </UiButton>
-        <div class="grid grid-cols-2 gap-2">
-          <UiButton variant="secondary" size="l" icon="upgrade" :to="upgradeTo" @click="open = false">{{ $t('upgrade.upgrade') }}</UiButton>
-          <UiButton variant="secondary" size="l" icon="steam" @click="withdrawOpen = true">{{ $t('withdraw.short') }}</UiButton>
+        <div v-if="loading && !items.length" class="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          <span v-for="n in 8" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-[4/5]" />
         </div>
-        <NuxtLink to="/profile?tab=inventory" class="type-12-caps text-center text-neutral-11 hover:text-neutral-15" @click="open = false">{{ $t('drawer.full') }}</NuxtLink>
-      </div>
-    </template>
+        <UiEmptyState v-else-if="!items.length" :text="$t('account.emptyInventory')" art="empty-inventory">
+          <UiButton to="/" icon="cases" @click="open = false">{{ $t('account.openCases') }}</UiButton>
+        </UiEmptyState>
+        <div v-else class="scrollbar-none grid max-h-[48dvh] grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">
+          <ItemTile v-for="it in items" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
+        </div>
+
+        <template v-if="items.length" #actions>
+          <div class="flex w-full flex-col gap-2">
+            <!-- the same block as the case dock: the main action across, two equal ones under it. Its label tells what
+                 the actions take: every skin, or the picked ones -->
+            <UiButton size="l" block @click="step = 'sell'">
+              <UiTextSwap :text="selected.length ? $t('drawer.sellSome', { n: selected.length }) : $t('drawer.sellAll')" />
+              <span class="btn-value"><UiPrice :amount="targetValue" size="m" tone="inverse" /></span>
+            </UiButton>
+            <div class="grid grid-cols-2 gap-2">
+              <UiButton variant="secondary" size="l" icon="upgrade" :to="upgradeTo" @click="open = false">{{ $t('upgrade.upgrade') }}</UiButton>
+              <UiButton variant="secondary" size="l" icon="steam" @click="step = 'withdraw'">{{ $t('withdraw.short') }}</UiButton>
+            </div>
+          </div>
+        </template>
+      </UiModal>
+      <WalletSellPreview v-else-if="step === 'sell'" key="sell" :model-value="true" inline :items="target" :loading="selling" @update:model-value="step = 'list'" @confirm="sell" />
+      <WalletWithdrawModal v-else key="withdraw" :model-value="true" inline :items="target" @update:model-value="step = 'list'" @done="onWithdrawn" />
+    </Transition>
   </UiModal>
-  <WalletSellPreview v-model="sellOpen" :items="target" :loading="selling" @confirm="sell" />
-  <WalletWithdrawModal v-model="withdrawOpen" :items="target" @done="onWithdrawn" />
 </template>
+
+<style scoped>
+/* a step comes in from the right and goes back the way it came */
+.kd-step-enter-active,
+.kd-step-back-enter-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+.kd-step-leave-active,
+.kd-step-back-leave-active {
+  transition:
+    opacity var(--dur-fast) var(--ease-in),
+    transform var(--dur-fast) var(--ease-in);
+}
+.kd-step-enter-from,
+.kd-step-back-leave-to {
+  opacity: 0;
+  transform: translateX(16px);
+}
+.kd-step-leave-to,
+.kd-step-back-enter-from {
+  opacity: 0;
+  transform: translateX(-16px);
+}
+</style>

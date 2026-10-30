@@ -3,30 +3,43 @@
 // Phones: a tray (Family) — it rises from the bottom with a handle, and when its content changes (a step, an
 // error, a result) the height glides to the new size instead of jumping. Pull it down to close (anywhere while its
 // content is at the top); the cross sits on the panel, outside the scroll, so it never rides away with the content.
+// inline: a step of another modal, no panel of its own: modals never stack, a flow changes what one panel shows.
+// label: the panel's name when its title is drawn by the step inside.
 const open = defineModel<boolean>({ required: true })
-withDefaults(defineProps<{ title?: string; description?: string; width?: number }>(), { width: 480 })
+const props = withDefaults(defineProps<{ title?: string; description?: string; width?: number; inline?: boolean; label?: string }>(), { width: 480 })
 
 const panel = useTemplateRef<HTMLElement>('panel')
 const body = useTemplateRef<HTMLElement>('body')
+const scroller = useTemplateRef<HTMLElement>('scroller')
 const scrim = useTemplateRef<HTMLElement>('scrim')
 useSheetDrag(panel, () => (open.value = false), { scrim, enabled: () => !window.matchMedia('(min-width: 640px)').matches })
 let lastH = 0
+let glide: Animation | null = null
 useResizeObserver(body, () => {
   const el = panel.value
   if (!el) return
+  // a new size mid-glide carries on from where the panel is; the content does not scroll while the panel catches up
+  const from = glide?.playState === 'running' ? el.offsetHeight : lastH
+  glide?.cancel()
+  if (scroller.value) scroller.value.style.overflowY = ''
   const h = el.offsetHeight
-  if (lastH && Math.abs(h - lastH) > 2 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    el.animate([{ height: `${lastH}px` }, { height: `${h}px` }], { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' })
+  if (from && Math.abs(h - from) > 2 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (scroller.value) scroller.value.style.overflowY = 'hidden'
+    glide = el.animate([{ height: `${from}px` }, { height: `${h}px` }], { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' })
+    glide.onfinish = () => scroller.value && (scroller.value.style.overflowY = '')
   }
   lastH = h
 })
 // the page lock, Escape for the topmost only, focus kept inside and handed back on close
-useOverlay(() => open.value, () => (open.value = false), { panel })
+useOverlay(() => open.value && !props.inline, () => (open.value = false), { panel })
 watch(open, () => (lastH = 0))
 </script>
 
 <template>
-  <Teleport to="body">
+  <UiModalBody v-if="inline" :title="title" :description="description">
+    <template v-for="(_, name) in $slots" #[name]><slot :name="name" /></template>
+  </UiModalBody>
+  <Teleport v-else to="body">
     <Transition name="kd-modal">
       <div v-if="open" class="fixed inset-0 z-[60] flex items-end justify-center sm:items-start sm:p-4 sm:pt-[10vh]">
         <div ref="scrim" class="kd-modal-overlay absolute inset-0 bg-black-60 backdrop-blur-[2px]" @click="open = false" />
@@ -34,9 +47,9 @@ watch(open, () => (lastH = 0))
           ref="panel"
           role="dialog"
           aria-modal="true"
-          :aria-label="title"
+          :aria-label="title ?? label"
           tabindex="-1"
-          class="kd-modal-panel relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-5xl border border-neutral-5 bg-neutral-2 shadow-[0_24px_64px_rgb(12_13_16/0.48)] outline-none sm:rounded-5xl"
+          class="kd-modal-panel relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-5xl border border-neutral-5 bg-neutral-2 shadow-[0_24px_64px_rgb(12_13_16/0.48)] outline-none sm:max-h-[calc(90dvh-16px)] sm:rounded-5xl"
           :style="{ maxWidth: `${width}px` }"
         >
           <button
@@ -47,18 +60,13 @@ watch(open, () => (lastH = 0))
           >
             <UiIcon name="close" :size="20" />
           </button>
-          <div class="flex min-h-0 flex-col gap-6 overflow-y-auto overscroll-contain p-6 pb-[calc(24px+env(safe-area-inset-bottom))] sm:p-8">
+          <!-- no scrollbar: its width would squeeze the content, and tiles sized by their width would change the height again -->
+          <div ref="scroller" class="scrollbar-none flex min-h-0 flex-col gap-6 overflow-y-auto overscroll-contain p-6 pb-[calc(24px+env(safe-area-inset-bottom))] sm:p-8">
             <span class="mx-auto -mt-3 -mb-2 h-1 w-10 shrink-0 rounded-full bg-neutral-7 sm:hidden" aria-hidden="true" />
-            <div ref="body" class="flex flex-col gap-6">
-              <slot name="media" />
-              <div v-if="title || description" class="flex flex-col gap-6 text-center">
-                <h2 v-if="title" class="type-20-caps">{{ title }}</h2>
-                <p v-if="description" class="type-14-regular text-neutral-12">{{ description }}</p>
-              </div>
-              <slot />
-              <div v-if="$slots.actions" class="flex gap-2">
-                <slot name="actions" />
-              </div>
+            <div ref="body">
+              <UiModalBody :title="title" :description="description">
+                <template v-for="(_, name) in $slots" #[name]><slot :name="name" /></template>
+              </UiModalBody>
             </div>
           </div>
         </div>

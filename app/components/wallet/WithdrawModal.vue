@@ -8,7 +8,8 @@ import type { InventoryItem, TradeUrlBody, WithdrawResponse } from '#shared/type
  *   3. sent — the offer number and a 15-minute countdown to accept it in Steam.
  */
 const open = defineModel<boolean>({ required: true })
-const props = defineProps<{ items: InventoryItem[] }>()
+/** inline: a step of the inventory's window; the secondary button goes back to it */
+const props = defineProps<{ items: InventoryItem[]; inline?: boolean }>()
 const emit = defineEmits<{ done: [uids: string[]] }>()
 
 const session = useSessionStore()
@@ -26,12 +27,16 @@ const total = computed(() => props.items.reduce((a, i) => a + i.price, 0))
 const offer = ref<WithdrawResponse['offer'] | null>(null)
 const sending = ref(false)
 
-watch(open, (v) => {
-  if (!v) return
-  offer.value = null
-  link.value = saved.value ?? ''
-  editing.value = !saved.value
-})
+watch(
+  open,
+  (v) => {
+    if (!v) return
+    offer.value = null
+    link.value = saved.value ?? ''
+    editing.value = !saved.value
+  },
+  { immediate: true },
+)
 
 const shortLink = computed(() => (saved.value ? saved.value.replace('https://steamcommunity.com/tradeoffer/new/', '…') : ''))
 
@@ -66,7 +71,7 @@ const left = computed(() => {
 </script>
 
 <template>
-  <UiModal v-model="open" :title="offer ? $t('withdraw.sentTitle') : $t('withdraw.title')" :description="offer ? undefined : $t(items.length > 1 ? 'withdraw.hint' : 'withdraw.hintOne')" :width="520">
+  <UiModal v-model="open" :inline="inline" :title="offer ? $t('withdraw.sentTitle') : $t('withdraw.title')" :description="offer ? undefined : $t(items.length > 1 ? 'withdraw.hint' : 'withdraw.hintOne')" :width="520">
     <Transition name="kd-wd" mode="out-in">
       <!-- Sent -->
       <div v-if="offer" key="sent" class="flex flex-col items-center gap-4 py-2 text-center">
@@ -115,7 +120,7 @@ const left = computed(() => {
     <template #actions>
       <UiButton v-if="offer" size="l" block @click="open = false">{{ $t('upgrade.done') }}</UiButton>
       <template v-else>
-        <UiButton variant="secondary" size="l" class="flex-1" @click="open = false">{{ $t('common.cancel') }}</UiButton>
+        <UiButton variant="secondary" size="l" class="flex-1" @click="open = false">{{ $t(inline ? 'common.back' : 'common.cancel') }}</UiButton>
         <UiButton size="l" :icon="ready ? 'steam' : undefined" class="flex-[2]" :loading="sending" :disabled="!ready" @click="send">
           <template v-if="ready">
             {{ $t('withdraw.send', { n: items.length }) }}

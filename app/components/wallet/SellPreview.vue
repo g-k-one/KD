@@ -6,7 +6,8 @@ import type { InventoryItem } from '#shared/types/api'
  * the coins that come, one button. A tray on phones (UiModal rises from the bottom), a card on desktop.
  */
 const open = defineModel<boolean>({ required: true })
-const props = defineProps<{ items: InventoryItem[]; loading?: boolean }>()
+/** inline: a step of the inventory's window; the secondary button goes back to it */
+const props = defineProps<{ items: InventoryItem[]; loading?: boolean; inline?: boolean }>()
 const emit = defineEmits<{ confirm: [] }>()
 
 const SHOWN = 8
@@ -16,7 +17,7 @@ const more = computed(() => Math.max(0, props.items.length - SHOWN))
 </script>
 
 <template>
-  <UiModal v-model="open" :title="$t('sell.title', { n: items.length }, items.length)" :width="480">
+  <UiModal v-model="open" :inline="inline" :title="$t('sell.title', { n: items.length }, items.length)" :width="480">
     <div class="flex flex-col gap-2">
       <span class="type-12-caps text-neutral-11">{{ $t('sell.give') }}</span>
       <div class="grid grid-cols-4 gap-2">
@@ -34,7 +35,7 @@ const more = computed(() => Math.max(0, props.items.length - SHOWN))
     </div>
 
     <template #actions>
-      <UiButton variant="secondary" size="l" class="flex-1" @click="open = false">{{ $t('common.cancel') }}</UiButton>
+      <UiButton variant="secondary" size="l" class="flex-1" @click="open = false">{{ $t(inline ? 'common.back' : 'common.cancel') }}</UiButton>
       <UiButton size="l" class="flex-1" :loading="loading" @click="emit('confirm')">
         {{ $t('wallet.sell') }}
         <UiPrice :amount="total" size="m" tone="inverse" />
