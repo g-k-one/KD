@@ -19,7 +19,7 @@ useResizeObserver(inner, () => (height.value = inner.value?.offsetHeight ?? 0))
         v-if="items.length"
         tag="div"
         name="kd-drop"
-        class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-3 pt-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]"
+        class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-2 pt-2 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))] lg:gap-3 lg:pt-3"
         :class="[props.lost && 'is-lost', tight && 'max-md:gap-1 max-md:pt-1']"
       >
         <div v-for="(item, i) in items" :key="i" class="h-25 lg:h-[105px]">
