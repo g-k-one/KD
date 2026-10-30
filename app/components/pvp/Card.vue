@@ -30,10 +30,10 @@ const played = computed(() => (props.battle.status === 'finished' ? props.battle
 type Cell = { key: string; image: string; name: string; state: 'next' | 'now' | 'done' }
 const cells = computed<Cell[]>(() => props.battle.rounds.map((r, i) => ({ key: `r${i}`, image: r.image, name: r.name, state: i < played.value ? 'done' : props.battle.status === 'live' && i === played.value ? 'now' : 'next' })))
 // Live, the band slides so the case opening now sits second; it stops once the last cell is in view. Transform only.
-// The cell width is CSS (100 / 84 px); the slide is worked out once mounted (the server renders at a phone's width).
+// The cell width is CSS (100 / 64 px); the slide is worked out once mounted (the server renders at a phone's width).
 const isLg = useMediaQuery('(min-width: 1024px)')
 const CELL_GAP = 4
-const step = computed(() => (isLg.value ? 100 : 84) + CELL_GAP)
+const step = computed(() => (isLg.value ? 100 : 64) + CELL_GAP)
 const viewport = useTemplateRef<HTMLElement>('viewport')
 const { width: viewW } = useElementSize(viewport)
 const fits = computed(() => (mounted.value ? Math.max(1, Math.floor((viewW.value + CELL_GAP) / step.value)) : Infinity))
@@ -70,7 +70,7 @@ function onClick(e: MouseEvent) {
     @click.capture="onClick"
   >
     <!-- rounds: the count in a circle -->
-    <div class="kd-brow-rounds flex items-center px-2 pt-2 lg:justify-center lg:p-0">
+    <div class="kd-brow-rounds flex items-center pl-1 lg:justify-center lg:p-0">
       <span class="kd-rounds grid size-11 shrink-0 place-items-center rounded-full lg:size-19" :style="circle" :title="roundsTip">
         <span class="kd-rounds-n tabular-nums" :class="battle.status === 'live' ? 'type-12-caps lg:type-20-caps' : 'type-20-caps lg:type-28'">{{ battle.status === 'live' ? `${round}/${battle.rounds.length}` : battle.rounds.length }}</span>
       </span>
@@ -85,12 +85,12 @@ function onClick(e: MouseEvent) {
         <div
           v-for="(c, i) in cells"
           :key="c.key"
-          class="kd-cell relative grid h-[84px] w-[84px] shrink-0 place-items-center rounded-2xl lg:h-full lg:w-[100px] lg:rounded-3xl"
+          class="kd-cell relative grid h-16 w-16 shrink-0 place-items-center rounded-2xl lg:h-full lg:w-[100px] lg:rounded-3xl"
           :class="`is-${c.state}`"
           :style="{ '--i': i }"
           :title="c.name"
         >
-          <img :src="c.image" :alt="c.name" draggable="false" class="kd-cell-img size-[76px] object-contain lg:size-[92px]" />
+          <img :src="c.image" :alt="c.name" draggable="false" class="kd-cell-img size-14 object-contain lg:size-[92px]" />
         </div>
         <span
           v-if="mounted && battle.status === 'live'"
@@ -105,15 +105,16 @@ function onClick(e: MouseEvent) {
       <span v-if="overflows" class="kd-band-fade pointer-events-none absolute inset-y-0 right-0 w-12" aria-hidden="true" />
     </div>
 
-    <!-- phones: the cost top right, the mode under it (desktop: the cost sits over the button) -->
-    <div class="kd-brow-cost flex flex-col items-end justify-center gap-1 px-2 pt-2 lg:hidden">
+    <!-- phones: two lines with nothing idle: the circle, the cases and the cost with the mode under it, then the seats and the
+         button (desktop: the cost sits over the button) -->
+    <div class="kd-brow-cost flex flex-col items-end justify-center gap-1 pr-1 lg:hidden">
       <UiPrice :amount="battle.cost" size="m" tone="coin" :title="$t('pvp.cost')" />
       <span class="kd-brow-mode type-12-caps flex items-center gap-1 lg:hidden"><UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="14" />{{ $t(`pvp.modeName.${battle.mode}`) }}</span>
     </div>
 
     <!-- the players: on desktop the mode over the seats, as the cost stands over the button beside them. One 6 px step
          between every avatar in every mode, on the button's line -->
-    <div class="kd-brow-who flex min-w-0 items-center px-2 pb-2 lg:h-19 lg:flex-col-reverse lg:justify-between lg:self-center lg:p-0">
+    <div class="kd-brow-who flex min-w-0 items-center pl-1 lg:h-19 lg:flex-col-reverse lg:justify-between lg:self-center lg:p-0">
       <span class="flex h-10 items-center justify-center gap-1.5 lg:w-full">
         <template v-for="(side, k) in sides" :key="k">
           <span v-if="k > 0" class="type-10-caps text-neutral-11">{{ $t('pvp.vs') }}</span>
@@ -136,9 +137,9 @@ function onClick(e: MouseEvent) {
     </div>
 
     <!-- the cost over the button, one cell the row's height (phones: the button alone, the cost is on top) -->
-    <div class="kd-brow-action flex items-center justify-end px-2 pb-2 lg:h-19 lg:flex-col lg:justify-between lg:self-center lg:pr-4 lg:pl-2 lg:py-0">
+    <div class="kd-brow-action flex items-center justify-end lg:h-19 lg:flex-col lg:justify-between lg:self-center lg:pr-4 lg:pl-2 lg:py-0">
       <UiPrice :amount="battle.cost" size="l" tone="coin" class="max-lg:hidden" />
-      <span class="kd-btn type-14-caps inline-flex h-10 w-32 items-center justify-center gap-1.5 rounded-lg lg:w-full" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
+      <span class="kd-btn type-14-caps inline-flex h-10 w-28 items-center justify-center gap-1.5 rounded-lg lg:w-full" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
         <UiIcon v-if="battle.status !== 'waiting'" name="eye" :size="16" class="shrink-0" />
         {{ $t(action) }}
       </span>
@@ -152,11 +153,10 @@ function onClick(e: MouseEvent) {
   --row: var(--color-neutral-2);
   --cell: var(--color-neutral-3);
   background: var(--row);
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   grid-template-areas:
-    'rounds cost'
-    'band band'
-    'who action';
+    'rounds band band cost'
+    'who who action action';
   transition: background-color var(--dur-base) var(--ease-out);
 }
 /* desktop: rounds · the band · players · cost and button (the header has the same) */
