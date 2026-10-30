@@ -233,13 +233,13 @@ function runCount() {
   countTimers = []
   countHome.value = true
   prepareCount()
-  at(4000, () => countBeat(3))
-  at(3000, () => countBeat(2))
-  at(2000, () => countBeat(1))
-  at(1000, () => countBeat(0))
-  at(620, () => (countSink.value = true))
-  at(270, () => (countHome.value = false))
-  at(200, countLanded)
+  at(3800, () => countBeat(3))
+  at(2800, () => countBeat(2))
+  at(1800, () => countBeat(1))
+  at(800, () => countBeat(0))
+  at(460, () => (countSink.value = true))
+  at(110, () => (countHome.value = false))
+  at(40, countLanded)
 }
 watch(countdown, (n, old) => n > 0 && !old && nextTick(runCount))
 onMounted(() => {
