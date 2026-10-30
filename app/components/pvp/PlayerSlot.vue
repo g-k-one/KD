@@ -5,7 +5,8 @@ import type { BattlePlayerRef } from '#shared/types/api'
 // Empty shows Call bot; Winner = success tint + 1px success stroke.
 // Who sits on the left, the name over the coins so far (no coin with a 0 before anything has dropped); on the right, away
 // from the name and big: the chance to win, WON / LOST at the end. Whoever is ahead gets a crown on the avatar and a warm
-// plate, every seat of a leading team alike.
+// plate, every seat of a leading team alike. The level sits on the avatar's corner. Phones: one column, the same three
+// lines on every seat (the picture, the name, a 32 px line with the chance or Join), so a free seat reads like a taken one.
 const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost'; busy?: boolean }>()
 defineEmits<{ bot: []; join: [] }>()
 
@@ -25,7 +26,7 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
   <div
     class="kd-slot relative flex items-center"
     :class="[
-      compact ? 'flex-col justify-center gap-1 rounded-2xl px-1 py-2 text-center' : 'h-16 gap-3 rounded-5xl px-3',
+      compact ? 'flex-col justify-center gap-1 rounded-2xl px-1 py-2 text-center' : 'h-16 gap-4 rounded-5xl px-3',
       winner ? 'is-winner' : lead ? 'is-lead' : '',
     ]"
   >
@@ -37,43 +38,39 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
         <span class="block overflow-hidden rounded-full bg-neutral-7" :class="compact ? 'size-8' : 'size-11'">
           <img :src="player.avatar" alt="" class="size-full object-cover" :class="player.bot && 'scale-75 object-contain'" />
         </span>
+        <span class="absolute -right-2 -bottom-1.5 flex" :class="compact && 'origin-bottom-right scale-85'"><UiLevelBadge :level="player.level" /></span>
         <Transition name="kd-lead">
           <span v-if="lead && !winner" class="kd-lead-crown absolute -top-1.5 -left-1.5 grid size-5 place-items-center rounded-full text-coin"><UiIcon name="crown-fill" :size="14" /></span>
         </Transition>
       </span>
       <span class="flex min-w-0 max-w-full flex-col gap-0.5" :class="compact ? 'items-center' : 'flex-1 items-start'">
-        <!-- phones: the level under the name, so a narrow seat cuts the name instead of running it into the next seat -->
-        <span class="flex min-w-0 max-w-full items-center" :class="compact ? 'flex-col gap-0.5' : 'gap-1.5'">
+        <span class="flex min-w-0 max-w-full items-center gap-1.5">
           <UiIcon v-if="winner && !compact" name="crown" :size="16" class="kd-crown shrink-0 text-coin" />
           <span class="min-w-0 max-w-full truncate" :class="compact ? 'type-12' : 'type-16-medium'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
-          <UiLevelBadge :level="player.level" class="shrink-0" :class="compact && 'scale-90'" />
         </span>
         <UiPrice v-if="result || playing" :amount="Math.round(totalShown)" :size="compact ? 'xs' : 'm'" :tone="winner ? 'success' : result ? 'default' : 'coin'" class="tabular-nums" />
       </span>
       <!-- the chance to win, from the first second to the last round -->
-      <span v-if="!result && chance != null" class="flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end pl-3'">
+      <span v-if="!result && chance != null" class="flex shrink-0 flex-col" :class="compact ? 'h-8 items-center justify-center' : 'items-end pl-3'">
         <span class="tabular-nums" :class="[compact ? 'type-14' : 'type-20-caps', chanceShown >= 50 ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15']">{{ Math.round(chanceShown) }}%</span>
         <span v-if="!compact" class="type-10-caps whitespace-nowrap text-neutral-11">{{ $t('pvp.toWin') }}</span>
       </span>
       <!-- once it is over: what happened, not a 100% / 0% -->
-      <span v-if="result" class="flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end'">
+      <span v-if="result" class="flex shrink-0 flex-col" :class="compact ? 'h-8 items-center justify-center' : 'items-end'">
         <span :class="[compact ? 'type-12-caps' : 'type-20-caps', result === 'won' ? 'text-success' : 'text-neutral-11']">{{ result === 'won' ? $t('pvp.won') : $t('pvp.lost') }}</span>
       </span>
     </template>
     <template v-else>
       <span class="grid shrink-0 place-items-center rounded-full border border-dashed border-neutral-8 text-neutral-11" :class="compact ? 'size-8' : 'size-10'">
-        <UiIcon name="user" :size="compact ? 16 : 20" />
+        <UiIcon name="plus" :size="compact ? 16 : 20" />
       </span>
       <span class="flex min-w-0 flex-col" :class="compact ? 'items-center' : 'flex-1'">
         <span class="text-neutral-12" :class="compact ? 'type-12' : 'type-14'">{{ compact ? $t('pvp.free') : $t('pvp.freeSlot') }}</span>
         <span v-if="!compact" class="type-12-regular truncate text-neutral-11">{{ $t('pvp.waitingForPlayer') }}</span>
       </span>
-      <UiButton v-if="canJoin" :size="'s'" :icon-only="compact" icon="plus" :loading="busy" :aria-label="$t('pvp.join')" @click="$emit('join')">
-        <template v-if="!compact">{{ $t('pvp.join') }}</template>
-      </UiButton>
-      <UiButton v-else-if="canCallBot" variant="secondary" size="s" :icon-only="compact" :icon="compact ? 'plus' : undefined" :loading="busy" :aria-label="$t('pvp.callBot')" @click="$emit('bot')">
-        <template v-if="!compact">{{ $t('pvp.callBot') }}</template>
-      </UiButton>
+      <UiButton v-if="canJoin" size="s" :block="compact" :loading="busy" @click="$emit('join')">{{ $t('pvp.join') }}</UiButton>
+      <UiButton v-else-if="canCallBot" variant="secondary" size="s" :block="compact" :loading="busy" @click="$emit('bot')">{{ $t('pvp.callBot') }}</UiButton>
+      <span v-else-if="compact" class="h-8" aria-hidden="true" />
     </template>
   </div>
 </template>
