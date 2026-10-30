@@ -9,7 +9,8 @@ import type { Rarity } from '#shared/types/api'
 // reveal: the landing moment, built on the rarity shape (any value > 0 plays it; the step comes from the rarity):
 // the shape pops in and turns into place, then waves of the same shape spread from behind the skin — none for
 // mil-spec and below, 1 restricted, 2 classified, 3 covert and gold; classified flashes the shape, covert and gold
-// bloom the glow. Forge (rarityRank) only adds sparks on covert and the full rank on gold.
+// bloom the glow. Mil-spec and below land quietly: a small pop with no flash, the glow lower. Forge (rarityRank) only adds
+// sparks on covert and the full rank on gold.
 const props = withDefaults(defineProps<{ image: string; rarity: Rarity; size?: number; dim?: boolean; alt?: string; morph?: boolean; float?: boolean; reveal?: number; eager?: boolean }>(), {
   size: 96,
   reveal: 0,
@@ -20,7 +21,7 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
 </script>
 
 <template>
-  <div class="kd-art relative" :class="[float && 'is-float', morph && 'is-morph', step >= 3 && 'is-bloom']" :style="{ height: `${size}px`, '--rc': RARITY_COLOR[rarity], '--s': size / 96 }">
+  <div class="kd-art relative" :class="[float && 'is-float', morph && 'is-morph', step === 0 && 'is-soft', step >= 3 && 'is-bloom']" :style="{ height: `${size}px`, '--rc': RARITY_COLOR[rarity], '--s': size / 96 }">
     <span class="kd-art-glow absolute top-1/2 left-1/2 rounded-full" />
     <!-- waves of the rarity shape, behind the skin; each starts a beat after the pop -->
     <span v-for="n in waves" :key="`w${n}`" class="kd-rarity-star kd-art-wave absolute top-1/2 left-1/2" :style="{ animationDelay: `${160 + (n - 1) * 150}ms` }" />
@@ -77,6 +78,26 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
     transform: translate(-50%, -50%) scale(1.18) rotate(8deg);
     opacity: 1;
     filter: brightness(1.5);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+}
+/* mil-spec and below: everywhere a drop lands, a quiet pop and a lower glow, so the rarer ones have room above them */
+.kd-art.is-soft .kd-art-star.is-reveal {
+  animation-name: kd-star-in-soft;
+}
+.kd-art.is-soft .kd-art-glow {
+  opacity: 0.4;
+}
+@keyframes kd-star-in-soft {
+  0% {
+    transform: translate(-50%, -50%) scale(0.7) rotate(-20deg);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.06) rotate(4deg);
+    opacity: 1;
   }
   100% {
     transform: translate(-50%, -50%) scale(1) rotate(0deg);
