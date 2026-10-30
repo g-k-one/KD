@@ -888,6 +888,19 @@ const roundLine = computed(() => {
 .kd-amark.right-0 {
   translate: 7px -50%;
 }
+/* phones: the narrow lanes take the marker of the case page's phone grid */
+@media (max-width: 47.999rem) {
+  .kd-amark {
+    width: 16px;
+    height: 12px;
+  }
+  .kd-amark.left-0 {
+    translate: -6px -50%;
+  }
+  .kd-amark.right-0 {
+    translate: 6px -50%;
+  }
+}
 .kd-arena-seat + .kd-arena-seat {
   border-left: 1px solid var(--color-neutral-4);
 }
