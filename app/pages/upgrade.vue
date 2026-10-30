@@ -407,8 +407,6 @@ async function runUpgrade() {
          enough to read and to tap, the dial under them; the pickers open in a sheet from the cards and the
          card that is the next step glows. -->
     <section class="grid grid-cols-2 items-center gap-2 lg:grid-cols-[400px_1fr_400px] lg:grid-rows-[auto_auto] lg:items-stretch lg:gap-x-4 lg:gap-y-3">
-      <!-- Desktop: one plate under the whole second row (balance · CTA · chance), first so they all paint over it -->
-      <div class="rounded-5xl bg-neutral-2 max-lg:hidden lg:col-span-full lg:row-start-2" aria-hidden="true" />
       <button type="button" class="kd-mini kd-press lg:hidden" :class="[state !== 'idle' && `is-${state}`, nextStep === 'stake' && 'is-next']" :disabled="state === 'spinning'" @click="openSheet('mine')">
         <template v-if="selectedItems.length || extra">
           <!-- a fan of what is in: the skins a touch smaller, the coins a size under them (their picture fills its square) -->
@@ -475,7 +473,7 @@ async function runUpgrade() {
         <UpgradeGauge ref="gauge" :chance="shownChance" :state="state" :nonce="lastNonce" class="relative z-[2] max-lg:max-w-[216px] lg:-mt-3" />
         <UpgradeControls
           :pending="pending"
-          class="relative z-[3] mt-5 w-full max-w-80 max-lg:hidden lg:mt-auto"
+          class="relative z-[3] mt-5 w-full max-lg:hidden lg:mt-auto"
           part="cta"
           v-model:extra="extraModel"
           v-model:fast="fast"

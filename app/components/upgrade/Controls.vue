@@ -319,15 +319,15 @@ const canReset = computed(() => !!(props.input || props.target))
   background: var(--color-neutral-2);
   padding: 16px 24px;
 }
-/* Desktop: the balance, the CTA and the chance share one plate (the page's), so the panels drop theirs;
-   144 px is the CTA block's: 56 button + 8 + 48 chips + 16 + 16 */
+/* Desktop: the third panel of the row, under the dial; the side panels take its 144 px (56 button + 8 + 48 chips + 16 + 16) */
 .kd-cta-plate {
-  padding-block: 16px;
+  border-radius: 24px;
+  background: var(--color-neutral-2);
+  padding: 16px;
 }
 @media (min-width: 64rem) {
   .kd-panel {
     min-height: 144px;
-    background: none;
   }
 }
 /* A fixed-height pill, so the percentage never makes the button taller */
