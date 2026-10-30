@@ -151,9 +151,7 @@ const COUNT_LOOK = {
 }
 const countEl = useTemplateRef<HTMLElement>('countEl')
 // the i beside the title: what this mode is
-const modeInfo = ref(false)
-const modeInfoEl = useTemplateRef<HTMLElement>('modeInfoEl')
-onClickOutside(modeInfoEl, () => (modeInfo.value = false))
+const howOpen = ref(false)
 let countLabel: ExtrudeHandle | null = null
 let countReady: Promise<void> | null = null
 let countFresh = true
@@ -373,23 +371,18 @@ const laneCols = computed(() => {
         { label: $t('pvp.back'), icon: 'arrow-left', to: '/pvp' },
         { label: $t('case.share'), icon: 'share', onClick: shareBattle },
       ]"
+      :right="[
+        { label: $t('upgrade.howItWorks'), icon: 'info', onClick: () => (howOpen = true) },
+        { label: $t('case.fairness'), icon: 'shield', to: '/fairness' },
+      ]"
     >
-      <!-- the mode and the battle's number, one big line in the mode's colour, as in the lobby; the i says what the mode
-           is, as the case page's RTP does -->
-      <span ref="modeInfoEl" class="relative flex items-center gap-1 md:gap-2">
-        <h1 class="kd-room-title type-16-caps md:type-20-caps flex items-center gap-2 whitespace-nowrap tabular-nums md:gap-3" :class="`is-${b.mode}`">
-          <span>{{ $t(`pvp.modeName.${b.mode}`) }}</span>
-          <span>#{{ b.id }}</span>
-        </h1>
-        <UiButton variant="ghost" size="s" icon="info" icon-only :aria-label="$t(`pvp.modeTip.${b.mode}`)" :aria-expanded="modeInfo" @click="modeInfo = !modeInfo" />
-        <Transition name="kd-mode-tip">
-          <p v-if="modeInfo" class="type-12-regular absolute top-full left-1/2 z-20 mt-2 w-64 -translate-x-1/2 rounded-2xl border border-neutral-5 bg-neutral-3 p-3 text-center text-neutral-13 shadow-elevation-2">
-            {{ $t(`pvp.modeTip.${b.mode}`) }}
-          </p>
-        </Transition>
-      </span>
+      <!-- the mode and the battle's number, one big line in the mode's colour, as in the lobby -->
+      <h1 class="kd-room-title type-16-caps md:type-20-caps flex items-center gap-2 whitespace-nowrap tabular-nums md:gap-3" :class="`is-${b.mode}`">
+        <span>{{ $t(`pvp.modeName.${b.mode}`) }}</span>
+        <span>#{{ b.id }}</span>
+      </h1>
     </UiPageBar>
-
+    <PvpHowModal v-model="howOpen" />
 
     <!-- Meta line: who is watching and the round · the battle's cases (the current one lit, spent ones dim) · what a
          seat costs and what is in the pot (the money on the right, as in the lobby's plate). Once the battle is over it
@@ -551,19 +544,18 @@ const laneCols = computed(() => {
 .kd-room-title {
   color: var(--color-coin);
 }
+/* the smallest phones: the line between the bar's four icons */
+@media (max-width: 359.98px) {
+  .kd-room-title {
+    gap: 4px;
+    font-size: 12px;
+  }
+}
 .kd-room-title.is-crazy {
   color: var(--color-item-classified);
 }
 .kd-room-title.is-team {
   color: var(--color-item-milspec);
-}
-.kd-mode-tip-enter-active,
-.kd-mode-tip-leave-active {
-  transition: opacity var(--dur-fast) var(--ease-out);
-}
-.kd-mode-tip-enter-from,
-.kd-mode-tip-leave-to {
-  opacity: 0;
 }
 /* a column to each lane; the gap between two seats is split evenly around the arena's line */
 .kd-lanes {

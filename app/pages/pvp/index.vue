@@ -13,12 +13,6 @@ const barRight = computed(() => [
   { label: t('upgrade.howItWorks'), icon: 'info', onClick: () => (howOpen.value = true) },
   { label: t('case.fairness'), icon: 'shield', to: '/fairness' },
 ])
-const HOW = [
-  { icon: 'cases', n: 1 },
-  { icon: 'pvp', n: 2 },
-  { icon: 'crown', n: 3 },
-  { icon: 'shield-check', n: 4 },
-]
 // The page shows at once on a tap from elsewhere: card skeletons hold the rows until the battles come in (the
 // first load, rendered on the server, comes complete)
 const req = useFetch<BattlesResponse>('/api/battles', { key: 'battles', lazy: true })
@@ -67,22 +61,7 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
     <!-- 16 px down to the content on every width, as under the case page's bar -->
     <UiPageBar logo :left="barLeft" :right="barRight" class="max-lg:-mb-1 lg:-mb-4" />
 
-    <!-- How it works: a battle in four plain steps, as the upgrade explains itself -->
-    <UiModal v-model="howOpen" :title="$t('pvp.howTitle')" :width="520">
-      <ol class="flex flex-col gap-3">
-        <li v-for="st in HOW" :key="st.n" class="flex gap-3 rounded-2xl bg-neutral-3 p-3">
-          <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-neutral-4 text-brand-light"><UiIcon :name="st.icon" :size="20" /></span>
-          <span class="flex min-w-0 flex-col gap-1">
-            <span class="type-14-caps">{{ st.n }}. {{ $t(`pvp.how${st.n}t`) }}</span>
-            <span class="type-14-regular text-neutral-12">{{ $t(`pvp.how${st.n}`) }}</span>
-          </span>
-        </li>
-      </ol>
-      <div class="mt-4 flex items-center justify-between gap-3">
-        <span class="type-12-regular text-neutral-11">{{ $t('pvp.howFair') }}</span>
-        <UiButton variant="fair" size="s" icon="shield-check" to="/fairness" class="shrink-0" @click="howOpen = false">{{ $t('case.fairness') }}</UiButton>
-      </div>
-    </UiModal>
+    <PvpHowModal v-model="howOpen" />
     <!-- The lobby's dock, the case page's (components/case/OpenControls.vue): one block — desktop, the filters on the left
          (the mode, Fits my balance), Create PvP in the middle as the case's Open (56 px, 320 wide), Reset (when something
          is set) and the sort on the right, all 48 px; the side columns are equal and fixed, so the button never moves.
