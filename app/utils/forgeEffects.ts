@@ -21,9 +21,7 @@ import { RARITY_HEX } from './rarity'
  *               (the label's middle sits at y ≈ 300)
  *   kdBlaze   — kdBurn turned up for a small plate that must read as on fire (a limited case's stock): tall licks
  *               that clear the plate's top edge, a denser shower of embers, a hotter glow; same base line
- *   kdCharge  — loop around a round badge (the PvP countdown, 78 units in radius): fire climbing round it, in opts.color;
- *               handle.set('level', 1…3) stokes it, each step with a flare
- *   kdChargeHit — the end of kdCharge: the fire tears off the badge in uneven tongues and dies fast
+ *   kdPuff    — one-shot: a light puff of grey smoke opening from the middle and drifting up as it thins
  *   kdRank    — Forge's rank reveal (motion pack, `tier`: base → luck → mega → ultra → jackpot) in the rarity's own
  *               colour, one burst on the drop's rarity shape; opts { color: '#hex', level: 0…4 }
  */
@@ -406,73 +404,25 @@ export function defineKdEffects(engine: Engine) {
     },
   }))
 
-  // The fire climbs from the whole rim, so the lower half runs behind the badge and shows at its sides and over its top.
-  // pow follows level softly; a new level throws a flare of tall licks at once, the beat of the countdown
-  const R0 = 78
-  engine.define('kdCharge', (h) => {
-    const lick = (s: State, at: Atlas, tall: number) => {
-      const { R } = h
-      const a = R(0, 6.28)
-      const c = s.c as Rgb
-      h.spawn(s.lick as Particle[], { x: 180 + Math.cos(a) * R0, y: 180 + Math.sin(a) * R0 * 0.9, vx: Math.cos(a) * 16, vy: R(-105, -60) * tall, size: R(26, 50) * (0.85 + tall * 0.2), stretch: 2.3, sc: [[0, 0.45], [0.3, 1], [1, 0.2]], life: R(0.4, 0.62) * (0.8 + tall * 0.2), cells: [at.map.glow], add: 1, alpha: 0.62, tint: Math.random() < 0.5 ? c : (s.hot as Rgb), fadeIn: 0.22, fadeOut: 0.6 })
-    }
-    return {
-      atlas: 'kd',
-      init(s) {
-        const o = (s as State & { o: { color?: string } }).o
-        const c = o.color ? hexToRgb(o.color) : ORANGE
-        Object.assign(s, { em: [] as Particle[], lick: [] as Particle[], c, hot: c.map((v) => v * 0.6 + 0.4), deep: c.map((v) => v * 0.7), level: 1, seen: 1, pow: 0.4 })
-      },
-      update(s, dt, at) {
-        const { R } = h
-        const level = s.level as number
-        s.pow = (s.pow as number) + (level - (s.pow as number)) * Math.min(1, dt * 5)
-        const pow = s.pow as number
-        if (level !== s.seen) {
-          s.seen = level
-          for (let i = 0; i < 16 + level * 8; i++) lick(s, at, 1 + level * 0.25)
-        }
-        h.emit(s.acc, 1, 30 + pow * 26, dt, () => lick(s, at, 0.7 + pow * 0.28))
-        h.emit(s.acc, 2, 3 + pow * 5, dt, () => {
-          const a = R(3.4, 6)
-          h.spawn(s.em as Particle[], { x: 180 + Math.cos(a) * R0, y: 180 + Math.sin(a) * R0, vx: R(-14, 14), vy: R(-170, -90), sway: R(8, 20), size: R(10, 18), life: R(0.6, 1), cells: [at.map.ember], add: 1, tint: s.hot as Rgb, fadeIn: 0.1, fadeOut: 0.7 })
-        })
-        h.step(s.em as Particle[], dt)
-        h.step(s.lick as Particle[], dt)
-      },
-      render(s, c) {
-        const pow = s.pow as number
-        h.sprite(c, 180, 186, 250 + pow * 26, 0, (0.14 + pow * 0.07) * Math.min(1, s.t / 0.3), 1, c.at.map.glow!, 1, s.deep as Rgb)
-        h.draw(c, s.lick as Particle[])
-        h.draw(c, s.em as Particle[])
-      },
-    }
-  })
-
-  // uneven on purpose: an even ring of tongues would read as a sunburst
-  engine.define('kdChargeHit', (h) => ({
+  // Normal blending, not additive: smoke darkens and veils what is under it instead of glowing
+  engine.define('kdPuff', (h) => ({
     atlas: 'kd',
-    period: 0.8,
-    init(s) {
-      const o = (s as State & { o: { color?: string } }).o
-      const c = o.color ? hexToRgb(o.color) : ORANGE
-      Object.assign(s, { fired: false, lick: [] as Particle[], c, hot: c.map((v) => v * 0.6 + 0.4) })
-    },
+    period: 1.3,
+    init: (s) => Object.assign(s, { fired: false, sp: [] as Particle[] }),
     update(s, dt, at) {
       const { R } = h
       if (!s.fired) {
         s.fired = true
-        let a = R(0, 6.28)
-        for (let i = 0; i < 22; i++) {
-          a += R(0.1, 0.5)
-          const sp = R(120, 430)
-          h.spawn(s.lick as Particle[], { x: 180 + Math.cos(a) * R0 * 0.9, y: 180 + Math.sin(a) * R0 * 0.9, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40, drag: 4, size: R(40, 96), stretch: 2.2, rot: a + h.PI / 2, sc: [[0, 0.7], [0.25, 1], [1, 0.15]], life: R(0.3, 0.62), cells: [at.map.glow], add: 1, alpha: 0.7, tint: Math.random() < 0.5 ? (s.c as Rgb) : (s.hot as Rgb), fadeIn: 0.05, fadeOut: 0.7 })
+        for (let i = 0; i < 16; i++) {
+          const a = R(0, 6.28)
+          const sp = R(30, 95)
+          h.spawn(s.sp as Particle[], { x: 180 + Math.cos(a) * 26, y: 186 + Math.sin(a) * 18, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.6 - R(20, 50), drag: 2, size: R(60, 110), sc: [[0, 0.5], [1, 1.8]], life: R(0.7, 1.15), rot: R(0, 6), vr: R(-0.6, 0.6), cells: [at.map.glow], add: 0, alpha: 0.2, tint: [0.4, 0.42, 0.48], fadeIn: 0.12, fadeOut: 0.75 })
         }
       }
-      h.step(s.lick as Particle[], dt)
+      h.step(s.sp as Particle[], dt)
     },
     render(s, c) {
-      h.draw(c, s.lick as Particle[])
+      h.draw(c, s.sp as Particle[])
     },
   }))
 

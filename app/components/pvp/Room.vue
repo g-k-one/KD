@@ -14,6 +14,7 @@ const session = useSessionStore()
 const ui = useUiStore()
 const toast = useToast()
 const sfx = useSfx()
+const ex = useExtrude()
 
 const { data, refresh, error } = await useFetch<BattleResponse>(() => `/api/battles/${id.value}`, { key: `battle-${id.value}` })
 if (error.value) {
@@ -41,10 +42,15 @@ async function shareBattle() {
     toast.show(replayLink())
   }
 }
-function replay() {
+// the stage comes up unseen first, so the replay's countdown has its 3D label from the first second too
+async function replay() {
   celebrated.value = true
-  replayAt.value = Date.now()
   window.scrollTo({ top: 0, behavior: 'smooth' })
+  countArmed.value = true
+  await nextTick()
+  await prepareCount()
+  replayAt.value = Date.now()
+  countArmed.value = false
 }
 useHead({ title: () => `PvP #${id.value} · KurwaDROP` })
 
@@ -132,48 +138,95 @@ watch(done, (d) => {
 const countdown = computed(() =>
   b.value.status !== 'waiting' && b.value.startedAt && clock.value.round < 0 ? Math.min(3, Math.max(0, Math.ceil((Date.parse(b.value.startedAt) - now.value) / 1000))) : 0,
 )
-// The countdown is the arena's VS badge itself: it grows out of its place on the line and charges up, the mode's colour
-// rising in it a third with every second as the numbers roll and the badge kicks; full, it turns back into VS and shrinks
-// home, where the real badge takes over. Plain DOM, transform and opacity only.
+// The numbers are pseudo-3D (Extrude) in the mode's colours, slim and not too big: the 3 spins in, each next flips out of the
+// one before it with a full turn the other way. On zero the 1 flips into a big VS in a light puff of smoke, and the VS
+// shrinks into the arena's own badge, which takes over before it is gone. The label is mounted ahead, while the seats
+// fill, so the first number does not pay for the shader. No WebGL or reduced motion: the plain number
+const COUNT_LOOK = {
+  font: '800 {s}px Rubik, ui-sans-serif, system-ui, sans-serif',
+  charset: '0123456789VS',
+  metal: 0.2,
+  gloss: 0.5,
+  bevel: 1.6,
+  depth: 11,
+  yaw: -14,
+  pitch: 8,
+  persp: 700,
+  drag: false,
+}
+const COUNT_INK = {
+  classic: { face: ['#fff6e0', '#ffc46b', '#ff9a1a'], side: ['#b8560f', '#2a1400'] },
+  crazy: { face: ['#fdeaff', '#e77bf2', '#b41fc9'], side: ['#7a1390', '#22052a'] },
+  team: { face: ['#e8edff', '#8aa0ff', '#4b69ff'], side: ['#2c3fa8', '#0a1033'] },
+}
 const howOpen = ref(false)
-const countHome = ref(false)
-const countBadge = useTemplateRef<HTMLElement>('countBadge')
-// the fire round the badge: Forge on its own canvas in the arena, under the badge and over the dimmed reels
+const countEl = useTemplateRef<HTMLElement>('countEl')
 const fxHost = useTemplateRef<HTMLElement>('fxHost')
 const fx = useForge(fxHost)
-const MODE_HEX = { classic: '#fdb022', crazy: RARITY_HEX.classified, team: RARITY_HEX.milspec }
-const fireAt = () => {
-  const el = fxHost.value
-  return el ? { x: el.offsetWidth / 2, y: el.offsetHeight / 2, size: el.offsetHeight, color: MODE_HEX[b.value.mode] } : null
+let countLabel: ExtrudeHandle | null = null
+let countReady: Promise<void> | null = null
+let countFresh = true
+let countSide = 1
+let countTimers: ReturnType<typeof setTimeout>[] = []
+const count3d = ref(false)
+const countArmed = ref(false)
+// on zero: the VS plays on the stage (countFade); the arena's badge is held back until the stage has nearly landed on it (countHome)
+const countFade = ref(false)
+const countHome = ref(false)
+function dropCountLabel() {
+  countLabel?.destroy()
+  countLabel = null
+  countReady = null
+  countFresh = true
+  count3d.value = false
+  countFade.value = false
+  countHome.value = false
 }
-let countFire: Promise<ForgeHandle | null> | null = null
-function stokeFire(level: number) {
-  const at = fireAt()
-  if (!at) return
-  countFire ??= fx.play('kdCharge', { ...at, loop: true })
-  countFire.then((h) => h?.set('level', level))
+function prepareCount() {
+  countReady ??= (async () => {
+    if (!countEl.value) return
+    countLabel = await ex.mount(countEl.value, { ...COUNT_LOOK, ...COUNT_INK[b.value.mode], size: isMobile.value ? 88 : 124, quality: isMobile.value ? 'low' : 'auto', text: '3' })
+    await countLabel?.ready
+    count3d.value = !!countLabel
+  })()
+  return countReady
 }
-function endFire() {
-  const at = fireAt()
-  countFire?.then((h) => h?.stop())
-  countFire = null
-  if (at) fx.play('kdChargeHit', at)
+watch(countEl, (el) => el && prepareCount())
+async function countBeat(n: number) {
+  await prepareCount()
+  if (!countLabel) return
+  countSide = -countSide
+  countLabel.set({ yaw: 14 * countSide })
+  if (countFresh) {
+    countFresh = false
+    if (countLabel.text !== String(n)) countLabel.set({ text: String(n) })
+    countLabel.play('spin')
+  } else {
+    countLabel.swap(String(n), { style: 'flip' })
+    countLabel.rotate(360 * countSide, 0, true)
+  }
 }
-let countTimer: ReturnType<typeof setTimeout> | undefined
+function countEnd() {
+  const host = fxHost.value
+  countFade.value = true
+  countHome.value = true
+  countLabel?.set({ yaw: 0, pitch: 0 })
+  countLabel?.swap('VS', { style: 'flip' })
+  if (host) fx.play('kdPuff', { x: host.offsetWidth / 2, y: host.offsetHeight / 2, size: host.offsetHeight * 1.3 })
+  countTimers.forEach(clearTimeout)
+  countTimers = [setTimeout(() => (countHome.value = false), 700), setTimeout(dropCountLabel, 950)]
+}
 watch(countdown, (n, old) => {
   if (n > 0 && n !== old) {
     sfx.count(n === 1)
-    stokeFire(4 - n)
-    if (old > 0) countBadge.value?.animate({ scale: [0.84, 1.14, 1] }, { duration: 460, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' })
-  } else if (n === 0 && old > 0) {
-    endFire()
-    countHome.value = true
-    clearTimeout(countTimer)
-    countTimer = setTimeout(() => (countHome.value = false), 800)
-  }
+    countBeat(n)
+  } else if (n === 0 && old > 0) countEnd()
 })
-onBeforeUnmount(() => clearTimeout(countTimer))
-// the atlas ready before the first second, or the first flames play unseen
+onBeforeUnmount(() => {
+  countTimers.forEach(clearTimeout)
+  dropCountLabel()
+})
+// the smoke's atlas ready before it is needed
 onMounted(() => done.value || fx.preload('kd'))
 
 // Same cases and seats in one click once the battle is over (Skin.club "Recreate")
@@ -397,14 +450,12 @@ const laneCols = computed(() => {
 
       <!-- The countdown: the VS badge, big, in the middle of the dimmed arena; three seats have no badge there, so it fades -->
       <div ref="fxHost" class="pointer-events-none absolute inset-0 z-[11]" />
-      <div v-if="countdown > 0 || countHome" class="kd-countdown pointer-events-none absolute inset-0 grid place-items-center" :class="[countHome && 'is-home', b.size === 3 && 'is-off-line']" :style="{ '--mc': PVP_MODE_COLOR[b.mode] }">
-        <div ref="countBadge" class="kd-count relative rounded-full">
-          <span class="absolute inset-0 overflow-hidden rounded-full">
-            <span class="kd-count-fill absolute" :style="{ '--level': countdown ? (4 - countdown) / 3 : 1 }" />
-            <Transition name="kd-count-roll">
-              <span :key="countdown" class="kd-count-n absolute inset-0 grid place-items-center tabular-nums" :class="!countdown && 'is-vs'">{{ countdown || $t('pvp.vs') }}</span>
-            </Transition>
-          </span>
+      <!-- The arena dims and the number stands in its middle. The stage stays in the page while seats fill, unseen, so its 3D
+           label is ready before the first second -->
+      <div v-if="b.status === 'waiting' || countArmed || countdown > 0 || countFade" class="kd-countdown pointer-events-none absolute inset-0 grid place-items-center" :class="[countdown > 0 && 'is-on', countFade && 'is-fade']">
+        <div class="kd-count-stage relative grid size-40 place-items-center lg:size-52">
+          <div ref="countEl" class="absolute inset-0" />
+          <span v-if="!count3d && countdown > 0" :key="countdown" class="kd-count-plain text-[56px] leading-none font-extrabold tabular-nums lg:text-[80px]">{{ countdown }}</span>
         </div>
       </div>
 
@@ -689,144 +740,56 @@ const laneCols = computed(() => {
   inset: 0;
   z-index: 10;
   background: rgb(12 13 16 / 0.6);
-  animation: kd-count-dim 300ms var(--ease-out) both;
-}
-.kd-countdown.is-home::before {
-  animation: kd-count-undim 500ms var(--ease-out) 200ms both;
-}
-@keyframes kd-count-dim {
-  from {
-    opacity: 0;
-  }
-}
-@keyframes kd-count-undim {
-  to {
-    opacity: 0;
-  }
-}
-/* the VS badge at its big size: home is the scale that makes it exactly the 36 px one on the line */
-.kd-count {
-  --home: 0.409;
-  --vs-font: 29.3px;
-  z-index: 12;
-  width: 88px;
-  height: 88px;
-  background: var(--color-neutral-3);
-  animation: kd-count-out 460ms var(--ease-spring) both;
-}
-@media (min-width: 64rem) {
-  .kd-count {
-    --home: 0.3;
-    --vs-font: 40px;
-    width: 120px;
-    height: 120px;
-  }
-}
-/* the real badge's hairline comes back only on the way home: no outline while it counts */
-.kd-count::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 1px var(--color-neutral-5);
   opacity: 0;
-  transition: opacity 300ms var(--ease-out) 300ms;
+  transition: opacity var(--dur-base) var(--ease-out);
 }
-.kd-countdown.is-home .kd-count::before {
+.kd-countdown.is-on::before {
   opacity: 1;
 }
-/* the charge: a big soft square, turning, rises in the badge, so its top reads as a liquid's moving surface */
-.kd-count-fill {
-  top: 0;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  border-radius: 44%;
-  background: color-mix(in srgb, var(--mc) 78%, #000);
-  translate: 0 calc((1 - var(--level)) * 50% - 3%);
-  transition:
-    translate 620ms var(--ease-spring),
-    opacity 400ms var(--ease-out) 160ms;
-  animation: kd-count-slosh 2.6s linear infinite;
-}
-@starting-style {
-  .kd-count-fill {
-    translate: 0 50%;
-  }
-}
-.kd-countdown.is-home .kd-count-fill {
+.kd-count-stage {
+  z-index: 12;
   opacity: 0;
 }
-@keyframes kd-count-slosh {
-  to {
-    rotate: 1turn;
-  }
+.kd-countdown.is-on .kd-count-stage,
+.kd-countdown.is-fade .kd-count-stage {
+  opacity: 1;
 }
-.kd-countdown.is-home .kd-count {
-  animation: kd-count-home 720ms var(--ease-in-out) both;
+/* the VS holds a beat in its smoke, then sinks into the badge's place, gone as the badge settles */
+.kd-countdown.is-fade .kd-count-stage {
+  animation: kd-count-vs 950ms var(--ease-in-out) both;
 }
-.kd-countdown.is-home.is-off-line .kd-count {
-  animation-name: kd-count-home-fade;
-}
-@keyframes kd-count-out {
-  from {
-    transform: scale(var(--home));
-  }
-}
-@keyframes kd-count-home {
+@keyframes kd-count-vs {
   0%,
-  40% {
+  35% {
+    opacity: 1;
     transform: scale(1);
   }
+  80% {
+    opacity: 1;
+  }
   100% {
-    transform: scale(var(--home));
+    opacity: 0;
+    transform: scale(0.22);
   }
 }
-@keyframes kd-count-home-fade {
-  0%,
-  40% {
+.kd-count-plain {
+  color: var(--color-neutral-15);
+  animation: kd-count-beat 950ms var(--ease-out) both;
+}
+@keyframes kd-count-beat {
+  0% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+  18%,
+  80% {
     opacity: 1;
     transform: scale(1);
   }
   100% {
     opacity: 0;
-    transform: scale(var(--home));
+    transform: scale(0.9);
   }
-}
-.kd-count-n {
-  color: var(--color-neutral-15);
-  text-shadow: 0 2px 0 rgb(0 0 0 / 0.3);
-  font-size: 44px;
-  font-weight: 800;
-  line-height: 1;
-}
-@media (min-width: 64rem) {
-  .kd-count-n {
-    font-size: 64px;
-  }
-}
-.kd-count-n.is-vs {
-  color: var(--color-neutral-13);
-  text-shadow: none;
-  font-size: var(--vs-font);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-/* the next number rolls up into the badge as the last one leaves through its top */
-.kd-count-roll-enter-active,
-.kd-count-roll-leave-active {
-  transition:
-    transform 340ms var(--ease-out),
-    opacity 240ms var(--ease-out);
-}
-.kd-count-roll-enter-from {
-  opacity: 0;
-  transform: translateY(65%);
-}
-.kd-count-roll-leave-to {
-  opacity: 0;
-  transform: translateY(-65%);
 }
 /* phones: two equal chips, the label on the left edge, the money on the right */
 @media (max-width: 63.98rem) {
