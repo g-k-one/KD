@@ -42,6 +42,7 @@ let nextKey = 0
 const keys = ref<number[]>([])
 const strip = computed(() => order.value.map((s, i) => ({ key: keys.value[i]!, case: bySlug.value.get(s)! })).filter((r) => r.case))
 
+const isLg = useMediaQuery('(min-width: 1024px)')
 const haptics = useHaptics()
 function add(slug: string) {
   if (rounds.value >= MAX_ROUNDS.value) return toast.show(t('pvp.maxRounds', { n: MAX_ROUNDS.value }))
@@ -173,15 +174,15 @@ async function create() {
         </div>
       </div>
 
-      <!-- Summary: the profile's panel on desktop, a header row over a hairline (the 32 px Clear 20 px from its top, bottom and
+      <!-- Summary: the profile's panel on desktop, a header row over a hairline (Clear is the skins panel's Select all, 16 px from its top, bottom and
            right), then a line per number -->
       <aside class="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-20 flex flex-col gap-2 border-t border-neutral-5 bg-neutral-2 px-4 py-3 lg:sticky lg:top-24 lg:bottom-auto lg:gap-0 lg:rounded-5xl lg:border-0 lg:p-0">
-        <div class="flex items-center justify-between gap-3 lg:h-18 lg:border-b lg:border-neutral-4 lg:pr-5 lg:pl-6">
+        <div class="flex items-center justify-between gap-3 lg:h-18 lg:border-b lg:border-neutral-4 lg:pr-4 lg:pl-6">
           <UiIcon name="pvp" :size="24" class="text-neutral-13 max-lg:hidden" />
           <h2 class="type-16-medium flex-1 max-lg:hidden">{{ $t('pvp.summary') }}</h2>
           <!-- phones keep the bar low: the round count stands here instead of the totals list -->
           <span class="type-12-caps text-neutral-11 tabular-nums lg:hidden">{{ $t('pvp.rounds') }} <span class="text-neutral-15">{{ rounds }} / {{ MAX_ROUNDS }}</span></span>
-          <UiButton v-if="rounds" variant="secondary" size="s" class="ml-auto" @click="clearRounds">{{ $t('pvp.clearRounds') }}</UiButton>
+          <UiButton v-if="rounds" variant="ghost" :size="isLg ? 'm' : 's'" class="ml-auto" @click="clearRounds">{{ $t('pvp.clearRounds') }}</UiButton>
         </div>
         <div class="flex flex-col gap-2 lg:gap-3 lg:p-4 lg:pt-3">
         <!-- the rounds in play order; a tap takes one out. Phones: one swipeable line over the button -->
