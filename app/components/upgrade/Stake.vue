@@ -81,7 +81,7 @@ function removePiece(p: Piece) {
   <div class="min-w-0">
     <div
       ref="root"
-      class="kd-stake relative flex flex-col rounded-5xl bg-neutral-2 lg:h-76"
+      class="kd-stake relative flex flex-col kd-panel lg:h-76"
       :class="`is-${state}`"
     >
       <Transition name="kd-stake-swap" mode="out-in">

@@ -26,7 +26,7 @@ watch(() => [props.version, session.user?.id], load)
     </div>
     <!-- the profile's history table, with the roll and the chance it was played at; a row opens its check. The rows'
          12 px corners sit 12 px in from the card's 24, on every side -->
-    <div class="rounded-5xl bg-neutral-2 p-3">
+    <div class="kd-panel p-3">
       <HistoryTable roll :entries="entries" :link="(e) => (e.nonce ? `/fairness?roll=${e.id}` : undefined)" />
     </div>
   </section>

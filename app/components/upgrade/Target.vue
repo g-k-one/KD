@@ -47,7 +47,7 @@ watch(
     <!-- Desktop -->
     <div
       ref="root"
-      class="kd-target relative h-72 overflow-hidden rounded-5xl bg-neutral-2 lg:h-76"
+      class="kd-target relative h-72 overflow-hidden kd-panel lg:h-76"
       :class="`is-${state}`"
       :style="{ '--rc': rc }"
     >

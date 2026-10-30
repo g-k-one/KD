@@ -38,7 +38,7 @@ async function redeem() {
 </script>
 
 <template>
-  <div ref="box" class="flex flex-col gap-4" :class="!bare && 'rounded-5xl bg-neutral-2 p-5'">
+  <div ref="box" class="flex flex-col gap-4" :class="!bare && 'kd-panel p-5'">
     <span v-if="!bare" class="type-12-caps flex items-center gap-1 text-neutral-11" :title="$t('bonus.promoText')">{{ $t('bonus.promo') }}<UiIcon name="info" :size="14" /></span>
     <form class="mt-auto flex flex-col gap-2" @submit.prevent="redeem">
       <div class="flex gap-2">

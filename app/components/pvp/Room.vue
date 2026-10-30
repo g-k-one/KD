@@ -442,7 +442,7 @@ const roundLine = computed(() => {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10">
+  <div class="kd-page kd-page-top gap-4 lg:gap-6">
     <!-- the bar's shield is the general fairness page, as on every page; this battle's own check is Check PvP in the result -->
     <UiPageBar
       class="lg:-mb-2"
@@ -780,19 +780,6 @@ const roundLine = computed(() => {
 @keyframes kd-free-seat {
   50% {
     opacity: 0.5;
-  }
-}
-/* the plate is the case page's dock: 24px radius, 12px padding; its chips are 48px high with a 12px radius (24 − 12) */
-.kd-dock {
-  border-radius: 24px;
-  background: var(--color-neutral-2);
-  padding: 12px;
-}
-/* desktop: the docks' 80 px and 16 px sides: the 48 px chips sit 16 px from every edge, the 56 px round strip 12 from the
-   top and bottom (it keeps 4 px more of its own, for the current round's lift) */
-@media (min-width: 64rem) {
-  .kd-dock {
-    padding-inline: 16px;
   }
 }
 .kd-dock-stat {

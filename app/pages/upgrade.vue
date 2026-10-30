@@ -383,7 +383,7 @@ async function runUpgrade() {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
+  <div class="kd-page kd-page-top gap-6">
     <!-- the logo in the middle, as on the case page: players record short videos of this screen -->
     <!-- 16 px down to the content on every width, as under the case page's bar -->
     <UiPageBar logo :left="barLeft" :right="barRight" class="-mb-2" />
@@ -584,7 +584,7 @@ async function runUpgrade() {
     <UiButton variant="ghost" size="s" icon="close" icon-only :aria-label="$t('common.close')" @click="sheetOpen = false" />
     </div>
     <section class="kd-dimmable -mt-2 grid gap-4 lg:mt-0 lg:grid-cols-2 lg:gap-x-6 lg:gap-y-5" :class="state === 'spinning' && 'is-dimmed'">
-      <div class="flex flex-col rounded-5xl bg-neutral-2 lg:pb-4" :class="panelTab !== 'mine' && 'max-lg:hidden'">
+      <div class="flex flex-col kd-panel lg:pb-4" :class="panelTab !== 'mine' && 'max-lg:hidden'">
         <!-- phones: the sheet's tab already names the panel, so the header keeps only its tools -->
         <UiPanelHead icon="inventory" :title="`${$t('upgrade.mySkins')} (${inventory.length})`" lg-title>
           <!-- nothing to count or sort with fewer than two skins: no "0", no sort arrows -->
@@ -610,14 +610,14 @@ async function runUpgrade() {
             <UiSortArrows :desc="invSortDesc" />
           </UiButton>
         </UiPanelHead>
-        <div v-if="session.user && inventoryLoading" class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
+        <div v-if="session.user && inventoryLoading" class="kd-item-grid">
           <span v-for="n in PAGE" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-square lg:aspect-auto lg:h-[105px]" :style="{ animationDelay: `${n * 40}ms` }" />
         </div>
         <!-- nothing to stake yet: one big step, open a case (no second, small "open cases" line under it) -->
         <UiEmptyState v-else-if="session.user && !inventory.length" :text="$t('account.emptyInventory')" art="empty-inventory" class="flex-1 justify-center">
           <UiButton size="l" icon="cases" to="/" class="w-full max-w-72">{{ $t('account.openCases') }}</UiButton>
         </UiEmptyState>
-        <div v-else-if="session.user" class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
+        <div v-else-if="session.user" class="kd-item-grid">
           <template v-for="n in PAGE" :key="n">
             <ItemTile
               :item="inventoryPage[n - 1]"
@@ -637,11 +637,11 @@ async function runUpgrade() {
         </NuxtLink>
       </div>
 
-      <div class="flex flex-col rounded-5xl bg-neutral-2 lg:pb-4" :class="panelTab !== 'desired' && 'max-lg:hidden'">
+      <div class="flex flex-col kd-panel lg:pb-4" :class="panelTab !== 'desired' && 'max-lg:hidden'">
         <UiFilterBar v-model:desc="sortDesc" v-model:search="search" v-model:open="searchOpen" v-model:from="priceFrom" v-model:to="priceTo" v-model:values="rarities" icon="gem" :title="$t('upgrade.desiredSkin')" :options="rarityOptions" />
         <!-- Always a full page of slots (empty ones on the last page), so paging never changes the height -->
         <div class="relative">
-        <TransitionGroup tag="div" name="kd-grid" class="relative grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4" :class="market && !filteredMarket.length && 'opacity-30'">
+        <TransitionGroup tag="div" name="kd-grid" class="relative kd-item-grid" :class="market && !filteredMarket.length && 'opacity-30'">
           <template v-for="n in PAGE" :key="marketPage[n - 1]?.id ?? `empty-${n}`">
             <ItemTile
               v-if="marketPage[n - 1]"

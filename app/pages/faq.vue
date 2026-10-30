@@ -19,7 +19,7 @@ const groups = computed(() => {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
+  <div class="kd-page kd-page-top gap-6">
     <UiPageBar
       class="-mb-2"
       :title="t('nav.faq')"
@@ -29,7 +29,7 @@ const groups = computed(() => {
 
     <!-- the same frame as the legal pages: the topics beside the text (above it on phones), one column of questions -->
     <div class="grid items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
-      <nav class="scrollbar-none flex gap-1 overflow-x-auto rounded-5xl bg-neutral-2 p-2 lg:sticky lg:top-24 lg:flex-col" :aria-label="t('nav.faq')">
+      <nav class="scrollbar-none flex gap-1 overflow-x-auto kd-panel p-2 lg:sticky lg:top-24 lg:flex-col" :aria-label="t('nav.faq')">
         <button
           v-for="o in topics"
           :key="o.id"
@@ -62,7 +62,7 @@ const groups = computed(() => {
           </section>
         </div>
 
-        <div class="flex flex-col items-center gap-3 rounded-5xl bg-neutral-2 p-4 text-center lg:flex-row lg:px-6 lg:text-left">
+        <div class="flex flex-col items-center gap-3 kd-panel p-4 text-center lg:flex-row lg:px-6 lg:text-left">
           <p class="type-14-regular flex-1 text-neutral-12">{{ t('help.faqMore') }}</p>
           <UiButton variant="secondary" size="m" to="/contact">{{ t('nav.contact') }}</UiButton>
         </div>

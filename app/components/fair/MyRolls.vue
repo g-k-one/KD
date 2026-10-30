@@ -83,7 +83,7 @@ watch(
     <!-- relative z-10: the rolls lie over the banner's magnifier when it drifts down past the banner -->
     <!-- one card, as the profile's game history: a header line (the icon and the name, a chip with how many rolls are
          still sealed — the why on hover; on the right the way to open them and the full history), then the table -->
-    <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
+    <div class="flex min-w-0 flex-col kd-panel">
       <UiPanelHead icon="shield-check" :title="$t('fair.myRolls')">
         <span v-if="session.user && rows.length && sealed" class="type-12-caps flex h-6 shrink-0 items-center gap-1 rounded-md bg-success-24 px-2 text-success" :title="$t('fair.sealedHint')">
           <UiIcon name="lock" :size="12" />{{ $t('fair.sealedChip', { n: sealed }, sealed) }}

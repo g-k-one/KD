@@ -182,17 +182,17 @@ const toPromo = () => promoEl.value?.scrollIntoView({ behavior: 'smooth', block:
         <UiButton v-if="session.user" variant="ghost" size="l" icon="sparkle" class="max-sm:h-10 max-sm:px-3" @click="toPromo"><span class="sm:hidden">{{ $t('bonus.promoShort') }}</span><span class="max-sm:hidden">{{ $t('bonus.promo') }}</span></UiButton>
       </template>
     </BannerBleed>
-  <div class="mx-auto flex max-w-content flex-col gap-6 px-4 lg:gap-10 lg:px-0">
+  <div class="kd-page gap-6 lg:gap-10">
 
     <!-- Guests: what signing in starts — the daily case's ladder, standing on its first step -->
-    <section v-if="!session.user && preview?.ladder?.length" class="flex flex-col gap-4 rounded-5xl bg-neutral-2 p-5">
+    <section v-if="!session.user && preview?.ladder?.length" class="flex flex-col gap-4 kd-panel p-5">
       <span class="type-16-caps">{{ $t('bonus.levelsGive') }}</span>
       <BonusLadder :ladder="preview.ladder" :ranks="preview.ranks" :tier="0" @pick="ui.openSignIn()" />
       <p class="type-12-regular text-neutral-11">{{ $t('bonus.guestLadder') }}</p>
     </section>
     <!-- Guests: the three rewards a player has, locked — the reason to sign in, in the same cards -->
     <div v-if="!session.user && preview?.ladder?.length" class="grid gap-3 lg:grid-cols-3 lg:gap-4">
-      <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4">
+      <div class="kd-reward flex flex-col gap-3 kd-panel p-4">
         <div class="flex items-center gap-3">
           <ItemArt :image="preview.ladder[0]!.best.image" :rarity="preview.ladder[0]!.best.rarity" :size="44" class="w-12 shrink-0" />
           <div class="flex min-w-0 flex-col gap-0.5">
@@ -203,7 +203,7 @@ const toPromo = () => promoEl.value?.scrollIntoView({ behavior: 'smooth', block:
         </div>
         <UiButton variant="secondary" size="m" icon="lock" block class="mt-auto" @click="ui.openSignIn()">{{ $t('bonus.signInToClaim') }}</UiButton>
       </div>
-      <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4">
+      <div class="kd-reward flex flex-col gap-3 kd-panel p-4">
         <div class="flex items-center gap-3">
           <span class="kd-reward-badge grid size-12 shrink-0 place-items-center rounded-lg"><UiLevelBadge :level="2" /></span>
           <div class="flex min-w-0 flex-col gap-0.5">
@@ -213,7 +213,7 @@ const toPromo = () => promoEl.value?.scrollIntoView({ behavior: 'smooth', block:
         </div>
         <UiButton variant="secondary" size="m" icon="lock" block class="mt-auto" @click="ui.openSignIn()">{{ $t('bonus.signInToClaim') }}</UiButton>
       </div>
-      <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4">
+      <div class="kd-reward flex flex-col gap-3 kd-panel p-4">
         <div class="flex items-center gap-3">
           <span class="kd-reward-badge grid size-12 shrink-0 place-items-center rounded-lg text-success"><UiIcon name="refresh" :size="24" /></span>
           <div class="flex min-w-0 flex-col gap-0.5">
@@ -228,7 +228,7 @@ const toPromo = () => promoEl.value?.scrollIntoView({ behavior: 'smooth', block:
     <!-- The level program: who you are (level, rank, how far the next level is) over the ranks' ladder, then the three
          rewards side by side — the daily case, the level cases, rakeback — then the promo code -->
     <section v-if="session.user && daily && level" class="grid gap-4">
-      <div class="flex flex-col gap-5 rounded-5xl bg-neutral-2 p-5 lg:p-6">
+      <div class="flex flex-col gap-5 kd-panel p-5 lg:p-6">
         <div class="flex items-center gap-3">
           <UiAvatar :src="session.user.avatar" :size="44" />
           <div class="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -249,7 +249,7 @@ const toPromo = () => promoEl.value?.scrollIntoView({ behavior: 'smooth', block:
 
       <!-- the three rewards, one card each: what it is, what is waiting, one button -->
       <div class="grid gap-3 lg:grid-cols-3 lg:gap-4">
-        <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4">
+        <div class="kd-reward flex flex-col gap-3 kd-panel p-4">
           <div class="flex items-center gap-3">
             <img :src="daily.case.image" alt="" class="size-12 shrink-0 object-contain" />
             <div class="flex min-w-0 flex-col gap-0.5">
@@ -263,7 +263,7 @@ const toPromo = () => promoEl.value?.scrollIntoView({ behavior: 'smooth', block:
             <UiIcon name="history" :size="16" class="text-neutral-11" /><span class="type-14 tabular-nums">{{ dailyIn }}</span>
           </div>
         </div>
-        <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4" :class="levelCount > 0 && 'is-ready'">
+        <div class="kd-reward flex flex-col gap-3 kd-panel p-4" :class="levelCount > 0 && 'is-ready'">
           <div class="flex items-center gap-3">
             <span class="kd-reward-badge grid size-12 shrink-0 place-items-center rounded-lg"><UiLevelBadge :level="level.levelCases[0]?.level ?? level.next.level" /></span>
             <div class="flex min-w-0 flex-col gap-0.5">
@@ -277,7 +277,7 @@ const toPromo = () => promoEl.value?.scrollIntoView({ behavior: 'smooth', block:
           <UiButton v-if="levelCount" size="m" block class="mt-auto" @click="openSource('level')">{{ $t('bonus.openFree') }}</UiButton>
           <p v-else class="type-12-regular mt-auto text-neutral-11">{{ level.next.big ? $t('bonus.levelCaseBig') : $t('bonus.levelCaseHow') }}</p>
         </div>
-        <div class="kd-reward flex flex-col gap-3 rounded-5xl bg-neutral-2 p-4" :class="level.rakeback.pending >= 1 && 'is-ready'">
+        <div class="kd-reward flex flex-col gap-3 kd-panel p-4" :class="level.rakeback.pending >= 1 && 'is-ready'">
           <div class="flex items-center gap-3">
             <span class="kd-reward-badge grid size-12 shrink-0 place-items-center rounded-lg text-success"><UiIcon name="refresh" :size="24" /></span>
             <div class="flex min-w-0 flex-col gap-0.5">
@@ -290,7 +290,7 @@ const toPromo = () => promoEl.value?.scrollIntoView({ behavior: 'smooth', block:
         </div>
       </div>
       <!-- the promo code sits as tall as it needs: its words and the field side by side on desktop, no empty middle -->
-      <div ref="promoEl" class="scroll-mt-24 flex flex-col gap-3 rounded-5xl bg-neutral-2 p-3.5 lg:flex-row lg:items-center lg:gap-6">
+      <div ref="promoEl" class="scroll-mt-24 flex flex-col gap-3 kd-panel p-3.5 lg:flex-row lg:items-center lg:gap-6">
         <div class="flex min-w-0 flex-1 flex-col gap-1">
           <span class="type-16-caps">{{ $t('bonus.promo') }}</span>
           <p class="type-12-regular text-neutral-11">{{ $t('bonus.promoText') }}</p>

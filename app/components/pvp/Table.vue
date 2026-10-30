@@ -19,7 +19,7 @@ defineProps<{ battles: Battle[] }>()
       <!-- the lobby's counters; elsewhere the column's own name, so its head is never a hole -->
       <span class="flex justify-center pr-2"><slot name="head">{{ $t('pvp.cost') }}</slot></span>
     </div>
-    <UiEmptyState v-if="!battles.length" :text="$t('pvp.noBattles')" art="empty-pvp" class="rounded-5xl bg-neutral-2 p-3" />
+    <UiEmptyState v-if="!battles.length" :text="$t('pvp.noBattles')" art="empty-pvp" class="kd-panel p-3" />
     <TransitionGroup v-else tag="div" name="kd-list" class="relative flex flex-col gap-2 lg:gap-3">
       <PvpCard v-for="b in battles" :key="b.id" :battle="b" />
     </TransitionGroup>

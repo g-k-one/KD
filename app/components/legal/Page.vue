@@ -25,7 +25,7 @@ const updated = computed(() => data.value && new Date(data.value.updatedAt).toLo
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
+  <div class="kd-page kd-page-top gap-6">
     <UiPageBar
       class="-mb-2"
       :title="title"
@@ -34,7 +34,7 @@ const updated = computed(() => data.value && new Date(data.value.updatedAt).toLo
     />
 
     <div class="grid items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
-      <nav ref="nav" class="scrollbar-none relative flex gap-1 overflow-x-auto rounded-5xl bg-neutral-2 p-2 lg:sticky lg:top-24 lg:flex-col" :aria-label="t('footer.legal')">
+      <nav ref="nav" class="scrollbar-none relative flex gap-1 overflow-x-auto kd-panel p-2 lg:sticky lg:top-24 lg:flex-col" :aria-label="t('footer.legal')">
         <NuxtLink
           v-for="d in LEGAL_NAV"
           :key="d.key"
@@ -47,7 +47,7 @@ const updated = computed(() => data.value && new Date(data.value.updatedAt).toLo
         </NuxtLink>
       </nav>
 
-      <article class="flex min-w-0 flex-col gap-6 rounded-5xl bg-neutral-2 p-4 lg:p-8">
+      <article class="flex min-w-0 flex-col gap-6 kd-panel p-4 lg:p-8">
         <template v-if="data">
           <p class="type-12-regular text-neutral-11">{{ t('help.updated', { date: updated }) }} · {{ t('help.sample') }}</p>
           <section v-for="(s, i) in data.sections" :id="s.id" :key="s.id" class="flex max-w-[72ch] scroll-mt-28 flex-col gap-2">

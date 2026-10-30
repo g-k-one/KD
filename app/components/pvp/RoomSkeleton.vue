@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10" aria-busy="true" :aria-label="$t('common.loading')">
+  <div class="kd-page kd-page-top gap-4 lg:gap-6" aria-busy="true" :aria-label="$t('common.loading')">
     <div class="flex min-h-10 items-center justify-between gap-2 lg:-mb-2">
       <span class="kd-skeleton h-6 w-20 rounded-md lg:w-36" />
       <span class="kd-skeleton h-6 w-32 rounded-md lg:h-8 lg:w-52" />

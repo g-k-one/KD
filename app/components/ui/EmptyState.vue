@@ -8,7 +8,7 @@ defineProps<{ text: string; art: EmptyArt }>()
 </script>
 
 <template>
-  <div class="flex flex-col items-center gap-4 rounded-5xl bg-neutral-2 px-6 py-12 text-center lg:py-16">
+  <div class="flex flex-col items-center gap-4 kd-panel px-6 py-12 text-center lg:py-16">
     <img :src="`/img/moods/${art}.webp`" alt="" class="kd-empty-art block size-24 object-contain lg:size-28" draggable="false" loading="lazy" />
     <p class="type-14-regular max-w-72 text-neutral-12">{{ text }}</p>
     <slot />

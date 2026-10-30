@@ -6,7 +6,7 @@ import type { RouteLocationRaw } from 'vue-router'
 // Figma "Button": Primary = main CTA, Secondary = neutral, Ghost = nav actions,
 // Light = on banners, Success = promo, Gold = rewards, Danger = destructive, Fair = provable-fairness actions.
 // States (hover / active / disabled) live in main.css → .kd-btn-*.
-type Variant = 'primary' | 'secondary' | 'ghost' | 'light' | 'success' | 'gold' | 'danger' | 'fair'
+type Variant = 'primary' | 'secondary' | 'ghost' | 'light' | 'success' | 'gold' | 'danger' | 'fair' | 'fair-soft'
 type Size = 's' | 'm' | 'l'
 
 const props = withDefaults(

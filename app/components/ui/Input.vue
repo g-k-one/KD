@@ -67,7 +67,7 @@ function clear() {
       :disabled="disabled"
       autocomplete="off"
       spellcheck="false"
-      class="type-14 w-full min-w-0 bg-transparent tabular-nums outline-none placeholder:normal-case placeholder:text-neutral-9"
+      class="type-14 w-full min-w-0 bg-transparent tabular-nums outline-none placeholder:normal-case placeholder:text-neutral-11"
       :class="[align === 'right' && 'text-right', mono && 'font-mono text-xs', uppercase && 'uppercase']"
       @input="onInput"
       @change="onChange"

@@ -200,9 +200,7 @@ const readout = computed(() =>
       </span>
       <UiTextSwap v-if="!showRoll" :text="label" class="type-12-caps sm:type-16-caps max-w-[62%] text-neutral-15 sm:font-bold" />
       <!-- after a roll: the verdict above, one tap under it to check the roll in the verifier -->
-      <button v-if="showRoll && nonce" type="button" class="kd-press kd-verify type-12-caps mt-1 flex h-8 items-center gap-1.5 rounded-lg px-3" @click.stop="navigateTo(`/fairness?verify=${nonce}`)">
-        <UiIcon name="shield-check" :size="16" />{{ $t('upgrade.verifyRoll') }}
-      </button>
+      <UiButton v-if="showRoll && nonce" variant="fair-soft" size="s" icon="shield-check" class="kd-verify mt-1 px-3" @click.stop="navigateTo(`/fairness?verify=${nonce}`)">{{ $t('upgrade.verifyRoll') }}</UiButton>
     </div>
 
     <!-- the meme chicken peeks out on close calls: won by a hair, missed by a hair -->
@@ -215,8 +213,6 @@ const readout = computed(() =>
 
 <style scoped>
 .kd-verify {
-  background: rgb(var(--success-rgb) / 0.14);
-  color: var(--color-success);
   pointer-events: auto;
 }
 .kd-gauge {

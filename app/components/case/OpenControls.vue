@@ -79,17 +79,6 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
 </template>
 
 <style scoped>
-.kd-dock {
-  border-radius: 24px;
-  background: var(--color-neutral-2);
-  padding: 12px;
-}
-/* desktop: the 48 px controls sit centred on the 56 px Open button, 16 px from the top and bottom, so the sides are 16 too */
-@media (min-width: 64rem) {
-  .kd-dock {
-    padding-inline: 16px;
-  }
-}
 .kd-kurwa-word {
   background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light) 45%, var(--color-item-gold));
   background-clip: text;

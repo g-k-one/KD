@@ -91,7 +91,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
   <div>
     <!-- the banner runs edge to edge above the column -->
     <HomeHeroBleed @start="scrollToCases" />
-    <div class="mx-auto flex max-w-content flex-col gap-6 px-4 lg:gap-10 lg:px-0">
+    <div class="kd-page gap-6 lg:gap-10">
 
       <!-- One Forge canvas for the big wins and the cases (a phone keeps one WebGL context per page, not one per block).
            Cases right after the big wins; the cases to continue and the live battles break up the grid further down.

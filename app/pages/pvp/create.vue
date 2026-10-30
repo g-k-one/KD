@@ -125,7 +125,7 @@ async function create() {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 pb-44 lg:gap-6 lg:px-0 lg:pt-10 lg:pb-0">
+  <div class="kd-page kd-page-top gap-4 lg:gap-6 pb-44 lg:pb-0">
     <!-- phones: pb-44 leaves room for the summary bar (rounds strip, totals, button), so the last cases scroll clear -->
     <!-- the same bar as the lobby's: back and the PvP history on the left -->
     <UiPageBar
@@ -141,7 +141,7 @@ async function create() {
       <div class="flex min-w-0 flex-col gap-4">
         <!-- The mode as three cards, each in its colour with its rule in plain text; team mode fixed at 4 players.
              Phones: two lines only, the modes as one row of buttons, then the chosen rule beside the players -->
-        <div class="kd-pvp-dock flex flex-col gap-2 lg:gap-3 xl:flex-row xl:items-stretch">
+        <div class="kd-dock lg:p-4 flex flex-col gap-2 lg:gap-3 xl:flex-row xl:items-stretch">
           <div class="grid min-w-0 grid-cols-3 gap-2 lg:gap-3 xl:flex-1" role="radiogroup" :aria-label="$t('pvp.mode')">
             <button
               v-for="m in MODES"
@@ -168,7 +168,7 @@ async function create() {
           </div>
         </div>
         <!-- the cases in the upgrade's panel: its bar over the grid -->
-        <div class="flex flex-col rounded-5xl bg-neutral-2">
+        <div class="flex flex-col kd-panel">
           <UiFilterBar v-model:sort="sort" :sort-options="sortOptions" v-model:search="search" v-model:open="searchOpen" v-model:from="priceFrom" v-model:to="priceTo" v-model:values="risks" icon="cases" :title="$t('pvp.chooseCases')" :options="riskOptions" />
           <UiEmptyState v-if="data && !visible.length" :text="$t('pvp.noCases')" art="empty-search" class="bg-transparent">
             <UiButton variant="secondary" size="m" @click="resetFilters">{{ $t('filters.reset') }}</UiButton>
@@ -267,17 +267,6 @@ async function create() {
 </template>
 
 <style scoped>
-.kd-pvp-dock {
-  border-radius: 24px;
-  background: var(--color-neutral-2);
-  padding: 12px;
-}
-/* desktop: the docks' 16 px on all sides around the 48 px controls */
-@media (min-width: 64rem) {
-  .kd-pvp-dock {
-    padding: 16px;
-  }
-}
 /* the smallest phones: the names and the rule whole, without the icons */
 @media (max-width: 359.98px) {
   .kd-mode-icon {

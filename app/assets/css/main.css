@@ -335,7 +335,16 @@ html body {
       transform var(--dur-base) var(--ease-spring),
       box-shadow var(--dur-base) var(--ease-out);
   }
+  /* Fair, quiet: a check beside a result, where the result is the loud thing */
+  .kd-btn-fair-soft {
+    color: var(--color-success);
+    background: rgb(var(--success-rgb) / 0.12);
+    transition: background-color var(--dur-base) var(--ease-out);
+  }
   @media (hover: hover) {
+    .kd-btn-fair-soft:hover {
+      background: rgb(var(--success-rgb) / 0.24);
+    }
     .kd-btn-fair:hover {
       filter: brightness(1.08);
       box-shadow:

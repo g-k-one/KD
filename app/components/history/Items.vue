@@ -19,11 +19,11 @@ defineProps<{ entry: HistoryEntry }>()
         </span>
         <span v-if="entry.stakeCoins" class="kd-hthumb kd-hcoins"><UiPrice :amount="entry.stakeCoins" size="xs" /></span>
       </span>
-      <UiIcon name="chevron-right" :size="16" class="shrink-0 text-neutral-9" />
+      <UiIcon name="chevron-right" :size="16" class="shrink-0 text-neutral-10" />
     </template>
     <template v-else-if="entry.game === 'case' && entry.bet">
       <span class="kd-hthumb kd-hcoins" :title="entry.title"><UiPrice :amount="entry.bet" size="xs" /></span>
-      <UiIcon name="chevron-right" :size="16" class="shrink-0 text-neutral-9" />
+      <UiIcon name="chevron-right" :size="16" class="shrink-0 text-neutral-10" />
     </template>
     <span v-if="entry.result" class="kd-hthumb" :class="entry.status === 'lost' && entry.game === 'upgrade' && 'is-lost'" :style="{ '--rc': RARITY_COLOR[entry.result.rarity] }" :title="entry.result.name">
       <ItemArt :image="entry.result.image" :rarity="entry.result.rarity" :size="24" class="w-10" />

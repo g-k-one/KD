@@ -44,7 +44,7 @@ function again() {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
+  <div class="kd-page kd-page-top gap-6">
     <UiPageBar
       class="-mb-2"
       :title="t('nav.contact')"
@@ -54,7 +54,7 @@ function again() {
 
     <div class="grid items-start gap-4 lg:grid-cols-[1fr_440px] lg:gap-5">
       <!-- the same panel as the deposit's: a header row over a hairline, then the content -->
-      <section class="rounded-5xl bg-neutral-2">
+      <section class="kd-panel">
         <UiPanelHead icon="m-mail" :title="t('help.writeTitle')" tag="h2" />
 
         <Transition name="kd-sent" mode="out-in">
@@ -80,7 +80,7 @@ function again() {
             </div>
             <div class="flex flex-col gap-2">
               <label for="contact-message" class="type-12-caps text-neutral-12">{{ t('help.message') }}</label>
-              <textarea id="contact-message" v-model="message" rows="6" class="kd-textarea type-14-regular" :placeholder="t('help.messageHint')" />
+              <UiTextarea id="contact-message" v-model="message" :placeholder="t('help.messageHint')" />
             </div>
             <UiButton type="submit" size="l" block :loading="sending" :disabled="!!missing">{{ t(missing || 'help.send') }}</UiButton>
           </form>
@@ -88,7 +88,7 @@ function again() {
       </section>
 
       <div class="flex flex-col gap-4 lg:gap-5">
-        <ul class="flex flex-col gap-1 rounded-5xl bg-neutral-2 p-2">
+        <ul class="flex flex-col gap-1 kd-panel p-2">
           <li v-for="c in CHANNELS" :key="c.key">
             <a :href="c.href" class="kd-channel kd-press flex items-center gap-3 rounded-3xl p-2">
               <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-neutral-3 text-neutral-13"><UiIcon :name="c.icon" :size="20" /></span>
@@ -99,7 +99,7 @@ function again() {
             </a>
           </li>
         </ul>
-        <p class="type-14-regular rounded-5xl bg-neutral-2 px-4 py-3 text-neutral-12 lg:px-6 lg:py-4">{{ t('help.replyTime') }}</p>
+        <p class="type-14-regular kd-panel px-4 py-3 text-neutral-12 lg:px-6 lg:py-4">{{ t('help.replyTime') }}</p>
         <p class="type-12-regular px-4 text-neutral-10 lg:px-6">{{ t('deposit.operator') }}</p>
       </div>
     </div>
@@ -107,23 +107,6 @@ function again() {
 </template>
 
 <style scoped>
-.kd-textarea {
-  width: 100%;
-  resize: vertical;
-  min-height: 136px;
-  border: 1px solid var(--color-neutral-4);
-  border-radius: 10px;
-  background: var(--color-neutral-1);
-  padding: 12px 16px;
-  outline: none;
-  transition: border-color var(--dur-base) var(--ease-out);
-}
-.kd-textarea::placeholder {
-  color: var(--color-neutral-9);
-}
-.kd-textarea:focus {
-  border-color: var(--color-brand-base);
-}
 .kd-sent-ok {
   background: rgb(var(--success-rgb) / 0.16);
   color: var(--color-success);

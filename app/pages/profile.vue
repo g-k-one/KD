@@ -204,7 +204,7 @@ async function saveTrade() {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10">
+  <div class="kd-page kd-page-top gap-4 lg:gap-6">
     <UiPageBar
       class="lg:-mb-2"
       :title="$t('account.title')"
@@ -214,7 +214,7 @@ async function saveTrade() {
       ]"
       :right="session.user ? [{ label: $t('auth.logOut'), icon: 'logout', onClick: () => session.logout() }] : []"
     />
-    <div v-if="!session.user" class="flex flex-col items-center gap-4 rounded-5xl bg-neutral-2 px-6 py-16 text-center">
+    <div v-if="!session.user" class="flex flex-col items-center gap-4 kd-panel px-6 py-16 text-center">
       <p class="type-14-regular text-neutral-12">{{ $t('account.signInHint') }}</p>
       <UiButton icon="sign-in" size="l" @click="ui.openSignIn()">{{ $t('auth.signInToPlay') }}</UiButton>
     </div>
@@ -262,7 +262,7 @@ async function saveTrade() {
            in view beside the list, so it never stretches into a hole -->
       <section class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-5">
         <!-- My skins: the upgrade page's panel, tiles to pick; picked ones get the bar below -->
-        <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
+        <div class="flex min-w-0 flex-col kd-panel">
           <UiPanelHead icon="inventory" :title="`${$t('upgrade.mySkins')} (${inventory.length})`">
             <!-- Select all and the sort arrows: one height, side by side -->
             <UiButton v-if="inventory.length" variant="ghost" size="m" class="ml-auto" @click="selected.length ? (selected = []) : selectAll()">
@@ -273,11 +273,11 @@ async function saveTrade() {
               <UiSortArrows :desc="invSort === 'priceDesc'" />
             </UiButton>
           </UiPanelHead>
-          <div v-if="loading" class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
+          <div v-if="loading" class="kd-item-grid">
             <span v-for="n in 15" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-[4/5] lg:aspect-auto lg:h-[105px]" />
           </div>
           <template v-else-if="inventory.length">
-            <div class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
+            <div class="kd-item-grid">
               <ItemTile v-for="it in shownInventory" :key="it.uid" :item="it" :selected="selected.includes(it.uid)" @toggle="toggle(it.uid)" />
             </div>
             <UiButton v-if="sortedInventory.length > skinsCap" variant="ghost" size="s" :icon="showAllSkins ? 'chevron-up' : 'chevron-down'" class="mx-auto -mt-1 mb-3 lg:mb-4" @click="showAllSkins = !showAllSkins">
@@ -292,7 +292,7 @@ async function saveTrade() {
         <!-- The right column: where withdrawals go, then the player's numbers -->
         <div class="flex min-w-0 flex-col gap-4 lg:sticky lg:top-24 lg:h-full lg:max-h-[500px] lg:gap-5 lg:self-start">
           <!-- the same panel as My skins: a header row over a hairline, then the field, where to find it, Save · Open in Steam -->
-          <form class="flex flex-col rounded-5xl bg-neutral-2" @submit.prevent="saveTrade">
+          <form class="flex flex-col kd-panel" @submit.prevent="saveTrade">
             <UiPanelHead icon="steam" :title="$t('withdraw.tradeLink')">
               <UiIcon v-if="session.user.tradeUrl && tradeValid" name="check-circle" :size="18" class="ml-auto text-success" />
             </UiPanelHead>
@@ -306,7 +306,7 @@ async function saveTrade() {
             </div>
           </form>
           <!-- the player's numbers: a line each, what on the left, how much on the right, hairlines between -->
-          <dl class="flex flex-col rounded-5xl bg-neutral-2 px-4 py-2 lg:flex-1 lg:px-6">
+          <dl class="flex flex-col kd-panel px-4 py-2 lg:flex-1 lg:px-6">
             <div v-for="(s, i) in statCards" :key="s.key" class="flex min-h-14 flex-1 items-center gap-3" :class="i > 0 && 'border-t border-neutral-4'">
               <UiIcon :name="s.icon" :size="20" class="shrink-0 text-neutral-12" />
               <dt class="type-12-caps min-w-0 flex-1 truncate text-neutral-11">{{ s.label }}</dt>
@@ -318,7 +318,7 @@ async function saveTrade() {
 
       <!-- Game history, the full width: what the player did, newest first; a roll opens its check -->
       <section>
-        <div ref="historyEl" class="flex min-w-0 scroll-mt-36 flex-col rounded-5xl bg-neutral-2">
+        <div ref="historyEl" class="flex min-w-0 scroll-mt-36 flex-col kd-panel">
           <!-- the title, then the filters: on one line on desktop, under it on phones -->
           <UiPanelHead icon="history" :title="$t('account.history')" class="max-lg:h-auto max-lg:flex-wrap max-lg:gap-y-5 max-lg:pt-5 max-lg:pb-3">
             <div class="grid grid-cols-2 gap-2 max-lg:w-full lg:ml-auto lg:flex">
@@ -389,18 +389,6 @@ async function saveTrade() {
   .kd-hrow.is-roll:hover .kd-hrow-check {
     color: var(--color-success);
     background: rgb(var(--success-rgb) / 0.12);
-  }
-}
-/* the plate is the case page's dock: 24px radius, 12px padding; its chips are 48px high with a 12px radius */
-.kd-dock {
-  border-radius: 24px;
-  background: var(--color-neutral-2);
-  padding: 12px;
-}
-/* desktop: 16 px on all sides around the 48 px stats (the 56 px Deposit sets the height) */
-@media (min-width: 64rem) {
-  .kd-dock {
-    padding-inline: 16px;
   }
 }
 .kd-dock-stat {

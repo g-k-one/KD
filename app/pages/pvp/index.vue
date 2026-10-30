@@ -57,7 +57,7 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-5 px-4 pt-4 lg:gap-8 lg:px-0 lg:pt-10">
+  <div class="kd-page kd-page-top gap-5 lg:gap-8">
     <!-- 16 px down to the content on every width, as under the case page's bar -->
     <UiPageBar logo :left="barLeft" :right="barRight" class="max-lg:-mb-1 lg:-mb-4" />
 
@@ -139,19 +139,6 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
 .kd-reset-leave-to {
   opacity: 0;
   transform: translateX(6px);
-}
-/* the dock: the case page's (components/case/OpenControls.vue) — 24 px corners, 12 in; desktop 28 and 16 at the sides,
-   the 48 px controls centred on the 56 px button */
-/* the case dock's: 24 px corners; desktop: 16 px on all sides around the 48 px controls (the 56 px button sets the height) */
-.kd-dock {
-  border-radius: 24px;
-  background: var(--color-neutral-2);
-  padding: 12px;
-}
-@media (min-width: 64rem) {
-  .kd-dock {
-    padding-inline: 16px;
-  }
 }
 /* the mode and the sort at the dock's 48 px (desktop), their 12 px corners */
 @media (min-width: 64rem) {

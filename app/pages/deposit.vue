@@ -88,7 +88,7 @@ async function pay() {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
+  <div class="kd-page kd-page-top gap-6">
     <!-- the same bar as the games': back and this page's own history on the left; on the right where to ask about a payment -->
     <UiPageBar
       class="-mb-2"
@@ -105,7 +105,7 @@ async function pay() {
     <div class="grid items-start gap-4 lg:grid-cols-[1fr_440px] lg:grid-rows-[auto_1fr] lg:gap-5">
       <!-- Methods -->
       <div class="flex flex-col gap-4 lg:col-start-1 lg:row-start-1">
-        <div class="rounded-5xl bg-neutral-2">
+        <div class="kd-panel">
           <UiPanelHead icon="wallet" :title="$t('deposit.paymentMethod')">
             <span class="type-12-caps ml-auto text-neutral-11 max-sm:hidden">{{ $t('deposit.country') }}:</span>
             <UiSelect v-model="country" :options="countryOptions" menu-width="fit" class="kd-inline-select w-34">
@@ -135,7 +135,7 @@ async function pay() {
       </div>
 
       <div class="flex flex-col gap-4 max-lg:order-last lg:col-start-1 lg:row-start-2">
-        <p class="type-14-regular rounded-5xl bg-neutral-2 px-4 py-3 text-neutral-12">
+        <p class="type-14-regular kd-panel px-4 py-3 text-neutral-12">
           <!-- one line and the rules (the long version lives in the AML policy) -->
           <i18n-t keypath="deposit.sharedWarning" scope="global">
             <template #notAllow><span class="text-danger">{{ $t('deposit.notAllow') }}</span></template>
@@ -149,7 +149,7 @@ async function pay() {
       </div>
 
       <!-- Amount & summary -->
-      <div class="flex flex-col gap-4 rounded-5xl bg-neutral-2 lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+      <div class="flex flex-col gap-4 kd-panel lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1">
         <UiPanelHead icon="coins" :title="$t('deposit.amount')">
           <span class="type-12-caps ml-auto text-neutral-11">{{ $t('deposit.currency') }}:</span>
           <UiSelect v-model="currency" :options="currencyOptions" menu-width="fit" class="kd-inline-select w-24" />

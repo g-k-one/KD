@@ -189,7 +189,7 @@ if (import.meta.client) {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:gap-10 lg:px-0 lg:pt-10">
+  <div class="kd-page kd-page-top gap-6 lg:gap-10">
     <CasePageSkeleton v-if="!cs" />
     <template v-else>
       <div class="flex flex-col gap-4">

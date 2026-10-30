@@ -112,7 +112,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
   <div>
     <!-- the banner opens the page, full width like the home page's -->
     <FairHero :seeds="seeds" @seeds="seedsOpen = true" />
-  <div class="mx-auto flex max-w-content flex-col gap-6 px-4 lg:gap-10 lg:px-0">
+  <div class="kd-page gap-6 lg:gap-10">
     <!-- Your rolls and the seed log are a player's own: a guest gets neither (two empty "sign in" cards said nothing) -->
     <FairMyRolls v-if="session.user" :seeds="seeds" :focus="focusNonce" :focus-roll="focusRoll" :rotating="rotating" @verify="openVerifier" @rotate="rotate" />
 
@@ -121,7 +121,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
       <div
         v-for="(s, i) in STEPS"
         :key="s.key"
-        class="kd-step group flex flex-col gap-4 rounded-5xl bg-neutral-2 p-6"
+        class="kd-step group flex flex-col gap-4 kd-panel p-6"
         :style="{ animationDelay: `${i * 90}ms` }"
       >
         <img :src="`/img/illustrations/${s.img}.webp`" alt="" class="kd-step-art h-20 w-50 object-contain object-left" />
@@ -132,7 +132,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
 
     <!-- The formula, each mode, the seed log: always out, nothing to unfold -->
     <div id="seeds" class="flex scroll-mt-24 flex-col gap-4 lg:gap-6">
-    <section class="flex flex-col rounded-5xl bg-neutral-2">
+    <section class="flex flex-col kd-panel">
       <!-- Verify a result sits by the formula it runs: there for guests too (any seeds can be checked by hand) -->
       <UiPanelHead icon="function" :title="$t('fair.formula')" tag="h3">
         <UiButton variant="secondary" :size="isLg ? 'm' : 's'" icon="function" class="ml-auto" @click="openVerifier()">{{ $t('fair.verify') }}</UiButton>
@@ -149,7 +149,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
 
     <!-- Modes -->
     <section class="grid gap-3 lg:grid-cols-3 lg:gap-4">
-      <div v-for="m in shownModes" :key="m.key" class="flex flex-col rounded-5xl bg-neutral-2">
+      <div v-for="m in shownModes" :key="m.key" class="flex flex-col kd-panel">
         <UiPanelHead v-if="isLg" :icon="m.icon" :title="$t(`fair.${m.key}`)" tag="h3" />
         <UiPanelHead v-else>
           <UiSegmented v-model="fairMode" :options="modeOptions" block class="flex-1" />
@@ -167,7 +167,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
          about (how many rolls, when), in the middle the two seeds each under its own name with the whole value a tap to
          copy, on the right the one thing to do: Reveal for the pair in use, Check (all its rolls) for a past one. A revealed seed says at
          once that it matches the hash promised before its first roll -->
-    <section v-if="session.user" class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
+    <section v-if="session.user" class="flex min-w-0 flex-col kd-panel">
       <UiPanelHead icon="seeds" :title="$t('fair.history')" />
       <TransitionGroup v-if="seeds" tag="ul" name="kd-hist" class="flex flex-col p-3">
         <li v-for="p in pairs" :key="p.serverSeedHash" class="kd-seedrow">

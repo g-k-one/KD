@@ -68,7 +68,19 @@ const rules: Rule[] = [
   [/^scrollbar-none$/, (_, { symbols }) => [{ 'scrollbar-width': 'none' }, { [symbols.selector]: (s: string) => `${s}::-webkit-scrollbar`, display: 'none' }], { noMerge: true }],
 ]
 
+// The kit's repeated blocks, one definition each: a page's frame (kd-page-top: the top gap of a page with no hero), a panel, the
+// plate of controls on the case, PvP and profile pages (48 px controls sit 16 px from every side next to a 56 px button) and the
+// tile grid of the skin lists
+const shortcuts = {
+  'kd-page': 'mx-auto flex max-w-content flex-col px-4 lg:px-0',
+  'kd-page-top': 'pt-4 lg:pt-10',
+  'kd-panel': 'rounded-5xl bg-neutral-2',
+  'kd-dock': 'rounded-5xl bg-neutral-2 p-3 lg:px-4',
+  'kd-item-grid': 'grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4',
+}
+
 export default defineConfig({
+  shortcuts,
   // our rules come first, before the preset's: UnoCSS orders utilities by rule, so these multi-property ones sit
   // before the single-property utilities (as Tailwind sorts them) — `type-10-caps leading-tight` takes the tight
   // line, `text-xl lg:type-28` the 28px on desktop
