@@ -504,7 +504,7 @@ const laneCols = computed(() => {
         </span>
         <span class="flex min-w-0 flex-1 flex-col gap-0.5">
           <span class="kd-team-name truncate" :class="[isMobile ? 'type-12-caps' : 'type-16-caps', `is-${TEAM_SIDE[gi]}`]">{{ $t(`pvp.team.${TEAM_SIDE[gi]}${isMobile ? 'Short' : ''}`) }}</span>
-          <UiPrice v-if="revealed > 0" :amount="groupTotal(g)" :size="isMobile ? 's' : 'm'" :tone="teamState(g) === 'lost' ? 'muted' : teamState(g) === 'won' ? 'default' : 'coin'" class="tabular-nums" />
+          <UiPrice :amount="groupTotal(g)" :size="isMobile ? 's' : 'm'" :tone="teamState(g) === 'lost' ? 'muted' : teamState(g) === 'won' ? 'default' : 'coin'" class="kd-fade tabular-nums" :class="revealed > 0 && 'is-on'" />
         </span>
         <span class="flex shrink-0 flex-col items-end gap-1">
           <span :class="[isMobile ? 'type-14-caps' : 'type-20-caps', done ? (teamState(g) === 'won' ? 'text-success' : 'text-neutral-11') : teamState(g) === 'lead' ? 'text-success' : 'text-neutral-15', !done && 'tabular-nums']">{{ done ? $t(teamState(g) === 'won' ? 'pvp.won' : 'pvp.lost') : `${Math.round(chances[g[0]!.slot] ?? 0)}%` }}</span>
@@ -528,11 +528,17 @@ const laneCols = computed(() => {
         @join="join(s.slot)"
         @bot="bot(s.slot)"
       />
-      <!-- once it is over, the losers' drops step back: they go to the winner. Under desktop the edge columns are a touch
-           wider than the middle ones, so the tiles get one height instead of following their width: the rows stay level -->
-      <TransitionGroup v-if="revealed > 0" tag="div" name="kd-drop" class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]" :class="[done && !winners.includes(s.slot) && 'is-lost', isTeam && 'max-md:gap-1']">
-        <ItemTile v-for="ri in Array.from({ length: revealed }, (_, k) => revealed - 1 - k)" :key="ri" :item="b.results![ri]!.drops[s.slot]!" readonly class="max-lg:!aspect-auto max-lg:h-25" />
-      </TransitionGroup>
+      <!-- a slot for every round from the start, so nothing grows when the first drops land: each settles into its own
+           slot. Once it is over, the losers' drops step back: they go to the winner -->
+      <div class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]" :class="[done && !winners.includes(s.slot) && 'is-lost', isTeam && 'max-md:gap-1']">
+        <div v-for="(_, ri) in b.rounds" :key="ri" class="kd-drop-slot relative h-25 rounded-2xl lg:h-[105px]">
+          <Transition name="kd-drop">
+            <div v-if="ri < revealed && b.results?.[ri]?.drops[s.slot]" class="absolute inset-0">
+              <ItemTile :item="b.results[ri]!.drops[s.slot]!" readonly class="!aspect-auto !h-full" />
+            </div>
+          </Transition>
+        </div>
+      </div>
       </div>
       </div>
       </div>
@@ -612,11 +618,23 @@ const laneCols = computed(() => {
 }
 /* a team's head reads like a seat's plate; green while the team is ahead */
 .kd-team-head {
+  isolation: isolate;
   background: var(--color-neutral-3);
   transition: background-color var(--dur-slow) var(--ease-out);
 }
-.kd-team-head.is-lead {
-  background: linear-gradient(90deg, rgb(18 183 106 / 0.26), rgb(18 183 106 / 0.05) 70%), var(--color-neutral-3);
+/* a layer that fades: a gradient itself cannot */
+.kd-team-head::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgb(18 183 106 / 0.26), rgb(18 183 106 / 0.05) 70%);
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+.kd-team-head.is-lead::before {
+  opacity: 1;
 }
 .kd-team-head.is-won {
   background: var(--color-success-24);
@@ -650,8 +668,22 @@ const laneCols = computed(() => {
 }
 /* the winner's column: green from the crown's corner, down into the plain panel */
 @media (min-width: 64rem) {
-  .kd-seat.is-won {
-    background: linear-gradient(155deg, rgb(18 183 106 / 0.24), transparent 55%), var(--color-neutral-2);
+  .kd-seat {
+    position: relative;
+    isolation: isolate;
+  }
+  .kd-seat::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: linear-gradient(155deg, rgb(18 183 106 / 0.24), transparent 55%);
+    opacity: 0;
+    transition: opacity 600ms var(--ease-out);
+  }
+  .kd-seat.is-won::before {
+    opacity: 1;
   }
 }
 .kd-seat-drops {
@@ -881,17 +913,30 @@ const laneCols = computed(() => {
     transform: scale(0.9);
   }
 }
+.kd-drop-slot {
+  background: var(--color-neutral-3);
+}
+@media (min-width: 64rem) {
+  .kd-drop-slot {
+    background: rgb(255 255 255 / 0.025);
+  }
+}
 .kd-drop-enter-active {
   transition:
     opacity var(--dur-slow) var(--ease-out),
-    transform var(--dur-slow) var(--ease-spring);
+    transform 520ms var(--ease-spring);
 }
 .kd-drop-enter-from {
   opacity: 0;
-  transform: translateY(-12px) scale(0.9);
+  transform: translateY(-14px) scale(0.86);
 }
-.kd-drop-move {
-  transition: transform var(--dur-slow) var(--ease-out);
+/* what appears in a line that already holds its place */
+.kd-fade {
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+.kd-fade.is-on {
+  opacity: 1;
 }
 .kd-pot {
   animation: kd-pot 500ms var(--ease-spring);

@@ -27,7 +27,7 @@ const playing = computed(() => (props.total ?? 0) > 0)
   <div
     class="kd-slot relative flex items-center"
     :class="[
-      compact ? ['flex-col justify-center rounded-2xl text-center', player ? 'gap-2 px-1 py-3' : 'gap-1 p-2'] : ['h-16 gap-3 rounded-2xl pl-[9px]', player ? 'pr-3' : 'pr-[15px]'],
+      compact ? ['flex-col justify-center rounded-2xl text-center', player ? 'gap-2 px-1 py-3' : 'gap-1 p-2', 'min-h-[110px]'] : ['h-16 gap-3 rounded-2xl pl-[9px]', player ? 'pr-3' : 'pr-[15px]'],
       quiet ? '' : winner ? 'is-winner' : lead ? 'is-lead' : '',
     ]"
   >
@@ -44,7 +44,8 @@ const playing = computed(() => (props.total ?? 0) > 0)
           <span class="min-w-0 max-w-full truncate" :class="compact ? 'type-12' : 'type-16-medium'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
           <UiLevelBadge v-if="!compact" :level="player.level" class="shrink-0" />
         </span>
-        <UiPrice v-if="result || playing" :amount="Math.round(totalShown)" :size="compact ? 's' : 'm'" :tone="winner ? 'default' : result ? 'muted' : 'coin'" class="tabular-nums" />
+        <!-- the line is kept from the start and only fades in, so the name above it never jumps -->
+        <UiPrice :amount="Math.round(totalShown)" :size="compact ? 's' : 'm'" :tone="winner ? 'default' : result ? 'muted' : 'coin'" class="tabular-nums transition-opacity duration-300" :class="!(result || playing) && 'opacity-0'" />
       </span>
       <!-- the chance to win, from the first second to the last round -->
       <span v-if="!quiet && !result && chance != null" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end gap-1 pl-1'">
