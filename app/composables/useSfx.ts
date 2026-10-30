@@ -36,7 +36,7 @@ const POKE: Record<'gawk' | 'bukbuk' | 'kurwawk' | 'kurwa' | 'puff', [number, nu
 }
 let pokeBuf: Promise<AudioBuffer | null> | null = null
 // The VS landing, soft and round as the site's other sounds: two recorded takes (public/sfx/vs-*.mp3, KREA · Seed Audio),
-// trimmed to start on the blow and quiet at the top, or c: the countdown's own voice, a step lower
+// trimmed to start on the blow and quiet at the top, or c, the one in use: the countdown's own click with an octave under it
 export type VsHit = 'a' | 'b' | 'c'
 const vsBufs = new Map<'a' | 'b', Promise<AudioBuffer | null>>()
 // the last launch: the case page plays it on the press and the reel again as it starts, the second within 300 ms is dropped
@@ -297,8 +297,9 @@ export function useSfx() {
     /** The VS lands */
     vsHit: (hit: VsHit = 'a') => {
       if (hit === 'c') {
-        glide(460, 150, 0.24, 0.2, 'triangle')
-        blip(520, 0.16, 0.05)
+        blip(1040, 0.08, 0.1)
+        blip(520, 0.2, 0.14)
+        glide(300, 150, 0.2, 0.16, 'triangle')
         return
       }
       const s = settings.settings

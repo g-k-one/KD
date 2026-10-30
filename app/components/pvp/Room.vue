@@ -48,7 +48,6 @@ async function replay() {
   celebrated.value = true
   window.scrollTo({ top: 0, behavior: 'smooth' })
   countArmed.value = true
-  sfx.vsLoad()
   await nextTick()
   await prepareCount()
   replayAt.value = Date.now()
@@ -223,7 +222,7 @@ async function countBeat(n: number) {
 function countLanded() {
   const r = arena.value?.getBoundingClientRect()
   dropCountLabel()
-  sfx.vsHit()
+  sfx.vsHit('c')
   if (r) fx.play('kdPuff', { x: r.left + r.width / 2, y: r.top + r.height / 2, size: r.height * 1.7 })
 }
 // in ms before the first reel: a second for each number, then the VS, and the smoke has its time before the reels move
@@ -244,7 +243,7 @@ function runCount() {
 }
 watch(countdown, (n, old) => n > 0 && !old && nextTick(runCount))
 onMounted(() => {
-  if (!done.value) whenIdle(() => (fx.preload('kd'), sfx.vsLoad()))
+  if (!done.value) whenIdle(() => fx.preload('kd'))
   if (countdown.value > 0) nextTick(runCount)
 })
 onBeforeUnmount(() => {
