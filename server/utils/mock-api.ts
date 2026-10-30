@@ -69,6 +69,8 @@ import {
   setAdminUsers,
 } from './mock-admin'
 
+import { getFaq, getLegal, sendContact } from './mock-content'
+
 export interface MockContext {
   loggedIn: boolean
 }
@@ -120,6 +122,10 @@ export async function mockRoute(method: string, path: string, body: Body, query:
     if (!body.demo) authed()
     return openCase(match[1]!, Number(body.count ?? 1), !!body.demo, !!body.kurwadrop)
   }
+
+  if (m === 'GET' && path === '/api/faq') return getFaq()
+  if (m === 'GET' && (match = path.match(/^\/api\/legal\/([\w-]+)$/))) return getLegal(match[1]!)
+  if (m === 'POST' && path === '/api/contact') return sendContact(body)
 
   if (m === 'GET' && path === '/api/feed') return getFeed()
   if (m === 'GET' && path === '/api/wins/today') return getBigWins()

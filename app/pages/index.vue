@@ -247,19 +247,16 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
     pointer-events: none;
   }
 }
-/* Stuck under the header: the bar sheds its labels' air and floats over the cases */
+/* Stuck under the header: the bar sheds its labels' air and its own card floats over the cases, nothing behind it */
 @media (min-width: 64rem) {
   .kd-filters-wrap {
-    transition:
-      padding var(--dur-base) var(--ease-out),
-      background-color var(--dur-base) var(--ease-out);
+    transition: padding var(--dur-base) var(--ease-out);
   }
   .kd-filters-wrap.is-stuck {
-    margin-inline: -16px;
-    padding: 8px 16px;
-    background: rgb(12 13 16 / 0.86);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.8);
+    padding-block: 8px;
+  }
+  .kd-filters-wrap.is-stuck :deep(.kd-filters) {
+    box-shadow: 0 12px 24px -8px rgb(0 0 0 / 0.72);
   }
   .kd-filters-wrap.is-stuck :deep(.kd-field-label) {
     display: none;

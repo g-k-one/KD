@@ -766,3 +766,45 @@ export interface AdminSnapshot {
   bigWins: BigWin[]
   users: AdminUsers
 }
+
+// --- Help: FAQ, legal documents, contact ------------------------------------------
+
+/** GET /api/faq */
+export interface FaqItem {
+  q: string
+  a: string
+}
+export interface FaqGroup {
+  id: string
+  title: string
+  icon: string
+  items: FaqItem[]
+}
+export interface FaqResponse {
+  groups: FaqGroup[]
+}
+
+/** GET /api/legal/:slug. A section's id is its anchor (/privacy#cookies). */
+export type LegalSlug = 'terms' | 'privacy' | 'aml' | 'refund'
+export interface LegalSection {
+  id: string
+  title: string
+  paragraphs: string[]
+}
+export interface LegalDoc {
+  slug: LegalSlug
+  updatedAt: string
+  sections: LegalSection[]
+}
+
+/** POST /api/contact. 400 without a valid email or with a message under 10 characters. */
+export interface ContactBody {
+  topic: 'payment' | 'withdrawal' | 'game' | 'account' | 'other'
+  email: string
+  message: string
+  /** the signed-in player's id, for support */
+  userId?: string
+}
+export interface ContactResponse {
+  ticketId: string
+}

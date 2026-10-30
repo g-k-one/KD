@@ -17,12 +17,13 @@ const methods = computed(() => methodsData.value?.methods ?? [])
 const CURRENCY_SIGN: Record<FiatCurrency, string> = { PLN: 'zł', EUR: '€', USD: '$' }
 const currencyOptions = (['PLN', 'EUR', 'USD'] as const).map((c) => ({ value: c, label: `${c} ${CURRENCY_SIGN[c]}` }))
 const countryOptions = [
-  { value: 'PL', label: 'Poland' },
-  { value: 'DE', label: 'Germany' },
-  { value: 'CZ', label: 'Czechia' },
+  { value: 'PL', label: 'Poland', image: '/img/flags/pl.svg' },
+  { value: 'DE', label: 'Germany', image: '/img/flags/de.svg' },
+  { value: 'CZ', label: 'Czechia', image: '/img/flags/cz.svg' },
 ]
 
 const country = ref('PL')
+const countryFlag = computed(() => countryOptions.find((o) => o.value === country.value)?.image)
 const currency = ref<FiatCurrency>('PLN')
 const currencyLabel = computed(() => currencyOptions.find((o) => o.value === currency.value)?.label)
 const methodId = ref('blik')
@@ -109,8 +110,8 @@ async function pay() {
             <UiIcon name="wallet" :size="20" class="text-neutral-13 lg:!size-6" />
             <span class="type-14 lg:type-16-medium flex-1">{{ $t('deposit.paymentMethod') }}</span>
             <span class="type-12-caps text-neutral-11 max-sm:hidden">{{ $t('deposit.country') }}:</span>
-            <UiSelect v-model="country" :options="countryOptions" class="kd-inline-select w-34">
-              <template #leading><img src="/img/brand/flag-en.svg" alt="" class="h-3 w-4 shrink-0" /></template>
+            <UiSelect v-model="country" :options="countryOptions" menu-width="fit" class="kd-inline-select w-34">
+              <template #leading><img :src="countryFlag" alt="" class="h-3.5 w-5 shrink-0" /></template>
             </UiSelect>
           </div>
           <!-- phones: three small cards a row, so every method shows without a long scroll -->

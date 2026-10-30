@@ -17,6 +17,15 @@ const toast = useToast()
 // Settings open in a modal from the page bar; an old ?tab=settings link still opens them
 // ?tab=settings opens it once the page is up (a modal open in the server render would not match the client's)
 const settingsOpen = ref(false)
+// The account's id: what support asks for, a tap copies it
+async function copyId() {
+  try {
+    await navigator.clipboard.writeText(session.user?.id ?? '')
+    toast.show(t('account.idCopied'), 'success')
+  } catch {
+    toast.show(t('common.error'))
+  }
+}
 onMounted(() => route.query.tab === 'settings' && (settingsOpen.value = true))
 
 const inventory = ref<InventoryItem[]>([])
@@ -195,6 +204,10 @@ async function saveTrade() {
             <div class="flex items-center gap-2">
               <h1 class="type-16-caps truncate">{{ session.user.nickname }}</h1>
               <UiLevelBadge :level="session.user.level" />
+              <button type="button" class="kd-press kd-icon-nudge type-12 flex shrink-0 items-center gap-1 text-neutral-11 tabular-nums hover:text-neutral-15" :aria-label="$t('account.copyId')" @click="copyId">
+                ID {{ session.user.id }}
+                <UiIcon name="copy" :size="14" class="kd-icon" />
+              </button>
             </div>
             <!-- the bar and where it leads; what levels give is told on the Bonuses page -->
             <div class="flex max-w-72 items-center gap-2">
@@ -220,7 +233,7 @@ async function saveTrade() {
       </section>
 
       <!-- The skins | the trade link and the player's numbers; the history full width below -->
-      <!-- the two columns end on one line: the trade link card stretches to the skins panel's height -->
+      <!-- the two columns end on one line: the numbers' card takes what the trade link leaves of the skins panel's height -->
       <section class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-5">
         <!-- My skins: the upgrade page's panel, tiles to pick; picked ones get the bar below -->
         <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
@@ -255,23 +268,23 @@ async function saveTrade() {
         <!-- The right column: where withdrawals go, then the player's numbers -->
         <div class="flex min-w-0 flex-col gap-4 lg:gap-5">
           <!-- the same panel as My skins: a header row over a hairline, then the field, where to find it, Save · Open in Steam -->
-          <form class="flex flex-col rounded-5xl bg-neutral-2 lg:flex-1" @submit.prevent="saveTrade">
+          <form class="flex flex-col rounded-5xl bg-neutral-2" @submit.prevent="saveTrade">
             <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:px-6">
               <UiIcon name="steam" :size="24" class="text-neutral-13" />
               <span class="type-14 lg:type-16-medium">{{ $t('withdraw.tradeLink') }}</span>
               <UiIcon v-if="session.user.tradeUrl && tradeValid" name="check-circle" :size="18" class="ml-auto text-success" />
             </div>
-            <div class="flex flex-1 flex-col gap-3 p-4 lg:px-6 lg:pb-6">
+            <div class="flex flex-col gap-3 p-4 lg:px-6 lg:pb-6">
               <UiInput id="profile-trade" v-model="tradeLink" size="l" class="kd-private" inputmode="url" clearable :error="!!tradeLink && !tradeValid" :placeholder="$t('withdraw.linkPlaceholder')" />
               <span class="type-12-regular text-neutral-11">{{ $t('withdraw.whereLink') }}</span>
-              <div class="mt-auto grid grid-cols-2 gap-2 pt-1">
+              <div class="grid grid-cols-2 gap-2 pt-1">
                 <UiButton type="submit" size="m" :loading="tradeSaving" :disabled="!tradeValid || tradeLink.trim() === session.user?.tradeUrl">{{ $t('common.save') }}</UiButton>
                 <UiButton variant="secondary" size="m" icon="arrow-square-out" to="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" target="_blank">{{ $t('withdraw.openSteam') }}</UiButton>
               </div>
             </div>
           </form>
           <!-- the numbers first, big, each over a one-line label; hairlines instead of plates inside the plate -->
-          <dl class="grid grid-cols-3 rounded-5xl bg-neutral-2 py-4 lg:py-5">
+          <dl class="grid grid-cols-3 items-center rounded-5xl bg-neutral-2 py-4 lg:flex-1 lg:py-5">
             <div v-for="(s, i) in statCards.slice(1, 4)" :key="s.key" class="flex min-w-0 flex-col-reverse items-center gap-1 px-1 text-center" :class="i > 0 && 'border-l border-neutral-4'">
               <dt class="type-10-caps whitespace-nowrap text-neutral-11">{{ s.label }}</dt>
               <dd class="type-20-caps tabular-nums" :class="s.coin && 'text-coin'">{{ s.value }}</dd>

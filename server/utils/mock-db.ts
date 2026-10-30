@@ -537,7 +537,7 @@ export function getCase(slug: string): CaseDetails {
 // --- State ---------------------------------------------------------------
 
 const DEFAULT_USER: User = {
-  id: 'u1',
+  id: '1048211',
   nickname: 'golden_hen',
   avatar: '/img/brand/avatar.webp',
   steamId: '76561198000004821',

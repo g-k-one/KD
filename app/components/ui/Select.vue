@@ -10,6 +10,8 @@ export interface SelectOption<V extends string> {
   icon?: string
   iconColor?: string
   coin?: boolean
+  /** a small 20 × 14 picture before the label (a country's flag) */
+  image?: string
 }
 
 const props = withDefaults(
@@ -112,6 +114,7 @@ const isSelected = (o: SelectOption<T>) => (props.multiple ? many.value.includes
             <span v-if="o.swatch" class="size-2.5 shrink-0 rounded-full" :style="{ background: o.swatch }" />
             <UiIcon v-if="o.icon" :name="o.icon" :size="16" class="shrink-0" :style="o.iconColor ? { color: o.iconColor } : undefined" />
             <UiCoin v-if="o.coin" :size="16" />
+            <img v-if="o.image" :src="o.image" alt="" class="h-3.5 w-5 shrink-0" />
             <span class="flex-1 text-sm leading-5" :class="[isSelected(o) ? 'font-semibold text-neutral-15' : 'text-neutral-13', menuWidth === 'fit' && 'whitespace-nowrap']">
               {{ o.label }}
             </span>

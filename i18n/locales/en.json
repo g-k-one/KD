@@ -179,6 +179,39 @@
     "marketing": "Marketing",
     "marketingHint": "Measure our ads and show fewer that don't fit you"
   },
+  "help": {
+    "faqSearch": "Search questions",
+    "faqAll": "All",
+    "faqEmpty": "No answer to that yet. Ask us and we will help.",
+    "faqMore": "Did not find your answer? Write to us.",
+    "writeTitle": "Write to us",
+    "topic": "Topic",
+    "topics": {
+      "payment": "Payment",
+      "withdrawal": "Withdrawal",
+      "game": "A game or a roll",
+      "account": "My account",
+      "other": "Something else"
+    },
+    "accountId": "Account ID",
+    "email": "Your email",
+    "message": "Message",
+    "messageHint": "What happened? Add dates, amounts or a roll's number if you have them.",
+    "needEmail": "Enter your email",
+    "needMessage": "Write your message",
+    "send": "Send message",
+    "sentTitle": "Message sent",
+    "sentHint": "Your ticket is {ticket}. We will reply to {email}.",
+    "sendAnother": "Send another",
+    "replyTime": "We usually reply within 24 hours. For a payment, add the date, the amount and the method.",
+    "channels": {
+      "email": "Email",
+      "telegram": "Telegram",
+      "discord": "Discord"
+    },
+    "updated": "Last updated {date}",
+    "sample": "Sample text, final wording comes from legal counsel"
+  },
   "footer": {
     "play": "Play",
     "info": "Info",
@@ -509,6 +542,8 @@
     "title": "Profile",
     "inventory": "Inventory",
     "history": "History",
+    "copyId": "Copy account ID",
+    "idCopied": "Account ID copied",
     "transactions": "Transactions",
     "settings": "Settings",
     "fairness": "Provably fair",
