@@ -41,7 +41,7 @@ const tabClass = (active: boolean) => (active ? 'text-brand-light' : 'text-neutr
         @click.capture="onTab(t.key, $event)"
       >
         <span class="relative">
-          <img v-if="t.key === 'profile' && session.user" :src="session.user.avatar" alt="" class="kd-tab-avatar size-5 rounded-full object-cover" />
+          <img v-if="t.key === 'profile' && session.user" :src="session.user.avatar" alt="" class="size-5 rounded-full object-cover" />
           <UiIcon v-else :name="t.icon" :size="20" class="kd-icon" />
           <span v-if="t.key === 'bonus' && (dailyReady || freeCount)" class="kd-dot absolute -top-0.5 -right-1 size-2 rounded-full bg-brand-base" />
         </span>
@@ -53,10 +53,6 @@ const tabClass = (active: boolean) => (active ? 'text-brand-light' : 'text-neutr
 </template>
 
 <style scoped>
-/* the avatar's ring takes the tab's colour, so it lights up like the icons do */
-.kd-tab-avatar {
-  box-shadow: 0 0 0 1.5px currentcolor;
-}
 .kd-dot {
   box-shadow: 0 0 0 2px var(--color-neutral-2);
   animation: kd-dot 1.6s ease-in-out infinite;
