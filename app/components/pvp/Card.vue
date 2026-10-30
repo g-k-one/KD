@@ -119,8 +119,8 @@ function onClick(e: MouseEvent) {
       <span class="kd-brow-mode type-12-caps flex items-center gap-1 lg:hidden"><UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="14" />{{ $t(`pvp.modeName.${battle.mode}`) }}</span>
     </div>
 
-    <!-- the players: the seats, the mode under them -->
-    <div class="kd-brow-who flex min-w-0 items-center px-2 pb-2 lg:h-19 lg:flex-col lg:justify-between lg:self-center lg:p-0">
+    <!-- the players: on desktop the mode over the seats, as the cost stands over the button beside them -->
+    <div class="kd-brow-who flex min-w-0 items-center px-2 pb-2 lg:h-19 lg:flex-col-reverse lg:justify-between lg:self-center lg:p-0">
       <span class="flex items-center gap-1.5">
         <template v-for="(side, k) in sides" :key="k">
           <span v-if="k > 0" class="type-10-caps text-neutral-11">{{ $t('pvp.vs') }}</span>
