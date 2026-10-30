@@ -422,7 +422,7 @@ const laneCols = computed(() => {
             </span>
           </div>
           <!-- phones: Check and Replay as icons, so the row fits the arena -->
-          <div class="kd-result-pot mt-1 flex justify-center gap-2">
+          <div class="kd-result-pot mt-3 flex justify-center gap-2">
             <UiButton size="m" icon="refresh" :loading="recreating" @click="recreate">
               {{ $t('pvp.recreate') }}
               <span class="btn-value"><UiPrice :amount="b.cost" size="s" tone="inverse" /></span>
