@@ -585,8 +585,10 @@ const laneCols = computed(() => {
         :compact="isMobile"
         :can-join="!s.player && b.status === 'waiting' && !youIn"
         :can-call-bot="!s.player && b.status === 'waiting' && isCreator"
-        :can-kick="!!s.player && s.slot > 0 && b.status === 'waiting' && isCreator"
+        :can-kick="!!s.player && !s.player.you && s.slot > 0 && b.status === 'waiting' && isCreator"
+        :can-leave="!!s.player?.you && b.status === 'waiting'"
         @kick="kick(s.slot)"
+        @leave="leaveOpen = true"
         :busy="busySlot === s.slot"
         @join="join(s.slot)"
         @bot="bot(s.slot)"
@@ -597,9 +599,6 @@ const laneCols = computed(() => {
       </div>
       </div>
     </section>
-    <div v-if="b.status === 'waiting' && youIn" class="flex justify-center">
-      <UiButton variant="ghost" size="m" icon="close" @click="leaveOpen = true">{{ $t(isCreator ? 'pvp.cancelBattle' : 'pvp.leaveBattle') }}</UiButton>
-    </div>
     <UiModal v-model="leaveOpen" :title="$t(isCreator ? 'pvp.cancelTitle' : 'pvp.leaveTitle')" :width="420">
       <p class="type-14-regular text-neutral-12">{{ $t(isCreator ? 'pvp.cancelText' : 'pvp.leaveText', { amount: formatCoins(b.cost) }) }}</p>
       <div class="mt-4 grid grid-cols-2 gap-2">

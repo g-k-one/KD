@@ -11,8 +11,8 @@ import type { BattlePlayerRef } from '#shared/types/api'
 // the bottom; a free seat is its plus in the middle and Join across the bottom, 8 px from the three edges around it.
 // Desktop: the 44 px avatar stands as far from the left edge as from the top and the bottom.
 // quiet: a seat inside a team: the team's head says the chance, who leads and who won, the seat only who sits there
-const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost'; busy?: boolean; quiet?: boolean; canKick?: boolean }>()
-defineEmits<{ bot: []; join: []; kick: [] }>()
+const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost'; busy?: boolean; quiet?: boolean; canKick?: boolean; canLeave?: boolean }>()
+defineEmits<{ bot: []; join: []; kick: []; leave: [] }>()
 
 // The running total rolls up to each new value like an odometer
 const totalSrc = computed(() => props.total ?? 0)
@@ -36,9 +36,6 @@ const idle = computed(() => !(props.result || playing.value))
     ]"
   >
     <template v-if="player">
-      <button v-if="canKick" type="button" class="kd-press kd-hit absolute -top-2 -right-2 z-[1] grid size-6 place-items-center rounded-full bg-neutral-5 text-neutral-13 hover:text-neutral-15" :aria-label="$t('pvp.kick', { name: player.nickname })" :title="$t('pvp.kick', { name: player.nickname })" @click="$emit('kick')">
-        <UiIcon name="close" :size="14" />
-      </button>
       <span class="kd-slot-pic relative shrink-0">
         <span class="block overflow-hidden rounded-full bg-neutral-7" :class="compact ? 'size-8' : 'size-11'">
           <img :src="player.avatar" alt="" class="size-full object-cover" :class="player.bot && 'scale-75 object-contain'" />
@@ -59,6 +56,9 @@ const idle = computed(() => !(props.result || playing.value))
         <span class="tabular-nums" :class="[compact ? 'type-14' : 'type-20-caps', lead ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15']">{{ Math.round(chanceShown) }}%</span>
         <span v-if="!compact" class="type-10-caps whitespace-nowrap text-neutral-11">{{ $t('pvp.toWin') }}</span>
       </span>
+      <!-- before the start, the seat's one action as an icon at its end: the creator clears a seat, your own seat is your way
+           out. Phones: small in the left corner, clear of the level on the right, the three lines stay centred -->
+      <UiButton v-if="canKick || canLeave" variant="secondary" size="s" :icon="canLeave ? 'logout' : 'close'" icon-only :class="compact ? 'absolute! top-1 left-1 size-6!' : 'shrink-0'" :title="canLeave ? $t('pvp.leaveBattle') : $t('pvp.kick', { name: player.nickname })" :aria-label="canLeave ? $t('pvp.leaveBattle') : $t('pvp.kick', { name: player.nickname })" @click="canLeave ? $emit('leave') : $emit('kick')" />
       <!-- once it is over: what happened, not a 100% / 0% -->
       <span v-if="result && !quiet" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end gap-1'">
         <span :class="[compact ? 'type-12-caps' : 'type-20-caps', result === 'won' ? 'text-success' : 'text-neutral-11']">{{ result === 'won' ? $t('pvp.won') : $t('pvp.lost') }}</span>
