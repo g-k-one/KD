@@ -414,11 +414,6 @@ const roundLine = computed(() => {
 
 // The seats below the arena stand on its lines: each column ends where a lane does. The arena's 4 px frame sits outside
 // its lanes, so the first and last columns are that much wider than the ones between them
-const laneCols = computed(() => {
-  const n = b.value.size
-  const edge = `calc((100% - 8px) / ${n} + 4px)`
-  return [edge, ...Array.from({ length: n - 2 }, () => `calc((100% - 8px) / ${n})`), edge].join(' ')
-})
 </script>
 
 <template>
@@ -550,7 +545,7 @@ const laneCols = computed(() => {
 
     <!-- Player bars: who sits where and what they have so far; join or call a bot on a free seat. Desktop: 24 px around the
          columns, down from the arena as between them; phones: one 12 px step down through the plates and tiles -->
-    <section class="kd-lanes max-lg:-mt-1" :class="isTeam && 'is-team'" :style="{ gridTemplateColumns: isTeam ? 'repeat(2, minmax(0, 1fr))' : laneCols }">
+    <section class="kd-lanes max-lg:-mt-1" :class="isTeam && 'is-team'" :style="{ gridTemplateColumns: `repeat(${isTeam ? 2 : b.size}, minmax(0, 1fr))` }">
       <!-- one column per seat, one per team in 2 vs 2. Desktop: a 24 px panel, 12 px in, so the plates and the tiles inside
            take 12 px corners (24 = 12 + 12); under each bar, its drops, newest first -->
       <div v-for="(g, gi) in seatGroups" :key="gi" class="kd-seat flex min-w-0 flex-col gap-3 lg:rounded-5xl lg:bg-neutral-2 lg:p-3" :class="[done && winners.includes(g[0]!.slot) && 'is-won', isTeam && 'max-md:gap-1']">
@@ -570,7 +565,7 @@ const laneCols = computed(() => {
           <span v-if="!isMobile" class="type-10-caps" :class="teamState(g) === 'won' ? 'text-success' : 'text-neutral-11'">{{ done ? $t('pvp.result') : $t('pvp.toWin') }}</span>
         </span>
       </div>
-      <div :class="isTeam && ['kd-team-seats grid', gi === 1 && 'is-right']">
+      <div :class="isTeam && 'kd-team-seats grid'">
       <div v-for="s in g" :key="s.slot" class="flex min-w-0 flex-col">
       <PvpPlayerSlot
         :quiet="isTeam"
@@ -633,6 +628,7 @@ const laneCols = computed(() => {
 .kd-lanes {
   --lane-gap: 8px;
   display: grid;
+  column-gap: var(--lane-gap);
 }
 @media (min-width: 48rem) {
   .kd-lanes {
@@ -652,13 +648,6 @@ const laneCols = computed(() => {
 }
 .kd-lanes > * {
   min-width: 0;
-  margin-inline: calc(var(--lane-gap) / 2);
-}
-.kd-lanes > :first-child {
-  margin-left: 0;
-}
-.kd-lanes > :last-child {
-  margin-right: 0;
 }
 /* earlier rounds went out of view on the left: the first tile fades in from the edge */
 .kd-rounds.is-cut {
@@ -715,31 +704,19 @@ const laneCols = computed(() => {
     transform: translateY(11px);
   }
 }
-/* the two seats of a team stand on the arena's line: its 4 px frame and the gap between the teams move their middle
-   off the team's own, so the outer seat is the wider one */
+/* a team's two seats: equal, as all the seats */
 .kd-team-seats {
   gap: 4px;
-  grid-template-columns: calc(50% + 3px) calc(50% - 7px);
-}
-.kd-team-seats.is-right {
-  grid-template-columns: calc(50% - 7px) calc(50% + 3px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 @media (min-width: 48rem) {
   .kd-team-seats {
     gap: 8px;
-    grid-template-columns: calc(50% + 2px) calc(50% - 10px);
-  }
-  .kd-team-seats.is-right {
-    grid-template-columns: calc(50% - 10px) calc(50% + 2px);
   }
 }
 @media (min-width: 64rem) {
   .kd-team-seats {
     gap: 12px;
-    grid-template-columns: calc(50% + 2px) calc(50% - 14px);
-  }
-  .kd-team-seats.is-right {
-    grid-template-columns: calc(50% - 14px) calc(50% + 2px);
   }
 }
 /* the winner's column: green from the crown's corner, down into the plain panel */
