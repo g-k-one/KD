@@ -12,8 +12,11 @@ const external = computed(() => /^https?:/.test(props.to))
 </template>
 
 <style scoped>
+/* medium, not the text's regular: thin letters blend into what is behind them, and the same colour looked different
+   on each background */
 .kd-link {
   color: var(--color-brand-light);
+  font-weight: 500;
   text-decoration: underline transparent;
   text-underline-offset: 2px;
   transition: text-decoration-color var(--dur-base) var(--ease-out);

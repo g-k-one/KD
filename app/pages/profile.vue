@@ -74,9 +74,9 @@ const sortedInventory = computed(() => {
   if (invSort.value === 'newest') return list.sort((a, b) => Date.parse(b.acquiredAt) - Date.parse(a.acquiredAt))
   return list.sort((a, b) => (invSort.value === 'priceAsc' ? a.price - b.price : b.price - a.price))
 })
-// Two rows of skins, the rest behind "Show all": with a big inventory the history would sit far down the page
+// Three rows of skins beside the right column, the rest behind "Show all": with a big inventory the history would sit far down the page
 const isSm = useMediaQuery('(min-width: 40rem)')
-const skinsCap = computed(() => (isSm.value ? 10 : 6))
+const skinsCap = computed(() => (isSm.value ? 15 : 6))
 const showAllSkins = ref(false)
 const shownInventory = computed(() => (showAllSkins.value ? sortedInventory.value : sortedInventory.value.slice(0, skinsCap.value)))
 const selectAll = () => (selected.value = sortedInventory.value.map((i) => i.uid))
@@ -233,7 +233,8 @@ async function saveTrade() {
       </section>
 
       <!-- The skins | the trade link and the player's numbers; the history full width below -->
-      <!-- the two columns end on one line: the numbers' card takes what the trade link leaves of the skins panel's height -->
+      <!-- the right column keeps its own height (nothing in it stretches into a hole) and stays in view beside a long list
+           of skins; the skins panel fills the row when it is the shorter one -->
       <section class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-5">
         <!-- My skins: the upgrade page's panel, tiles to pick; picked ones get the bar below -->
         <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
@@ -266,7 +267,7 @@ async function saveTrade() {
         </div>
 
         <!-- The right column: where withdrawals go, then the player's numbers -->
-        <div class="flex min-w-0 flex-col gap-4 lg:gap-5">
+        <div class="flex min-w-0 flex-col gap-4 lg:sticky lg:top-24 lg:gap-5 lg:self-start">
           <!-- the same panel as My skins: a header row over a hairline, then the field, where to find it, Save · Open in Steam -->
           <form class="flex flex-col rounded-5xl bg-neutral-2" @submit.prevent="saveTrade">
             <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:px-6">
@@ -283,10 +284,11 @@ async function saveTrade() {
               </div>
             </div>
           </form>
-          <!-- the numbers first, big, each over a one-line label; hairlines instead of plates inside the plate -->
-          <dl class="grid grid-cols-3 items-center rounded-5xl bg-neutral-2 py-4 lg:flex-1 lg:py-5">
-            <div v-for="(s, i) in statCards.slice(1, 4)" :key="s.key" class="flex min-w-0 flex-col-reverse items-center gap-1 px-1 text-center" :class="i > 0 && 'border-l border-neutral-4'">
-              <dt class="type-10-caps whitespace-nowrap text-neutral-11">{{ s.label }}</dt>
+          <!-- the player's numbers: a line each, what on the left, how much on the right, hairlines between -->
+          <dl class="flex flex-col rounded-5xl bg-neutral-2 px-4 py-2 lg:px-6">
+            <div v-for="(s, i) in statCards.slice(1, 4)" :key="s.key" class="flex h-14 items-center gap-3" :class="i > 0 && 'border-t border-neutral-4'">
+              <UiIcon :name="s.icon" :size="20" class="shrink-0 text-neutral-12" />
+              <dt class="type-12-caps min-w-0 flex-1 truncate text-neutral-11">{{ s.label }}</dt>
               <dd class="type-20-caps tabular-nums" :class="s.coin && 'text-coin'">{{ s.value }}</dd>
             </div>
           </dl>
