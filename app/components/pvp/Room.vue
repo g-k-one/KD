@@ -408,19 +408,19 @@ const laneCols = computed(() => {
       <!-- The result, inside the arena: who took the pot, how much, and the same battle again -->
       <Transition name="kd-result">
         <div v-if="done && b.winnerSlot != null" class="kd-arena-result absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-4 text-center">
-          <!-- who took it: their face(s) beside the caption and the name, then the pot and the actions; one 12 px step down -->
+          <!-- who took it, one block: the face(s) as tall as the three lines beside them, caption · name · pot; the actions under it -->
           <div class="kd-result-title flex items-center gap-4 text-left">
             <span class="flex shrink-0 -space-x-3">
-              <span v-for="w in winners" :key="w" class="kd-result-face relative block overflow-hidden rounded-full bg-neutral-7" :class="isMobile ? 'size-12' : 'size-16'">
+              <span v-for="w in winners" :key="w" class="kd-result-face relative block overflow-hidden rounded-full bg-neutral-7" :class="isMobile ? 'size-16' : 'size-20'">
                 <img :src="b.slots[w]?.player?.avatar" alt="" class="size-full object-cover" :class="b.slots[w]?.player?.bot && 'scale-75 object-contain'" />
               </span>
             </span>
             <span class="flex min-w-0 flex-col items-start">
               <span class="type-12-caps text-success">{{ winners.length > 1 ? $t('pvp.battleWonTeam') : $t('pvp.battleWon') }}</span>
               <span class="text-[22px] leading-7 font-extrabold uppercase lg:type-28">{{ winners.map(nameOf).join(' & ') }}</span>
+              <UiPrice :amount="pot" :size="isMobile ? 'l' : 'xl'" tone="coin" class="mt-1" />
             </span>
           </div>
-          <UiPrice :amount="pot" :size="isMobile ? 'l' : 'xl'" tone="coin" class="kd-result-pot" />
           <!-- phones: Check and Replay as icons, so the row fits the arena -->
           <div class="kd-result-pot mt-1 flex justify-center gap-2">
             <UiButton size="m" icon="refresh" :loading="recreating" @click="recreate">
