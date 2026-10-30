@@ -120,12 +120,12 @@ function onClick(e: MouseEvent) {
     </div>
 
     <!-- the players: on desktop the mode over the seats, as the cost stands over the button beside them. The seats are a
-         plate of the button's height and radius, one 4 px step between every avatar in every mode -->
+         plate of the button's height and radius, one 6 px step between every avatar in every mode -->
     <div class="kd-brow-who flex min-w-0 items-center px-2 pb-2 lg:h-19 lg:flex-col-reverse lg:justify-between lg:self-center lg:p-0">
-      <span class="kd-brow-seats flex h-10 items-center justify-center gap-1 rounded-lg px-2 lg:w-full">
+      <span class="kd-brow-seats flex h-10 items-center justify-center gap-1.5 rounded-lg px-2 lg:w-full lg:px-1">
         <template v-for="(side, k) in sides" :key="k">
           <span v-if="k > 0" class="type-10-caps text-neutral-11">{{ $t('pvp.vs') }}</span>
-          <span class="flex items-center gap-1">
+          <span class="flex items-center gap-1.5">
           <template v-for="s in side" :key="s.slot">
             <span v-if="s.player" class="kd-av relative size-7" :class="[winners.includes(s.slot) && 'is-won', battle.status === 'finished' && !winners.includes(s.slot) && 'is-lost']" :title="s.player.nickname">
               <span class="block size-full overflow-hidden rounded-full bg-neutral-7">
