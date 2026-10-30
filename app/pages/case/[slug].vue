@@ -23,11 +23,14 @@ const cs = computed(() => data.value?.case)
 useHead({ title: () => `${cs.value?.name ?? 'Case'} · KurwaDROP` })
 
 const count = ref<1 | 2 | 3 | 4 | 5>(1)
-const fast = ref(false)
+// Fast and KURWADROP stay as the player left them, across cases and visits
+const fast = useFast()
+const prefs = usePersisted('kd_case', { kurwadrop: false })
 // the open (or a sell) was sent and the server has not answered yet: the button shows it is working
 const pending = ref(false)
 const selling = ref(false)
-const kurwadrop = ref(route.query.kurwa === '1')
+const kurwadrop = computed({ get: () => !!prefs.value.kurwadrop, set: (v: boolean) => (prefs.value = { kurwadrop: v }) })
+if (route.query.kurwa === '1') kurwadrop.value = true
 // KURWADROP is free and changes no odds: it only stages top drops (chicken + respin)
 const openPrice = computed(() => cs.value?.price ?? 0)
 const phase = ref<'idle' | 'spinning' | 'result'>('idle')

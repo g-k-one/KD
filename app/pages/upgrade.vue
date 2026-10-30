@@ -60,10 +60,9 @@ watch(() => session.user?.id, loadInventory, { immediate: true })
 const selected = ref<string[]>([])
 const extra = ref(0) // coin cents from balance
 const target = ref<Item | null>(null)
-const prefs = usePersisted('kd_upgrade', { fast: false })
 /** Nonce of the last roll, for the dial's "Verify roll" */
 const lastNonce = ref<number | null>(null)
-const fast = computed({ get: () => !!prefs.value.fast, set: (v: boolean) => (prefs.value = { ...prefs.value, fast: v }) })
+const fast = useFast()
 const isLg = useMediaQuery('(min-width: 1024px)')
 const isSm = useMediaQuery('(min-width: 640px)')
 const panelTab = ref<'mine' | 'desired'>('mine')
