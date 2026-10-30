@@ -2,15 +2,15 @@
 import type { Battle } from '#shared/types/api'
 
 // A battle as a row of the lobby (components/pvp/Table.vue), on skin.club's row in our colours and corners: the rounds
-// (the count on a round plate, red while live; the band shows how far it has got), the battle
+// (the count on a round plate; live, red and "1/15"), the battle
 // scenario as case cells (the case alone, close together, its name on hover; a run of one case as one cell, ×N, while
 // seats are open), the players (the seats, overlapping only in 2v2, where four and VS must fit, the mode under them) and
 // the cost over the button — Join (a guest signs in first), Watch or View. The row is one card in the house's way (24 px, 8 in; phones 20):
 // neutral-2, the cases standing on it without tiles. The small print is gone: the button says the status, the seats say
 // how many have joined, the coin says it is the cost. Desktop: one 24 px inset all round the 124 px row: the 76 px ring,
 // the seats over the mode and the cost over the button all start and end on the same two lines.
-// Live, the band shows progress only, as skin.club does: the cases played are dimmed, the one opening now is marked and
-// lifted, and the band slides along with it. No drops here — they are the room's (the lobby gets no results: lighter,
+// Live, the band shows progress only, as skin.club does: the cases played are dimmed, the one opening now sits between
+// the case reel's two orange markers, pressed to the row's top and bottom edges, and the band slides along with it. No drops here — they are the room's (the lobby gets no results: lighter,
 // and nothing to read ahead of the replay). Phones: skin.club's card — rounds and status, the cost and the mode · the
 // band · the players and the button.
 const props = defineProps<{ battle: Battle }>()
@@ -76,14 +76,15 @@ function onClick(e: MouseEvent) {
     <!-- rounds: the count on a round plate -->
     <div class="kd-brow-rounds flex items-center px-2 pt-2 lg:justify-center lg:p-0">
       <span class="kd-rounds grid size-11 shrink-0 place-items-center rounded-full lg:size-19" :title="roundsTip">
-        <span class="kd-rounds-n type-20-caps tabular-nums lg:type-28">{{ battle.status === 'live' ? round : battle.rounds.length }}</span>
+        <span class="kd-rounds-n tabular-nums" :class="battle.status === 'live' ? 'type-12-caps lg:type-20-caps' : 'type-20-caps lg:type-28'">{{ battle.status === 'live' ? `${round}/${battle.rounds.length}` : battle.rounds.length }}</span>
       </span>
     </div>
 
     <!-- the battle scenario: one band of case cells -->
     <!-- our card's corners: the row 20 (phones, the case card's) / 24 (desktop), 8 in, so the case tiles sit concentric at
          12 / 16 -->
-    <div ref="viewport" class="kd-brow-band relative min-w-0 overflow-hidden">
+    <!-- desktop: it reaches the row's top and bottom edges (its 8 px padding), so the markers can press against them -->
+    <div ref="viewport" class="kd-brow-band relative min-w-0 overflow-hidden lg:-my-2 lg:py-2">
       <div class="kd-band flex h-full" :style="{ gap: `${CELL_GAP}px`, transform: `translateX(${-shift * step}px)` }">
         <div
           v-for="(c, i) in cells"
@@ -95,7 +96,10 @@ function onClick(e: MouseEvent) {
         >
           <img :src="c.image" :alt="c.name" draggable="false" class="kd-cell-img size-[76px] object-contain lg:size-[92px]" />
           <span v-if="c.qty > 1" class="kd-cell-qty type-10-caps absolute top-1.5 right-1.5 rounded-md px-1 tabular-nums">×{{ c.qty }}</span>
-          <span v-if="c.state === 'now'" class="kd-cell-mark absolute top-0 left-1/2" aria-hidden="true" />
+          <template v-if="c.state === 'now'">
+            <img src="/img/fx/marker-top.svg" alt="" class="kd-cell-mark is-top absolute left-1/2" />
+            <img src="/img/fx/marker-top.svg" alt="" class="kd-cell-mark is-bottom absolute left-1/2" />
+          </template>
         </div>
       </div>
       <span v-if="overflows" class="kd-band-fade pointer-events-none absolute inset-y-0 right-0 w-12" aria-hidden="true" />
@@ -218,14 +222,29 @@ function onClick(e: MouseEvent) {
   background: radial-gradient(55% 45% at 50% 42%, color-mix(in srgb, var(--mc) 32%, transparent), transparent);
 }
 .kd-cell.is-now .kd-cell-img {
-  transform: translateY(-2px) scale(1.12);
+  transform: scale(1.08);
 }
+/* the case reel's marker, at row size; the row's edges on desktop (the band's 8 px), the cell's on phones */
 .kd-cell-mark {
-  width: 12px;
-  height: 7px;
+  width: 14px;
+  height: 11px;
+  max-width: none;
   translate: -50% 0;
-  background: var(--mc);
-  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.kd-cell-mark.is-top {
+  top: 0;
+}
+.kd-cell-mark.is-bottom {
+  bottom: 0;
+  rotate: 180deg;
+}
+@media (min-width: 64rem) {
+  .kd-cell-mark.is-top {
+    top: -8px;
+  }
+  .kd-cell-mark.is-bottom {
+    bottom: -8px;
+  }
 }
 .kd-cell-qty {
   color: var(--color-neutral-15);
