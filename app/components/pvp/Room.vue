@@ -47,11 +47,11 @@ function replay() {
 }
 useHead({ title: () => `PvP #${id.value} · KurwaDROP` })
 
-// Poll while waiting so other players and bots show up
+// Poll while waiting so other players and bots show up (in the browser only: on the server the timer would outlive the render)
 const { pause, resume } = useIntervalFn(() => document.visibilityState === 'visible' && refresh(), 2500, { immediate: false })
 watch(
   () => b.value.status,
-  (s) => (s === 'finished' ? pause() : resume()),
+  (s) => import.meta.client && (s === 'finished' ? pause() : resume()),
   { immediate: true },
 )
 
@@ -259,7 +259,7 @@ const roundLine = computed(() => {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-5 lg:px-0 lg:pt-10">
+  <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10">
     <!-- the bar's shield is the general fairness page, as on every page; this battle's own check is Check PvP in the result -->
     <UiPageBar
       :title="$t(`pvp.modeName.${b.mode}`)"
@@ -280,11 +280,11 @@ const roundLine = computed(() => {
     <section class="kd-dock flex flex-wrap items-center justify-between gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
       <div class="type-12-caps flex gap-2 tabular-nums max-lg:w-full">
         <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center"><UiIcon name="eye" :size="16" /><span class="text-neutral-15">{{ b.viewers }}</span></span>
-        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.rounds') }} <span class="text-neutral-15">{{ Math.min(b.rounds.length, revealed) }}/{{ b.rounds.length }}</span></span>
+        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.rounds') }} <span class="text-neutral-15" data-allow-mismatch="text">{{ Math.min(b.rounds.length, revealed) }}/{{ b.rounds.length }}</span></span>
       </div>
       <!-- As many rounds as fit, none cut: a window that follows the current round, a "+N" tile for the ones after it,
            and a soft fade on the side where earlier rounds went out of view -->
-      <div ref="stripEl" class="kd-rounds flex min-w-0 items-center gap-2 overflow-hidden px-1 py-2 max-lg:order-last max-lg:w-full lg:max-w-full" :class="[strip.from > 0 && 'is-cut', strip.more > 0 && 'is-more']">
+      <div ref="stripEl" class="kd-rounds flex min-w-0 items-center gap-2 overflow-hidden px-1 py-2 max-lg:order-last max-lg:w-full lg:-my-1 lg:max-w-full lg:py-1" :class="[strip.from > 0 && 'is-cut', strip.more > 0 && 'is-more']">
         <PvpCaseThumb v-for="i in strip.idx" :key="i" :image="b.rounds[i]!.image" :name="`${b.rounds[i]!.name} · ${formatCoins(b.rounds[i]!.price)}`" size="m" :state="roundState(i)" />
       </div>
       <div class="type-12-caps flex justify-end gap-2 max-lg:w-full">
@@ -304,7 +304,7 @@ const roundLine = computed(() => {
           <div v-if="!s.player && b.status === 'waiting'" class="flex items-center justify-center p-2" :class="isMobile ? 'h-50' : 'h-72'">
             <button
               type="button"
-              class="kd-press kd-free-seat flex size-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed text-neutral-11"
+              class="kd-press kd-free-seat flex size-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed text-neutral-11"
               :disabled="youIn && !isCreator"
               @click="youIn ? isCreator && bot(s.slot) : join(s.slot)"
             >
@@ -376,7 +376,7 @@ const roundLine = computed(() => {
 
 
     <!-- Player bars: who sits where and what they have so far; join or call a bot on a free seat -->
-    <section class="grid gap-2 md:gap-4" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
+    <section class="grid gap-2 md:gap-4 lg:-mt-3 lg:gap-6" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
       <PvpPlayerSlot
         v-for="s in b.slots"
         :key="s.slot"
@@ -396,8 +396,8 @@ const roundLine = computed(() => {
     </section>
 
     <!-- Drops: each player's right under their bar, newest first -->
-    <section v-if="revealed > 0" class="-mt-1">
-      <div class="grid gap-2 md:gap-4" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
+    <section v-if="revealed > 0" class="-mt-1 lg:-mt-3">
+      <div class="grid gap-2 md:gap-4 lg:gap-6" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
         <!-- once it is over, the losers' drops step back: they go to the winner -->
         <TransitionGroup v-for="seat in b.slots" :key="seat.slot" tag="div" name="kd-drop" class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-2 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]" :class="done && !winners.includes(seat.slot) && 'is-lost'">
           <ItemTile v-for="ri in Array.from({ length: revealed }, (_, k) => revealed - 1 - k)" :key="ri" :item="b.results![ri]!.drops[seat.slot]!" readonly />
@@ -462,10 +462,11 @@ const roundLine = computed(() => {
   background: var(--color-neutral-2);
   padding: 12px;
 }
-/* desktop: the round strip makes the row 72 px, so the 48 px chips sit 24 px from the top and bottom; the sides match */
+/* desktop: the docks' 80 px and 16 px sides: the 48 px chips sit 16 px from every edge, the 56 px round strip 12 from the
+   top and bottom (it keeps 4 px more of its own, for the current round's lift) */
 @media (min-width: 64rem) {
   .kd-dock {
-    padding-inline: 24px;
+    padding-inline: 16px;
   }
 }
 .kd-dock-stat {

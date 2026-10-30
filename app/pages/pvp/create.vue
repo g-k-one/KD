@@ -214,6 +214,12 @@ async function create() {
   background: var(--color-neutral-2);
   padding: 12px;
 }
+/* desktop: the docks' 16 px on all sides around the 48 px controls */
+@media (min-width: 64rem) {
+  .kd-pvp-dock {
+    padding: 16px;
+  }
+}
 .kd-fade-enter-active,
 .kd-fade-leave-active {
   transition: opacity var(--dur-base) var(--ease-out);

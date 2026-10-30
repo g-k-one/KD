@@ -25,7 +25,7 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
   <div
     class="kd-slot relative flex items-center"
     :class="[
-      compact ? 'flex-col justify-center gap-1 rounded-2xl px-1 py-2 text-center' : 'h-16 gap-3 rounded-2xl px-3',
+      compact ? 'flex-col justify-center gap-1 rounded-2xl px-1 py-2 text-center' : 'h-16 gap-3 rounded-5xl px-3',
       winner ? 'is-winner' : lead ? 'is-lead' : '',
     ]"
   >
