@@ -554,7 +554,15 @@
     "upgradeThem": "Upgrade",
     "emptyInventory": "Your inventory is empty. Open a case to get your first skin.",
     "openCases": "Open cases",
-    "emptyHistory": "No games yet.",
+    "emptyHistory": {
+      "all": "Nothing here yet.",
+      "case": "No cases opened yet.",
+      "upgrade": "No upgrades yet.",
+      "pvp": "No battles yet.",
+      "deposit": "No deposits yet.",
+      "sell": "No skins sold yet.",
+      "withdraw": "No withdrawals yet."
+    },
     "date": "Date",
     "game": "Game",
     "bet": "Bet",

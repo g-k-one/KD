@@ -304,7 +304,7 @@ async function saveTrade() {
             <span class="type-14 lg:type-16-medium">{{ $t('account.history') }}</span>
             <UiSelect v-model="gameFilter" :options="gameOptions" menu-width="fixed" class="ml-auto w-36 lg:w-40" :active="gameFilter !== 'all'" />
           </div>
-          <UiEmptyState v-if="!filteredHistory.length" :text="$t('account.emptyHistory')" art="empty-history" class="m-3" />
+          <UiEmptyState v-if="!filteredHistory.length" :text="$t(`account.emptyHistory.${gameFilter}`)" art="empty-history" class="m-3" />
           <!-- the table: game · drop · stake · payout · profit · time · check; a roll opens its check -->
           <!-- no top padding on desktop: the sticky headers stop at the panel's hairline, nothing shows over them -->
           <div v-else class="kd-history overflow-y-auto p-3 lg:pt-0">
