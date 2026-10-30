@@ -15,6 +15,7 @@ const ui = useUiStore()
 const toast = useToast()
 const sfx = useSfx()
 const ex = useExtrude()
+const fx = useForge()
 
 const { data, refresh, error } = await useFetch<BattleResponse>(() => `/api/battles/${id.value}`, { key: `battle-${id.value}` })
 if (error.value) {
@@ -129,12 +130,13 @@ const countdown = computed(() =>
   b.value.status !== 'waiting' && b.value.startedAt && clock.value.round < 0 ? Math.max(0, Math.ceil((Date.parse(b.value.startedAt) - now.value) / 1000)) : 0,
 )
 // The numbers are 3D metal (Extrude): the 3 spins in, each next flips out of the one before it while the whole number
-// swings to the other side, and the 1 drifts up into a soft wave of warm light as the first round spins up. The label is
-// mounted ahead, while the seats fill, so the first number does not pay for the shader; its small canvas and the low
-// quality keep the ray marching light. No WebGL or reduced motion: the plain number
+// swings to the other side, and every beat lands with the case reel's sparks (Forge's kdReveal) in the mode's colour,
+// stronger from 3 to 1. The 1 flips into a big VS, which shrinks into the arena's VS badge as the first round spins up. The
+// label is mounted ahead, while the seats fill, so the first number does not pay for the shader; its small canvas keeps
+// the ray marching light. No WebGL or reduced motion: the plain number
 const COUNT_LOOK = {
   font: '800 {s}px Rubik, ui-sans-serif, system-ui, sans-serif',
-  charset: '0123456789',
+  charset: '0123456789VS',
   face: ['#fff6e0', '#ffc46b', '#ff7a1a'],
   side: ['#d9480f', '#2a0e00'],
   metal: 0.35,
@@ -157,6 +159,13 @@ let countReady: Promise<void> | null = null
 let countFresh = true
 let countSide = 1
 const COUNT_YAW = 12
+const MODE_RGB = { classic: [1, 0.72, 0.25], crazy: [0.9, 0.3, 0.95], team: [0.4, 0.5, 1] }
+function countSparks(level: number) {
+  fx.at('kdReveal', countEl.value, 1.3).then((h) => {
+    h?.set('tint', MODE_RGB[b.value.mode])
+    h?.set('level', level)
+  })
+}
 const count3d = ref(false)
 const countFade = ref(false)
 function dropCountLabel() {
@@ -190,12 +199,15 @@ async function countBeat(n: number) {
     countLabel.swap(String(n), { style: 'flip' })
     countLabel.rotate(320 * countSide, 0, true)
   }
+  countSparks(4 - n)
 }
 async function countEnd() {
   if (!countLabel) return
   countFade.value = true
-  countLabel.play('fade', { time: 0.4 })
-  setTimeout(dropCountLabel, 700)
+  countLabel.swap('VS', { style: 'flip' })
+  countLabel.rotate(420, 0, true)
+  countSparks(3)
+  setTimeout(dropCountLabel, 750)
 }
 watch(countdown, (n, old) => {
   if (n > 0 && n !== old) {
@@ -203,6 +215,8 @@ watch(countdown, (n, old) => {
     countBeat(n)
   } else if (n === 0 && old > 0) countEnd()
 })
+// the sparks' engine ready before the first number too
+onMounted(() => done.value || fx.preload('kd'))
 onBeforeUnmount(dropCountLabel)
 
 // Same cases and seats in one click once the battle is over (Skin.club "Recreate")
@@ -423,7 +437,7 @@ const laneCols = computed(() => {
       <!-- VS between the seats (between the two teams in Team 2v2); it beats on every new round -->
       <div class="pointer-events-none absolute inset-0 z-[3] grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }" aria-hidden="true">
         <span v-for="s in b.slots" :key="s.slot" class="relative">
-          <span v-if="countdown <= 0 && s.slot > 0 && (!isTeam || s.slot === 2)" :key="`${clock.round}`" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="isTeam && 'is-team'">{{ $t('pvp.vs') }}</span>
+          <span v-if="countdown <= 0 && !countFade && s.slot > 0 && (!isTeam || s.slot === 2)" :key="`${clock.round}`" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="isTeam && 'is-team'">{{ $t('pvp.vs') }}</span>
         </span>
       </div>
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 left-0 -rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
@@ -696,6 +710,21 @@ const laneCols = computed(() => {
 .kd-countdown.is-on .kd-count-stage,
 .kd-countdown.is-fade .kd-count-stage {
   opacity: 1;
+}
+/* the VS holds a beat, then drops into the badge's place */
+.kd-countdown.is-fade .kd-count-stage {
+  animation: kd-count-vs 750ms var(--ease-in) both;
+}
+@keyframes kd-count-vs {
+  0%,
+  55% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.4;
+    transform: scale(0.2);
+  }
 }
 /* the end: one soft wave of warm light from the middle, the arena back under it */
 .kd-countdown.is-fade::after {
