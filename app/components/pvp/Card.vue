@@ -2,7 +2,7 @@
 import type { Battle } from '#shared/types/api'
 
 // A battle as a row of the lobby (components/pvp/Table.vue), on skin.club's row in our colours and corners: the rounds
-// (the count on a round plate; live, red and "1/15"), the battle
+// (the count on a round plate with a soft glow in the mode's colour; live, red, pulsing and "1/15"), the battle
 // scenario as case cells (the case alone, close together, its name on hover; a run of one case as one cell, ×N, while
 // seats are open), the players (the seats, overlapping only in 2v2, where four and VS must fit, the mode under them) and
 // the cost over the button — Join (a guest signs in first), Watch or View. The row is one card in the house's way (24 px, 8 in; phones 20):
@@ -10,7 +10,8 @@ import type { Battle } from '#shared/types/api'
 // how many have joined, the coin says it is the cost. Desktop: one 24 px inset all round the 124 px row: the 76 px ring,
 // the seats over the mode and the cost over the button all start and end on the same two lines.
 // Live, the band shows progress only, as skin.club does: the cases played are dimmed, the one opening now sits between
-// the case reel's two orange markers, pressed to the row's top and bottom edges, and the band slides along with it. No drops here — they are the room's (the lobby gets no results: lighter,
+// the case reel's two orange markers, pressed to the row's top and bottom edges; they glide from case to case, and the
+// band slides along with them. No drops here — they are the room's (the lobby gets no results: lighter,
 // and nothing to read ahead of the replay). Phones: skin.club's card — rounds and status, the cost and the mode · the
 // band · the players and the button.
 const props = defineProps<{ battle: Battle }>()
@@ -49,6 +50,8 @@ const viewport = useTemplateRef<HTMLElement>('viewport')
 const { width: viewW } = useElementSize(viewport)
 const fits = computed(() => (mounted.value ? Math.max(1, Math.floor((viewW.value + CELL_GAP) / step.value)) : Infinity))
 const shift = computed(() => (props.battle.status === 'live' ? Math.min(Math.max(0, played.value - 1), Math.max(0, cells.value.length - fits.value)) : 0))
+// the markers ride on the band: one per case, so the case opening now is the rounds played
+const markX = computed(() => Math.min(played.value, props.battle.rounds.length - 1) * step.value)
 const overflows = computed(() => mounted.value && (cells.value.length - shift.value) * step.value - CELL_GAP > viewW.value + 1)
 
 const winners = computed<number[]>(() => (props.battle.status === 'finished' ? (props.battle.winners ?? (props.battle.winnerSlot != null ? [props.battle.winnerSlot] : [])) : []))
@@ -85,7 +88,7 @@ function onClick(e: MouseEvent) {
          12 / 16 -->
     <!-- desktop: it reaches the row's top and bottom edges (its 8 px padding), so the markers can press against them -->
     <div ref="viewport" class="kd-brow-band relative min-w-0 overflow-hidden lg:-my-2 lg:py-2">
-      <div class="kd-band flex h-full" :style="{ gap: `${CELL_GAP}px`, transform: `translateX(${-shift * step}px)` }">
+      <div class="kd-band relative flex h-full" :style="{ gap: `${CELL_GAP}px`, transform: `translateX(${-shift * step}px)` }">
         <div
           v-for="(c, i) in cells"
           :key="c.key"
@@ -96,11 +99,16 @@ function onClick(e: MouseEvent) {
         >
           <img :src="c.image" :alt="c.name" draggable="false" class="kd-cell-img size-[76px] object-contain lg:size-[92px]" />
           <span v-if="c.qty > 1" class="kd-cell-qty type-10-caps absolute top-1.5 right-1.5 rounded-md px-1 tabular-nums">×{{ c.qty }}</span>
-          <template v-if="c.state === 'now'">
-            <img src="/img/fx/marker-top.svg" alt="" class="kd-cell-mark is-top absolute left-1/2" />
-            <img src="/img/fx/marker-top.svg" alt="" class="kd-cell-mark is-bottom absolute left-1/2" />
-          </template>
         </div>
+        <span
+          v-if="mounted && battle.status === 'live'"
+          class="kd-marks pointer-events-none absolute inset-y-0"
+          :style="{ left: `${(step - CELL_GAP) / 2}px`, transform: `translateX(${markX}px)` }"
+          aria-hidden="true"
+        >
+          <img src="/img/fx/marker-top.svg" alt="" class="kd-cell-mark is-top absolute left-0" />
+          <img src="/img/fx/marker-top.svg" alt="" class="kd-cell-mark is-bottom absolute left-0" />
+        </span>
       </div>
       <span v-if="overflows" class="kd-band-fade pointer-events-none absolute inset-y-0 right-0 w-12" aria-hidden="true" />
     </div>
@@ -190,12 +198,47 @@ function onClick(e: MouseEvent) {
 .kd-brow-mode {
   color: var(--mc);
 }
-/* the rounds' plate: the cell colour under the count, red while live, grey once over */
+/* the rounds' plate: the cell colour under the count, a soft radial glow in the mode's colour behind it; live, the glow
+   goes red and breathes (opacity and scale only, on its own layer); grey once over */
 .kd-rounds {
+  --glow: var(--mc);
+  position: relative;
   background: var(--cell);
   transition: background-color var(--dur-base) var(--ease-out);
 }
+.kd-rounds::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 26%, transparent), transparent);
+}
+.kd-brow.is-live .kd-rounds {
+  --glow: var(--color-danger);
+}
+.kd-brow.is-live .kd-rounds::before {
+  animation: kd-rounds-pulse 1.4s ease-in-out infinite alternate;
+}
+.kd-brow.is-finished .kd-rounds::before {
+  content: none;
+}
+@keyframes kd-rounds-pulse {
+  from {
+    opacity: 0.45;
+    transform: scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kd-brow.is-live .kd-rounds::before {
+    animation: none;
+  }
+}
 .kd-rounds-n {
+  position: relative;
   color: var(--color-neutral-15);
 }
 .kd-brow.is-live .kd-rounds-n {
@@ -224,7 +267,11 @@ function onClick(e: MouseEvent) {
 .kd-cell.is-now .kd-cell-img {
   transform: scale(1.08);
 }
-/* the case reel's marker, at row size; the row's edges on desktop (the band's 8 px), the cell's on phones */
+/* the case reel's marker, at row size; the row's edges on desktop (the band's 8 px), the cell's on phones. The pair glides
+   on the same beat as the band, transform only */
+.kd-marks {
+  transition: transform var(--dur-slow) var(--ease-out);
+}
 .kd-cell-mark {
   width: 14px;
   height: 11px;
