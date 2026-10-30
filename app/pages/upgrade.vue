@@ -30,7 +30,11 @@ const ui = useUiStore()
 const toast = useToast()
 
 // --- Data -----------------------------------------------------------------
-const { data: market } = await useFetch<MarketResponse>('/api/market', { key: 'market' })
+// The page shows at once on a tap from elsewhere: the skins fill in when they come (the first load, rendered on the
+// server, comes complete)
+const marketReq = useFetch<MarketResponse>('/api/market', { key: 'market', lazy: true })
+if (import.meta.server) await marketReq
+const { data: market } = marketReq
 const inventory = ref<InventoryItem[]>([])
 // Client only: server-side $fetch would go out without the session cookie and get a 401
 const inventoryLoading = ref(true)
@@ -51,9 +55,14 @@ async function loadInventory() {
   // Arriving from a case result (?item=uid,uid&target=id): those skins are already in the stake
   const fromCase = String(route.query.item ?? '').split(',').filter((uid) => inventory.value.some((i) => i.uid === uid))
   if (fromCase.length && !selected.value.length) selected.value = fromCase
+  pickWanted()
+}
+// ...and ?target=id is the skin to aim at, whichever of the two lists comes in last
+function pickWanted() {
   const wanted = market.value?.items.find((i) => i.id === route.query.target)
   if (wanted && !target.value) target.value = wanted
 }
+watch(market, pickWanted)
 watch(() => session.user?.id, loadInventory, { immediate: true })
 
 // --- Selection --------------------------------------------------------------

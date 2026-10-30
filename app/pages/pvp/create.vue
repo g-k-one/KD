@@ -12,7 +12,9 @@ const session = useSessionStore()
 const ui = useUiStore()
 const toast = useToast()
 
-const { data } = await useFetch<CasesResponse>('/api/cases', { key: 'cases' })
+const req = useFetch<CasesResponse>('/api/cases', { key: 'cases', lazy: true })
+if (import.meta.server) await req
+const { data } = req
 // Every case on the site, once each (home lists some in several sections), cheapest first
 const cases = computed(() => [...new Map((data.value?.sections ?? []).flatMap((sec) => sec.cases).map((c) => [c.slug, c])).values()].sort((a, b) => a.price - b.price))
 

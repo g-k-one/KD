@@ -34,6 +34,12 @@ export default defineNuxtConfig({
 
   experimental: {
     ...(artifact && { appManifest: false }),
+    // The page change: the browser holds the old page as a picture and fades the new one over it (main.css). Nothing
+    // waits for the animation, and it runs off the main thread, so a heavy page does not stutter it
+    viewTransition: true,
+    // Nuxt waits for a painted frame before each page change, and the browser paints none during a transition: every
+    // tap sat out its 100 ms fallback. The transition's own snapshot is that paint
+    navigationRepaint: false,
     // A link loads its page's code when a finger or the cursor reaches it, not as soon as it scrolls into view: on a
     // slow phone every page's chunks no longer download and parse in the background of the one being read
     defaults: { nuxtLink: { prefetchOn: { visibility: false, interaction: true } } },

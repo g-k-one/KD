@@ -39,6 +39,16 @@ useEventListener(
   { passive: true },
 )
 
+// A tap back to the home page answers at once: the first row is drawn with the page, each row past it just after, one
+// per frame, while a light empty cell holds its place. The whole catalog at once took half a second on a phone
+const drawn = ref(import.meta.server || useNuxtApp().isHydrating ? Infinity : 1)
+function drawNext() {
+  if (drawn.value >= sections.value.length) return
+  drawn.value++
+  requestAnimationFrame(() => setTimeout(drawNext))
+}
+onMounted(() => watch(data, (d) => d && requestAnimationFrame(() => setTimeout(drawNext)), { immediate: true }))
+
 // Sections with a clock (the weekly picks) count down on their header
 const clock = useClock(1000)
 const allCases = computed(() => (data.value?.sections ?? []).flatMap((s) => s.cases))
@@ -117,7 +127,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
         <!-- sections after the first are skipped by the renderer until they come near the screen -->
         <!-- a themed row draws its scene edge to edge, so it is never skipped by the renderer (that would clip the scene) -->
         <!-- collapsed, a themed row drops its scene and its air: just the header, like any other -->
-        <section class="relative flex flex-col gap-4" :class="[s.theme && !collapsed[s.id] && `kd-themed is-${s.theme}`, i > 0 && !s.theme && 'kd-offscreen']">
+        <section class="relative flex flex-col gap-4" :class="[s.theme && !collapsed[s.id] && `kd-themed is-${s.theme}`, i > 0 && !s.theme && (i < drawn ? 'kd-offscreen' : 'kd-offscreen-hold')]">
           <div v-if="s.theme && !collapsed[s.id]" class="kd-row-scene" aria-hidden="true"><img :src="`/img/coop/${s.theme}.webp`" alt="" draggable="false" loading="lazy" /></div>
           <UiSectionHeader
             :title="s.title"
@@ -142,16 +152,21 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
             class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-flow-dense xl:grid-cols-5"
             :class="isShortOdd(s) && 'max-sm:[&>*:last-child]:hidden'"
           >
-            <HomeCaseCard
-              v-for="c in s.cases"
-              :key="c.id"
-              :item="c"
-              :shape="shapeOf(c, s)"
-              :look="s.theme"
-              :class="shapeOf(c, s) && SHAPE_CELL[shapeOf(c, s)!]"
-            >
-              <HomeCardKindPicker v-if="homeLayout.editing.value" :item="c" :themed="!!s.theme" />
-            </HomeCaseCard>
+            <template v-if="i < drawn">
+              <HomeCaseCard
+                v-for="c in s.cases"
+                :key="c.id"
+                :item="c"
+                :shape="shapeOf(c, s)"
+                :look="s.theme"
+                :class="shapeOf(c, s) && SHAPE_CELL[shapeOf(c, s)!]"
+              >
+                <HomeCardKindPicker v-if="homeLayout.editing.value" :item="c" :themed="!!s.theme" />
+              </HomeCaseCard>
+            </template>
+            <template v-else>
+              <div v-for="c in s.cases" :key="c.id" class="kd-card-hold" :class="shapeOf(c, s) && SHAPE_CELL[shapeOf(c, s)!]" aria-hidden="true" />
+            </template>
           </div>
         </section>
         <HomeContinue v-if="i === 0" :cases="allCases" />
@@ -197,6 +212,28 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
   object-position: 50% 30%;
   filter: brightness(0.7);
   opacity: 0.8;
+}
+
+/* A row not drawn yet: a plain cell of a card's height (the art's square, the text under it) */
+.kd-card-hold {
+  border-radius: var(--radius-4xl);
+  background: var(--color-neutral-2);
+}
+.kd-card-hold::before {
+  content: '';
+  display: block;
+  aspect-ratio: 1;
+  margin-bottom: 104px;
+}
+@media (min-width: 64rem) {
+  .kd-card-hold {
+    border-radius: var(--radius-5xl);
+  }
+  .kd-card-hold::before {
+    aspect-ratio: auto;
+    height: 220px;
+    margin-bottom: 124px;
+  }
 }
 
 /* Phones: stuck 8 px under the header, only the filters' own card shows, nothing behind it */

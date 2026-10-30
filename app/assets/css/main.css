@@ -94,6 +94,7 @@
   --dur-fast: 140ms;
   --dur-base: 220ms;
   --dur-slow: 420ms;
+  --dur-page: 180ms;
 }
 
 /* Lets transitions animate numeric custom properties (gauge chance, spotlight position). */
@@ -538,6 +539,11 @@ html body {
 /* long blocks below the fold: layout and paint are skipped until they come near the screen */
 .kd-offscreen {
   content-visibility: auto;
+}
+/* -hold: a row still in its empty cells is laid out, so the browser remembers its real height and the skipped row keeps
+   it (a skipped row with no remembered height stands 640 px and the page below it jumps) */
+.kd-offscreen,
+.kd-offscreen-hold {
   contain-intrinsic-size: auto 640px;
 }
 
@@ -612,6 +618,27 @@ html body {
   .kd-ico-deck svg *,
   .kd-ico-target svg * {
     animation: none !important;
+  }
+}
+
+/* Page change (experimental.viewTransition): one for every page. The old page stays still as a picture and the new one
+   fades in over it, so the screen never dips to black. Nothing moves: what both pages share (the header, the live
+   strip, the tab bar) is the same pixels on both and stays still under the fade. Clicks go through to the new page while
+   it fades. */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  animation: kd-page-in var(--dur-page) var(--ease-out) both;
+  mix-blend-mode: normal;
+}
+@keyframes kd-page-in {
+  from {
+    opacity: 0;
   }
 }
 
