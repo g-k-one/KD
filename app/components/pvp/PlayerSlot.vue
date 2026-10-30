@@ -20,9 +20,6 @@ const totalShown = useTransition(totalSrc, { duration: 700, transition: [0.22, 1
 const chanceSrc = computed(() => props.chance ?? 0)
 const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22, 1, 0.36, 1] })
 const playing = computed(() => (props.total ?? 0) > 0)
-// Sparks only at the moment the seat wins, not for a battle that was already over when the page opened
-const celebrate = ref(false)
-watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
 </script>
 
 <template>
@@ -34,8 +31,6 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
     ]"
   >
     <template v-if="player">
-      <!-- Winner: a burst of sparks; the plate and WON say the rest -->
-      <FxBurst v-if="celebrate" :tier="3" color="var(--color-success)" :size="compact ? 90 : 160" />
       <span class="relative shrink-0">
         <span class="block overflow-hidden rounded-full bg-neutral-7" :class="compact ? 'size-8' : 'size-11'">
           <img :src="player.avatar" alt="" class="size-full object-cover" :class="player.bot && 'scale-75 object-contain'" />
@@ -58,7 +53,7 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
       <!-- once it is over: what happened, not a 100% / 0% -->
       <span v-if="result" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end gap-1'">
         <span :class="[compact ? 'type-12-caps' : 'type-20-caps', result === 'won' ? 'text-success' : 'text-neutral-11']">{{ result === 'won' ? $t('pvp.won') : $t('pvp.lost') }}</span>
-        <span v-if="!compact" class="type-10-caps text-neutral-11">{{ $t('pvp.result') }}</span>
+        <span v-if="!compact" class="type-10-caps" :class="result === 'won' ? 'text-success' : 'text-neutral-11'">{{ $t('pvp.result') }}</span>
       </span>
     </template>
     <template v-else>
