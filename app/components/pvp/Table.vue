@@ -17,7 +17,7 @@ defineProps<{ battles: Battle[] }>()
       <span class="pl-1">{{ $t('pvp.scenario') }}</span>
       <span class="text-center">{{ $t('pvp.players') }}</span>
       <!-- the lobby's counters; elsewhere the column's own name, so its head is never a hole -->
-      <span class="flex justify-center"><slot name="head">{{ $t('pvp.cost') }}</slot></span>
+      <span class="flex justify-center pr-2"><slot name="head">{{ $t('pvp.cost') }}</slot></span>
     </div>
     <UiEmptyState v-if="!battles.length" :text="$t('pvp.noBattles')" art="empty-pvp" class="rounded-5xl bg-neutral-2 p-3" />
     <TransitionGroup v-else tag="div" name="kd-list" class="relative flex flex-col gap-2 lg:gap-3">
@@ -29,7 +29,7 @@ defineProps<{ battles: Battle[] }>()
 <style scoped>
 /* the columns, shared with every row: rounds · the battle scenario · players · the cost over the button */
 .kd-pvp-table {
-  --pvp-cols: 108px minmax(0, 1fr) 160px 176px;
+  --pvp-cols: 108px minmax(0, 1fr) 160px 184px;
 }
 .kd-th {
   grid-template-columns: var(--pvp-cols);

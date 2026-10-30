@@ -143,7 +143,7 @@ function onClick(e: MouseEvent) {
     </div>
 
     <!-- the cost over the button, one cell the row's height (phones: the button alone, the cost is on top) -->
-    <div class="kd-brow-action flex items-center justify-end px-2 pb-2 lg:h-19 lg:flex-col lg:justify-between lg:self-center lg:px-2 lg:py-0">
+    <div class="kd-brow-action flex items-center justify-end px-2 pb-2 lg:h-19 lg:flex-col lg:justify-between lg:self-center lg:pr-4 lg:pl-2 lg:py-0">
       <UiPrice :amount="battle.cost" size="l" tone="coin" class="max-lg:hidden" />
       <span class="kd-btn type-14-caps inline-flex h-10 w-32 items-center justify-center gap-1.5 rounded-lg lg:w-full" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
         <UiIcon v-if="battle.status !== 'waiting'" name="eye" :size="16" class="shrink-0" />
@@ -169,7 +169,7 @@ function onClick(e: MouseEvent) {
 /* desktop: rounds · the band · players · cost and button (the header has the same) */
 @media (min-width: 64rem) {
   .kd-brow {
-    grid-template-columns: var(--pvp-cols, 108px minmax(0, 1fr) 160px 176px);
+    grid-template-columns: var(--pvp-cols, 108px minmax(0, 1fr) 160px 184px);
     grid-template-areas: 'rounds band who action';
   }
 }
