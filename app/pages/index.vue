@@ -62,9 +62,8 @@ const shapeOf = (c: CaseSummary, s: CaseSection) =>
 // Both stand at the row's right edge: the tall cell in the last column, the wide one just left of it; the standard
 // cards fill in from the left
 const SHAPE_CELL = { wide: 'lg:order-first lg:[grid-column:span_2/-2]', tall: 'lg:order-first lg:[grid-column:-2/-1] lg:row-span-2' } as const
-// Phones: every row is the two-column grid, no sideways swiping, and every case stays. With an odd count the last card
-// stands in the middle of its own line
-const isOdd = (s: CaseSection) => s.cases.length % 2 === 1
+// Phones: every row is the two-column grid, no sideways swiping, and every case stays: with an odd count the last card
+// stands on its own line, at the left
 
 // The home layout editor (prototype, opened from the debug dock): rows and cards are edited where they stand
 const homeLayout = useHomeLayout()
@@ -150,7 +149,6 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
           <div
             v-show="!collapsed[s.id]"
             class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-flow-dense xl:grid-cols-5"
-            :class="isOdd(s) && 'max-sm:[&>*:last-child]:col-span-2 max-sm:[&>*:last-child]:mx-auto max-sm:[&>*:last-child]:w-[calc(50%-6px)]'"
           >
             <template v-if="i < drawn">
               <HomeCaseCard
