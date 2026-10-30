@@ -87,7 +87,16 @@ async function pay() {
 
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-6 px-4 pt-4 lg:px-0 lg:pt-10">
-    <UiPageBar :title="$t('deposit.title')" :left="[{ label: $t('case.allCases'), icon: 'arrow-left', to: '/' }]" />
+    <!-- the same bar as the games': back and this page's own history on the left; on the right where to ask about a payment -->
+    <UiPageBar
+      class="-mb-2"
+      :title="$t('deposit.title')"
+      :left="[
+        { label: $t('case.allCases'), icon: 'arrow-left', to: '/' },
+        { label: $t('upgrade.history'), icon: 'history', to: '/profile?tab=history&game=deposit' },
+      ]"
+      :right="[{ label: $t('nav.contact'), icon: 'info', to: '/contact' }]"
+    />
 
     <!-- Phones: methods, the amount, then the notices at the bottom (they used to sit between the methods and the
          amount, a long scroll to the field); desktop keeps them under the methods, the summary spanning both rows -->

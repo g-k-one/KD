@@ -95,6 +95,7 @@ async function create() {
     <!-- phones: pb-44 leaves room for the summary bar (rounds strip, totals, button), so the last cases scroll clear -->
     <!-- the same bar as the lobby's: back and the PvP history on the left -->
     <UiPageBar
+      class="lg:-mb-2"
       :title="$t('pvp.create')"
       :left="[
         { label: $t('pvp.back'), icon: 'arrow-left', to: '/pvp' },

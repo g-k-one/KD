@@ -173,6 +173,7 @@ async function saveTrade() {
 <template>
   <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10">
     <UiPageBar
+      class="lg:-mb-2"
       :title="$t('account.title')"
       :left="[
         { label: $t('case.allCases'), icon: 'arrow-left', to: '/' },
@@ -269,13 +270,11 @@ async function saveTrade() {
               </div>
             </div>
           </form>
-          <dl class="grid grid-cols-3 gap-2 rounded-5xl bg-neutral-2 p-3 lg:p-4">
-            <div v-for="s in statCards.slice(1, 4)" :key="s.key" class="flex min-w-0 flex-col gap-1 rounded-2xl bg-neutral-3 px-3 py-2.5 lg:rounded-lg">
-              <dt class="type-10-caps leading-tight text-neutral-11">{{ s.label }}</dt>
-              <dd class="type-14 tabular-nums" :class="s.coin && 'text-coin'">
-                <UiPrice v-if="s.price != null" :amount="s.price" size="s" tone="coin" />
-                <template v-else>{{ s.value }}</template>
-              </dd>
+          <!-- the numbers first, big, each over a one-line label; hairlines instead of plates inside the plate -->
+          <dl class="grid grid-cols-3 rounded-5xl bg-neutral-2 py-4 lg:py-5">
+            <div v-for="(s, i) in statCards.slice(1, 4)" :key="s.key" class="flex min-w-0 flex-col-reverse items-center gap-1 px-1 text-center" :class="i && 'border-l border-neutral-4'">
+              <dt class="type-10-caps whitespace-nowrap text-neutral-11">{{ s.label }}</dt>
+              <dd class="type-20-caps tabular-nums" :class="s.coin && 'text-coin'">{{ s.value }}</dd>
             </div>
           </dl>
         </div>
@@ -291,7 +290,8 @@ async function saveTrade() {
           </div>
           <UiEmptyState v-if="!filteredHistory.length" :text="$t('account.emptyHistory')" art="empty-history" class="m-3" />
           <!-- the table: game · drop · stake · payout · profit · time · check; a roll opens its check -->
-          <div v-else class="kd-history overflow-y-auto p-3">
+          <!-- no top padding on desktop: the sticky headers stop at the panel's hairline, nothing shows over them -->
+          <div v-else class="kd-history overflow-y-auto p-3 lg:pt-0">
             <HistoryTable :entries="filteredHistory" :link="(h) => (h.battleId ? `/pvp/${h.battleId}?check=1` : h.nonce ? `/fairness?roll=${h.id}` : undefined)" />
           </div>
         </div>
@@ -301,9 +301,9 @@ async function saveTrade() {
       <Transition name="kd-bar">
         <div
           v-if="selected.length"
-          class="fixed inset-x-3 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-[760px] flex-wrap items-center gap-2 rounded-3xl border border-neutral-5 bg-neutral-3 p-3 shadow-elevation-2 lg:bottom-6"
+          class="fixed inset-x-3 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-[760px] flex-wrap items-center gap-2 rounded-4xl border border-neutral-5 bg-neutral-3 p-3 shadow-elevation-2 lg:bottom-6"
         >
-          <span class="type-14 flex-1">{{ $t('account.selected', { count: selected.length }) }}</span>
+          <span class="type-14 flex-1 lg:pl-4">{{ $t('account.selected', { count: selected.length }) }}</span>
           <UiButton variant="ghost" size="m" @click="selected = []">{{ $t('account.clear') }}</UiButton>
           <UiButton variant="secondary" size="m" icon="upgrade" :to="`/upgrade?item=${selected.slice(0, 6).join(',')}`">{{ $t('account.upgradeThem') }}</UiButton>
           <!-- skins leave one at a time -->

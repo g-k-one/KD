@@ -54,7 +54,7 @@
   "profile": {
     "profile": "Profile",
     "inventory": "Inventory",
-    "gameHistory": "Game history",
+    "gameHistory": "History",
     "settings": "Settings",
     "level": "LVL {from} → {to}",
     "steamId": "Steam ID {id}",
@@ -508,7 +508,7 @@
   "account": {
     "title": "Profile",
     "inventory": "Inventory",
-    "history": "Game history",
+    "history": "History",
     "transactions": "Transactions",
     "settings": "Settings",
     "fairness": "Provably fair",

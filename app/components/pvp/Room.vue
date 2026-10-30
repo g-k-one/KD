@@ -262,6 +262,7 @@ const roundLine = computed(() => {
   <div class="mx-auto flex max-w-content flex-col gap-4 px-4 pt-4 lg:gap-6 lg:px-0 lg:pt-10">
     <!-- the bar's shield is the general fairness page, as on every page; this battle's own check is Check PvP in the result -->
     <UiPageBar
+      class="lg:-mb-2"
       :title="$t(`pvp.modeName.${b.mode}`)"
       :subtitle="`${$t(`pvp.modeRule.${b.mode}`)} · #${b.id}`"
       fixed-sides
