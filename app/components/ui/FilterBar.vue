@@ -18,9 +18,7 @@ const isSm = useMediaQuery('(min-width: 640px)')
 </script>
 
 <template>
-  <div class="kd-filter-row flex h-16 items-center gap-2 border-b border-neutral-4 px-3 lg:h-18 lg:pr-4 lg:pl-6">
-    <UiIcon :name="icon" :size="isLg ? 24 : 20" class="text-neutral-13 max-lg:hidden lg:mr-1" />
-    <span class="type-14 lg:type-16-medium mr-1 whitespace-nowrap max-lg:hidden">{{ title }}</span>
+  <UiPanelHead :icon="icon" :title="title" lg-title class="kd-filter-row">
     <UiSelect v-if="sortOptions" v-model="sort" :options="sortOptions" menu-width="fit" class="kd-sort-select shrink-0 sm:w-44">
       <template #leading><UiIcon name="sort" :size="16" class="shrink-0 text-neutral-11" /></template>
     </UiSelect>
@@ -51,7 +49,7 @@ const isSm = useMediaQuery('(min-width: 640px)')
       </div>
     </Transition>
     <UiButton variant="ghost" :size="isLg ? 'm' : 's'" :icon="open ? 'close' : 'search'" icon-only :aria-label="$t(open ? 'common.close' : 'upgrade.search')" @click="open = !open" />
-  </div>
+  </UiPanelHead>
 </template>
 
 <style scoped>

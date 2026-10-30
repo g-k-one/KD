@@ -263,9 +263,7 @@ async function saveTrade() {
       <section class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-5">
         <!-- My skins: the upgrade page's panel, tiles to pick; picked ones get the bar below -->
         <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
-          <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
-            <UiIcon name="inventory" :size="24" class="text-neutral-13" />
-            <span class="type-14 lg:type-16-medium">{{ $t('upgrade.mySkins') }} ({{ inventory.length }})</span>
+          <UiPanelHead icon="inventory" :title="`${$t('upgrade.mySkins')} (${inventory.length})`">
             <!-- Select all and the sort arrows: one height, side by side -->
             <UiButton v-if="inventory.length" variant="ghost" size="m" class="ml-auto" @click="selected.length ? (selected = []) : selectAll()">
               <UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" />
@@ -274,7 +272,7 @@ async function saveTrade() {
             <UiButton v-if="inventory.length > 1" variant="ghost" size="m" icon-only :aria-label="$t(invSort === 'priceDesc' ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="invSort = invSort === 'priceDesc' ? 'priceAsc' : 'priceDesc'">
               <UiSortArrows :desc="invSort === 'priceDesc'" />
             </UiButton>
-          </div>
+          </UiPanelHead>
           <div v-if="loading" class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
             <span v-for="n in 15" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-[4/5] lg:aspect-auto lg:h-[105px]" />
           </div>
@@ -295,12 +293,10 @@ async function saveTrade() {
         <div class="flex min-w-0 flex-col gap-4 lg:sticky lg:top-24 lg:h-full lg:max-h-[500px] lg:gap-5 lg:self-start">
           <!-- the same panel as My skins: a header row over a hairline, then the field, where to find it, Save · Open in Steam -->
           <form class="flex flex-col rounded-5xl bg-neutral-2" @submit.prevent="saveTrade">
-            <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:px-6">
-              <UiIcon name="steam" :size="24" class="text-neutral-13" />
-              <span class="type-14 lg:type-16-medium">{{ $t('withdraw.tradeLink') }}</span>
+            <UiPanelHead icon="steam" :title="$t('withdraw.tradeLink')">
               <UiIcon v-if="session.user.tradeUrl && tradeValid" name="check-circle" :size="18" class="ml-auto text-success" />
-            </div>
-            <div class="flex flex-col gap-3 p-4 lg:px-6 lg:pb-6">
+            </UiPanelHead>
+            <div class="flex flex-col gap-3 p-3 lg:px-6 lg:pb-6">
               <UiInput id="profile-trade" v-model="tradeLink" size="l" class="kd-private" inputmode="url" clearable :error="!!tradeLink && !tradeValid" :placeholder="$t('withdraw.linkPlaceholder')" />
               <span class="type-12-regular text-neutral-11">{{ $t('withdraw.whereLink') }}</span>
               <div class="grid grid-cols-2 gap-2 pt-1">
@@ -324,18 +320,14 @@ async function saveTrade() {
       <section>
         <div ref="historyEl" class="flex min-w-0 scroll-mt-36 flex-col rounded-5xl bg-neutral-2">
           <!-- the title, then the filters: on one line on desktop, under it on phones -->
-          <div class="flex flex-col gap-3 border-b border-neutral-4 p-4 lg:h-18 lg:flex-row lg:items-center lg:py-0 lg:pr-4 lg:pl-6">
-            <div class="flex items-center gap-3">
-              <UiIcon name="history" :size="24" class="text-neutral-13" />
-              <span class="type-14 lg:type-16-medium">{{ $t('account.history') }}</span>
-            </div>
-            <div class="grid grid-cols-2 gap-2 lg:ml-auto lg:flex">
+          <UiPanelHead icon="history" :title="$t('account.history')" class="max-lg:h-auto max-lg:flex-wrap max-lg:gap-y-5 max-lg:pt-5 max-lg:pb-3">
+            <div class="grid grid-cols-2 gap-2 max-lg:w-full lg:ml-auto lg:flex">
               <UiInput v-model="historyQuery" icon="search" clearable inputmode="search" :placeholder="$t('account.historySearch')" class="lg:w-56" />
               <UiSelect v-model="period" :options="periodOptions" menu-width="fit" class="lg:w-36" :active="period !== 'all'" />
               <UiSelect v-model="outcome" :options="outcomeOptions" menu-width="fit" class="lg:w-32" :active="outcome !== 'all'" />
               <UiSelect v-model="gameFilter" :options="gameOptions" menu-width="fit" class="lg:w-36" :active="gameFilter !== 'all'" />
             </div>
-          </div>
+          </UiPanelHead>
           <div v-if="!history.length && historyBusy" class="flex flex-col gap-2 p-3" aria-hidden="true">
             <span v-for="n in 6" :key="n" class="kd-skeleton h-[62px] rounded-xl" />
           </div>

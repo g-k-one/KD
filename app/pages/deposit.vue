@@ -106,14 +106,12 @@ async function pay() {
       <!-- Methods -->
       <div class="flex flex-col gap-4 lg:col-start-1 lg:row-start-1">
         <div class="rounded-5xl bg-neutral-2">
-          <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
-            <UiIcon name="wallet" :size="20" class="text-neutral-13 lg:!size-6" />
-            <span class="type-14 lg:type-16-medium flex-1">{{ $t('deposit.paymentMethod') }}</span>
-            <span class="type-12-caps text-neutral-11 max-sm:hidden">{{ $t('deposit.country') }}:</span>
+          <UiPanelHead icon="wallet" :title="$t('deposit.paymentMethod')">
+            <span class="type-12-caps ml-auto text-neutral-11 max-sm:hidden">{{ $t('deposit.country') }}:</span>
             <UiSelect v-model="country" :options="countryOptions" menu-width="fit" class="kd-inline-select w-34">
               <template #leading><img :src="countryFlag" alt="" class="h-3.5 w-5 shrink-0" /></template>
             </UiSelect>
-          </div>
+          </UiPanelHead>
           <!-- phones: three small cards a row, so every method shows without a long scroll -->
           <div class="grid grid-cols-3 gap-2 p-3 lg:gap-3 lg:p-4" role="radiogroup" :aria-label="$t('deposit.paymentMethod')">
             <span v-for="n in methodsData ? 0 : 6" :key="`s${n}`" class="kd-skeleton h-[88px] rounded-xl sm:h-[130px] lg:h-34 lg:rounded-lg" aria-hidden="true" />
@@ -152,13 +150,11 @@ async function pay() {
 
       <!-- Amount & summary -->
       <div class="flex flex-col gap-4 rounded-5xl bg-neutral-2 lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1">
-        <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
-          <UiIcon name="coins" :size="20" class="text-neutral-13 lg:!size-6" />
-          <span class="type-14 lg:type-16-medium flex-1">{{ $t('deposit.amount') }}</span>
-          <span class="type-12-caps text-neutral-11">{{ $t('deposit.currency') }}:</span>
+        <UiPanelHead icon="coins" :title="$t('deposit.amount')">
+          <span class="type-12-caps ml-auto text-neutral-11">{{ $t('deposit.currency') }}:</span>
           <UiSelect v-model="currency" :options="currencyOptions" menu-width="fit" class="kd-inline-select w-24" />
-        </div>
-        <div class="flex flex-col gap-4 px-4 lg:px-6 lg:pt-2">
+        </UiPanelHead>
+        <div class="flex flex-col gap-4 px-3 lg:px-6 lg:pt-2">
           <!-- the sum and its currency read as one, "1000 PLN zł", in the middle of the field; the picker is in the header -->
           <UiInput id="deposit-amount" v-model.number="amount" size="l" type="number" inputmode="decimal" class="kd-amount" :style="{ '--len': String(amount ?? '').length || 1 }">
             <template #trailing>
@@ -207,7 +203,7 @@ async function pay() {
             {{ $t('deposit.pay', { amount: fmtFiat(amount || 0) }) }}
           </UiButton>
         </div>
-        <p class="type-12-regular lg:type-14-regular px-4 pb-4 text-neutral-10 lg:px-6 lg:pb-6">{{ $t('deposit.operator') }}</p>
+        <p class="type-12-regular lg:type-14-regular px-3 pb-3 text-neutral-10 lg:px-6 lg:pb-6">{{ $t('deposit.operator') }}</p>
       </div>
     </div>
   </div>

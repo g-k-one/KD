@@ -134,12 +134,10 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
     <div id="seeds" class="flex scroll-mt-24 flex-col gap-4 lg:gap-6">
     <section class="flex flex-col rounded-5xl bg-neutral-2">
       <!-- Verify a result sits by the formula it runs: there for guests too (any seeds can be checked by hand) -->
-      <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
-        <UiIcon name="function" :size="24" class="shrink-0 text-neutral-13" />
-        <h3 class="type-14 lg:type-16-medium lg:font-semibold">{{ $t('fair.formula') }}</h3>
+      <UiPanelHead icon="function" :title="$t('fair.formula')" tag="h3">
         <UiButton variant="secondary" :size="isLg ? 'm' : 's'" icon="function" class="ml-auto" @click="openVerifier()">{{ $t('fair.verify') }}</UiButton>
-      </div>
-      <div class="flex flex-col gap-4 p-4 lg:gap-3 lg:p-6">
+      </UiPanelHead>
+      <div class="flex flex-col gap-4 p-3 lg:gap-3 lg:p-6">
         <div class="overflow-x-auto rounded-2xl bg-neutral-1 p-4">
           <pre class="type-14 -my-1 leading-7 whitespace-pre"><span class="text-neutral-15">hash   = HMAC_SHA256(server_seed, client_seed + ":" + nonce)</span>
 <span class="text-neutral-15">number = parseInt(hash.slice(0, 8), 16)</span>        <span class="text-neutral-11">// 0 … 4 294 967 295</span>
@@ -152,13 +150,10 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
     <!-- Modes -->
     <section class="grid gap-3 lg:grid-cols-3 lg:gap-4">
       <div v-for="m in shownModes" :key="m.key" class="flex flex-col rounded-5xl bg-neutral-2">
-        <div v-if="isLg" class="flex h-18 items-center gap-3 border-b border-neutral-4 px-6">
-          <UiIcon :name="m.icon" :size="24" class="text-neutral-13" />
-          <h3 class="type-16-medium font-semibold">{{ $t(`fair.${m.key}`) }}</h3>
-        </div>
-        <div v-else class="border-b border-neutral-4 p-3">
-          <UiSegmented v-model="fairMode" :options="modeOptions" block />
-        </div>
+        <UiPanelHead v-if="isLg" :icon="m.icon" :title="$t(`fair.${m.key}`)" tag="h3" />
+        <UiPanelHead v-else>
+          <UiSegmented v-model="fairMode" :options="modeOptions" block class="flex-1" />
+        </UiPanelHead>
         <dl class="flex flex-col px-6 py-2 lg:pb-4">
           <div v-for="(r, i) in ROWS" :key="r" class="flex min-h-12 items-center justify-between gap-4 lg:min-h-11" :class="{ 'border-t border-neutral-4': i > 0 }">
             <dt class="type-12-caps shrink-0 text-neutral-11">{{ $t(ROW_LABEL[r]) }}</dt>
@@ -173,10 +168,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
          copy, on the right the one thing to do: Reveal for the pair in use, Check (all its rolls) for a past one. A revealed seed says at
          once that it matches the hash promised before its first roll -->
     <section v-if="session.user" class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
-      <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
-        <UiIcon name="seeds" :size="24" class="shrink-0 text-neutral-13" />
-        <span class="type-14 lg:type-16-medium">{{ $t('fair.history') }}</span>
-      </div>
+      <UiPanelHead icon="seeds" :title="$t('fair.history')" />
       <TransitionGroup v-if="seeds" tag="ul" name="kd-hist" class="flex flex-col p-3">
         <li v-for="p in pairs" :key="p.serverSeedHash" class="kd-seedrow">
           <span class="kd-seeddot" :class="!p.revealed && 'kd-live'" />

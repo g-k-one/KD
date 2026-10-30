@@ -55,10 +55,7 @@ function again() {
     <div class="grid items-start gap-4 lg:grid-cols-[1fr_440px] lg:gap-5">
       <!-- the same panel as the deposit's: a header row over a hairline, then the content -->
       <section class="rounded-5xl bg-neutral-2">
-        <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:px-6">
-          <UiIcon name="m-mail" :size="24" class="text-neutral-13" />
-          <h2 class="type-14 lg:type-16-medium">{{ t('help.writeTitle') }}</h2>
-        </div>
+        <UiPanelHead icon="m-mail" :title="t('help.writeTitle')" tag="h2" />
 
         <Transition name="kd-sent" mode="out-in">
           <div v-if="ticket" key="sent" class="flex flex-col items-center gap-4 p-6 text-center lg:p-10">
@@ -68,7 +65,7 @@ function again() {
             <UiButton variant="secondary" size="m" @click="again">{{ t('help.sendAnother') }}</UiButton>
           </div>
 
-          <form v-else key="form" class="flex flex-col gap-4 p-4 lg:p-6" @submit.prevent="missing || send()">
+          <form v-else key="form" class="flex flex-col gap-4 p-3 lg:p-6" @submit.prevent="missing || send()">
             <!-- signed in: the account's id goes with the message, filled in and locked, so support knows who writes -->
             <div class="grid gap-4" :class="session.user && 'sm:grid-cols-2'">
               <UiSelect v-model="topic" :label="t('help.topic')" :options="topics" />

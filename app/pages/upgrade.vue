@@ -585,10 +585,8 @@ async function runUpgrade() {
     </div>
     <section class="kd-dimmable -mt-2 grid gap-4 lg:mt-0 lg:grid-cols-2 lg:gap-x-6 lg:gap-y-5" :class="state === 'spinning' && 'is-dimmed'">
       <div class="flex flex-col rounded-5xl bg-neutral-2 lg:pb-4" :class="panelTab !== 'mine' && 'max-lg:hidden'">
-        <div class="flex h-16 items-center gap-3 border-b border-neutral-4 px-3 lg:h-18 lg:pr-4 lg:pl-6">
-          <!-- phones: the sheet's tab already names the panel, so the header keeps only its tools -->
-          <UiIcon name="inventory" :size="isLg ? 24 : 20" class="text-neutral-13 max-lg:hidden" />
-          <span class="type-14 lg:type-16-medium max-lg:hidden">{{ $t('upgrade.mySkins') }} ({{ inventory.length }})</span>
+        <!-- phones: the sheet's tab already names the panel, so the header keeps only its tools -->
+        <UiPanelHead icon="inventory" :title="`${$t('upgrade.mySkins')} (${inventory.length})`" lg-title>
           <!-- nothing to count or sort with fewer than two skins: no "0", no sort arrows -->
           <UiPrice v-if="inventory.length" :amount="inventoryTotal" size="m" tone="coin" class="opacity-64 max-lg:hidden" />
           <!-- phones: coins from the balance go into the stake here, next to the skins (the sheet's footer sums both) -->
@@ -611,7 +609,7 @@ async function runUpgrade() {
           <UiButton v-if="inventory.length > 1" variant="ghost" :size="isLg ? 'm' : 's'" icon-only :aria-label="$t(invSortDesc ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="invSortDesc = !invSortDesc">
             <UiSortArrows :desc="invSortDesc" />
           </UiButton>
-        </div>
+        </UiPanelHead>
         <div v-if="session.user && inventoryLoading" class="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4">
           <span v-for="n in PAGE" :key="n" class="kd-skeleton aspect-[164/128] rounded-2xl max-sm:aspect-square lg:aspect-auto lg:h-[105px]" :style="{ animationDelay: `${n * 40}ms` }" />
         </div>

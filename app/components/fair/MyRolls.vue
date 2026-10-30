@@ -84,9 +84,7 @@ watch(
     <!-- one card, as the profile's game history: a header line (the icon and the name, a chip with how many rolls are
          still sealed — the why on hover; on the right the way to open them and the full history), then the table -->
     <div class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
-      <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
-        <UiIcon name="shield-check" :size="24" class="shrink-0 text-neutral-13" />
-        <span class="type-14 lg:type-16-medium">{{ $t('fair.myRolls') }}</span>
+      <UiPanelHead icon="shield-check" :title="$t('fair.myRolls')">
         <span v-if="session.user && rows.length && sealed" class="type-12-caps flex h-6 shrink-0 items-center gap-1 rounded-md bg-success-24 px-2 text-success" :title="$t('fair.sealedHint')">
           <UiIcon name="lock" :size="12" />{{ $t('fair.sealedChip', { n: sealed }, sealed) }}
         </span>
@@ -97,7 +95,7 @@ watch(
             <span class="max-sm:hidden">{{ $t('fair.rotateReveal') }}</span><span class="sm:hidden">{{ $t('fair.reveal') }}</span>
           </UiButton>
         </span>
-      </div>
+      </UiPanelHead>
 
       <!-- the rolls on their way: the table's place (signed in only: the page leaves this card out for guests) -->
       <span v-if="!loaded" class="kd-skeleton m-3 h-[180px] rounded-3xl lg:h-52" aria-hidden="true" />
