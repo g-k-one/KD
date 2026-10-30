@@ -345,11 +345,11 @@ const laneCols = computed(() => {
         { label: $t('case.share'), icon: 'share', onClick: shareBattle },
       ]"
     >
-      <!-- the mode and the battle's number, centred as one line -->
-      <span class="flex items-center gap-2 md:gap-3">
-        <h1 class="type-16-caps md:type-20-caps whitespace-nowrap">{{ $t(`pvp.modeName.${b.mode}`) }}</h1>
-        <span class="type-12 text-neutral-11 tabular-nums md:type-14">#{{ b.id }}</span>
-      </span>
+      <!-- the mode and the battle's number, one big line in the mode's colour, as in the lobby -->
+      <h1 class="kd-room-title type-16-caps md:type-20-caps flex items-center gap-2 whitespace-nowrap tabular-nums md:gap-3" :class="`is-${b.mode}`">
+        <span>{{ $t(`pvp.modeName.${b.mode}`) }}</span>
+        <span>#{{ b.id }}</span>
+      </h1>
     </UiPageBar>
 
 
@@ -506,6 +506,15 @@ const laneCols = computed(() => {
 </template>
 
 <style scoped>
+.kd-room-title {
+  color: var(--color-coin);
+}
+.kd-room-title.is-crazy {
+  color: var(--color-item-classified);
+}
+.kd-room-title.is-team {
+  color: var(--color-item-milspec);
+}
 /* a column to each lane; the gap between two seats is split evenly around the arena's line */
 .kd-lanes {
   --lane-gap: 8px;
