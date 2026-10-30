@@ -301,20 +301,20 @@ async function saveTrade() {
       <Transition name="kd-bar">
         <div
           v-if="selected.length"
-          class="fixed inset-x-3 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-[760px] flex-wrap items-center gap-2 rounded-4xl border border-neutral-5 bg-neutral-3 p-3 shadow-elevation-2 lg:bottom-6"
+          class="fixed inset-x-3 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 mx-auto grid max-w-[760px] grid-cols-2 items-center gap-2 rounded-4xl border border-neutral-5 bg-neutral-3 p-3 shadow-elevation-2 lg:bottom-6 lg:flex"
         >
-          <span class="type-14 flex-1 lg:pl-4">{{ $t('account.selected', { count: selected.length }) }}</span>
-          <UiButton variant="ghost" size="m" @click="selected = []">{{ $t('account.clear') }}</UiButton>
+          <span class="type-14 flex-1 max-lg:pl-1 lg:pl-4">{{ $t('account.selected', { count: selected.length }) }}</span>
+          <UiButton variant="ghost" size="m" class="max-lg:justify-self-end" @click="selected = []">{{ $t('account.clear') }}</UiButton>
           <UiButton variant="secondary" size="m" icon="upgrade" :to="`/upgrade?item=${selected.slice(0, 6).join(',')}`">{{ $t('account.upgradeThem') }}</UiButton>
-          <!-- skins leave one at a time -->
-          <UiButton variant="secondary" size="m" icon="steam" :disabled="!canWithdraw" :title="canWithdraw ? undefined : $t('account.withdrawOne')" @click="withdrawOpen = true">{{ $t('withdraw.short') }}</UiButton>
-          <UiButton variant="light" size="m" @click="sellOpen = true">
+          <!-- skins leave one at a time: the button asks for that, as in the inventory window -->
+          <UiButton variant="secondary" size="m" icon="steam" :disabled="!canWithdraw" @click="withdrawOpen = true"><UiTextSwap :text="canWithdraw ? $t('withdraw.short') : $t('withdraw.pickOne')" /></UiButton>
+          <UiButton variant="light" size="m" class="max-lg:col-span-2" @click="sellOpen = true">
             {{ $t('account.sellSelected') }}
-            <UiPrice :amount="selectedValue" size="s" tone="inverse" />
+            <span class="btn-value"><UiPrice :amount="selectedValue" size="s" tone="inverse" /></span>
           </UiButton>
         </div>
       </Transition>
-      <WalletWithdrawModal v-model="withdrawOpen" :items="selectedItems.slice(0, 1)" @done="onWithdrawn" />
+      <WalletWithdrawModal v-model="withdrawOpen" :item="selectedItems[0]" @done="onWithdrawn" />
       <WalletSellPreview v-model="sellOpen" :items="selectedItems" :loading="selling" @confirm="sellSelected" />
 
       <!-- Settings: the app's settings (sound, vibration…), in a modal from the page bar; the trade link has its card -->

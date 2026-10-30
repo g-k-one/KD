@@ -46,6 +46,8 @@ function toggle(uid: string) {
 const target = computed(() => (selected.value.length ? items.value.filter((i) => selected.value.includes(i.uid)) : items.value))
 const total = computed(() => items.value.reduce((a, i) => a + i.price, 0))
 const targetValue = computed(() => target.value.reduce((a, i) => a + i.price, 0))
+/** Skins leave one at a time: the button asks to pick one until exactly one is in play */
+const canWithdraw = computed(() => target.value.length === 1)
 
 const selling = ref(false)
 async function sell() {
@@ -103,13 +105,13 @@ const upgradeTo = computed(() => `/upgrade?item=${target.value.slice(0, 6).map((
             </UiButton>
             <div class="grid grid-cols-2 gap-2">
               <UiButton variant="secondary" size="l" icon="upgrade" :to="upgradeTo" @click="open = false">{{ $t('upgrade.upgrade') }}</UiButton>
-              <UiButton variant="secondary" size="l" icon="steam" @click="step = 'withdraw'">{{ $t('withdraw.short') }}</UiButton>
+              <UiButton variant="secondary" size="l" icon="steam" :disabled="!canWithdraw" @click="step = 'withdraw'"><UiTextSwap :text="canWithdraw ? $t('withdraw.short') : $t('withdraw.pickOne')" /></UiButton>
             </div>
           </div>
         </template>
       </UiModal>
       <WalletSellPreview v-else-if="step === 'sell'" key="sell" :model-value="true" inline :items="target" :loading="selling" @update:model-value="step = 'list'" @confirm="sell" />
-      <WalletWithdrawModal v-else key="withdraw" :model-value="true" inline :items="target" @update:model-value="step = 'list'" @done="onWithdrawn" />
+      <WalletWithdrawModal v-else key="withdraw" :model-value="true" inline :item="target[0]" @update:model-value="step = 'list'" @done="onWithdrawn" />
     </Transition>
   </UiModal>
 </template>

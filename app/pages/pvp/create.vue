@@ -200,7 +200,7 @@ async function create() {
         <UiButton size="l" block :disabled="!rounds" :loading="creating" @click="create">
           <template v-if="rounds">
             {{ $t('pvp.createFor') }}
-            <UiPrice :amount="cost" size="m" tone="inverse" />
+            <span class="btn-value"><UiPrice :amount="cost" size="m" tone="inverse" /></span>
           </template>
           <template v-else>{{ $t('pvp.pickCase') }}</template>
         </UiButton>

@@ -26,7 +26,8 @@ const { t } = useI18n()
 const isPvp = isPvpEntry
 const played = (e: HistoryEntry) => e.game === 'case' || e.game === 'upgrade'
 const GAME_ICON = { deposit: 'plus', sell: 'wallet', withdraw: 'steam' } as const
-const gameName = (e: HistoryEntry) => (e.game === 'case' ? e.title : e.game === 'upgrade' ? t('account.games.upgrade') : `${t(`account.games.${e.game}`)} · ${e.title}`)
+// a skin that was sold or withdrawn is named in the drop column; only a payment needs its title here
+const gameName = (e: HistoryEntry) => (e.game === 'case' ? e.title : e.game === 'upgrade' || e.result ? t(`account.games.${e.game}`) : `${t(`account.games.${e.game}`)} · ${e.title}`)
 const gameArt = historyArt
 const parts = (name: string) => {
   const [weapon, ...rest] = name.split(' | ')

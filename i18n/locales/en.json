@@ -552,8 +552,7 @@
     "levelNext": "LVL {n}",
     "skinsAll": "Show all {n}",
     "stakeOf": "stake {amount}",
-    "skinsLess": "Show less",
-    "withdrawOne": "Withdraw one skin at a time"
+    "skinsLess": "Show less"
   },
   "pvp": {
     "won": "Won",
@@ -783,18 +782,16 @@
   "withdraw": {
     "title": "Withdraw to Steam",
     "short": "Withdraw",
-    "hint": "All selected skins go out in one Steam trade offer.",
-    "hintOne": "The skin goes out in a Steam trade offer.",
+    "hint": "The skin goes out in a Steam trade offer.",
     "tradeLink": "Your Steam trade link",
     "linkPlaceholder": "Paste your trade link",
     "needLink": "Add your trade link",
     "checkLink": "Check the link",
-    "change": "Change",
     "whereLink": "Find it in Steam → Inventory → Trade offers → Who can send me trade offers.",
     "openSteam": "Open in Steam",
-    "send": "Withdraw {n}",
+    "pickOne": "Pick one skin",
     "sentTitle": "Trade offer sent",
-    "sentHint": "Accept it in Steam (app or site) before the timer runs out — otherwise the skins come back to your inventory.",
+    "sentHint": "Accept it in Steam (app or site) before the timer runs out — otherwise the skin comes back to your inventory.",
     "offer": "Offer",
     "expires": "Accept within",
     "saved": "Trade link saved"

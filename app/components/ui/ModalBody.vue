@@ -12,7 +12,7 @@ defineProps<{ title?: string; description?: string }>()
       <p v-if="description" class="type-14-regular text-neutral-12">{{ description }}</p>
     </div>
     <slot />
-    <div v-if="$slots.actions" class="flex gap-2">
+    <div v-if="$slots.actions" class="flex flex-wrap gap-2">
       <slot name="actions" />
     </div>
   </div>
