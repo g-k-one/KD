@@ -26,11 +26,12 @@ if (error.value) {
   await new Promise(() => {})
 }
 // Replay (#7): a finished battle plays again from the countdown — on a tap, or for anyone opening a shared
-// ?replay=1 link. The room just runs its own clock from now.
-const replayAt = ref<number | null>(route.query.replay ? Date.now() : null)
+// ?replay=1 link (only once it is over: a link to a battle still running just watches it). The room just runs its own
+// clock from now, so the button works the moment the room's last round ends, before the next poll says finished.
+const replayAt = ref<number | null>(route.query.replay && data.value!.battle.status === 'finished' ? Date.now() : null)
 const b = computed(() => {
   const x = data.value!.battle
-  return replayAt.value && x.status === 'finished' ? { ...x, status: 'live' as const, startedAt: new Date(replayAt.value + 3000).toISOString() } : x
+  return replayAt.value ? { ...x, status: 'live' as const, startedAt: new Date(replayAt.value + 3000).toISOString() } : x
 })
 const router = useRouter()
 const replayLink = () => new URL(router.resolve({ path: `/pvp/${id.value}`, query: { replay: '1' } }).href, location.href).href
@@ -475,7 +476,7 @@ const laneCols = computed(() => {
             <UiButton variant="fair" size="m" icon="shield-check" :icon-only="isMobile" :aria-label="$t('pvp.checkBattle')" @click="verifyOpen = true">
               <template v-if="!isMobile">{{ $t('pvp.checkBattle') }}</template>
             </UiButton>
-            <UiButton v-if="data!.battle.status === 'finished'" variant="secondary" size="m" icon="demo" :icon-only="isMobile" :aria-label="$t('pvp.replay')" @click="replay">
+            <UiButton variant="secondary" size="m" icon="demo" :icon-only="isMobile" :aria-label="$t('pvp.replay')" @click="replay">
               <template v-if="!isMobile">{{ $t('pvp.replay') }}</template>
             </UiButton>
           </div>
