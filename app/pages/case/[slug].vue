@@ -245,7 +245,6 @@ if (import.meta.client) {
           :demo="demo"
           :kurwadrop="kurwadrop"
           :fast="fast"
-          :ends-at="cs.endsAt"
           @sell="(uid) => sell([uid])"
           try-free
           @demo="open(true)"
