@@ -1,15 +1,24 @@
 <script setup lang="ts">
 const route = useRoute()
 const ui = useUiStore()
+const session = useSessionStore()
 
 // Even tabs, the same for guests and players: topping up is the + by the balance in the header, signing in its
-// Sign in button and the menu its top-right icon, so the bar holds only places
+// Sign in button and the menu its top-right icon, so the bar holds only places. A player's Profile tab wears their
+// avatar; a guest has no profile yet, so the tab opens the sign-in
 const TABS = [
   { key: 'cases', label: 'nav.cases', to: '/', icon: 'm-cases', order: 1 },
   { key: 'upgrade', label: 'nav.upgrade', to: '/upgrade', icon: 'm-upgrade', order: 2 },
   { key: 'pvp', label: 'nav.pvp', to: '/pvp', icon: 'm-pvp', order: 3 },
   { key: 'bonus', label: 'nav.bonus', to: '/bonuses', icon: 'm-bonus', order: 4 },
+  { key: 'profile', label: 'profile.profile', to: '/profile', icon: 'user', order: 5 },
 ]
+function onTab(key: string, e: MouseEvent) {
+  ui.mobileMenuOpen = false
+  if (key !== 'profile' || session.user) return
+  e.preventDefault()
+  ui.openSignIn()
+}
 
 // The bonus tab doubles as the free case timer on phones (the desktop header has its own chip): the countdown
 // to the next daily case replaces the label until it is ready, then the dot says "come and take it"
@@ -29,10 +38,11 @@ const tabClass = (active: boolean) => (active ? 'text-brand-light' : 'text-neutr
         class="kd-press type-12 flex h-16 flex-1 flex-col items-center justify-center gap-1"
         :style="{ order: t.order }"
         :class="tabClass(!ui.mobileMenuOpen && isNavActive(route, t.to))"
-        @click.capture="ui.mobileMenuOpen = false"
+        @click.capture="onTab(t.key, $event)"
       >
         <span class="relative">
-          <UiIcon :name="t.icon" :size="20" class="kd-icon" />
+          <img v-if="t.key === 'profile' && session.user" :src="session.user.avatar" alt="" class="kd-tab-avatar size-5 rounded-full object-cover" />
+          <UiIcon v-else :name="t.icon" :size="20" class="kd-icon" />
           <span v-if="t.key === 'bonus' && (dailyReady || freeCount)" class="kd-dot absolute -top-0.5 -right-1 size-2 rounded-full bg-brand-base" />
         </span>
         <span v-if="t.key === 'bonus' && dailyIn" class="tabular-nums">{{ dailyIn }}</span>
@@ -43,6 +53,10 @@ const tabClass = (active: boolean) => (active ? 'text-brand-light' : 'text-neutr
 </template>
 
 <style scoped>
+/* the avatar's ring takes the tab's colour, so it lights up like the icons do */
+.kd-tab-avatar {
+  box-shadow: 0 0 0 1.5px currentcolor;
+}
 .kd-dot {
   box-shadow: 0 0 0 2px var(--color-neutral-2);
   animation: kd-dot 1.6s ease-in-out infinite;
