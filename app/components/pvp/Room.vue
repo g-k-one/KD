@@ -222,7 +222,6 @@ async function countBeat(n: number) {
 function countLanded() {
   const r = arena.value?.getBoundingClientRect()
   dropCountLabel()
-  sfx.vsHit()
   if (r) fx.play('kdPuff', { x: r.left + r.width / 2, y: r.top + r.height / 2, size: r.height * 1.7 })
 }
 // in ms before the first reel: a second for each number, then the VS, and the smoke has its time before the reels move

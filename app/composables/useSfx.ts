@@ -274,11 +274,6 @@ export function useSfx() {
     },
     /** Countdown beep; the last one is higher */
     count: (last = false) => blip(last ? 1040 : 700, last ? 0.25 : 0.12, 0.09),
-    /** The VS lands: the voice of a target being chosen, a fifth lower */
-    vsHit: () => {
-      glide(347, 693, 0.12, 0.07, 'triangle')
-      setTimeout(() => blip(1040, 0.2, 0.07), 100)
-    },
     lose: () => blip(180, 0.35, 0.12, 'sawtooth'),
     /** Rewards claimed, a PvP win, a level up: the reveal arpeggio they always used */
     claim: () => reveal(2),
