@@ -106,7 +106,7 @@ if (import.meta.client) {
 <template>
   <section
     ref="root"
-    class="kd-feed relative flex h-16 items-center gap-2 border-b border-neutral-4 bg-neutral-2 px-2 py-1.5 lg:h-22 lg:py-2 lg:pr-6"
+    class="kd-feed relative flex h-16 items-center gap-2 border-b border-neutral-4 bg-neutral-2 px-2 py-1.5 lg:h-22 lg:py-2 lg:pr-0"
     :aria-label="$t('feed.aria')"
   >
     <!-- Live / Best switch: a segment with a sliding thumb -->
@@ -168,8 +168,8 @@ if (import.meta.client) {
       </div>
     </template>
 
-    <!-- Drops strip -->
-    <div v-else class="scrollbar-none relative flex min-w-0 flex-1 gap-0.5 overflow-x-auto rounded-lg mask-r-from-90% lg:mask-none" @mouseenter="pause" @mouseleave="resume">
+    <!-- Drops strip. Desktop: it runs off the window's edge, so no tile stops short of it, cut in mid-air -->
+    <div v-else class="scrollbar-none relative flex min-w-0 flex-1 gap-0.5 overflow-x-auto rounded-lg mask-r-from-90% lg:rounded-r-none lg:mask-none" @mouseenter="pause" @mouseleave="resume">
       <div ref="track" class="flex gap-0.5">
         <NuxtLink
           v-for="d in shown"
