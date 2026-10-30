@@ -407,8 +407,9 @@ const laneCols = computed(() => {
 
       <!-- The result, inside the arena: who took the pot, how much, and the same battle again -->
       <Transition name="kd-result">
-        <div v-if="done && b.winnerSlot != null" class="kd-arena-result absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-4 text-center">
-          <!-- who took it, one block: the face(s) as tall as the three lines beside them, caption · name · pot; the actions under it -->
+        <div v-if="done && b.winnerSlot != null" class="kd-arena-result absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 px-4 text-center lg:flex-row lg:gap-8">
+          <!-- two blocks of one height, a hairline between them on desktop: who took it (the face as tall as caption · name ·
+               pot) and what to do next; phones: the actions under it -->
           <div class="kd-result-title flex items-center gap-4 text-left">
             <span class="flex shrink-0 -space-x-3">
               <span v-for="w in winners" :key="w" class="kd-result-face relative block overflow-hidden rounded-full bg-neutral-7" :class="isMobile ? 'size-16' : 'size-20'">
@@ -421,9 +422,10 @@ const laneCols = computed(() => {
               <UiPrice :amount="pot" :size="isMobile ? 'l' : 'xl'" tone="coin" class="mt-1" />
             </span>
           </div>
-          <!-- phones: Check and Replay as icons, so the row fits the arena -->
-          <div class="kd-result-pot mt-3 flex justify-center gap-2">
-            <UiButton size="m" icon="refresh" :loading="recreating" @click="recreate">
+          <span class="hidden h-22 w-px shrink-0 bg-neutral-5 lg:block" aria-hidden="true" />
+          <!-- Recreate across, Check and Replay under it; phones: one row, those two as icons, so it fits the arena -->
+          <div class="kd-result-pot flex justify-center gap-2 lg:grid lg:w-80 lg:grid-cols-2">
+            <UiButton size="m" icon="refresh" class="lg:col-span-2" :loading="recreating" @click="recreate">
               {{ $t('pvp.recreate') }}
               <span class="btn-value"><UiPrice :amount="b.cost" size="s" tone="inverse" /></span>
             </UiButton>
