@@ -450,7 +450,7 @@ const roundLine = computed(() => {
       </div>
       <!-- As many rounds as fit, none cut: a window that follows the current round, a "+N" tile for the ones after it,
            and a soft fade on the side where earlier rounds went out of view -->
-      <div ref="stripEl" class="kd-rounds flex min-w-0 items-center gap-2 overflow-hidden px-1 py-2 max-lg:order-last max-lg:w-full lg:-my-1 lg:max-w-full lg:py-1" :class="[strip.from > 0 && 'is-cut', strip.more > 0 && 'is-more']">
+      <div ref="stripEl" class="kd-rounds flex min-w-0 items-center gap-2 overflow-hidden py-1 max-lg:order-last max-lg:-mb-1 max-lg:w-full lg:-my-1 lg:max-w-full lg:px-1" :class="[strip.from > 0 && 'is-cut', strip.more > 0 && 'is-more']">
         <PvpCaseThumb v-for="i in strip.idx" :key="i" :image="b.rounds[i]!.image" :name="`${b.rounds[i]!.name} · ${formatCoins(b.rounds[i]!.price)}`" size="m" :state="roundState(i)" />
       </div>
       <div class="type-12-caps flex justify-end gap-2 max-lg:w-full">
