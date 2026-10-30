@@ -11,8 +11,8 @@ import type { BattlePlayerRef } from '#shared/types/api'
 // the bottom; a free seat is its plus in the middle and Join across the bottom, 8 px from the three edges around it.
 // Desktop: the 44 px avatar stands as far from the left edge as from the top and the bottom.
 // quiet: a seat inside a team: the team's head says the chance, who leads and who won, the seat only who sits there
-const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost'; busy?: boolean; quiet?: boolean }>()
-defineEmits<{ bot: []; join: [] }>()
+const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost'; busy?: boolean; quiet?: boolean; canKick?: boolean }>()
+defineEmits<{ bot: []; join: []; kick: [] }>()
 
 // The running total rolls up to each new value like an odometer
 const totalSrc = computed(() => props.total ?? 0)
@@ -36,6 +36,9 @@ const idle = computed(() => !(props.result || playing.value))
     ]"
   >
     <template v-if="player">
+      <button v-if="canKick" type="button" class="kd-press kd-hit absolute -top-2 -right-2 z-[1] grid size-6 place-items-center rounded-full bg-neutral-5 text-neutral-13 hover:text-neutral-15" :aria-label="$t('pvp.kick', { name: player.nickname })" :title="$t('pvp.kick', { name: player.nickname })" @click="$emit('kick')">
+        <UiIcon name="close" :size="14" />
+      </button>
       <span class="kd-slot-pic relative shrink-0">
         <span class="block overflow-hidden rounded-full bg-neutral-7" :class="compact ? 'size-8' : 'size-11'">
           <img :src="player.avatar" alt="" class="size-full object-cover" :class="player.bot && 'scale-75 object-contain'" />

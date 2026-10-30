@@ -472,6 +472,13 @@ export interface BattleRoundResult {
  */
 export type BattleMode = 'classic' | 'crazy' | 'team'
 
+/** What one winner takes: skins, and the coins that make a team's two halves exactly equal */
+export interface BattleShare {
+  slot: number
+  items: Item[]
+  coins: number
+}
+
 export interface Battle {
   id: string
   mode: BattleMode
@@ -492,6 +499,8 @@ export interface Battle {
   winnerSlot: number | null
   /** Every winning seat: one, or the two of the winning team */
   winners: number[]
+  /** One per winner, set when the battle starts. Team: two exactly equal halves */
+  shares: BattleShare[]
   /** People watching the room right now (the Go backend counts WebSocket subscribers) */
   viewers: number
   /**

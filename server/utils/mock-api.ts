@@ -46,7 +46,7 @@ function meUser() {
   const st = getMockState()
   return { ...st.user, levelLeft: Math.max(0, xpFor(st.user.level) - st.xp) }
 }
-import { callBot, createBattle, getBattle, joinBattle, listBattles } from './mock-battles'
+import { callBot, createBattle, getBattle, joinBattle, kickFromBattle, leaveBattle, listBattles } from './mock-battles'
 import {
   addBigWin,
   deleteCase,
@@ -197,6 +197,14 @@ export async function mockRoute(method: string, path: string, body: Body, query:
   if (m === 'POST' && (match = path.match(/^\/api\/battles\/(\d+)\/join$/))) {
     authed()
     return joinBattle(match[1]!, body.slot)
+  }
+  if (m === 'POST' && (match = path.match(/^\/api\/battles\/(\d+)\/leave$/))) {
+    authed()
+    return leaveBattle(match[1]!)
+  }
+  if (m === 'POST' && (match = path.match(/^\/api\/battles\/(\d+)\/kick$/))) {
+    authed()
+    return kickFromBattle(match[1]!, Number(body.slot))
   }
   if (m === 'POST' && (match = path.match(/^\/api\/battles\/(\d+)\/bot$/))) {
     authed()

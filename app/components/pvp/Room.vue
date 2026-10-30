@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BattleResponse, BattleSlot, CaseItem, CaseResponse } from '#shared/types/api'
+import type { BattleResponse, BattleShare, BattleSlot, CaseItem, CaseResponse } from '#shared/types/api'
 import { BATTLE_LEAD_MS } from '#shared/utils/battle'
 
 // Battle room (after csgogem; the page app/pages/pvp/[id].vue shows it inside a Suspense with its skeleton): the mode as the title; one meta line (cost and pot · the case strip · viewers and
@@ -116,6 +116,10 @@ function roundLanded() {
   sfx.reveal(Math.max(0, ...drops.map((d) => RARITY_TIER[d.rarity])))
 }
 
+// What one winner takes: all of it alone, an exact half in a team, the rest of a skin that would not divide paid in coins
+const shareValue = (s: BattleShare) => s.items.reduce((a, i) => a + i.price, 0) + s.coins
+const winAmount = computed(() => (b.value.shares.length > 1 ? shareValue(b.value.shares[0]!) : pot.value))
+const myShare = computed(() => b.value.shares.find((s) => b.value.slots[s.slot]?.player?.you))
 // Celebrate once when the replay finishes
 const celebrated = ref(false)
 watch(done, (d) => {
@@ -126,7 +130,7 @@ watch(done, (d) => {
   if (youSlot == null) return sfx.win()
   if (winners.value.includes(youSlot)) {
     sfx.win()
-    toast.show(t('pvp.youWon', { amount: formatCoins(pot.value) }), 'success', 5000)
+    toast.show(t('pvp.youWon', { amount: formatCoins(winAmount.value) }), 'success', 5000)
     session.fetchMe()
   } else {
     sfx.lose()
@@ -138,10 +142,9 @@ watch(done, (d) => {
 // the seconds before the first round (the page's clock ticks late, so a fresh start would read 4: never above 3)
 const countdown = computed(() => (b.value.status !== 'waiting' && b.value.startedAt && clock.value.round < 0 ? Math.min(3, Math.max(0, Math.ceil((Date.parse(b.value.startedAt) - now.value) / 1000))) : 0))
 // The numbers are pseudo-3D (Extrude): the 3 spins in, each next flips out of the one before it while the whole label swings
-// to the other side, a full second each on real timers, not the page's 200 ms clock. The 1 flips away and a heavy VS slams
-// down in its place: the arena shakes and smoke rolls out from under it. Then the VS sinks onto the arena's own badge, and
-// only as the smoke thins do the reels start. The label is mounted ahead, while the seats fill, so the first number does
-// not pay for the shader. No WebGL: the plain number
+// to the other side, a full second each on real timers, not the page's 200 ms clock. The VS comes the same way, out of the 1.
+// Then it sinks onto the arena's own badge, smoke rolls out from under it as it lands, and only then the reels start. The
+// label is mounted ahead, while the seats fill, so the first number does not pay for the shader. No WebGL: the plain number
 const COUNT_LOOK = {
   font: '800 {s}px Rubik, ui-sans-serif, system-ui, sans-serif',
   charset: '0123456789VS',
@@ -158,7 +161,6 @@ const COUNT_LOOK = {
 }
 const howOpen = ref(false)
 const countEl = useTemplateRef<HTMLElement>('countEl')
-const arena = useTemplateRef<HTMLElement>('arena')
 const fxHost = useTemplateRef<HTMLElement>('fxHost')
 const fx = useForge(fxHost)
 let countLabel: ExtrudeHandle | null = null
@@ -197,43 +199,26 @@ function prepareCount() {
 watch(countEl, (el) => (el ? prepareCount() : dropCountLabel()))
 async function countBeat(n: number) {
   countShown.value = n
-  sfx.count(n === 1)
+  if (!n) countFade.value = true
+  sfx.count(n <= 1)
   await prepareCount()
   if (!countLabel) return
+  const text = n ? String(n) : 'VS'
   countSide = -countSide
   countLabel.set({ yaw: 22 * countSide })
   if (countFresh) {
     countFresh = false
-    if (countLabel.text !== String(n)) countLabel.set({ text: String(n) })
+    if (countLabel.text !== text) countLabel.set({ text })
     countLabel.play('pop')
   } else {
-    countLabel.swap(String(n), { style: 'flip' })
+    countLabel.swap(text, { style: 'flip' })
     countLabel.rotate(240 * countSide, 0, true)
   }
 }
-async function countVs() {
-  countShown.value = 0
-  countFade.value = true
-  const label = countLabel
-  let hit = false
-  const impact = () => {
-    if (hit) return
-    hit = true
-    countImpact()
-  }
-  // the plain number has no slam to wait for
-  countTimers.push(setTimeout(impact, 800))
-  if (!label) return
-  await label.play('flipout', { each: 0 })
-  if (countLabel !== label) return
-  label.set({ text: 'VS', yaw: 0, pitch: 6 })
-  await label.play('slam', { time: 0.3, each: 0, onLand: impact })
-}
-function countImpact() {
+function countLanded() {
   const host = fxHost.value
-  sfx.count(true)
-  arena.value?.animate({ translate: ['0 0', '0 7px', '0 -3px', '0 1px', '0 0'] }, { duration: 300, easing: 'ease-out' })
-  if (host) fx.play('kdDust', { x: host.offsetWidth / 2, y: host.offsetHeight / 2, size: host.offsetHeight * 1.9 })
+  dropCountLabel()
+  if (host) fx.play('kdPuff', { x: host.offsetWidth / 2, y: host.offsetHeight / 2, size: host.offsetHeight * 1.9 })
 }
 // in ms before the first reel: a second for each number, then the VS, and the smoke has its time before the reels move
 function runCount() {
@@ -246,10 +231,10 @@ function runCount() {
   at(4500, () => countBeat(3))
   at(3500, () => countBeat(2))
   at(2500, () => countBeat(1))
-  at(1500, countVs)
-  at(620, () => (countSink.value = true))
-  at(300, () => (countHome.value = false))
-  at(200, dropCountLabel)
+  at(1500, () => countBeat(0))
+  at(1000, () => (countSink.value = true))
+  at(650, () => (countHome.value = false))
+  at(580, countLanded)
 }
 watch(countdown, (n, old) => n > 0 && !old && nextTick(runCount))
 onMounted(() => {
@@ -316,6 +301,34 @@ async function bot(slot: number) {
     else toast.error(e, t('common.error'))
   } finally {
     busySlot.value = null
+  }
+}
+
+// Before the start anyone can get their stake back: a player leaves their seat, the creator cancels the whole battle (every
+// stake comes back) or clears a seat. From the start on nothing can be undone: the result is already fixed by the seeds.
+const leaveOpen = ref(false)
+const leaving = ref(false)
+async function leave() {
+  leaving.value = true
+  try {
+    const res = await $fetch<BattleResponse & { cancelled?: boolean }>(`/api/battles/${id.value}/leave`, { method: 'POST' })
+    if (session.user && res.balance != null) session.user.balance = res.balance
+    leaveOpen.value = false
+    toast.show(t(res.cancelled ? 'pvp.cancelled' : 'pvp.left', { amount: formatCoins(b.value.cost) }), 'success', 4000)
+    if (res.cancelled) return navigateTo('/pvp')
+    data.value = res
+  } catch (e) {
+    toast.error(e, t('common.error'))
+  } finally {
+    leaving.value = false
+  }
+}
+async function kick(slot: number) {
+  try {
+    data.value = await $fetch<BattleResponse>(`/api/battles/${id.value}/kick`, { method: 'POST', body: { slot } })
+    sfx.deselect()
+  } catch (e) {
+    toast.error(e, t('common.error'))
   }
 }
 
@@ -449,7 +462,7 @@ const laneCols = computed(() => {
       </div>
     </section>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
-    <section ref="arena" class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
+    <section class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
         <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="[done && winners.includes(s.slot) && 'is-winner', leaders.includes(s.slot) && 'is-lead', isTeam && s.slot === 2 && 'is-team-split']">
           <!-- a free seat while it waits: an empty lane, no second Join: the action is on the seat's plate under it -->
@@ -511,7 +524,11 @@ const laneCols = computed(() => {
               <span class="type-12-caps text-success">{{ winners.length > 1 ? $t('pvp.battleWonTeam') : $t('pvp.battleWon') }}</span>
               <!-- always one line: a team's two names step down a size on phones, and the longest are cut, not wrapped -->
               <span class="max-w-full truncate leading-7 font-extrabold uppercase lg:type-28" :class="winners.length > 1 ? 'text-base' : 'text-[22px]'">{{ winners.map(nameOf).join(' & ') }}</span>
-              <UiPrice :amount="pot" :size="isMobile ? 'l' : 'xl'" tone="coin" class="mt-1" />
+              <span class="mt-1 flex items-center gap-2">
+                <UiPrice :amount="winAmount" :size="isMobile ? 'l' : 'xl'" tone="coin" />
+                <span v-if="winners.length > 1" class="type-12-caps text-neutral-12">{{ $t('pvp.each') }}</span>
+              </span>
+              <span v-if="myShare && winners.length > 1" class="type-12-regular mt-0.5 text-neutral-12">{{ myShare.coins ? $t('pvp.yourHalfCoins', { n: myShare.items.length, coins: formatCoins(myShare.coins) }, myShare.items.length) : $t('pvp.yourHalf', { n: myShare.items.length }, myShare.items.length) }}</span>
             </span>
           </div>
           <span class="hidden h-22 w-px shrink-0 bg-neutral-5 lg:block" aria-hidden="true" />
@@ -568,6 +585,8 @@ const laneCols = computed(() => {
         :compact="isMobile"
         :can-join="!s.player && b.status === 'waiting' && !youIn"
         :can-call-bot="!s.player && b.status === 'waiting' && isCreator"
+        :can-kick="!!s.player && s.slot > 0 && b.status === 'waiting' && isCreator"
+        @kick="kick(s.slot)"
         :busy="busySlot === s.slot"
         @join="join(s.slot)"
         @bot="bot(s.slot)"
@@ -578,6 +597,16 @@ const laneCols = computed(() => {
       </div>
       </div>
     </section>
+    <div v-if="b.status === 'waiting' && youIn" class="flex justify-center">
+      <UiButton variant="ghost" size="m" icon="close" @click="leaveOpen = true">{{ $t(isCreator ? 'pvp.cancelBattle' : 'pvp.leaveBattle') }}</UiButton>
+    </div>
+    <UiModal v-model="leaveOpen" :title="$t(isCreator ? 'pvp.cancelTitle' : 'pvp.leaveTitle')" :width="420">
+      <p class="type-14-regular text-neutral-12">{{ $t(isCreator ? 'pvp.cancelText' : 'pvp.leaveText', { amount: formatCoins(b.cost) }) }}</p>
+      <div class="mt-4 grid grid-cols-2 gap-2">
+        <UiButton variant="secondary" block @click="leaveOpen = false">{{ $t('pvp.stay') }}</UiButton>
+        <UiButton block :loading="leaving" @click="leave">{{ $t(isCreator ? 'pvp.cancelBattle' : 'pvp.leaveBattle') }}</UiButton>
+      </div>
+    </UiModal>
     <PvpVerifyModal v-model="verifyOpen" :battle="b" />
   </div>
 </template>

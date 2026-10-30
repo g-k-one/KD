@@ -21,8 +21,7 @@ import { RARITY_HEX } from './rarity'
  *               (the label's middle sits at y ≈ 300)
  *   kdBlaze   — kdBurn turned up for a small plate that must read as on fire (a limited case's stock): tall licks
  *               that clear the plate's top edge, a denser shower of embers, a hotter glow; same base line
- *   kdDust    — one-shot: something heavy has hit the floor at the centre: soft clubs of smoke roll out low and flat, stop
- *               short and hang as they thin
+ *   kdPuff    — one-shot: soft clubs of smoke roll out low and flat from the middle, stop short and hang as they thin
  *   kdRank    — Forge's rank reveal (motion pack, `tier`: base → luck → mega → ultra → jackpot) in the rarity's own
  *               colour, one burst on the drop's rarity shape; opts { color: '#hex', level: 0…4 }
  */
@@ -405,10 +404,10 @@ export function defineKdEffects(engine: Engine) {
     },
   }))
 
-  // Fast out, then almost still: the smoke is thrown by the blow and the air stops it. Flattened in y, so the floor lies under
-  // it; a few slower clubs stay by the middle. Normal blending: smoke is matter, not light
+  // Fast out, then almost still: the air stops the smoke. Flattened in y, so a floor lies under it. Normal blending: smoke is
+  // matter, not light
   const SMOKE: Rgb = [0.74, 0.72, 0.7]
-  engine.define('kdDust', (h) => ({
+  engine.define('kdPuff', (h) => ({
     atlas: 'kd',
     period: 2,
     init: (s) => Object.assign(s, { fired: false, sp: [] as Particle[] }),

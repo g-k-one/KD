@@ -5,7 +5,7 @@
 // exists, with the block ID read from the chain; the mock stands a random 64-hex ID in for it.
 import type { Battle, BattleCaseRef, BattleMode, BattlePlayerRef, BattleRoundResult, CreateBattleRequest } from '#shared/types/api'
 import { avatarFor } from '#shared/utils/avatar'
-import { BATTLE_LEAD_MS, battleTie, battleTotals, battleWinners } from '#shared/utils/battle'
+import { BATTLE_LEAD_MS, battleTie, battleTotals, battleWinners, splitWin } from '#shared/utils/battle'
 import { pickByTicket, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
 import { adminSettings, getCase, getMockState, lobbyCaseSlugs, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory } from './mock-db'
 
@@ -43,6 +43,7 @@ async function newBattle(size: number, rounds: BattleCaseRef[], mode: BattleMode
     roundMs: pvp().roundMs,
     winnerSlot: null,
     winners: [],
+    shares: [],
     viewers: 0,
     seed: { serverSeedHash: await sha256Hex(serverSeed), eosBlock: null, eosBlockId: null, serverSeed: null },
     // the odds are fixed with the seed: what each ticket gives can't change after the hash is shown
@@ -92,21 +93,24 @@ async function start(b: StoredBattle) {
   b.status = 'live'
   b.startedAt = new Date(Date.now() + BATTLE_LEAD_MS).toISOString()
 
-  // The winner takes every drop; a winning team deals them out between its two players, priciest first, in turn.
+  // The winner takes every drop; a winning team splits them into two exact halves (splitWin).
   // The mock pays the signed-in user at once; the UI reveals it at the end.
+  const all = results.flatMap((r) => r.drops).sort((x, y) => y.price - x.price)
+  b.shares = splitWin(all, b.winners.length).map((s, i) => ({ slot: b.winners[i]!, ...s }))
   const youSlot = b.slots.findIndex((s) => s.player?.you)
   if (youSlot >= 0) {
-    const won = b.winners.includes(youSlot)
-    const all = results.flatMap((r) => r.drops).sort((x, y) => y.price - x.price)
-    const mine = won ? all.filter((_, i) => i % b.winners.length === b.winners.indexOf(youSlot)) : []
+    const share = b.shares.find((s) => s.slot === youSlot)
+    const won = !!share
+    const mine = share?.items ?? []
+    const st = getMockState()
+    if (share?.coins) st.user.balance += share.coins
     if (mine.length) {
-      const st = getMockState()
       for (const d of mine) st.inventory.unshift(toInventory(d, 'case'))
       syncSkinsValue()
     }
     // the best skin of the battle stands for it in the history: the player's if they won, else the one that beat them
     const best = (won ? mine : all)[0]
-    record({ game: 'case', title: `PvP #${b.id}`, bet: b.cost, payout: mine.reduce((a, d) => a + d.price, 0), status: won ? 'won' : 'lost', battleId: b.id, result: best ? { name: `${best.weapon} | ${best.skin}`, image: best.image, rarity: best.rarity, price: best.price } : undefined })
+    record({ game: 'case', title: `PvP #${b.id}`, bet: b.cost, payout: mine.reduce((a, d) => a + d.price, share?.coins ?? 0), status: won ? 'won' : 'lost', battleId: b.id, result: best ? { name: `${best.weapon} | ${best.skin}`, image: best.image, rarity: best.rarity, price: best.price } : undefined })
   }
 }
 
@@ -147,7 +151,7 @@ function ensureSeeded() {
     const specs: Array<{ mode: BattleMode; size: number; rounds: BattleCaseRef[]; filled: number; past?: boolean }> = [
       { mode: 'classic', size: 3, rounds: pick(5, 0), filled: 2 },
       { mode: 'crazy', size: 2, rounds: pick(3, 2), filled: 1 },
-      { mode: 'team', size: 4, rounds: pick(6, 1), filled: 3 },
+      { mode: 'team', size: 4, rounds: pick(6, 1), filled: 2 },
       { mode: 'classic', size: 2, rounds: pick(8, 4), filled: 2 },
       { mode: 'crazy', size: 3, rounds: pick(4, 5), filled: 3 },
       { mode: 'classic', size: 3, rounds: pick(2, 3), filled: 3, past: true },
@@ -175,7 +179,7 @@ export async function listBattles(loggedIn: boolean) {
   const order = { waiting: 0, live: 1, finished: 2 }
   return {
     battles: battles
-      .map((b) => ({ ...publicBattle(b, loggedIn), results: null, odds: {} }))
+      .map((b) => ({ ...publicBattle(b, loggedIn), results: null, shares: [], odds: {} }))
       .sort((a, b) => order[a.status] - order[b.status] || b.createdAt.localeCompare(a.createdAt)),
   }
 }
@@ -221,6 +225,35 @@ export async function joinBattle(id: string, slot?: number) {
   free.player = you()
   if (b.slots.every((s) => s.player)) await start(b)
   return { battle: publicBattle(b, true), balance: getMockState().user.balance }
+}
+
+/** Before the start a stake can always come back: a player leaves their seat; the creator leaving cancels the battle for all. */
+export async function leaveBattle(id: string) {
+  await ensureSeeded()
+  const b = find(id)
+  if (b.status !== 'waiting') throw new MockError(409, 'This battle has already started')
+  const seat = b.slots.find((s) => s.player?.you)
+  if (!seat) throw new MockError(409, 'You are not in this battle')
+  const st = getMockState()
+  st.user.balance += b.cost
+  if (seat.slot === 0) {
+    battles.splice(battles.indexOf(b), 1)
+    return { battle: publicBattle(b, true), cancelled: true, balance: st.user.balance }
+  }
+  seat.player = null
+  return { battle: publicBattle(b, true), balance: st.user.balance }
+}
+
+/** The creator clears a seat before the start; a person there gets their stake back. */
+export async function kickFromBattle(id: string, slot: number) {
+  await ensureSeeded()
+  const b = find(id)
+  if (b.status !== 'waiting') throw new MockError(409, 'This battle has already started')
+  if (!b.slots[0]?.player?.you) throw new MockError(403, 'Only the creator can do this')
+  const seat = b.slots.find((s) => s.slot === slot)
+  if (!seat?.player || slot === 0) throw new MockError(409, 'Nobody to remove')
+  seat.player = null
+  return { battle: publicBattle(b, true) }
 }
 
 /** Fills one free seat with a bot (only the battle creator may do this in the real product). */
