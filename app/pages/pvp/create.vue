@@ -149,7 +149,7 @@ async function create() {
               type="button"
               role="radio"
               :aria-checked="mode === m"
-              class="kd-mode kd-press flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-2xl border px-2 lg:h-20 lg:justify-start lg:gap-3 lg:px-4 lg:text-left"
+              class="kd-mode kd-press flex h-12 min-w-0 items-center justify-center gap-1.5 rounded-2xl border px-2 lg:h-20 lg:justify-start lg:gap-3 lg:px-4 lg:text-left"
               :class="[`is-${m}`, mode === m && 'is-on']"
               @click="mode = m"
             >

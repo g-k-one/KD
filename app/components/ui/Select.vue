@@ -26,6 +26,8 @@ const props = withDefaults(
     active?: boolean
     /** up: always open above the trigger (a select at the very bottom of the page); auto: below unless there is no room */
     placement?: 'auto' | 'up'
+    /** a name for a trigger that shows no text of its own (the colour dots of a filter) */
+    ariaLabel?: string
   }>(),
   { menuWidth: 'trigger' },
 )
@@ -86,6 +88,7 @@ const isSelected = (o: SelectOption<T>) => (props.multiple ? many.value.includes
       class="flex h-10 w-full items-center gap-2 rounded-lg border bg-neutral-1 px-3 text-left transition-colors duration-200"
       :class="[open ? 'border-brand-base' : 'border-neutral-4 hover:border-neutral-6', active && !open && 'kd-field-set']"
       :aria-expanded="open"
+      :aria-label="ariaLabel"
       aria-haspopup="listbox"
       @click="open = !open"
     >

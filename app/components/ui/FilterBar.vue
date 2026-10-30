@@ -32,7 +32,7 @@ const isSm = useMediaQuery('(min-width: 640px)')
              without the coin (the placeholder and the prices around say it) -->
         <UiInput id="price-from" v-model="from" :coin="isSm" inputmode="decimal" :placeholder="$t('upgrade.from')" class="min-w-0 flex-1 sm:w-24 sm:flex-none" />
         <UiInput id="price-to" v-model="to" :coin="isSm" inputmode="decimal" :placeholder="$t('upgrade.to')" class="min-w-0 flex-1 sm:w-24 sm:flex-none" />
-        <UiSelect v-model:values="values" multiple :options="options" class="kd-dots-select shrink-0 sm:min-w-20" menu-width="fixed">
+        <UiSelect v-model:values="values" multiple :options="options" class="kd-dots-select shrink-0 sm:min-w-20" menu-width="fixed" :aria-label="$t('upgrade.rarity')">
           <template #leading>
             <!-- The trigger shows the choice: every colour dimmed = all of them, otherwise just the picked ones -->
             <TransitionGroup tag="span" name="kd-rdot" class="flex items-center gap-0.5">

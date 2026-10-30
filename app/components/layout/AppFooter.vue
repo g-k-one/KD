@@ -64,7 +64,7 @@ const columns = computed(() => [
               v-for="l in col.links"
               :key="l.key"
               :to="l.to"
-              class="type-14-caps whitespace-nowrap text-neutral-12 transition-colors hover:text-neutral-15"
+              class="kd-hit type-14-caps relative whitespace-nowrap [--hit:-6px_0] text-neutral-12 transition-colors hover:text-neutral-15"
             >
               {{ $t(`nav.${l.key}`) }}
             </NuxtLink>
@@ -72,7 +72,7 @@ const columns = computed(() => [
             <button
               v-if="col.title === 'footer.legal'"
               type="button"
-              class="type-14-caps self-start whitespace-nowrap text-neutral-12 transition-colors hover:text-neutral-15"
+              class="kd-hit type-14-caps relative self-start whitespace-nowrap [--hit:-6px_0] text-neutral-12 transition-colors hover:text-neutral-15"
               @click="consent.reopen()"
             >
               {{ $t('nav.cookieSettings') }}

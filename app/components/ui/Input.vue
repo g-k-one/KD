@@ -74,7 +74,7 @@ function clear() {
       @keydown.enter="emit('enter')"
     />
     <Transition name="kd-input-clear">
-      <button v-if="clearable && filled && !disabled" type="button" class="kd-press -mr-1 grid size-6 shrink-0 place-items-center rounded-md text-neutral-11 hover:text-neutral-15" :aria-label="$t('upgrade.clear')" @click.prevent="clear">
+      <button v-if="clearable && filled && !disabled" type="button" class="kd-press kd-hit relative -mr-1 grid size-6 shrink-0 place-items-center rounded-md [--hit:-4px] text-neutral-11 hover:text-neutral-15" :aria-label="$t('upgrade.clear')" @click.prevent="clear">
         <UiIcon name="close" :size="14" />
       </button>
     </Transition>

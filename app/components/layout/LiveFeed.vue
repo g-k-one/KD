@@ -118,8 +118,8 @@ if (import.meta.client) {
         type="button"
         role="radio"
         :aria-checked="mode === m"
-        class="kd-press type-10-caps sm:type-12-caps relative z-[1] flex min-w-9 items-center justify-center gap-1 px-2 sm:justify-start transition-colors sm:gap-1.5 sm:px-2.5 lg:px-3"
-        :class="mode === m ? 'text-neutral-15' : 'text-neutral-11 hover:text-neutral-13'"
+        class="kd-press kd-hit type-10-caps sm:type-12-caps relative z-[1] flex min-w-9 items-center justify-center gap-1 px-2 sm:justify-start transition-colors sm:gap-1.5 sm:px-2.5 lg:px-3"
+        :class="[mode === m ? 'text-neutral-15' : 'text-neutral-11 hover:text-neutral-13', m === 'live' ? '[--hit:-10px_-4px_0]' : '[--hit:0_-4px_-10px]']"
         :title="m === 'top' ? $t('feed.topHint') : undefined"
         @click="mode = m"
       >
