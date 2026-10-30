@@ -187,12 +187,14 @@ function onClick(e: MouseEvent) {
   color: var(--mc);
 }
 /* the rounds' circle: a slow conic gradient turns behind a disc lit softly from the middle in the mode's colour. The disc
-   circles a hair off-centre on its own beat, so the rim's thickness runs round it: thin here, thick there, never quite
-   with the light. Only transform and opacity move. Live, red, faster, breathing; still and grey once over */
+   breathes and rolls a hair off-centre on its own beat, so the rim keeps changing, 0.75 to 3 px at most, thick here and
+   thin there, never quite with the light. Only transform and opacity move. Live, red, faster, breathing; still and grey
+   once over */
 .kd-rounds {
   --glow: var(--mc);
   --turn: 7s;
   --rim: 4.6s;
+  --breath: 0.965;
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -209,11 +211,19 @@ function onClick(e: MouseEvent) {
 .kd-rounds::after {
   content: '';
   position: absolute;
-  inset: 4%;
+  inset: 1.5px;
   z-index: -1;
   border-radius: inherit;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 24%, var(--cell)), var(--cell));
-  animation: kd-rounds-rim var(--rim) linear infinite;
+  animation:
+    kd-rounds-rim var(--rim) linear infinite,
+    kd-rounds-breath calc(var(--rim) * 0.7) ease-in-out infinite alternate;
+}
+/* 0.75 px off the edge at the same share on both sizes of the circle */
+@media (min-width: 64rem) {
+  .kd-rounds {
+    --breath: 0.98;
+  }
 }
 .kd-brow.is-live .kd-rounds {
   --glow: var(--color-danger);
@@ -239,10 +249,15 @@ function onClick(e: MouseEvent) {
 }
 @keyframes kd-rounds-rim {
   from {
-    transform: rotate(0) translateY(2.8%);
+    transform: rotate(0) translateY(0.75px);
   }
   to {
-    transform: rotate(-1turn) translateY(2.8%);
+    transform: rotate(-1turn) translateY(0.75px);
+  }
+}
+@keyframes kd-rounds-breath {
+  to {
+    scale: var(--breath);
   }
 }
 @keyframes kd-rounds-pulse {
