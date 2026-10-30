@@ -21,7 +21,7 @@ const isSm = useMediaQuery('(min-width: 640px)')
   <div class="flex h-14 items-center gap-2 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
     <UiIcon :name="icon" :size="isLg ? 24 : 20" class="text-neutral-13 max-lg:hidden lg:mr-1" />
     <span class="type-14 lg:type-16-medium mr-1 whitespace-nowrap max-lg:hidden">{{ title }}</span>
-    <UiSelect v-if="sortOptions" v-model="sort" :options="sortOptions" menu-width="fit" class="kd-sort-select shrink-0 sm:w-40">
+    <UiSelect v-if="sortOptions" v-model="sort" :options="sortOptions" menu-width="fit" class="kd-sort-select shrink-0 sm:w-46">
       <template #leading><UiIcon name="sort" :size="16" class="shrink-0 text-neutral-11" /></template>
     </UiSelect>
     <UiButton v-else variant="ghost" :size="isLg ? 'm' : 's'" icon-only :aria-label="$t(desc ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="desc = !desc">
