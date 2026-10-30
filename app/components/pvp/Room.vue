@@ -377,8 +377,9 @@ const laneCols = computed(() => {
     </section>
 
 
-    <!-- Player bars: who sits where and what they have so far; join or call a bot on a free seat -->
-    <section class="kd-lanes lg:-mt-3" :style="{ gridTemplateColumns: laneCols }">
+    <!-- Player bars: who sits where and what they have so far; join or call a bot on a free seat. One 12 px step from the
+         arena down through the plates and every tile, sideways too -->
+    <section class="kd-lanes max-lg:-mt-1 lg:-mt-3" :style="{ gridTemplateColumns: laneCols }">
       <PvpPlayerSlot
         v-for="s in b.slots"
         :key="s.slot"
@@ -401,7 +402,7 @@ const laneCols = computed(() => {
     <section v-if="revealed > 0" class="-mt-1 lg:-mt-3">
       <div class="kd-lanes" :style="{ gridTemplateColumns: laneCols }">
         <!-- once it is over, the losers' drops step back: they go to the winner -->
-        <TransitionGroup v-for="seat in b.slots" :key="seat.slot" tag="div" name="kd-drop" class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-2 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]" :class="done && !winners.includes(seat.slot) && 'is-lost'">
+        <TransitionGroup v-for="seat in b.slots" :key="seat.slot" tag="div" name="kd-drop" class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]" :class="done && !winners.includes(seat.slot) && 'is-lost'">
           <ItemTile v-for="ri in Array.from({ length: revealed }, (_, k) => revealed - 1 - k)" :key="ri" :item="b.results![ri]!.drops[seat.slot]!" readonly />
         </TransitionGroup>
       </div>
