@@ -747,6 +747,12 @@
     "result": "Result",
     "pot": "Pot",
     "bestDrop": "Best drop",
+    "team": {
+      "ct": "Counter-Terrorists",
+      "t": "Terrorists",
+      "ctShort": "CT",
+      "tShort": "T"
+    },
     "openSeats": "Open seats"
   },
   "quick": {

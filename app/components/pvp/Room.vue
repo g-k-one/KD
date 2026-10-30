@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BattleResponse, CaseItem, CaseResponse } from '#shared/types/api'
+import type { BattleResponse, BattleSlot, CaseItem, CaseResponse } from '#shared/types/api'
 
 // Battle room (after csgogem; the page app/pages/pvp/[id].vue shows it inside a Suspense with its skeleton): the mode as the title; one meta line (cost and pot · the case strip · viewers and
 // rounds); a short stage so the players and their drops stay on screen; every action once — join / call a bot in
@@ -84,6 +84,12 @@ const revealed = computed(() => {
 })
 const totals = computed(() => slotTotals(b.value, revealed.value))
 const pot = computed(() => totals.value.reduce((a, x) => a + x, 0))
+// Who plays together: 2 vs 2 is two teams of two, every other mode each seat for itself
+const seatGroups = computed(() => (isTeam.value ? [b.value.slots.slice(0, 2), b.value.slots.slice(2, 4)] : b.value.slots.map((s) => [s])))
+const groupTotal = (g: BattleSlot[]) => g.reduce((a, s) => a + (totals.value[s.slot] ?? 0), 0)
+// the two sides of CS2, each in its colour
+const TEAM_SIDE = ['ct', 't'] as const
+const teamState = (g: BattleSlot[]) => (done.value ? (winners.value.includes(g[0]!.slot) ? 'won' : 'lost') : leaders.value.includes(g[0]!.slot) ? 'lead' : '')
 // the battle's dearest skin, for the finished battle's stats
 const bestDrop = computed(() => Math.max(0, ...(b.value.results ?? []).flatMap((r) => r.drops.map((d) => d?.price ?? 0))))
 // the server and hydration answer at the phone width the ssr-width plugin provides (most players are on phones),
@@ -345,11 +351,12 @@ const laneCols = computed(() => {
 
     <!-- Meta line: who is watching and the round · the battle's cases (the current one lit, spent ones dim) · what a
          seat costs and what is in the pot (the money on the right, as in the lobby's plate). Once the battle is over it
-         stays as the battle's stats: the pot is in the arena's result by then, so the best drop takes its place -->
+         stays as the battle's stats: the pot is in the arena's result by then, so the best drop takes its place.
+         Phones: the money and the cases only, the strip already shows the round -->
     <section class="kd-dock flex flex-wrap items-center justify-between gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
-      <div class="type-12-caps flex gap-2 tabular-nums max-lg:w-full">
-        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center"><UiIcon name="eye" :size="16" /><span class="text-neutral-15">{{ b.viewers }}</span></span>
-        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.rounds') }} <span class="text-neutral-15" data-allow-mismatch="text">{{ Math.min(b.rounds.length, revealed) }}/{{ b.rounds.length }}</span></span>
+      <div class="type-12-caps flex gap-2 tabular-nums max-lg:hidden">
+        <span class="kd-dock-stat"><UiIcon name="eye" :size="16" /><span class="text-neutral-15">{{ b.viewers }}</span></span>
+        <span class="kd-dock-stat">{{ $t('pvp.rounds') }} <span class="text-neutral-15" data-allow-mismatch="text">{{ Math.min(b.rounds.length, revealed) }}/{{ b.rounds.length }}</span></span>
       </div>
       <!-- As many rounds as fit, none cut: a window that follows the current round, a "+N" tile for the ones after it,
            and a soft fade on the side where earlier rounds went out of view -->
@@ -357,9 +364,9 @@ const laneCols = computed(() => {
         <PvpCaseThumb v-for="i in strip.idx" :key="i" :image="b.rounds[i]!.image" :name="`${b.rounds[i]!.name} · ${formatCoins(b.rounds[i]!.price)}`" size="m" :state="roundState(i)" />
       </div>
       <div class="type-12-caps flex justify-end gap-2 max-lg:w-full">
-        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="m" /></span>
-        <span v-if="done" class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.bestDrop') }} <UiPrice :amount="bestDrop" size="m" tone="coin" class="tabular-nums" /></span>
-        <span v-else class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" class="kd-pot tabular-nums" /></span>
+        <span class="kd-dock-stat max-lg:flex-1">{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="m" :compact="isMobile" /></span>
+        <span v-if="done" class="kd-dock-stat max-lg:flex-1">{{ $t('pvp.bestDrop') }} <UiPrice :amount="bestDrop" size="m" tone="coin" :compact="isMobile" class="tabular-nums" /></span>
+        <span v-else class="kd-dock-stat max-lg:flex-1">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" :compact="isMobile" class="kd-pot tabular-nums" /></span>
       </div>
     </section>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
@@ -410,15 +417,16 @@ const laneCols = computed(() => {
         <div v-if="done && b.winnerSlot != null" class="kd-arena-result absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 px-4 text-center lg:flex-row lg:gap-8">
           <!-- two blocks of one height, a hairline between them on desktop: who took it (the face as tall as caption · name ·
                pot) and what to do next; phones: the actions under it -->
-          <div class="kd-result-title flex items-center gap-4 text-left">
+          <div class="kd-result-title flex max-w-full min-w-0 items-center gap-3 text-left lg:gap-4">
             <span class="flex shrink-0 -space-x-3">
-              <span v-for="w in winners" :key="w" class="kd-result-face relative block overflow-hidden rounded-full bg-neutral-7" :class="isMobile ? 'size-16' : 'size-20'">
+              <span v-for="w in winners" :key="w" class="kd-result-face relative block overflow-hidden rounded-full bg-neutral-7" :class="isMobile ? (winners.length > 1 ? 'size-12' : 'size-16') : 'size-20'">
                 <img :src="b.slots[w]?.player?.avatar" alt="" class="size-full object-cover" :class="b.slots[w]?.player?.bot && 'scale-75 object-contain'" />
               </span>
             </span>
             <span class="flex min-w-0 flex-col items-start">
               <span class="type-12-caps text-success">{{ winners.length > 1 ? $t('pvp.battleWonTeam') : $t('pvp.battleWon') }}</span>
-              <span class="text-[22px] leading-7 font-extrabold uppercase lg:type-28">{{ winners.map(nameOf).join(' & ') }}</span>
+              <!-- always one line: a team's two names step down a size on phones, and the longest are cut, not wrapped -->
+              <span class="max-w-full truncate leading-7 font-extrabold uppercase lg:type-28" :class="winners.length > 1 ? 'text-base' : 'text-[22px]'">{{ winners.map(nameOf).join(' & ') }}</span>
               <UiPrice :amount="pot" :size="isMobile ? 'l' : 'xl'" tone="coin" class="mt-1" />
             </span>
           </div>
@@ -443,11 +451,30 @@ const laneCols = computed(() => {
 
     <!-- Player bars: who sits where and what they have so far; join or call a bot on a free seat. Desktop: 24 px around the
          columns, down from the arena as between them; phones: one 12 px step down through the plates and tiles -->
-    <section class="kd-lanes max-lg:-mt-1" :style="{ gridTemplateColumns: laneCols }">
-      <!-- each seat is one column on desktop: a 24 px panel, 12 px in, so the plate and the tiles inside take 12 px corners
-           (24 = 12 + 12); under the bar, its drops, newest first -->
-      <div v-for="s in b.slots" :key="s.slot" class="kd-seat flex flex-col gap-3 lg:rounded-5xl lg:bg-neutral-2 lg:p-3" :class="done && winners.includes(s.slot) && 'is-won'">
+    <section class="kd-lanes max-lg:-mt-1" :class="isTeam && 'is-team'" :style="{ gridTemplateColumns: isTeam ? 'repeat(2, minmax(0, 1fr))' : laneCols }">
+      <!-- one column per seat, one per team in 2 vs 2. Desktop: a 24 px panel, 12 px in, so the plates and the tiles inside
+           take 12 px corners (24 = 12 + 12); under each bar, its drops, newest first -->
+      <div v-for="(g, gi) in seatGroups" :key="gi" class="kd-seat flex min-w-0 flex-col gap-3 lg:rounded-5xl lg:bg-neutral-2 lg:p-3" :class="[done && winners.includes(g[0]!.slot) && 'is-won', isTeam && 'max-md:gap-1']">
+      <!-- the team as one: its name, what it holds together, its chance; green while ahead, the result at the end -->
+      <div v-if="isTeam" class="kd-team-head relative flex h-12 items-center gap-2 rounded-2xl pr-3 pl-2 lg:h-16 lg:gap-3 lg:pl-[9px]" :class="teamState(g) && `is-${teamState(g)}`">
+        <!-- the team's emblem where a seat has its avatar, the winners' crown on its corner as on a seat -->
+        <span class="relative shrink-0">
+          <img :src="`/img/teams/${TEAM_SIDE[gi]}.svg`" alt="" class="block size-8 rounded-full lg:size-11" draggable="false" />
+          <span v-if="teamState(g) === 'won'" class="kd-team-crown absolute -top-1.5 -left-1.5 grid size-5 place-items-center rounded-full text-success"><UiIcon name="crown-fill" :size="14" /></span>
+        </span>
+        <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span class="kd-team-name truncate" :class="[isMobile ? 'type-12-caps' : 'type-16-caps', `is-${TEAM_SIDE[gi]}`]">{{ $t(`pvp.team.${TEAM_SIDE[gi]}${isMobile ? 'Short' : ''}`) }}</span>
+          <UiPrice v-if="revealed > 0" :amount="groupTotal(g)" :size="isMobile ? 's' : 'm'" :tone="teamState(g) === 'lost' ? 'muted' : teamState(g) === 'won' ? 'default' : 'coin'" class="tabular-nums" />
+        </span>
+        <span class="flex shrink-0 flex-col items-end gap-1">
+          <span :class="[isMobile ? 'type-14-caps' : 'type-20-caps', done ? (teamState(g) === 'won' ? 'text-success' : 'text-neutral-11') : teamState(g) === 'lead' ? 'text-success' : 'text-neutral-15', !done && 'tabular-nums']">{{ done ? $t(teamState(g) === 'won' ? 'pvp.won' : 'pvp.lost') : `${Math.round(chances[g[0]!.slot] ?? 0)}%` }}</span>
+          <span v-if="!isMobile" class="type-10-caps" :class="teamState(g) === 'won' ? 'text-success' : 'text-neutral-11'">{{ done ? $t('pvp.result') : $t('pvp.toWin') }}</span>
+        </span>
+      </div>
+      <div :class="isTeam && ['kd-team-seats grid', gi === 1 && 'is-right']">
+      <div v-for="s in g" :key="s.slot" class="flex min-w-0 flex-col gap-3" :class="isTeam && 'max-md:gap-1'">
       <PvpPlayerSlot
+        :quiet="isTeam"
         :player="s.player"
         :total="totals[s.slot]"
         :winner="done && winners.includes(s.slot)"
@@ -463,9 +490,11 @@ const laneCols = computed(() => {
       />
       <!-- once it is over, the losers' drops step back: they go to the winner. Under desktop the edge columns are a touch
            wider than the middle ones, so the tiles get one height instead of following their width: the rows stay level -->
-      <TransitionGroup v-if="revealed > 0" tag="div" name="kd-drop" class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]" :class="done && !winners.includes(s.slot) && 'is-lost'">
+      <TransitionGroup v-if="revealed > 0" tag="div" name="kd-drop" class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]" :class="[done && !winners.includes(s.slot) && 'is-lost', isTeam && 'max-md:gap-1']">
         <ItemTile v-for="ri in Array.from({ length: revealed }, (_, k) => revealed - 1 - k)" :key="ri" :item="b.results![ri]!.drops[s.slot]!" readonly class="max-lg:!aspect-auto max-lg:h-25" />
       </TransitionGroup>
+      </div>
+      </div>
       </div>
     </section>
     <PvpVerifyModal v-model="verifyOpen" :battle="b" />
@@ -488,6 +517,12 @@ const laneCols = computed(() => {
     --lane-gap: 24px;
   }
 }
+/* phones, 2 vs 2: the teams read as groups: 4 px inside one, 12 between them */
+@media (max-width: 47.999rem) {
+  .kd-lanes.is-team {
+    --lane-gap: 12px;
+  }
+}
 .kd-lanes > * {
   min-width: 0;
   margin-inline: calc(var(--lane-gap) / 2);
@@ -507,6 +542,54 @@ const laneCols = computed(() => {
 }
 .kd-rounds.is-cut.is-more {
   mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent);
+}
+.kd-team-crown {
+  background: var(--color-neutral-1);
+  box-shadow: 0 0 0 1px rgb(18 183 106 / 0.4);
+}
+.kd-team-name.is-ct {
+  color: #8db4f5;
+}
+.kd-team-name.is-t {
+  color: #eeb04f;
+}
+/* a team's head reads like a seat's plate; green while the team is ahead */
+.kd-team-head {
+  background: var(--color-neutral-3);
+  transition: background-color var(--dur-slow) var(--ease-out);
+}
+.kd-team-head.is-lead {
+  background: linear-gradient(90deg, rgb(18 183 106 / 0.26), rgb(18 183 106 / 0.05) 70%), var(--color-neutral-3);
+}
+.kd-team-head.is-won {
+  background: var(--color-success-24);
+}
+/* the two seats of a team stand on the arena's line: its 4 px frame and the gap between the teams move their middle
+   off the team's own, so the outer seat is the wider one */
+.kd-team-seats {
+  gap: 4px;
+  grid-template-columns: calc(50% + 3px) calc(50% - 7px);
+}
+.kd-team-seats.is-right {
+  grid-template-columns: calc(50% - 7px) calc(50% + 3px);
+}
+@media (min-width: 48rem) {
+  .kd-team-seats {
+    gap: 8px;
+    grid-template-columns: calc(50% + 2px) calc(50% - 10px);
+  }
+  .kd-team-seats.is-right {
+    grid-template-columns: calc(50% - 10px) calc(50% + 2px);
+  }
+}
+@media (min-width: 64rem) {
+  .kd-team-seats {
+    gap: 12px;
+    grid-template-columns: calc(50% + 2px) calc(50% - 14px);
+  }
+  .kd-team-seats.is-right {
+    grid-template-columns: calc(50% - 14px) calc(50% + 2px);
+  }
 }
 /* the winner's column: green from the crown's corner, down into the plain panel */
 @media (min-width: 64rem) {
@@ -573,6 +656,15 @@ const laneCols = computed(() => {
   opacity: 0;
 }
 /* lands fast and big, holds, gets out of the way of the next one */
+/* phones: two equal chips, the label on the left edge, the money on the right */
+@media (max-width: 63.98rem) {
+  .kd-dock-stat {
+    height: 40px;
+    min-width: 0;
+    justify-content: space-between;
+    padding: 0 12px;
+  }
+}
 .kd-count {
   color: var(--color-neutral-15);
   animation: kd-count-beat 950ms var(--ease-out) both;

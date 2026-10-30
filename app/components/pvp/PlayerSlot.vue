@@ -10,7 +10,8 @@ import type { BattlePlayerRef } from '#shared/types/api'
 // them and 12 from the top and
 // the bottom; a free seat is its plus in the middle and Join across the bottom, 8 px from the three edges around it.
 // Desktop: the 44 px avatar stands as far from the left edge as from the top and the bottom.
-const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost'; busy?: boolean }>()
+// quiet: a seat inside a team: the team's head says the chance, who leads and who won, the seat only who sits there
+const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost'; busy?: boolean; quiet?: boolean }>()
 defineEmits<{ bot: []; join: [] }>()
 
 // The running total rolls up to each new value like an odometer
@@ -27,7 +28,7 @@ const playing = computed(() => (props.total ?? 0) > 0)
     class="kd-slot relative flex items-center"
     :class="[
       compact ? ['flex-col justify-center rounded-2xl text-center', player ? 'gap-2 px-1 py-3' : 'gap-1 p-2'] : ['h-16 gap-3 rounded-2xl pl-[9px]', player ? 'pr-3' : 'pr-[15px]'],
-      winner ? 'is-winner' : lead ? 'is-lead' : '',
+      quiet ? '' : winner ? 'is-winner' : lead ? 'is-lead' : '',
     ]"
   >
     <template v-if="player">
@@ -36,7 +37,7 @@ const playing = computed(() => (props.total ?? 0) > 0)
           <img :src="player.avatar" alt="" class="size-full object-cover" :class="player.bot && 'scale-75 object-contain'" />
         </span>
         <span v-if="compact" class="absolute -top-1.5 -right-2.5 flex origin-top-right scale-75"><UiLevelBadge :level="player.level" /></span>
-        <span v-if="winner" class="kd-crown absolute -top-1.5 -left-1.5 grid size-5 place-items-center rounded-full text-success"><UiIcon name="crown-fill" :size="14" /></span>
+        <span v-if="winner && !quiet" class="kd-crown absolute -top-1.5 -left-1.5 grid size-5 place-items-center rounded-full text-success"><UiIcon name="crown-fill" :size="14" /></span>
       </span>
       <span class="flex min-w-0 max-w-full flex-col" :class="compact ? 'items-center gap-2' : 'flex-1 items-start gap-0.5'">
         <span class="flex min-w-0 max-w-full items-center gap-1.5">
@@ -46,12 +47,12 @@ const playing = computed(() => (props.total ?? 0) > 0)
         <UiPrice v-if="result || playing" :amount="Math.round(totalShown)" :size="compact ? 's' : 'm'" :tone="winner ? 'default' : result ? 'muted' : 'coin'" class="tabular-nums" />
       </span>
       <!-- the chance to win, from the first second to the last round -->
-      <span v-if="!result && chance != null" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end gap-1 pl-1'">
+      <span v-if="!quiet && !result && chance != null" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end gap-1 pl-1'">
         <span class="tabular-nums" :class="[compact ? 'type-14' : 'type-20-caps', lead ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15']">{{ Math.round(chanceShown) }}%</span>
         <span v-if="!compact" class="type-10-caps whitespace-nowrap text-neutral-11">{{ $t('pvp.toWin') }}</span>
       </span>
       <!-- once it is over: what happened, not a 100% / 0% -->
-      <span v-if="result" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end gap-1'">
+      <span v-if="result && !quiet" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end gap-1'">
         <span :class="[compact ? 'type-12-caps' : 'type-20-caps', result === 'won' ? 'text-success' : 'text-neutral-11']">{{ result === 'won' ? $t('pvp.won') : $t('pvp.lost') }}</span>
         <span v-if="!compact" class="type-10-caps" :class="result === 'won' ? 'text-success' : 'text-neutral-11'">{{ $t('pvp.result') }}</span>
       </span>
