@@ -153,6 +153,15 @@
     "left": "{n} left",
     "soldOut": "Sold out"
   },
+  "push": {
+    "title": "Don't miss a bonus",
+    "text": "Turn on notifications and we'll send you {what}.",
+    "what": "personal offers, bonuses and important news",
+    "later": "Later",
+    "subscribe": "Turn on",
+    "on": "Notifications are on",
+    "blocked": "Notifications are blocked in your browser settings"
+  },
   "cookies": {
     "title": "Cookies",
     "text": "Necessary cookies keep you signed in. Analytics and ads only with your OK.",

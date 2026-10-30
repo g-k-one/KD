@@ -37,6 +37,7 @@ useHead({ htmlAttrs: { class: computed(() => (settings.settings.streamerMode ? '
     <LayoutLevelUp />
     <UiToaster />
     <LayoutCookieConsent />
+    <LayoutPushPrompt />
     <LayoutDebugDock v-if="debug" />
   </div>
 </template>

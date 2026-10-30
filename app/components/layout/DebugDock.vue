@@ -14,6 +14,7 @@ import type { Rarity } from '#shared/types/api'
 type Force = { cases: { rarity?: Rarity; kurwa?: boolean }[]; upgrade: string | null; battle: string | null }
 
 const dock = usePersisted('kd_debug', { open: false, shown: false })
+const pushPreview = useState('kd-push-preview', () => false)
 const open = computed({ get: () => dock.value.open, set: (v: boolean) => (dock.value = { ...dock.value, open: v }) })
 // The tab stays out of the way until asked for (it sat over cards for anyone shown the prototype): three quick taps
 // on the logo, or Shift+D, show or hide it; the choice is remembered on this device
@@ -153,6 +154,7 @@ const resetDaily = async () => {
         <div class="flex items-center gap-1">
           <span class="type-16-caps flex-1">Debug</span>
           <UiButton size="s" variant="ghost" @click="post({ clear: true })">Clear forces</UiButton>
+          <UiButton size="s" variant="ghost" @click="pushPreview = true">Push prompt</UiButton>
           <UiButton size="s" variant="ghost" title="Three taps on the logo or Shift+D bring it back" @click="shown = false">Hide</UiButton>
         </div>
 
