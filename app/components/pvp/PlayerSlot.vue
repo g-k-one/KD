@@ -110,7 +110,7 @@ const idle = computed(() => !(props.result || playing.value))
   inset: -1px;
   z-index: -1;
   border-radius: inherit;
-  background: linear-gradient(90deg, rgb(18 183 106 / 0.26), rgb(18 183 106 / 0.05) 70%);
+  background: linear-gradient(90deg, rgb(var(--success-rgb) / 0.26), rgb(var(--success-rgb) / 0.05) 70%);
   opacity: 0;
   transition: opacity var(--dur-slow) var(--ease-out);
 }
@@ -125,7 +125,7 @@ const idle = computed(() => !(props.result || playing.value))
 /* the crown drops onto the avatar's corner; a plain fall, so it stays smooth while the whole room changes around it */
 .kd-crown {
   background: var(--color-neutral-1);
-  box-shadow: 0 0 0 1px rgb(18 183 106 / 0.4);
+  box-shadow: 0 0 0 1px rgb(var(--success-rgb) / 0.4);
   animation: kd-crown-in 460ms var(--ease-spring) both;
 }
 @keyframes kd-crown-in {

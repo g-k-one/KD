@@ -53,7 +53,7 @@ watch(
   animation: kd-chick-phew 1.2s var(--ease-in-out) infinite;
 }
 .is-nearLose .kd-chick {
-  animation: kd-chick-laugh 420ms var(--ease-in-out) 4;
+  animation: kd-chick-laugh var(--dur-slow) var(--ease-in-out) 4;
 }
 @keyframes kd-chick-phew {
   50% {
@@ -69,7 +69,7 @@ watch(
 }
 .kd-bubble {
   margin-bottom: -6px;
-  animation: kd-bubble-in 420ms var(--ease-spring) 260ms both;
+  animation: kd-bubble-in var(--dur-slow) var(--ease-spring) 260ms both;
 }
 .kd-bubble.is-phew {
   background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light), var(--color-item-gold));

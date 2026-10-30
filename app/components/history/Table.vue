@@ -147,7 +147,7 @@ const cols = computed(() =>
 }
 .kd-check {
   color: var(--color-success);
-  background: rgb(18 183 106 / 0.12);
+  background: rgb(var(--success-rgb) / 0.12);
   transition: background-color var(--dur-base) var(--ease-out);
 }
 /* its seed is still secret: the chip waits, grey */
@@ -160,13 +160,13 @@ const cols = computed(() =>
     background: var(--color-neutral-3);
   }
   .kd-tr-hit:hover .kd-check:not(.is-sealed) {
-    background: rgb(18 183 106 / 0.24);
+    background: rgb(var(--success-rgb) / 0.24);
   }
 }
 .kd-tr.is-focus {
   border-radius: 12px;
   box-shadow:
-    inset 0 0 0 1px rgb(18 183 106 / 0.6),
-    0 0 24px rgb(18 183 106 / 0.18);
+    inset 0 0 0 1px rgb(var(--success-rgb) / 0.6),
+    0 0 24px rgb(var(--success-rgb) / 0.18);
 }
 </style>

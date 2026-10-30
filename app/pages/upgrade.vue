@@ -730,21 +730,21 @@ async function runUpgrade() {
 }
 /* The next step: a soft brand glow breathing around the card, the plus lit (the same circle, only tinted) */
 .kd-mini.is-next {
-  background: linear-gradient(180deg, rgb(255 95 31 / 0.1), var(--color-neutral-2) 70%);
-  box-shadow: inset 0 0 0 1px rgb(255 95 31 / 0.16);
+  background: linear-gradient(180deg, rgb(var(--brand-rgb) / 0.1), var(--color-neutral-2) 70%);
+  box-shadow: inset 0 0 0 1px rgb(var(--brand-rgb) / 0.16);
 }
 .kd-mini.is-next::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 0 0 1px rgb(255 95 31 / 0.3), 0 0 22px -6px rgb(255 95 31 / 0.55);
+  box-shadow: inset 0 0 0 1px rgb(var(--brand-rgb) / 0.3), 0 0 22px -6px rgb(var(--brand-rgb) / 0.55);
   opacity: 0;
   pointer-events: none;
   animation: kd-glow-pulse 2.2s ease-in-out infinite;
 }
 .kd-mini.is-next .kd-mini-plus {
-  background: rgb(255 95 31 / 0.16);
+  background: rgb(var(--brand-rgb) / 0.16);
   color: var(--color-brand-light);
 }
 /* While the dial turns the pieces float in place */

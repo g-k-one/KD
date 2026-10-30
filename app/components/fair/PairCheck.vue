@@ -166,7 +166,7 @@ const value = (e: HistoryEntry) => (e.ticket != null ? spaced(e.ticket) : (e.rol
   font-variant-numeric: tabular-nums;
 }
 .kd-pairtick {
-  animation: kd-pairtick 220ms var(--ease-spring) both;
+  animation: kd-pairtick var(--dur-base) var(--ease-spring) both;
 }
 /* the verdict lands with a small pop, as the verifier's does */
 .kd-verdict {

@@ -116,7 +116,7 @@ async function spin(roll: number, fast: boolean) {
   phase.value = reduced ? 'turns' : 'charge'
   const anim = el.animate(
     [
-      { transform: `rotate(${from}deg)`, easing: 'cubic-bezier(0.45, 0, 0.55, 1)' },
+      { transform: `rotate(${from}deg)`, easing: EASE_SINE },
       { transform: `rotate(${from - wind}deg)`, offset: windMs / total, easing: edge ? 'cubic-bezier(0.3, 0, 0.04, 1)' : 'cubic-bezier(0.3, 0, 0.1, 1)' },
       { transform: `rotate(${to}deg)` },
     ],
@@ -148,7 +148,7 @@ function reset() {
   // Glide back to zero the short way round instead of snapping
   const from = ((angle % 360) + 360) % 360
   const back = from > 180 ? 360 : 0
-  el.animate([{ transform: `rotate(${from}deg)` }, { transform: `rotate(${back}deg)` }], { duration: 500, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' })
+  el.animate([{ transform: `rotate(${from}deg)` }, { transform: `rotate(${back}deg)` }], { duration: 500, easing: EASE_OUT })
   el.style.transform = 'rotate(0deg)'
   angle = 0
 }
@@ -215,7 +215,7 @@ const readout = computed(() =>
 
 <style scoped>
 .kd-verify {
-  background: rgb(18 183 106 / 0.14);
+  background: rgb(var(--success-rgb) / 0.14);
   color: var(--color-success);
   pointer-events: auto;
 }
@@ -320,12 +320,12 @@ const readout = computed(() =>
   opacity: 0;
 }
 .kd-gauge.is-lose::before {
-  box-shadow: 0 0 0 2px rgb(240 68 56 / 0.7);
+  box-shadow: 0 0 0 2px rgb(var(--danger-rgb) / 0.7);
   animation: kd-lose-ring 900ms var(--ease-out) 80ms both;
 }
 .kd-gauge.is-lose::after {
   z-index: -1;
-  background: radial-gradient(closest-side, transparent 72%, rgb(240 68 56 / 0.28) 86%, transparent);
+  background: radial-gradient(closest-side, transparent 72%, rgb(var(--danger-rgb) / 0.28) 86%, transparent);
   animation: kd-lose-glow 1400ms var(--ease-out) both;
 }
 @keyframes kd-lose-ring {

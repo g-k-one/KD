@@ -351,7 +351,7 @@ function removePiece(p: Piece) {
 .is-spinning .kd-piece,
 .is-spinning .kd-single-art {
   animation: kd-piece-float 1.6s var(--ease-in-out) infinite;
-  animation-delay: calc(var(--i, 0) * 140ms);
+  animation-delay: calc(var(--i, 0) * var(--dur-fast));
 }
 @keyframes kd-piece-float {
   50% {

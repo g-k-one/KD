@@ -25,7 +25,7 @@ useResizeObserver(body, () => {
   const h = el.offsetHeight
   if (from && Math.abs(h - from) > 2 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     if (scroller.value) scroller.value.style.overflowY = 'hidden'
-    glide = el.animate([{ height: `${from}px` }, { height: `${h}px` }], { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' })
+    glide = el.animate([{ height: `${from}px` }, { height: `${h}px` }], { duration: 280, easing: EASE_OUT })
     glide.onfinish = () => scroller.value && (scroller.value.style.overflowY = '')
   }
   lastH = h

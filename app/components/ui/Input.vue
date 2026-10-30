@@ -97,7 +97,7 @@ function clear() {
   border-color: var(--color-brand-base);
 }
 .kd-input.is-error {
-  border-color: rgb(240 68 56 / 0.6);
+  border-color: rgb(var(--danger-rgb) / 0.6);
 }
 .kd-input.is-disabled {
   opacity: 0.5;

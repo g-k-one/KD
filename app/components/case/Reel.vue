@@ -338,7 +338,7 @@ async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseIt
       if (ending === 'settle') {
         const overshoot = (Math.random() * 0.36 + 0.12) * size * (Math.random() < 0.5 ? 1 : -1)
         await slide(t, axis, from, to + overshoot, duration, 'cubic-bezier(0.08, 0.6, 0.12, 1)')
-        await slide(t, axis, to + overshoot, to, reduced || skipping ? 1 : 420, 'cubic-bezier(0.65, 0, 0.35, 1)')
+        await slide(t, axis, to + overshoot, to, reduced || skipping ? 1 : 420, EASE_IN_OUT)
       } else {
         // short: the marker stops over the card before; over: just past, on the next card
         const edge = (0.53 + Math.random() * 0.08) * size * (ending === 'short' ? 1 : -1)
@@ -349,7 +349,7 @@ async function run(winners: Item[], fast: boolean, cols: number[], pool?: CaseIt
         await wait(ending === 'short' ? 520 : 440)
         // a tiny nudge the wrong way, then it gives in
         const pull = edge * 0.06
-        await slide(t, axis, to + edge, to + edge + pull, skipping ? 1 : 160, 'cubic-bezier(0.45, 0, 0.55, 1)')
+        await slide(t, axis, to + edge, to + edge + pull, skipping ? 1 : 160, EASE_SINE)
         tense.value[col] = false
         await slide(t, axis, to + edge + pull, to, skipping ? 1 : ending === 'short' ? 820 : 700, 'cubic-bezier(0.55, 0, 0.25, 1)')
       }
@@ -783,7 +783,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 }
 /* Glass over the stage so the case art behind stays readable */
 .kd-try-stage {
-  background: rgb(12 13 16 / 0.7);
+  background: rgb(var(--dark-rgb) / 0.7);
   backdrop-filter: blur(6px);
 }
 /* Phone grid: the outer frame steps aside and every mini reel gets its own */
@@ -806,7 +806,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
     linear-gradient(var(--color-neutral-4), var(--color-neutral-4)) border-box;
 }
 .kd-reel.is-grid.spinning .kd-cell {
-  box-shadow: 0 0 24px -8px rgb(255 95 31 / 0.45);
+  box-shadow: 0 0 24px -8px rgb(var(--brand-rgb) / 0.45);
 }
 /* While idle on phones one big frame covers the grid, so the case still reads as one object */
 .kd-reel.is-grid .kd-idle {
@@ -859,7 +859,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   /* translate only (compositor), on the skin's picture alone: animating the whole art made a layer the art's size,
      and the rarity glow, the waves and the bloom (all bigger than it) were cut off flat at its top and bottom.
      The glow stays put; no float until the reveal is over (the last wave and the bloom end by ~1.4 s) */
-  animation: kd-drop-float 3.2s cubic-bezier(0.45, 0, 0.55, 1) 1500ms infinite;
+  animation: kd-drop-float 3.2s var(--ease-sine) 1500ms infinite;
 }
 @keyframes kd-drop-float {
   50% {
@@ -887,8 +887,8 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   /* static shadow (an animated drop-shadow repaints every frame); the case stays clear of the frame */
   filter: drop-shadow(0 12px 14px rgb(0 0 0 / 0.6));
   animation:
-    kd-case-float 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite,
-    kd-stack-in 420ms var(--ease-spring) both;
+    kd-case-float 3.6s var(--ease-sine) infinite,
+    kd-stack-in var(--dur-slow) var(--ease-spring) both;
   animation-delay: var(--float-delay, 0s), var(--in-delay, 0s);
   /* the stack re-fans when the amount changes */
   transition:
@@ -918,7 +918,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 /* Breath: the case squashes, jumps and swells before it bursts open into the strip */
 /* every case of the stack winds up together (no per-case delay) */
 .kd-idle.is-breathing .kd-reel-case {
-  animation: kd-breath 420ms var(--ease-in-out) both;
+  animation: kd-breath var(--dur-slow) var(--ease-in-out) both;
   animation-delay: 0s;
 }
 .kd-idle.is-breathing .kd-drift {
@@ -1013,7 +1013,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 }
 .kd-reel.is-tense:not(.is-grid),
 .kd-cell.is-framed.is-tense {
-  box-shadow: 0 0 44px -10px rgb(255 95 31 / 0.7);
+  box-shadow: 0 0 44px -10px rgb(var(--brand-rgb) / 0.7);
   transition: box-shadow var(--dur-slow) var(--ease-out);
 }
 .kd-reel.is-tense .kd-marker-a,
@@ -1053,7 +1053,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   transform: translate(-50%, -50%) scale(var(--hen-zoom, 1.55));
   transition:
     opacity 0s calc(0.12s * var(--hen-k, 1)),
-    transform calc(0.12s * var(--hen-k, 1)) cubic-bezier(0.55, 0, 1, 0.45);
+    transform calc(0.12s * var(--hen-k, 1)) var(--ease-in);
 }
 .kd-chicken-hit.is-hen-back :deep(.kd-art-img) {
   animation: kd-hen-back 0.6s var(--ease-spring) both;
@@ -1143,7 +1143,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 }
 /* the chicken's scream: a fast small tremble of the whole reel while it lasts (the chicken rides with its logo) */
 .kd-reel.is-screaming {
-  animation: kd-scream-shake 90ms linear infinite;
+  animation: kd-scream-shake var(--dur-press) linear infinite;
 }
 @keyframes kd-scream-shake {
   25% {
@@ -1173,7 +1173,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 .kd-marker-a,
 .kd-marker-b {
   transition:
-    opacity 420ms var(--ease-out),
+    opacity var(--dur-slow) var(--ease-out),
     translate 520ms var(--ease-out),
     filter 120ms linear;
 }
@@ -1229,7 +1229,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 }
 
 .kd-reel.is-punch {
-  animation: kd-punch 420ms var(--ease-spring);
+  animation: kd-punch var(--dur-slow) var(--ease-spring);
 }
 @keyframes kd-punch {
   35% {

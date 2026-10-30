@@ -125,7 +125,7 @@ function again() {
   border-color: var(--color-brand-base);
 }
 .kd-sent-ok {
-  background: rgb(18 183 106 / 0.16);
+  background: rgb(var(--success-rgb) / 0.16);
   color: var(--color-success);
 }
 .kd-channel {

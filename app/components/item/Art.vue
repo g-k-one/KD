@@ -184,13 +184,13 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
   }
 }
 .kd-art.is-float .kd-art-img {
-  animation: kd-art-sway 4.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation: kd-art-sway 4.2s var(--ease-sine) infinite;
 }
 .kd-art.is-float .kd-art-star {
-  animation: kd-art-star-sway 6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation: kd-art-star-sway 6s var(--ease-sine) infinite;
 }
 .kd-art.is-float .kd-art-glow {
-  animation: kd-art-breathe 4.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation: kd-art-breathe 4.2s var(--ease-sine) infinite;
 }
 @keyframes kd-art-sway {
   0%,
@@ -223,9 +223,9 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
 .kd-art-morph-enter-active,
 .kd-art-morph-leave-active {
   transition:
-    opacity 420ms var(--ease-out),
+    opacity var(--dur-slow) var(--ease-out),
     transform 560ms var(--ease-spring),
-    filter 420ms var(--ease-out);
+    filter var(--dur-slow) var(--ease-out);
 }
 .kd-art-morph-leave-active {
   transition-timing-function: var(--ease-in);

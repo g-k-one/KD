@@ -253,8 +253,8 @@ function kickProps(level: number, delay: number) {
       const up = (level === 2 ? 14 : 8) * k
       img.animate(
         [
-          { ...f(0, 0), easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
-          { ...f(-up, side * 2.5 * k), offset: 0.35, easing: 'cubic-bezier(0.55, 0, 1, 0.45)' },
+          { ...f(0, 0), easing: EASE_OUT },
+          { ...f(-up, side * 2.5 * k), offset: 0.35, easing: EASE_IN },
           { ...f(0, 0), offset: 0.7, easing: 'ease-out' },
           { ...f(-up * 0.2, 0), offset: 0.85, easing: 'ease-in' },
           f(0, 0),
@@ -306,10 +306,10 @@ function poke(e: MouseEvent) {
       el.animate(
         [
           { ...f(0, 0, 0, 1, 1), easing: 'cubic-bezier(0.33, 0, 0.67, 1)' },
-          { ...f(0, 8, 0, 1.12, 0.86), offset: 0.12, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          { ...f(0, 8, 0, 1.12, 0.86), offset: 0.12, easing: EASE_OUT },
           // mid-air: tilted away from the finger
           { ...f(0, -h.up, dir * h.tilt, 0.93, 1.09), offset: 0.45, easing: 'cubic-bezier(0.55, 0, 0.8, 0.5)' },
-          { ...f(0, 3, -dir * 2, 1.06, 0.95), offset: 0.74, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          { ...f(0, 3, -dir * 2, 1.06, 0.95), offset: 0.74, easing: EASE_OUT },
           f(0, 0, 0, 1, 1),
         ],
         { duration: h.ms },

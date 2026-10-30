@@ -194,7 +194,7 @@ function onArtLeave() {
 /* the same dark glass as Try free on the reel's stage (no outline): hover only brightens the text */
 .kd-try {
   color: var(--color-neutral-14);
-  background: rgb(12 13 16 / 0.7);
+  background: rgb(var(--dark-rgb) / 0.7);
   backdrop-filter: blur(6px);
   transition: color var(--dur-base) var(--ease-out);
 }
@@ -211,7 +211,7 @@ function onArtLeave() {
   background: linear-gradient(180deg, #ffb13b, var(--color-brand-base) 60%, #d93a12);
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.35),
-    0 0 12px rgb(255 95 31 / 0.55);
+    0 0 12px rgb(var(--brand-rgb) / 0.55);
 }
 .kd-badge.is-today {
   color: #3a2400;
@@ -254,8 +254,8 @@ function onArtLeave() {
   text-shadow: 0 1px 0 rgb(0 0 0 / 0.45);
   background: #3b1309;
   box-shadow:
-    inset 0 0 0 1px rgb(255 95 31 / 0.6),
-    0 0 12px rgb(255 95 31 / 0.4);
+    inset 0 0 0 1px rgb(var(--brand-rgb) / 0.6),
+    0 0 12px rgb(var(--brand-rgb) / 0.4);
 }
 .kd-stock-fill {
   transform-origin: left center;
@@ -266,12 +266,12 @@ function onArtLeave() {
 .kd-stock.is-low {
   box-shadow:
     inset 0 0 0 1px rgb(255 177 59 / 0.85),
-    0 0 18px rgb(255 95 31 / 0.65);
+    0 0 18px rgb(var(--brand-rgb) / 0.65);
 }
 .kd-stock.is-out {
   color: var(--color-neutral-11);
   text-shadow: none;
-  background: rgb(12 13 16 / 0.82);
+  background: rgb(var(--dark-rgb) / 0.82);
   box-shadow: inset 0 0 0 1px var(--color-neutral-6);
 }
 .kd-case-card.is-sold-out .kd-case-art {

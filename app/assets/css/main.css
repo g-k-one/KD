@@ -27,15 +27,22 @@
   --color-neutral-15: #ffffff;
 
   /* brand */
-  --color-brand-base: #ff5f1f;
+  /* channels: a see-through shade in CSS comes from these, rgb(var(--brand-rgb) / 0.4), so a colour changes in one place */
+  --brand-rgb: 255 95 31;
+  --coin-rgb: 253 176 34;
+  --success-rgb: 18 183 106;
+  --warning-rgb: 247 144 9;
+  --danger-rgb: 240 68 56;
+  --dark-rgb: 12 13 16;
+  --color-brand-base: rgb(var(--brand-rgb));
   --color-brand-light: #ff7d20;
   --color-brand-bright: #ff9721;
 
   /* status */
-  --color-coin: #fdb022;
-  --color-success: #12b76a;
-  --color-warning: #f79009;
-  --color-danger: #f04438;
+  --color-coin: rgb(var(--coin-rgb));
+  --color-success: rgb(var(--success-rgb));
+  --color-warning: rgb(var(--warning-rgb));
+  --color-danger: rgb(var(--danger-rgb));
 
   /* item rarity */
   --color-item-covert: #eb4b4b;
@@ -53,15 +60,15 @@
   --color-white-4: rgb(255 255 255 / 0.04);
   --color-white-8: rgb(255 255 255 / 0.08);
   --color-white-12: rgb(255 255 255 / 0.24);
-  --color-black-32: rgb(12 13 16 / 0.32);
-  --color-black-60: rgb(12 13 16 / 0.64);
-  --color-brand-24: rgb(255 95 31 / 0.24);
-  --color-success-24: rgb(18 183 106 / 0.24);
-  --color-success-48: rgb(18 183 106 / 0.48);
-  --color-warning-24: rgb(247 144 9 / 0.24);
-  --color-warning-48: rgb(247 144 9 / 0.48);
-  --color-danger-24: rgb(240 68 56 / 0.24);
-  --color-danger-48: rgb(240 68 56 / 0.48);
+  --color-black-32: rgb(var(--dark-rgb) / 0.32);
+  --color-black-60: rgb(var(--dark-rgb) / 0.64);
+  --color-brand-24: rgb(var(--brand-rgb) / 0.24);
+  --color-success-24: rgb(var(--success-rgb) / 0.24);
+  --color-success-48: rgb(var(--success-rgb) / 0.48);
+  --color-warning-24: rgb(var(--warning-rgb) / 0.24);
+  --color-warning-48: rgb(var(--warning-rgb) / 0.48);
+  --color-danger-24: rgb(var(--danger-rgb) / 0.24);
+  --color-danger-48: rgb(var(--danger-rgb) / 0.48);
 
   --font-sans: 'Rubik', ui-sans-serif, system-ui, sans-serif;
 
@@ -75,8 +82,8 @@
   --radius-4xl: 20px;
   --radius-5xl: 24px;
 
-  --shadow-elevation-2: 0 8px 24px rgb(12 13 16 / 0.64);
-  --shadow-inner-primary: inset 0 2px 0 rgb(255 255 255 / 0.24), inset 0 -2px 0 rgb(12 13 16 / 0.32);
+  --shadow-elevation-2: 0 8px 24px rgb(var(--dark-rgb) / 0.64);
+  --shadow-inner-primary: inset 0 2px 0 rgb(255 255 255 / 0.24), inset 0 -2px 0 rgb(var(--dark-rgb) / 0.32);
 
   --container-content: 1232px;
 
@@ -89,6 +96,8 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* loops that breathe: no start and no stop to see */
+  --ease-sine: cubic-bezier(0.45, 0, 0.55, 1);
   --ease-spring: linear(0, 0.25 7%, 0.68 17%, 0.97 27%, 1.08 35%, 1.06 45%, 1.01 58%, 0.995 72%, 1);
   --dur-press: 90ms;
   --dur-fast: 140ms;
@@ -316,7 +325,7 @@ html body {
     border: 1px solid var(--color-white-12);
   }
   /* Fair: everything about provable fairness (verify, check a roll) is green on white text */
-  /* Dark text on the green: white on #12b76a fails contrast */
+  /* Dark text on the green: white on var(--color-success) fails contrast */
   .kd-btn-fair {
     color: var(--color-neutral-1);
     background: linear-gradient(180deg, #19c97a, var(--color-success) 60%, #0e9a58);
@@ -331,7 +340,7 @@ html body {
       filter: brightness(1.08);
       box-shadow:
         var(--shadow-inner-primary),
-        0 6px 20px -6px rgb(18 183 106 / 0.6);
+        0 6px 20px -6px rgb(var(--success-rgb) / 0.6);
     }
   }
   .kd-btn-success,
@@ -395,30 +404,30 @@ html body {
     border: 1px solid transparent;
   }
   .kd-chip[data-tone='success'] {
-    --tone: rgb(18 183 106 / 0.24);
+    --tone: rgb(var(--success-rgb) / 0.24);
     --tone-fill: var(--color-success-24);
     --tone-active: var(--color-success);
     border-color: var(--tone);
   }
   .kd-chip[data-tone='warning'] {
-    --tone: rgb(247 144 9 / 0.24);
+    --tone: rgb(var(--warning-rgb) / 0.24);
     --tone-fill: var(--color-warning-24);
     --tone-active: var(--color-warning);
     border-color: var(--tone);
   }
   .kd-chip[data-tone='danger'] {
-    --tone: rgb(240 68 56 / 0.24);
+    --tone: rgb(var(--danger-rgb) / 0.24);
     --tone-fill: var(--color-danger-24);
     --tone-active: var(--color-danger);
     border-color: var(--tone);
   }
   .kd-chip[data-tone='coin'] {
-    --tone-fill: rgb(253 176 34 / 0.14);
+    --tone-fill: rgb(var(--coin-rgb) / 0.14);
     --tone-active: var(--color-coin);
   }
   .kd-chip[data-tone='gold'] {
     --tone-fill: rgb(245 198 73 / 0.16);
-    --tone-active: #f5c649;
+    --tone-active: var(--color-gold);
   }
   .kd-chip[data-tone='coin'][aria-pressed='true'],
   .kd-chip[data-tone='gold'][aria-pressed='true'] {
@@ -440,7 +449,7 @@ html body {
   .kd-chip[data-variant='field'][aria-pressed='true'],
   .kd-field-set {
     background: var(--color-brand-24);
-    border-color: rgb(255 95 31 / 0.3);
+    border-color: rgb(var(--brand-rgb) / 0.3);
     box-shadow: none;
   }
   .kd-chip-icon {
@@ -477,8 +486,8 @@ html body {
   }
   .kd-select-tile[aria-pressed='true'],
   .kd-select-tile[aria-checked='true'] {
-    border-color: rgb(255 95 31 / 0.35);
-    background: linear-gradient(180deg, rgb(255 95 31 / 0.3), rgb(255 95 31 / 0.12));
+    border-color: rgb(var(--brand-rgb) / 0.35);
+    background: linear-gradient(180deg, rgb(var(--brand-rgb) / 0.3), rgb(var(--brand-rgb) / 0.12));
   }
 
   /* Diagonal sheen that sweeps across now and then (Key-Drop "shine", Hellcase "glossSweep").

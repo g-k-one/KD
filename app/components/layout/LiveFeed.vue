@@ -282,7 +282,7 @@ if (import.meta.client) {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: rgb(18 183 106 / 0.6);
+  background: rgb(var(--success-rgb) / 0.6);
   animation: kd-live-ping 1.6s ease-out infinite;
 }
 .kd-best-crown::after {
@@ -291,7 +291,7 @@ if (import.meta.client) {
   inset: 2px;
   z-index: -1;
   border-radius: 50%;
-  background: rgb(253 176 34 / 0.6);
+  background: rgb(var(--coin-rgb) / 0.6);
   animation: kd-live-ping 1.6s ease-out infinite;
 }
 @keyframes kd-live-ping {

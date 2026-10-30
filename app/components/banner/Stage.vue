@@ -200,7 +200,7 @@ img.kd-stage-float {
 }
 .kd-stage-chip {
   color: var(--color-neutral-14);
-  background: rgb(12 13 16 / 0.72);
+  background: rgb(var(--dark-rgb) / 0.72);
   box-shadow:
     inset 0 0 0 1px rgb(255 255 255 / 0.12),
     0 8px 20px rgb(0 0 0 / 0.4);

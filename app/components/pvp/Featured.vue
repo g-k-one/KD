@@ -89,8 +89,8 @@ const pot = computed(() => props.battle.cost * props.battle.size)
 <style scoped>
 .kd-feat {
   background:
-    radial-gradient(120% 140% at 0% 0%, rgb(240 68 56 / 0.16), transparent 50%),
-    radial-gradient(100% 120% at 100% 100%, rgb(255 95 31 / 0.12), transparent 55%),
+    radial-gradient(120% 140% at 0% 0%, rgb(var(--danger-rgb) / 0.16), transparent 50%),
+    radial-gradient(100% 120% at 100% 100%, rgb(var(--brand-rgb) / 0.12), transparent 55%),
     var(--color-neutral-2);
   transition: translate var(--dur-base) var(--ease-spring);
 }
@@ -150,8 +150,8 @@ const pot = computed(() => props.battle.cost * props.battle.size)
     box-shadow var(--dur-slow) var(--ease-out);
 }
 .kd-fseat.is-lead {
-  background: linear-gradient(180deg, rgb(253 176 34 / 0.14), rgb(255 255 255 / 0.02));
-  box-shadow: inset 0 0 0 1px rgb(253 176 34 / 0.2);
+  background: linear-gradient(180deg, rgb(var(--coin-rgb) / 0.14), rgb(255 255 255 / 0.02));
+  box-shadow: inset 0 0 0 1px rgb(var(--coin-rgb) / 0.2);
 }
 .kd-fseat-wait {
   opacity: 0.8;

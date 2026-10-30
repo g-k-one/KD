@@ -333,13 +333,13 @@ async function create() {
   }
 }
 .kd-ctile.is-added {
-  background: linear-gradient(180deg, rgb(255 95 31 / 0.3), rgb(255 95 31 / 0.1));
+  background: linear-gradient(180deg, rgb(var(--brand-rgb) / 0.3), rgb(var(--brand-rgb) / 0.1));
   border-color: var(--color-brand-base);
 }
 .kd-ctile-count {
   color: var(--color-neutral-1);
   background: var(--color-brand-base);
-  box-shadow: 0 4px 12px rgb(255 95 31 / 0.45);
+  box-shadow: 0 4px 12px rgb(var(--brand-rgb) / 0.45);
 }
 /* a badge pops in, and pops again on every new count (keyed by it) */
 .kd-badge-enter-active {
@@ -364,7 +364,7 @@ async function create() {
 }
 .kd-round-x {
   color: var(--color-neutral-15);
-  background: rgb(12 13 16 / 0.7);
+  background: rgb(var(--dark-rgb) / 0.7);
   opacity: 0;
   transition: opacity var(--dur-base) var(--ease-out);
 }

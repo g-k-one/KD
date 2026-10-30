@@ -347,7 +347,7 @@ const canReset = computed(() => !!(props.input || props.target))
 }
 .kd-bal-fill {
   background: linear-gradient(90deg, var(--color-gold-dark), var(--color-coin));
-  box-shadow: 0 0 12px rgb(253 176 34 / 0.45);
+  box-shadow: 0 0 12px rgb(var(--coin-rgb) / 0.45);
   transition: width var(--dur-slow) var(--ease-out);
 }
 .kd-bar.is-dragging .kd-bal-fill {
@@ -376,7 +376,7 @@ const canReset = computed(() => !!(props.input || props.target))
 }
 .kd-win-zone {
   background: linear-gradient(90deg, #0b6b3f, var(--color-success));
-  box-shadow: 0 0 14px rgb(18 183 106 / 0.6);
+  box-shadow: 0 0 14px rgb(var(--success-rgb) / 0.6);
   transition: width var(--dur-slow) var(--ease-out);
 }
 .kd-bar.is-dragging .kd-win-zone,
@@ -386,7 +386,7 @@ const canReset = computed(() => !!(props.input || props.target))
 .kd-shade {
   height: 12px;
   translate: 0 -50%;
-  background: repeating-linear-gradient(-45deg, rgb(12 13 16 / 0.72) 0 3px, rgb(12 13 16 / 0.5) 3px 6px);
+  background: repeating-linear-gradient(-45deg, rgb(var(--dark-rgb) / 0.72) 0 3px, rgb(var(--dark-rgb) / 0.5) 3px 6px);
   pointer-events: none;
   transition: width var(--dur-slow) var(--ease-out);
 }

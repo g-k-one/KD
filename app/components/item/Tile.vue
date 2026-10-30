@@ -86,20 +86,20 @@ const rc = computed(() => (props.item ? RARITY_COLOR[props.item.rarity] : undefi
 }
 .kd-tile[aria-pressed='true'] {
   background: var(--color-brand-24);
-  border-color: rgb(255 95 31 / 0.35);
+  border-color: rgb(var(--brand-rgb) / 0.35);
 }
 .kd-tile[aria-pressed='true'] .kd-tile-x {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1) rotate(0);
 }
 .kd-tile-hint {
-  background: rgb(12 13 16 / 0.7);
+  background: rgb(var(--dark-rgb) / 0.7);
   color: var(--color-neutral-13);
   transition: color var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out);
 }
 /* Chance slider: tiles near the wanted chance light up */
 .kd-tile[data-near] {
-  border-color: rgb(18 183 106 / 0.6);
+  border-color: rgb(var(--success-rgb) / 0.6);
   box-shadow: 0 0 16px -6px var(--color-success);
 }
 .kd-tile[data-near] .kd-tile-hint {

@@ -120,6 +120,6 @@ async function pay() {
 }
 .kd-qmethod[aria-pressed='true'] {
   background: var(--color-brand-24);
-  border-color: rgb(255 95 31 / 0.35);
+  border-color: rgb(var(--brand-rgb) / 0.35);
 }
 </style>

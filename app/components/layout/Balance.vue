@@ -49,8 +49,8 @@ watch(balance, (now, before) => {
 }
 @keyframes kd-balance-glow {
   25% {
-    box-shadow: 0 0 18px 4px rgb(18 183 106 / 0.55);
-    background: rgb(18 183 106 / 0.12);
+    box-shadow: 0 0 18px 4px rgb(var(--success-rgb) / 0.55);
+    background: rgb(var(--success-rgb) / 0.12);
   }
 }
 .kd-credit {

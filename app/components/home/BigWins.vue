@@ -218,7 +218,7 @@ provide(FORGE_KEY, {
   background: linear-gradient(180deg, var(--color-gold-light), var(--color-brand-bright) 55%, var(--color-brand-base));
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 2px 8px rgb(255 95 31 / 0.5));
+  filter: drop-shadow(0 2px 8px rgb(var(--brand-rgb) / 0.5));
 }
 @media (min-width: 64rem) {
   .kd-win-x {

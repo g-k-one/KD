@@ -17,7 +17,7 @@ withDefaults(defineProps<{ code?: number; path?: string }>(), { code: 404 })
 /* it runs off with the page */
 .kd-nf-art {
   filter: drop-shadow(0 16px 20px rgb(0 0 0 / 0.55));
-  animation: kd-nf-run 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation: kd-nf-run 1.4s var(--ease-sine) infinite;
 }
 @keyframes kd-nf-run {
   50% {

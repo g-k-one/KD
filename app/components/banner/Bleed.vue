@@ -86,7 +86,7 @@ const EYEBROW = { warm: 'text-brand-light', gold: 'text-coin', green: 'text-succ
 .kd-bleed-glow.is-green {
   background:
     radial-gradient(ellipse 36% 40% at 50% 8%, rgb(220 255 235 / 0.2), transparent 70%),
-    linear-gradient(100deg, #04261a, #0c7a45 26%, #19c97a 48%, #7dffb8 58%, #12b76a 74%, #053a3a);
+    linear-gradient(100deg, #04261a, #0c7a45 26%, #19c97a 48%, #7dffb8 58%, var(--color-success) 74%, #053a3a);
   opacity: 0.5;
 }
 /* phones: a narrow screen needs a wider arc to reach its sides */

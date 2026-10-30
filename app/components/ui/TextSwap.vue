@@ -21,7 +21,7 @@ watch(
     await nextTick()
     const to = sizer.value?.getBoundingClientRect().width ?? from
     if (Math.abs(to - from) < 1 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    el.animate([{ width: `${from}px` }, { width: `${to}px` }], { duration: 320, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' })
+    el.animate([{ width: `${from}px` }, { width: `${to}px` }], { duration: 320, easing: EASE_OUT })
   },
   { flush: 'pre' },
 )

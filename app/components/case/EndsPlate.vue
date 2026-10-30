@@ -21,18 +21,18 @@ const left = computed(() => Date.parse(props.endsAt) - clock.value)
   text-shadow: 0 1px 0 rgb(0 0 0 / 0.45);
   background: #3b1309;
   box-shadow:
-    inset 0 0 0 1px rgb(255 95 31 / 0.6),
-    0 0 12px rgb(255 95 31 / 0.4);
+    inset 0 0 0 1px rgb(var(--brand-rgb) / 0.6),
+    0 0 12px rgb(var(--brand-rgb) / 0.4);
 }
 .kd-ends.is-low {
   box-shadow:
     inset 0 0 0 1px rgb(255 177 59 / 0.85),
-    0 0 18px rgb(255 95 31 / 0.65);
+    0 0 18px rgb(var(--brand-rgb) / 0.65);
 }
 .kd-ends.is-out {
   color: var(--color-neutral-11);
   text-shadow: none;
-  background: rgb(12 13 16 / 0.82);
+  background: rgb(var(--dark-rgb) / 0.82);
   box-shadow: inset 0 0 0 1px var(--color-neutral-6);
 }
 </style>

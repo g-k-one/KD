@@ -32,12 +32,12 @@ const options = computed(() => [
 
 <style scoped>
 .kd-kind {
-  background: rgb(12 13 16 / 0.32);
+  background: rgb(var(--dark-rgb) / 0.32);
   outline: 1px dashed var(--color-white-12);
   outline-offset: -1px;
 }
 .kd-kind-note {
-  background: rgb(12 13 16 / 0.82);
+  background: rgb(var(--dark-rgb) / 0.82);
   box-shadow: inset 0 0 0 1px var(--color-neutral-6);
 }
 </style>

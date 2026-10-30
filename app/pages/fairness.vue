@@ -313,7 +313,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
 /* the check: the history table's green chip */
 .kd-check {
   color: var(--color-success);
-  background: rgb(18 183 106 / 0.12);
+  background: rgb(var(--success-rgb) / 0.12);
   transition: background-color var(--dur-base) var(--ease-out);
 }
 .kd-check:disabled {
@@ -322,7 +322,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
 }
 @media (hover: hover) {
   button.kd-check:not(:disabled):hover {
-    background: rgb(18 183 106 / 0.24);
+    background: rgb(var(--success-rgb) / 0.24);
   }
 }
 .kd-live {

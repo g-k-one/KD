@@ -388,7 +388,7 @@ async function saveTrade() {
   }
   .kd-hrow.is-roll:hover .kd-hrow-check {
     color: var(--color-success);
-    background: rgb(18 183 106 / 0.12);
+    background: rgb(var(--success-rgb) / 0.12);
   }
 }
 /* the plate is the case page's dock: 24px radius, 12px padding; its chips are 48px high with a 12px radius */

@@ -689,7 +689,7 @@ const roundLine = computed(() => {
 }
 .kd-team-crown {
   background: var(--color-neutral-1);
-  box-shadow: 0 0 0 1px rgb(18 183 106 / 0.4);
+  box-shadow: 0 0 0 1px rgb(var(--success-rgb) / 0.4);
 }
 .kd-team-name.is-ct {
   color: #8db4f5;
@@ -710,7 +710,7 @@ const roundLine = computed(() => {
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  background: linear-gradient(90deg, rgb(18 183 106 / 0.26), rgb(18 183 106 / 0.05) 70%);
+  background: linear-gradient(90deg, rgb(var(--success-rgb) / 0.26), rgb(var(--success-rgb) / 0.05) 70%);
   opacity: 0;
   transition: opacity var(--dur-slow) var(--ease-out);
 }
@@ -759,7 +759,7 @@ const roundLine = computed(() => {
     inset: 0;
     z-index: -1;
     border-radius: inherit;
-    background: linear-gradient(155deg, rgb(18 183 106 / 0.24), transparent 55%);
+    background: linear-gradient(155deg, rgb(var(--success-rgb) / 0.24), transparent 55%);
     opacity: 0;
     transition: opacity 600ms var(--ease-out);
   }
@@ -811,7 +811,7 @@ const roundLine = computed(() => {
   position: absolute;
   inset: 0;
   z-index: 10;
-  background: rgb(12 13 16 / 0.6);
+  background: rgb(var(--dark-rgb) / 0.6);
   opacity: 0;
   transition: opacity var(--dur-base) var(--ease-out);
 }
@@ -830,7 +830,7 @@ const roundLine = computed(() => {
 /* the VS sinks exactly onto the badge, gone as the badge comes up under it */
 .kd-countdown.is-sink .kd-count-stage {
   --home: 0.16;
-  animation: kd-count-vs 420ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  animation: kd-count-vs var(--dur-slow) var(--ease-in-out) both;
 }
 @media (min-width: 64rem) {
   .kd-countdown.is-sink .kd-count-stage {
@@ -881,7 +881,7 @@ const roundLine = computed(() => {
   border: 4px solid transparent;
   background:
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
-    linear-gradient(180deg, var(--color-neutral-4) 15%, rgb(255 95 31 / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
+    linear-gradient(180deg, var(--color-neutral-4) 15%, rgb(var(--brand-rgb) / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
 }
 /* the case reel's marker, turned: 28 × 22, its base on the frame's outer edge */
 .kd-amark {
@@ -935,7 +935,7 @@ const roundLine = computed(() => {
 }
 /* Team 2v2: the line between the teams is the strong one */
 .kd-arena-seat.is-team-split {
-  border-left: 2px solid rgb(255 95 31 / 0.5);
+  border-left: 2px solid rgb(var(--brand-rgb) / 0.5);
 }
 .kd-vs {
   translate: -50% -50%;
@@ -946,7 +946,7 @@ const roundLine = computed(() => {
 }
 .kd-vs.is-team {
   color: var(--color-brand-light);
-  box-shadow: inset 0 0 0 1px rgb(255 95 31 / 0.6), 0 0 16px rgb(255 95 31 / 0.35);
+  box-shadow: inset 0 0 0 1px rgb(var(--brand-rgb) / 0.6), 0 0 16px rgb(var(--brand-rgb) / 0.35);
 }
 /* the first one is the countdown's VS arriving: no beat, it only comes up under the label */
 .kd-vs.is-landing {
@@ -979,15 +979,15 @@ const roundLine = computed(() => {
   transition: background-color var(--dur-slow) var(--ease-out);
 }
 .kd-arena-seat.is-winner {
-  background: radial-gradient(60% 50% at 50% 50%, rgb(18 183 106 / 0.18), transparent);
+  background: radial-gradient(60% 50% at 50% 50%, rgb(var(--success-rgb) / 0.18), transparent);
 }
 .kd-result-face {
   box-shadow:
     0 0 0 3px var(--color-success),
-    0 0 24px rgb(18 183 106 / 0.45);
+    0 0 24px rgb(var(--success-rgb) / 0.45);
 }
 .kd-arena-result {
-  background: rgb(12 13 16 / 0.88);
+  background: rgb(var(--dark-rgb) / 0.88);
 }
 .kd-result-enter-active {
   transition: opacity var(--dur-slow) var(--ease-out) 600ms;

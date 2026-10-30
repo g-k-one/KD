@@ -167,15 +167,15 @@ async function logout() {
   opacity: 0;
 }
 .kd-daily.is-ready {
-  background: rgb(253 176 34 / 0.12);
-  box-shadow: inset 0 0 0 1px rgb(253 176 34 / 0.45);
+  background: rgb(var(--coin-rgb) / 0.12);
+  box-shadow: inset 0 0 0 1px rgb(var(--coin-rgb) / 0.45);
 }
 .kd-daily.is-ready::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: 0 0 18px -4px rgb(253 176 34 / 0.8);
+  box-shadow: 0 0 18px -4px rgb(var(--coin-rgb) / 0.8);
   opacity: 0;
   pointer-events: none;
   animation: kd-glow-pulse 2s ease-in-out infinite;

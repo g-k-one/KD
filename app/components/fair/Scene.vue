@@ -115,7 +115,7 @@ const columns = computed(() =>
   top: 3%;
   width: 72%;
   height: 94%;
-  background: radial-gradient(closest-side, rgb(18 183 106 / 0.5), rgb(18 183 106 / 0.16) 60%, transparent);
+  background: radial-gradient(closest-side, rgb(var(--success-rgb) / 0.5), rgb(var(--success-rgb) / 0.16) 60%, transparent);
   transform: translate3d(calc(var(--px, 0) * 0.8 * 14px), calc(var(--py, 0) * 0.8 * 9px), 0);
   transition: transform var(--dur-slow) var(--ease-out);
 }

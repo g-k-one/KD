@@ -144,7 +144,7 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
   }
 }
 .kd-check-ic {
-  background: rgb(18 183 106 / 0.14);
+  background: rgb(var(--success-rgb) / 0.14);
   color: var(--color-success);
 }
 /* a 48px icon tile 8px in from the 64px card's 24px corners: 24 − 8 = 16 (concentric, as the top drops) */
@@ -176,7 +176,7 @@ const xLabel = (m: number) => (m >= 10 ? `×${Math.round(m)}` : `×${m.toFixed(1
   color: transparent;
 }
 .kd-sell-ic {
-  background: rgb(253 176 34 / 0.14);
+  background: rgb(var(--coin-rgb) / 0.14);
   color: var(--color-coin);
   transition:
     background-color var(--dur-slow) var(--ease-out),

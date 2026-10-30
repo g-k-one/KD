@@ -102,7 +102,7 @@ async function spin() {
   cancelAnimationFrame(raf)
   const settle = el.animate([{ transform: `translateY(${to + jitter}px)` }, { transform: `translateY(${to}px)` }], {
     duration: props.instant ? 1 : 300,
-    easing: 'cubic-bezier(0.65, 0, 0.35, 1)',
+    easing: EASE_IN_OUT,
     fill: 'forwards',
   })
   await animationDone(settle, props.instant ? 1 : 300)
@@ -175,7 +175,7 @@ watch([height, cell], () => {
 }
 /* as the case reel's drop: the skin's picture alone floats once the reveal is over */
 .kd-preel-card[data-win] > .kd-art :deep(.kd-art-img) {
-  animation: kd-drop-float 3.2s cubic-bezier(0.45, 0, 0.55, 1) 1500ms infinite;
+  animation: kd-drop-float 3.2s var(--ease-sine) 1500ms infinite;
 }
 @keyframes kd-drop-float {
   50% {
@@ -187,7 +187,7 @@ watch([height, cell], () => {
   border: 3px solid transparent;
   background:
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
-    linear-gradient(180deg, var(--color-neutral-4) 15%, rgb(255 95 31 / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
+    linear-gradient(180deg, var(--color-neutral-4) 15%, rgb(var(--brand-rgb) / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
 }
 .kd-pmark {
   translate: 0 -50%;
