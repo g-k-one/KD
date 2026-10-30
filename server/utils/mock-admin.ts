@@ -12,6 +12,7 @@ import type {
   AdminUsers,
   BigWin,
   CaseTag,
+  CaseTint,
   GameRules,
   HomeCardKind,
   Item,
@@ -48,6 +49,7 @@ const clamp = (v: unknown, lo: number, hi: number, fallback = lo) => {
 }
 const RISKS: RiskLevel[] = ['low', 'medium', 'high', 'extreme']
 const CARDS: HomeCardKind[] = ['standard', 'full', 'wide', 'tall']
+const TINTS: CaseTint[] = ['orange', 'violet', 'lime', 'teal', 'red', 'gold']
 /** Known skin ids, each once */
 const skinIds = (ids: unknown) => [...new Set((Array.isArray(ids) ? ids : []).map(String))].filter((id) => findItem(id))
 
@@ -73,6 +75,7 @@ function toAdminCase(def: CaseDef): AdminCase {
     // the built case keeps the stock as opens spend it
     limited: c.limited ? { ...c.limited } : null,
     endsAt: c.endsAt ?? null,
+    tint: def.tint ?? null,
     card: getHomeLayout().layout.cards[def.slug] ?? 'standard',
     art: { ...c.art },
     animated: !!(def.rig || def.animation),
@@ -120,6 +123,8 @@ export function setAdminCase(slug: string, input: Partial<AdminCaseInput>) {
   const endsAt = input.endsAt ? Date.parse(input.endsAt) : NaN
   if (Number.isNaN(endsAt)) delete def.endsAt
   else def.endsAt = new Date(endsAt).toISOString()
+  if (input.tint && TINTS.includes(input.tint)) def.tint = input.tint
+  else if (input.tint === null) delete def.tint
   if (input.odds === 'manual') {
     def.preset = scaleTickets(picked)
     delete def.itemIds

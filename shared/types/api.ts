@@ -37,8 +37,13 @@ export interface CaseSummary {
   limited?: { total: number; left: number }
   /** A case limited by time: it can be opened until then, ISO */
   endsAt?: string
+  /** A colour gradient behind the art on its plain, wide or tall card; the plain plate when absent */
+  tint?: CaseTint
   createdAt: string
 }
+
+/** The gradients a case card can wear (the admin picks one per case) */
+export type CaseTint = 'orange' | 'violet' | 'lime' | 'teal' | 'red' | 'gold'
 
 /** A Spine 4.3 rig: skeleton JSON plus its atlas (the atlas names its page image, next to it). */
 export interface CaseRig {
@@ -659,6 +664,8 @@ export interface AdminCase {
   limited: { total: number; left: number } | null
   /** A case limited by time: its end, ISO */
   endsAt: string | null
+  /** The gradient on its card */
+  tint: CaseTint | null
   /** Its card on home (the same as HomeLayout.cards) */
   card: HomeCardKind
   /** The art it has; a card kind needs its art */
@@ -684,6 +691,7 @@ export interface AdminCaseInput {
   tag: CaseTag | null
   limited: { total: number; left: number } | null
   endsAt: string | null
+  tint?: CaseTint | null
   card: HomeCardKind
   odds: AdminOddsMode
   items: Array<{ id: string; tickets: number }>

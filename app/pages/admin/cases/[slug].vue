@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AdminCase, AdminCaseInput, CaseTag, HomeCardKind, RiskLevel } from '#shared/types/api'
+import type { AdminCase, AdminCaseInput, CaseTag, CaseTint, HomeCardKind, RiskLevel } from '#shared/types/api'
 
 // Admin · one case: name, price, risk, tag; limited stock; its home card; its pictures (square, full card, wide,
 // tall); odds (auto from the target RTP, or each skin's chance by hand) and contents. One draft, one Save
@@ -31,6 +31,15 @@ const TAGS: Array<{ value: CaseTag | 'none'; label: string }> = [
   { value: 'new', label: 'New' },
   { value: 'hot', label: 'Hot' },
 ]
+const TINTS: Array<{ value: CaseTint | 'none'; label: string; swatch?: string }> = [
+  { value: 'none', label: 'None' },
+  { value: 'orange', label: 'Orange', swatch: '#ff5f1f' },
+  { value: 'violet', label: 'Violet', swatch: '#8b3dff' },
+  { value: 'lime', label: 'Lime', swatch: '#9be21f' },
+  { value: 'teal', label: 'Teal', swatch: '#1fd6b4' },
+  { value: 'red', label: 'Red', swatch: '#ff2d55' },
+  { value: 'gold', label: 'Gold', swatch: '#f5b82e' },
+]
 const ODDS = [
   { value: 'auto' as const, label: 'Auto', title: 'Solved from the target RTP' },
   { value: 'manual' as const, label: 'Manual', title: 'Each chance by hand' },
@@ -49,6 +58,10 @@ const cards = computed(() => {
 const tag = computed({
   get: () => draft.value?.tag ?? 'none',
   set: (v: CaseTag | 'none') => draft.value && (draft.value.tag = v === 'none' ? null : v),
+})
+const tint = computed({
+  get: () => draft.value?.tint ?? 'none',
+  set: (v: CaseTint | 'none') => draft.value && (draft.value.tint = v === 'none' ? null : v),
 })
 const limitedOn = computed({
   get: () => !!draft.value?.limited,
@@ -119,6 +132,7 @@ async function duplicate() {
 
         <AdminPanel title="Card on home" icon="view-grid" hint="The same in every row; 2×1 and 1×2 show on desktop">
           <UiSegmented v-model="draft.card" :options="cards" size="s" block />
+          <AdminField label="Background gradient" hint="Behind the art; a full scene covers it"><UiSelect v-model="tint" :options="TINTS" /></AdminField>
         </AdminPanel>
       </div>
 

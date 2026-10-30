@@ -10,6 +10,8 @@ const props = defineProps<{ item: CaseSummary; shape?: 'wide' | 'tall'; look?: '
 const shaped = computed(() => (props.shape ? props.item.art?.[props.shape] : undefined))
 /** A full-art card (the layout says so and the art is there): the scene fills the card; a themed row and a bento cell keep their own art */
 const full = computed(() => (!props.look && !shaped.value && props.item.card === 'full' ? props.item.art?.full : undefined))
+/** The case's colour gradient: behind the art of a plain or bento card; a scene or a themed row is its own background */
+const tint = computed(() => (!props.look && !full.value ? props.item.tint : undefined))
 const { onPointerMove } = useSpotlight()
 const { t } = useI18n()
 const session = useSessionStore()
@@ -81,10 +83,11 @@ function onArtLeave() {
   <NuxtLink
     :to="`/case/${item.slug}`"
     class="kd-case-card kd-spotlight group relative flex h-full flex-col items-center gap-2 rounded-5xl border max-sm:rounded-4xl"
-    :class="[(stock?.out || ended) && 'is-sold-out', shape && `is-${shape}`, look && `look-${look}`, full && 'is-full']"
+    :class="[(stock?.out || ended) && 'is-sold-out', shape && `is-${shape}`, look && `look-${look}`, full && 'is-full', tint && 'has-tint']"
     @pointermove="onArtPointer"
     @pointerleave="onArtLeave"
   >
+    <span v-if="tint" class="kd-case-tint" :class="`tint-${tint}`" aria-hidden="true" />
     <!-- full art: the scene behind everything, darkened at the foot where the text sits -->
     <img v-if="full" :src="full" :alt="item.name" loading="lazy" draggable="false" class="kd-case-full" />
     <span v-if="full" class="kd-case-scrim" aria-hidden="true" />
@@ -350,6 +353,46 @@ function onArtLeave() {
   .kd-case-card:hover .kd-case-risk-label {
     opacity: 1;
     transform: none;
+  }
+}
+/* --- a colour gradient behind the art: a glow where the art stands, fading into the plate at the foot, a touch
+   brighter on hover (opacity only) --- */
+.kd-case-card.has-tint {
+  isolation: isolate;
+}
+.kd-case-tint {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.85;
+  background:
+    radial-gradient(80% 60% at 50% 36%, color-mix(in srgb, var(--tint) 52%, transparent), transparent 74%),
+    linear-gradient(180deg, color-mix(in srgb, var(--tint) 24%, transparent), transparent 72%);
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.tint-orange {
+  --tint: #ff5f1f;
+}
+.tint-violet {
+  --tint: #8b3dff;
+}
+.tint-lime {
+  --tint: #9be21f;
+}
+.tint-teal {
+  --tint: #1fd6b4;
+}
+.tint-red {
+  --tint: #ff2d55;
+}
+.tint-gold {
+  --tint: #f5b82e;
+}
+@media (hover: hover) {
+  .kd-case-card:hover .kd-case-tint {
+    opacity: 1;
   }
 }
 /* --- full art: the scene fills the card and drifts closer on hover --- */
