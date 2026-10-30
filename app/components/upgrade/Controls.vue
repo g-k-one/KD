@@ -190,7 +190,7 @@ const canReset = computed(() => !!(props.input || props.target))
           <UiIcon name="chevron-right" :size="18" class="kd-skip-icon" />
         </template>
         <template v-else-if="idle">
-          <UiIcon :name="input ? 'target-up' : 'plus'" :size="20" />
+          <UiIcon name="plus" :size="20" />
           <span>{{ input ? $t('upgrade.pickTarget') : $t('upgrade.addSkins') }}</span>
         </template>
         <span v-else>{{ $t('auth.signInToPlay') }}</span>

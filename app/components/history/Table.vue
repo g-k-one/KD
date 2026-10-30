@@ -3,8 +3,8 @@ import type { HistoryEntry } from '#shared/types/api'
 import { NuxtLink } from '#components'
 
 /*
- * The game history as a table (the bet history on Stake): one line per game, real columns under headers —
- * the game (the case, the upgrade, a payment…), the drop, the stake, the payout, the profit (+ green, − grey), when,
+ * The game history as a table (the bet history on Stake): one line per game, real columns under headers — when,
+ * the game (the case, the upgrade, a payment…), the drop, the stake, the payout, the profit (+ green, − grey),
  * and the check. Used by the profile's game history, the Provably Fair page's rolls and the upgrade page's own list,
  * so it reads the same everywhere. `roll` adds the roll's number (ticket or upgrade roll) before the time.
  * Phones: no headers; each line is the drop, its name over "game · time", the payout over the profit, the check.
@@ -42,8 +42,8 @@ const checkable = (e: HistoryEntry) => e.nonce != null || !!e.battleId
 const kind = (e: HistoryEntry) => (props.link?.(e) ? 'link' : props.clickable?.(e) ? 'button' : 'row')
 const cols = computed(() =>
   props.roll
-    ? 'lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.5fr)_96px_96px_96px_112px_56px_92px]'
-    : 'lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.6fr)_104px_104px_104px_64px_92px]',
+    ? 'lg:grid-cols-[48px_minmax(0,1.1fr)_minmax(0,1.5fr)_96px_96px_96px_112px_92px]'
+    : 'lg:grid-cols-[48px_minmax(0,1.1fr)_minmax(0,1.6fr)_104px_104px_104px_92px]',
 )
 </script>
 
@@ -51,13 +51,13 @@ const cols = computed(() =>
   <div class="flex min-w-0 flex-col">
     <!-- headers (desktop) -->
     <div class="kd-th type-10-caps sticky top-0 z-[1] hidden h-9 items-center gap-4 border-b border-neutral-4 px-3 text-neutral-11 lg:grid" :class="cols">
+      <span>{{ $t('history.time') }}</span>
       <span>{{ $t('history.game') }}</span>
       <span>{{ $t('history.drop') }}</span>
       <span class="text-right">{{ $t('history.stake') }}</span>
       <span class="text-right">{{ $t('history.payout') }}</span>
       <span class="text-right">{{ $t('history.profit') }}</span>
       <span v-if="roll" class="text-right">{{ $t('history.roll') }}</span>
-      <span class="text-right">{{ $t('history.time') }}</span>
       <span />
     </div>
     <ul class="flex flex-col">
@@ -70,6 +70,7 @@ const cols = computed(() =>
           :class="[cols, kind(e) !== 'row' && 'kd-tr-hit']"
           @click="kind(e) === 'button' && emit('pick', e)"
         >
+          <span class="type-14-regular text-neutral-11 tabular-nums max-lg:hidden">{{ timeAgo(e.at) }}</span>
           <!-- game (desktop column; on phones its picture sits on the drop) -->
           <span class="flex min-w-0 items-center gap-2.5 max-lg:hidden">
             <!-- an upgrade's arrow or a battle's sword is drawn edge to edge: a 4 px inset so it sits as small as a case -->
@@ -114,7 +115,6 @@ const cols = computed(() =>
             <span class="type-14 font-mono tabular-nums">{{ rollValue(e) }}</span>
             <span class="type-10-caps text-neutral-11">{{ e.ticket != null ? $t('fair.ticket') : e.chance != null ? $t('history.ofChance', { pct: (e.chance / 100).toFixed(2) }) : '' }}</span>
           </span>
-          <span class="type-14-regular text-right text-neutral-11 tabular-nums max-lg:hidden">{{ timeAgo(e.at) }}</span>
           <!-- the check: a clear green chip on every roll and battle (the icon alone on phones) -->
           <span v-if="checkable(e)" class="kd-check type-12-caps flex h-8 items-center justify-center gap-1.5 justify-self-end rounded-lg max-lg:w-8 lg:px-2.5" :class="sealed?.(e) && 'is-sealed'" :title="sealed?.(e) ? $t('fair.sealedHintShort') : $t('fair.check')">
             <UiIcon :name="sealed?.(e) ? 'shield' : 'shield-check'" :size="16" class="shrink-0" />
