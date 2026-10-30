@@ -473,7 +473,7 @@ async function runUpgrade() {
         <UpgradeGauge ref="gauge" :chance="shownChance" :state="state" :nonce="lastNonce" class="relative z-[2] max-lg:max-w-[216px] lg:-mt-3" />
         <UpgradeControls
           :pending="pending"
-          class="relative z-[3] mt-5 w-full max-w-80 max-lg:hidden lg:mt-auto"
+          class="relative z-[3] mt-5 w-full max-lg:hidden lg:mt-auto"
           part="cta"
           v-model:extra="extraModel"
           v-model:fast="fast"

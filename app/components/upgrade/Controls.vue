@@ -170,7 +170,7 @@ const canReset = computed(() => !!(props.input || props.target))
   <section class="kd-controls grid grid-cols-[minmax(0,1fr)] gap-2" :class="busy && 'is-busy'">
     <!-- CTA, then Reset · Fast as two equal chips under it (the case page's dock has the same block). Phones: the two
          sit in the dial's top corners instead (the page), so the dock is the button alone -->
-    <div v-if="is('cta')" class="flex flex-wrap gap-2" :class="part !== 'cta' && 'kd-cta-dock max-lg:order-last'">
+    <div v-if="is('cta')" class="flex flex-wrap gap-2" :class="part === 'cta' ? 'kd-cta-plate' : 'kd-cta-dock max-lg:order-last'">
       <UiButton size="l" class="kd-cta h-12 min-w-0 basis-full lg:h-14" :variant="busy || idle ? 'secondary' : 'primary'" :loading="pending" @click="onCta">
         <template v-if="offerAgain && again">
           <UiIcon name="upgrade" :size="20" />
@@ -263,7 +263,7 @@ const canReset = computed(() => !!(props.input || props.target))
     <div v-if="is('balance')" class="kd-panel flex flex-col justify-between gap-2">
       <div class="flex h-8 items-center justify-between gap-2">
         <span class="type-14-caps lg:type-12-caps text-neutral-11">{{ $t('upgrade.fromBalance') }}</span>
-        <UiInput id="upgrade-extra" v-model="extraText" size="s" coin clearable lazy align="right" inputmode="decimal" placeholder="0" :disabled="busy || !signedIn" class="-mr-2 w-36 lg:w-32" @clear="extra = 0" />
+        <UiInput id="upgrade-extra" v-model="extraText" size="s" coin clearable lazy align="right" inputmode="decimal" placeholder="0" :disabled="busy || !signedIn" class="-mr-2 w-40" @clear="extra = 0" />
       </div>
       <div
         ref="balBar"
@@ -318,6 +318,17 @@ const canReset = computed(() => !!(props.input || props.target))
   border-radius: 24px;
   background: var(--color-neutral-2);
   padding: 16px 24px;
+}
+/* Desktop: the third panel of the row, under the dial; the side panels take its 144 px (56 button + 8 + 48 chips + 16 + 16) */
+.kd-cta-plate {
+  border-radius: 24px;
+  background: var(--color-neutral-2);
+  padding: 16px;
+}
+@media (min-width: 64rem) {
+  .kd-panel {
+    min-height: 144px;
+  }
 }
 /* A fixed-height pill, so the percentage never makes the button taller */
 /* Phones: sticks above the bottom nav on a fade of the page ground */
