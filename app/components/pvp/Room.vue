@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { BattleResponse, BattleSlot, CaseItem, CaseResponse } from '#shared/types/api'
+import { BATTLE_LEAD_MS } from '#shared/utils/battle'
 
 // Battle room (after csgogem; the page app/pages/pvp/[id].vue shows it inside a Suspense with its skeleton): the mode as the title; one meta line (cost and pot · the case strip · viewers and
 // rounds); a short stage so the players and their drops stay on screen; every action once — join / call a bot in
@@ -30,7 +31,7 @@ if (error.value) {
 const replayAt = ref<number | null>(route.query.replay && data.value!.battle.status === 'finished' ? Date.now() : null)
 const b = computed(() => {
   const x = data.value!.battle
-  return replayAt.value ? { ...x, status: 'live' as const, startedAt: new Date(replayAt.value + 3000).toISOString() } : x
+  return replayAt.value ? { ...x, status: 'live' as const, startedAt: new Date(replayAt.value + BATTLE_LEAD_MS).toISOString() } : x
 })
 const router = useRouter()
 const replayLink = () => new URL(router.resolve({ path: `/pvp/${id.value}`, query: { replay: '1' } }).href, location.href).href
@@ -135,19 +136,17 @@ watch(done, (d) => {
 })
 
 // the seconds before the first round (the page's clock ticks late, so a fresh start would read 4: never above 3)
-const countMs = computed(() => (b.value.status !== 'waiting' && b.value.startedAt && clock.value.round < 0 ? Math.max(0, Date.parse(b.value.startedAt) - now.value) : 0))
-const countdown = computed(() => Math.min(3, Math.ceil(countMs.value / 1000)))
-// what stands in the arena: 3, 2, 1, each shorter than the last, then 0, the VS, which has landed by the time the reels start
-const countStep = computed(() => (countMs.value <= 0 ? -1 : countMs.value <= 900 ? 0 : countMs.value <= 1550 ? 1 : countMs.value <= 2250 ? 2 : 3))
-// The numbers are pseudo-3D (Extrude), white: the 3 spins in, each next flips out of the one before it with a full turn the
-// other way. The 1 flips into a big VS, which shrinks into the arena's own badge before the reels move, and a light puff of
-// smoke opens round it as it lands. The label is mounted ahead, while the seats fill, so the first
-// number does not pay for the shader. No WebGL or reduced motion: the plain number
+const countdown = computed(() => (b.value.status !== 'waiting' && b.value.startedAt && clock.value.round < 0 ? Math.min(3, Math.max(0, Math.ceil((Date.parse(b.value.startedAt) - now.value) / 1000))) : 0))
+// The numbers are pseudo-3D (Extrude): the 3 spins in, each next flips out of the one before it while the whole label swings
+// to the other side, a full second each on real timers, not the page's 200 ms clock. The 1 flips away and a heavy VS slams
+// down in its place: the arena shakes and smoke rolls out from under it. Then the VS sinks onto the arena's own badge, and
+// only as the smoke thins do the reels start. The label is mounted ahead, while the seats fill, so the first number does
+// not pay for the shader. No WebGL: the plain number
 const COUNT_LOOK = {
   font: '800 {s}px Rubik, ui-sans-serif, system-ui, sans-serif',
   charset: '0123456789VS',
-  face: ['#ffffff', '#f2f3f6', '#c6cad4'],
-  side: ['#6b7080', '#14161c'],
+  face: ['#fff6e0', '#ffc46b', '#ff7a1a'],
+  side: ['#d9480f', '#2a0e00'],
   metal: 0.2,
   gloss: 0.55,
   bevel: 2,
@@ -159,6 +158,7 @@ const COUNT_LOOK = {
 }
 const howOpen = ref(false)
 const countEl = useTemplateRef<HTMLElement>('countEl')
+const arena = useTemplateRef<HTMLElement>('arena')
 const fxHost = useTemplateRef<HTMLElement>('fxHost')
 const fx = useForge(fxHost)
 let countLabel: ExtrudeHandle | null = null
@@ -168,8 +168,10 @@ let countSide = 1
 let countTimers: ReturnType<typeof setTimeout>[] = []
 const count3d = ref(false)
 const countArmed = ref(false)
-// the arena's badge steps aside for the whole countdown (countHome) and comes back as the stage's VS lands on it (countFade)
+// what stands in the arena now: 3, 2, 1, then 0, the VS (countFade); the arena's badge steps aside until the VS is nearly on it
+const countShown = ref(0)
 const countFade = ref(false)
+const countSink = ref(false)
 const countHome = ref(false)
 function dropCountLabel() {
   countLabel?.destroy()
@@ -177,7 +179,9 @@ function dropCountLabel() {
   countReady = null
   countFresh = true
   count3d.value = false
+  countShown.value = 0
   countFade.value = false
+  countSink.value = false
   countHome.value = false
 }
 function prepareCount() {
@@ -189,8 +193,11 @@ function prepareCount() {
   })()
   return countReady
 }
-watch(countEl, (el) => el && prepareCount())
+// the stage went (a countdown that was already running when the page opened): the label went with it
+watch(countEl, (el) => (el ? prepareCount() : dropCountLabel()))
 async function countBeat(n: number) {
+  countShown.value = n
+  sfx.count(n === 1)
   await prepareCount()
   if (!countLabel) return
   countSide = -countSide
@@ -198,40 +205,61 @@ async function countBeat(n: number) {
   if (countFresh) {
     countFresh = false
     if (countLabel.text !== String(n)) countLabel.set({ text: String(n) })
-    countLabel.play('spin')
+    countLabel.play('pop')
   } else {
     countLabel.swap(String(n), { style: 'flip' })
-    countLabel.rotate(360 * countSide, 0, true)
+    countLabel.rotate(240 * countSide, 0, true)
   }
 }
-function countEnd() {
-  const host = fxHost.value
+async function countVs() {
+  countShown.value = 0
   countFade.value = true
-  countLabel?.set({ yaw: -16 * countSide, pitch: 10 })
-  countLabel?.swap('VS', { style: 'flip' })
-  countTimers.forEach(clearTimeout)
-  countTimers = [
-    // the very end: the VS lands on the badge and the smoke opens round it
-    setTimeout(() => {
-      countHome.value = false
-      if (host) fx.play('kdPuff', { x: host.offsetWidth / 2, y: host.offsetHeight / 2, size: host.offsetHeight * 1.3 })
-    }, 700),
-    setTimeout(dropCountLabel, 950),
-  ]
+  const label = countLabel
+  let hit = false
+  const impact = () => {
+    if (hit) return
+    hit = true
+    countImpact()
+  }
+  // the plain number has no slam to wait for
+  countTimers.push(setTimeout(impact, 800))
+  if (!label) return
+  await label.play('flipout', { each: 0 })
+  if (countLabel !== label) return
+  label.set({ text: 'VS', yaw: 0, pitch: 6 })
+  await label.play('slam', { time: 0.3, each: 0, onLand: impact })
 }
-watch(countStep, (n, old) => {
-  if (n > 0) {
-    countHome.value = true
-    sfx.count(n === 1)
-    countBeat(n)
-  } else if (n === 0 && old > 0) countEnd()
+function countImpact() {
+  const host = fxHost.value
+  sfx.count(true)
+  arena.value?.animate({ translate: ['0 0', '0 7px', '0 -3px', '0 1px', '0 0'] }, { duration: 300, easing: 'ease-out' })
+  if (host) fx.play('kdDust', { x: host.offsetWidth / 2, y: host.offsetHeight / 2, size: host.offsetHeight * 1.9 })
+}
+// in ms before the first reel: a second for each number, then the VS, and the smoke has its time before the reels move
+function runCount() {
+  const left = Date.parse(b.value.startedAt!) - Date.now()
+  const at = (ms: number, f: () => void) => left > ms - 900 && countTimers.push(setTimeout(f, Math.max(0, left - ms)))
+  countTimers.forEach(clearTimeout)
+  countTimers = []
+  countHome.value = true
+  prepareCount()
+  at(4500, () => countBeat(3))
+  at(3500, () => countBeat(2))
+  at(2500, () => countBeat(1))
+  at(1500, countVs)
+  at(620, () => (countSink.value = true))
+  at(300, () => (countHome.value = false))
+  at(200, dropCountLabel)
+}
+watch(countdown, (n, old) => n > 0 && !old && nextTick(runCount))
+onMounted(() => {
+  if (!done.value) fx.preload('kd')
+  if (countdown.value > 0) nextTick(runCount)
 })
 onBeforeUnmount(() => {
   countTimers.forEach(clearTimeout)
   dropCountLabel()
 })
-// the smoke's atlas ready before it is needed
-onMounted(() => done.value || fx.preload('kd'))
 
 // Same cases and seats in one click once the battle is over (Skin.club "Recreate")
 const recreating = ref(false)
@@ -421,7 +449,7 @@ const laneCols = computed(() => {
       </div>
     </section>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
-    <section class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
+    <section ref="arena" class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
         <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="[done && winners.includes(s.slot) && 'is-winner', leaders.includes(s.slot) && 'is-lead', isTeam && s.slot === 2 && 'is-team-split']">
           <!-- a free seat while it waits: an empty lane, no second Join: the action is on the seat's plate under it -->
@@ -446,21 +474,26 @@ const laneCols = computed(() => {
       <!-- VS between the seats (between the two teams in Team 2v2); it beats on every new round -->
       <div class="pointer-events-none absolute inset-0 z-[3] grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }" aria-hidden="true">
         <span v-for="s in b.slots" :key="s.slot" class="relative">
-          <span v-if="!countHome && s.slot > 0 && (!isTeam || s.slot === 2)" :key="`${clock.round}`" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="isTeam && 'is-team'">{{ $t('pvp.vs') }}</span>
+          <span v-if="!countHome && s.slot > 0 && (!isTeam || s.slot === 2)" :key="Math.max(0, clock.round)" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="[isTeam && 'is-team', clock.round < 1 && 'is-landing']">{{ $t('pvp.vs') }}</span>
         </span>
       </div>
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 left-0 -rotate-90" />
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 right-0 rotate-90" />
 
-      <!-- The countdown: the VS badge, big, in the middle of the dimmed arena; three seats have no badge there, so it fades -->
       <div ref="fxHost" class="pointer-events-none absolute inset-0 z-[11]" />
       <!-- The arena dims and the number stands in its middle. The stage stays in the page while seats fill, unseen, so its 3D
            label is ready before the first second -->
-      <div v-if="b.status === 'waiting' || countArmed || countdown > 0 || countFade" class="kd-countdown pointer-events-none absolute inset-0 grid place-items-center" :class="[countdown > 0 && 'is-on', countFade && 'is-fade']">
+      <div v-if="b.status === 'waiting' || countArmed || countdown > 0 || countFade" class="kd-countdown pointer-events-none absolute inset-0 grid place-items-center" :class="[countdown > 0 && countHome && 'is-on', countFade && 'is-fade', countSink && 'is-sink', b.size === 3 && 'is-split']">
         <div class="kd-count-stage relative grid size-40 place-items-center lg:size-52">
           <div ref="countEl" class="absolute inset-0" />
-          <span v-if="!count3d && countdown > 0" :key="countdown" class="kd-count-plain text-[56px] leading-none font-extrabold tabular-nums lg:text-[80px]">{{ countdown }}</span>
+          <span v-if="!count3d && countShown" :key="countShown" class="kd-count-plain text-[56px] leading-none font-extrabold tabular-nums lg:text-[80px]">{{ countShown }}</span>
         </div>
+        <!-- three seats have two badges and none in the middle: the VS parts in two and each half slides onto its line -->
+        <template v-if="b.size === 3 && countSink">
+          <span v-for="side in ['is-l', 'is-r']" :key="side" class="kd-count-twin absolute inset-0 grid place-items-center" :class="side">
+            <span class="kd-count-twin-vs type-12-caps grid size-9 place-items-center rounded-full">{{ $t('pvp.vs') }}</span>
+          </span>
+        </template>
       </div>
 
       <!-- The result, inside the arena: who took the pot, how much, and the same battle again -->
@@ -753,28 +786,75 @@ const laneCols = computed(() => {
 .kd-count-stage {
   z-index: 12;
   opacity: 0;
+  transition: opacity 260ms var(--ease-out);
 }
 .kd-countdown.is-on .kd-count-stage,
 .kd-countdown.is-fade .kd-count-stage {
   opacity: 1;
 }
-/* the VS holds a beat, then sinks into the badge's place, gone as the badge settles */
-.kd-countdown.is-fade .kd-count-stage {
-  animation: kd-count-vs 950ms var(--ease-in-out) both;
+/* the VS sinks exactly onto the badge, gone as the badge comes up under it */
+.kd-countdown.is-sink .kd-count-stage {
+  --home: 0.16;
+  animation: kd-count-vs 420ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+@media (min-width: 64rem) {
+  .kd-countdown.is-sink .kd-count-stage {
+    --home: 0.13;
+  }
 }
 @keyframes kd-count-vs {
-  0%,
-  35% {
-    opacity: 1;
-    transform: scale(1);
-  }
   80% {
     opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: scale(0.22);
+    transform: scale(var(--home));
   }
+}
+.kd-countdown.is-split.is-sink .kd-count-stage {
+  animation: kd-count-part 300ms var(--ease-out) both;
+}
+@keyframes kd-count-part {
+  to {
+    opacity: 0;
+    transform: scale(0.45);
+  }
+}
+.kd-count-twin {
+  z-index: 12;
+  animation: kd-count-twin-l 420ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+.kd-count-twin.is-r {
+  animation-name: kd-count-twin-r;
+}
+.kd-count-twin-vs {
+  background: var(--color-neutral-2);
+  color: var(--color-neutral-13);
+  box-shadow: inset 0 0 0 1px var(--color-neutral-5);
+  animation: kd-count-twin-in 420ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+/* a sixth of the arena each way: its two inner lines */
+@keyframes kd-count-twin-l {
+  to {
+    transform: translateX(-16.667%);
+  }
+}
+@keyframes kd-count-twin-r {
+  to {
+    transform: translateX(16.667%);
+  }
+}
+@keyframes kd-count-twin-in {
+  from {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+  40% {
+    opacity: 1;
+  }
+}
+.kd-countdown.is-fade::before {
+  transition-duration: 700ms;
 }
 .kd-count-plain {
   color: var(--color-neutral-15);
@@ -861,6 +941,16 @@ const laneCols = computed(() => {
   color: var(--color-brand-light);
   box-shadow: inset 0 0 0 1px rgb(255 95 31 / 0.6), 0 0 16px rgb(255 95 31 / 0.35);
 }
+/* the first one is the countdown's VS arriving: no beat, it only comes up under the label */
+.kd-vs.is-landing {
+  animation: kd-vs-land 240ms var(--ease-out) both;
+}
+@keyframes kd-vs-land {
+  from {
+    opacity: 0;
+    scale: 0.82;
+  }
+}
 @keyframes kd-vs {
   40% {
     scale: 1.3;
@@ -890,8 +980,7 @@ const laneCols = computed(() => {
     0 0 24px rgb(18 183 106 / 0.45);
 }
 .kd-arena-result {
-  background: rgb(12 13 16 / 0.82);
-  backdrop-filter: blur(4px);
+  background: rgb(12 13 16 / 0.88);
 }
 .kd-result-enter-active {
   transition: opacity var(--dur-slow) var(--ease-out) 600ms;

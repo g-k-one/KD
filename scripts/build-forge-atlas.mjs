@@ -53,10 +53,13 @@ const cells = [
   ],
 ]
 
+// clubs of smoke from scripts/build-smoke-sprites.py (white, tinted per particle)
+for (const n of [1, 2, 3, 4]) cells.push([`smoke${n}`, readFileSync(`scripts/forge-art/smoke${n}.png`)])
+
 const rows = Math.ceil(cells.length / COLS)
 const composites = await Promise.all(
   cells.map(async ([, svg], i) => {
-    const png = await sharp(Buffer.from(svg)).resize(CELL, CELL, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()
+    const png = await sharp(Buffer.isBuffer(svg) ? svg : Buffer.from(svg)).resize(CELL, CELL, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()
     return { input: png, left: (i % COLS) * CELL, top: Math.floor(i / COLS) * CELL }
   }),
 )

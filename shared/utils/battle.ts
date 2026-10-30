@@ -8,6 +8,9 @@ import { hmacSha256Hex } from './pf'
  * A tie is settled by the seeds, not by the seat: tie = parseInt(HMAC_SHA256(server_seed, block_id + ":tie")[0:8], 16),
  * and the winner is tied[tie % tied.length] (teams: [team 0–1, team 2–3][tie % 2]).
  */
+/** From the last seat filling to the first reel: the countdown's 3, 2, 1, the VS and its smoke */
+export const BATTLE_LEAD_MS = 4500
+
 export function battleWinners(mode: BattleMode, totals: number[], tie: number): number[] {
   if (mode === 'team') {
     const a = totals[0]! + totals[1]!

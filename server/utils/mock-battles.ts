@@ -5,7 +5,7 @@
 // exists, with the block ID read from the chain; the mock stands a random 64-hex ID in for it.
 import type { Battle, BattleCaseRef, BattleMode, BattlePlayerRef, BattleRoundResult, CreateBattleRequest } from '#shared/types/api'
 import { avatarFor } from '#shared/utils/avatar'
-import { battleTie, battleTotals, battleWinners } from '#shared/utils/battle'
+import { BATTLE_LEAD_MS, battleTie, battleTotals, battleWinners } from '#shared/utils/battle'
 import { pickByTicket, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
 import { adminSettings, getCase, getMockState, lobbyCaseSlugs, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory } from './mock-db'
 
@@ -90,7 +90,7 @@ async function start(b: StoredBattle) {
   b.winners = out.winners
   b.winnerSlot = b.winners[0]!
   b.status = 'live'
-  b.startedAt = new Date(Date.now() + 3000).toISOString()
+  b.startedAt = new Date(Date.now() + BATTLE_LEAD_MS).toISOString()
 
   // The winner takes every drop; a winning team deals them out between its two players, priciest first, in turn.
   // The mock pays the signed-in user at once; the UI reveals it at the end.

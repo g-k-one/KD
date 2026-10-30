@@ -21,7 +21,8 @@ import { RARITY_HEX } from './rarity'
  *               (the label's middle sits at y ≈ 300)
  *   kdBlaze   — kdBurn turned up for a small plate that must read as on fire (a limited case's stock): tall licks
  *               that clear the plate's top edge, a denser shower of embers, a hotter glow; same base line
- *   kdPuff    — one-shot: a light puff of grey smoke opening from the middle and drifting up as it thins
+ *   kdDust    — one-shot: something heavy has hit the floor at the centre: soft clubs of smoke roll out low and flat, stop
+ *               short and hang as they thin
  *   kdRank    — Forge's rank reveal (motion pack, `tier`: base → luck → mega → ultra → jackpot) in the rarity's own
  *               colour, one burst on the drop's rarity shape; opts { color: '#hex', level: 0…4 }
  */
@@ -404,22 +405,27 @@ export function defineKdEffects(engine: Engine) {
     },
   }))
 
-  // Normal blending, not additive: smoke darkens and veils what is under it instead of glowing
-  engine.define('kdPuff', (h) => ({
+  // Fast out, then almost still: the smoke is thrown by the blow and the air stops it. Flattened in y, so the floor lies under
+  // it; a few slower clubs stay by the middle. Normal blending: smoke is matter, not light
+  const SMOKE: Rgb = [0.74, 0.72, 0.7]
+  engine.define('kdDust', (h) => ({
     atlas: 'kd',
-    period: 1.3,
+    period: 2,
     init: (s) => Object.assign(s, { fired: false, sp: [] as Particle[] }),
     update(s, dt, at) {
-      const { R } = h
+      const { R, pick } = h
+      const sp = s.sp as Particle[]
       if (!s.fired) {
         s.fired = true
-        for (let i = 0; i < 16; i++) {
-          const a = R(0, 6.28)
-          const sp = R(30, 95)
-          h.spawn(s.sp as Particle[], { x: 180 + Math.cos(a) * 26, y: 186 + Math.sin(a) * 18, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.6 - R(20, 50), drag: 2, size: R(60, 110), sc: [[0, 0.5], [1, 1.8]], life: R(0.7, 1.15), rot: R(0, 6), vr: R(-0.6, 0.6), cells: [at.map.glow], add: 0, alpha: 0.2, tint: [0.4, 0.42, 0.48], fadeIn: 0.12, fadeOut: 0.75 })
+        const clubs = [at.map.smoke1, at.map.smoke2, at.map.smoke3, at.map.smoke4]
+        const first = R(0, 6.28)
+        for (let i = 0; i < 26; i++) {
+          const a = first + (i / 26) * 6.28 + R(-0.14, 0.14)
+          const v = R(130, 420) * (i % 4 ? 1 : 0.45)
+          h.spawn(sp, { x: 180 + Math.cos(a) * 34, y: 196 + Math.sin(a) * 12, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.32 - R(6, 26), drag: 3.8, size: R(90, 170), sc: [[0, 0.45], [0.25, 0.9], [1, 1.6]], life: R(1, 1.7), rot: R(0, 6.28), vr: R(-0.35, 0.35), cells: [pick(clubs)], add: 0, alpha: 0.5, tint: SMOKE, fadeIn: 0.05, fadeOut: 0.8 })
         }
       }
-      h.step(s.sp as Particle[], dt)
+      h.step(sp, dt)
     },
     render(s, c) {
       h.draw(c, s.sp as Particle[])

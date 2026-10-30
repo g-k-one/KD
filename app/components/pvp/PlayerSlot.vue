@@ -120,23 +120,16 @@ const idle = computed(() => !(props.result || playing.value))
   border-color: transparent;
   animation: kd-winner 900ms var(--ease-spring);
 }
-/* Crown drops in big and settles on the avatar's corner (Skin.club "show-crown") */
+/* the crown drops onto the avatar's corner; a plain fall, so it stays smooth while the whole room changes around it */
 .kd-crown {
   background: var(--color-neutral-1);
   box-shadow: 0 0 0 1px rgb(18 183 106 / 0.4);
-  animation: kd-crown-in 1.1s var(--ease-spring) both;
+  animation: kd-crown-in 460ms var(--ease-spring) both;
 }
 @keyframes kd-crown-in {
-  0% {
+  from {
     opacity: 0;
-    transform: translateY(-14px) scale(3);
-  }
-  45% {
-    opacity: 1;
-    transform: translateY(-6px) scale(2.2) rotateY(360deg);
-  }
-  100% {
-    transform: none;
+    transform: translateY(-12px) scale(1.5);
   }
 }
 @keyframes kd-winner {
