@@ -247,6 +247,13 @@ html body {
   .kd-btn-primary:disabled:not([aria-busy])::after {
     display: none;
   }
+  /* the price on it was drawn for the orange: it follows the grey label, and the dark coin turns light */
+  .kd-btn-primary:disabled:not([aria-busy]) .text-neutral-1 {
+    color: inherit !important;
+  }
+  .kd-btn-primary:disabled:not([aria-busy]) img {
+    filter: grayscale(1) invert(1) opacity(0.4);
+  }
 
   /*
    * Primary: Figma hover swaps base→bright for light→coin. A gradient can't be transitioned,

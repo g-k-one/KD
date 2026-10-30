@@ -262,7 +262,7 @@ async function saveTrade() {
               <UiIcon v-if="session.user.tradeUrl && tradeValid" name="check-circle" :size="18" class="ml-auto text-success" />
             </div>
             <div class="flex flex-1 flex-col gap-3 p-4 lg:px-6 lg:pb-6">
-              <UiInput id="profile-trade" v-model="tradeLink" size="l" class="kd-private" inputmode="url" clearable :error="!!tradeLink && !tradeValid" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…" />
+              <UiInput id="profile-trade" v-model="tradeLink" size="l" class="kd-private" inputmode="url" clearable :error="!!tradeLink && !tradeValid" :placeholder="$t('withdraw.linkPlaceholder')" />
               <span class="type-12-regular text-neutral-11">{{ $t('withdraw.whereLink') }}</span>
               <div class="mt-auto grid grid-cols-2 gap-2 pt-1">
                 <UiButton type="submit" size="m" :loading="tradeSaving" :disabled="!tradeValid || tradeLink.trim() === session.user?.tradeUrl">{{ $t('common.save') }}</UiButton>

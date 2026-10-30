@@ -20,6 +20,8 @@ const link = ref('')
 const editing = ref(false)
 const saved = computed(() => session.user?.tradeUrl ?? null)
 const valid = computed(() => TRADE_RE.test(link.value.trim()))
+/** Something to send to: the button says what is missing until then */
+const ready = computed(() => (!editing.value && !!saved.value) || valid.value)
 const total = computed(() => props.items.reduce((a, i) => a + i.price, 0))
 const offer = ref<WithdrawResponse['offer'] | null>(null)
 const sending = ref(false)
@@ -64,7 +66,7 @@ const left = computed(() => {
 </script>
 
 <template>
-  <UiModal v-model="open" :title="offer ? $t('withdraw.sentTitle') : $t('withdraw.title')" :description="offer ? undefined : $t('withdraw.hint')" :width="520">
+  <UiModal v-model="open" :title="offer ? $t('withdraw.sentTitle') : $t('withdraw.title')" :description="offer ? undefined : $t(items.length > 1 ? 'withdraw.hint' : 'withdraw.hintOne')" :width="520">
     <Transition name="kd-wd" mode="out-in">
       <!-- Sent -->
       <div v-if="offer" key="sent" class="flex flex-col items-center gap-4 py-2 text-center">
@@ -100,7 +102,7 @@ const left = computed(() => {
             <UiButton variant="ghost" size="s" @click="editing = true">{{ $t('withdraw.change') }}</UiButton>
           </div>
           <template v-else>
-            <UiInput id="trade-link" v-model="link" size="l" icon="steam" class="kd-private" inputmode="url" clearable :error="!!link && !valid" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…" />
+            <UiInput id="trade-link" v-model="link" size="l" icon="steam" class="kd-private" inputmode="url" clearable :error="!!link && !valid" :placeholder="$t('withdraw.linkPlaceholder')" />
             <span class="type-12-regular text-neutral-11">
               {{ $t('withdraw.whereLink') }}
               <a href="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" target="_blank" rel="noopener" class="text-brand-light underline-offset-2 hover:underline">{{ $t('withdraw.openSteam') }}</a>
@@ -114,9 +116,12 @@ const left = computed(() => {
       <UiButton v-if="offer" size="l" block @click="open = false">{{ $t('upgrade.done') }}</UiButton>
       <template v-else>
         <UiButton variant="secondary" size="l" class="flex-1" @click="open = false">{{ $t('common.cancel') }}</UiButton>
-        <UiButton size="l" icon="steam" class="flex-[2]" :loading="sending" :disabled="(editing || !saved) && !valid" @click="send">
-          {{ $t('withdraw.send', { n: items.length }) }}
-          <UiPrice :amount="total" size="s" tone="inverse" />
+        <UiButton size="l" :icon="ready ? 'steam' : undefined" class="flex-[2]" :loading="sending" :disabled="!ready" @click="send">
+          <template v-if="ready">
+            {{ $t('withdraw.send', { n: items.length }) }}
+            <UiPrice :amount="total" size="s" tone="inverse" />
+          </template>
+          <template v-else>{{ $t(link ? 'withdraw.checkLink' : 'withdraw.needLink') }}</template>
         </UiButton>
       </template>
     </template>
