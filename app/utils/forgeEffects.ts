@@ -17,8 +17,6 @@ import { RARITY_HEX } from './rarity'
  *               Colour per rarity: handle.set('tint', [r, g, b])
  *   kdWin     — won upgrade: one beat — a burst of green and gold sparks and a single thin ring that stays
  *               close to the dial (no glow wash, no second wave)
- *   kdStart   — the end of a battle's countdown: a mini explosion in the brand's colour. A white flash for a frame or
- *               two, one thin ring, a burst of sparks that slow down and redden, a few embers left to fall
  *   kdBurn    — loop around a label: a flat warm glow hugging it, licks and embers rising along its width
  *               (the label's middle sits at y ≈ 300)
  *   kdBlaze   — kdBurn turned up for a small plate that must read as on fire (a limited case's stock): tall licks
@@ -350,41 +348,6 @@ export function defineKdEffects(engine: Engine) {
       const t = s.cycle
       const k = t / 0.55
       if (k < 1) h.sprite(c, 180, 180, 220 + 120 * h.easeOut(k), 0, (1 - k) * 0.55, 1, m.ring!, 1, GREEN)
-      h.draw(c, s.sp as Particle[])
-    },
-  }))
-
-  engine.define('kdStart', (h) => ({
-    atlas: 'kd',
-    period: 1.6,
-    init: (s) => Object.assign(s, { fired: false, sp: [] as Particle[], ember: [] as Particle[] }),
-    update(s, dt, at) {
-      const { R, pick } = h
-      if (!s.fired) {
-        s.fired = true
-        for (let i = 0; i < 30; i++) {
-          const a = R(0, 6.28)
-          const sp = R(240, 560)
-          h.spawn(s.sp as Particle[], { x: 180 + Math.cos(a) * 30, y: 180 + Math.sin(a) * 30, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, size: R(12, 26), life: R(0.35, 0.7), rot: a, vr: 0, drag: 4, cells: [at.map.spark], add: 1, tint: pick([[1, 0.45, 0.1], [1, 0.7, 0.2], [1, 0.95, 0.8]]), fadeIn: 0.01, fadeOut: 0.7 })
-        }
-        for (let i = 0; i < 10; i++) {
-          const a = R(0, 6.28)
-          const sp = R(40, 150)
-          h.spawn(s.ember as Particle[], { x: 180 + Math.cos(a) * 50, y: 180 + Math.sin(a) * 50, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp + 30, size: R(6, 12), life: R(0.7, 1.3), rot: 0, vr: 0, drag: 1.4, cells: [at.map.ember ?? at.map.spark], add: 1, tint: [1, 0.3, 0.05], fadeIn: 0.05, fadeOut: 0.8 })
-        }
-      }
-      h.step(s.sp as Particle[], dt)
-      h.step(s.ember as Particle[], dt)
-    },
-    render(s, c) {
-      const m = c.at.map
-      const t = s.cycle
-      // the flash is the brightest frame there is, and it is over in a blink
-      if (t < 0.09) h.sprite(c, 180, 180, 240, 0, 1 - t / 0.09, 1, m.glow!, 1, [1, 0.92, 0.75])
-      if (t < 0.3) h.sprite(c, 180, 180, 300, 0, (1 - t / 0.3) * 0.5, 1, m.glow!, 1, [1, 0.42, 0.1])
-      const k = t / 0.4
-      if (k < 1) h.sprite(c, 180, 180, 120 + 230 * h.easeOut(k), 0, (1 - k) * 0.7, 1, m.ring!, 1, [1, 0.55, 0.15])
-      h.draw(c, s.ember as Particle[])
       h.draw(c, s.sp as Particle[])
     },
   }))

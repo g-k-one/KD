@@ -121,8 +121,9 @@ watch(done, (d) => {
 const countdown = computed(() =>
   b.value.status !== 'waiting' && b.value.startedAt && clock.value.round < 0 ? Math.max(0, Math.ceil((Date.parse(b.value.startedAt) - now.value) / 1000)) : 0,
 )
-// Each number is 3D metal (Extrude) and slams into the arena; the last one blasts apart over a mini explosion (Forge), and
-// the first round spins up behind it. No WebGL or reduced motion: the plain number, no blast
+// The numbers are 3D metal (Extrude): the first pops in, each next flips out of the one before it, and the last blasts
+// apart in a real explosion (Forge's boom) while the first round spins up behind it. Its canvas spans the arena's height
+// with room to spare, so nothing is cut. No WebGL or reduced motion: the plain number, no blast
 const COUNT_LOOK = {
   font: '800 {s}px Rubik, ui-sans-serif, system-ui, sans-serif',
   charset: '0123456789',
@@ -130,11 +131,9 @@ const COUNT_LOOK = {
   side: ['#d9480f', '#2a0e00'],
   metal: 0.35,
   gloss: 0.7,
-  bevel: 3,
-  depth: 26,
-  pad: 0.7,
+  bevel: 3.5,
+  depth: 30,
   strokes: [{ color: '#2a1400', width: 1.4, inset: 0 }],
-  glow: { color: '#ff5f1f', size: 18, strength: 0.65 },
   yaw: -12,
   pitch: 10,
   persp: 700,
@@ -154,18 +153,19 @@ function dropCountLabel() {
 async function countBeat(n: number) {
   await nextTick()
   if (!countLabel && countEl.value) {
-    countLabel = await ex.mount(countEl.value, { ...COUNT_LOOK, text: String(n) })
+    countLabel = await ex.mount(countEl.value, { ...COUNT_LOOK, size: isMobile.value ? 112 : 176, text: String(n) })
     await countLabel?.ready
     count3d.value = !!countLabel
-  } else countLabel?.set({ text: String(n) })
-  // a slow first mount: a newer second has already taken over
-  if (countdown.value === n) countLabel?.play('slam')
+    countLabel?.play('pop')
+  } else countLabel?.swap(String(n), { style: 'flip' })
 }
 async function countEnd() {
   if (!countLabel) return
   countBlast.value = true
-  fx.at('kdStart', arenaEl.value, isMobile.value ? 1 : 0.6)
-  await countLabel.play('blast')
+  fx.at('boom', arenaEl.value, isMobile.value ? 1.1 : 0.5)
+  // the flash comes up first: the number goes to pieces inside it
+  await new Promise((r) => setTimeout(r, 120))
+  await countLabel?.play('blast')
   dropCountLabel()
 }
 watch(countdown, (n, old) => {
@@ -178,7 +178,7 @@ watch(countdown, (n, old) => {
 onMounted(() => {
   if (done.value) return
   ex.preload()
-  fx.preload('kd')
+  fx.preload('aura')
 })
 onBeforeUnmount(dropCountLabel)
 
@@ -390,7 +390,7 @@ const laneCols = computed(() => {
       <!-- VS between the seats (between the two teams in Team 2v2); it beats on every new round -->
       <div class="pointer-events-none absolute inset-0 z-[3] grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }" aria-hidden="true">
         <span v-for="s in b.slots" :key="s.slot" class="relative">
-          <span v-if="countdown <= 0 && s.slot > 0 && (!isTeam || s.slot === 2)" :key="`${clock.round}`" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="isTeam && 'is-team'">{{ $t('pvp.vs') }}</span>
+          <span v-if="countdown <= 0 && !countBlast && s.slot > 0 && (!isTeam || s.slot === 2)" :key="`${clock.round}`" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="isTeam && 'is-team'">{{ $t('pvp.vs') }}</span>
         </span>
       </div>
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 left-0 -rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
@@ -399,7 +399,7 @@ const laneCols = computed(() => {
       <!-- The countdown: the arena dims and each number lands big in its middle, one beat a second -->
       <Transition name="kd-countdown">
         <div v-if="countdown > 0 || countBlast" class="kd-countdown pointer-events-none absolute inset-0 z-10 grid place-items-center" :class="countBlast && 'is-blast'">
-          <div class="relative grid size-44 place-items-center lg:size-72">
+          <div class="relative grid h-full w-full max-w-[560px] place-items-center">
             <div ref="countEl" class="absolute inset-0" />
             <span v-if="!count3d" :key="countdown" class="kd-count text-[72px] leading-none font-extrabold tabular-nums lg:text-[112px]">{{ countdown }}</span>
           </div>
@@ -572,7 +572,7 @@ const laneCols = computed(() => {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(40% 70% at 50% 50%, rgb(255 95 31 / 0.2), rgb(12 13 16 / 0.72));
+  background: rgb(12 13 16 / 0.72);
   transition: opacity var(--dur-base) var(--ease-out);
 }
 /* the arena comes back the moment the last number blasts: the first round is already spinning under it */
@@ -590,7 +590,6 @@ const laneCols = computed(() => {
 /* lands fast and big, holds, gets out of the way of the next one */
 .kd-count {
   color: var(--color-neutral-15);
-  text-shadow: 0 0 40px rgb(255 95 31 / 0.7);
   animation: kd-count-beat 950ms var(--ease-out) both;
 }
 @keyframes kd-count-beat {
