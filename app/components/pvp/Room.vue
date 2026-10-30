@@ -571,6 +571,7 @@ const roundLine = computed(() => {
       <div v-for="s in g" :key="s.slot" class="flex min-w-0 flex-col">
       <PvpPlayerSlot
         :quiet="isTeam"
+        :started="b.status !== 'waiting'"
         :player="s.player"
         :total="totals[s.slot]"
         :winner="done && winners.includes(s.slot)"

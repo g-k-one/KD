@@ -10,7 +10,7 @@ import type { BattlePlayerRef } from '#shared/types/api'
 // line of a free seat's button), 8 px in from the edges; a free seat is its plus in the picture's place and Join at the bottom.
 // Desktop: the 44 px avatar stands as far from the left edge as from the top and the bottom.
 // quiet: a seat inside a team: the team's head says the chance, who leads and who won, the seat only who sits there
-const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost'; busy?: boolean; quiet?: boolean; canKick?: boolean; canLeave?: boolean }>()
+const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost'; busy?: boolean; quiet?: boolean; canKick?: boolean; canLeave?: boolean; started?: boolean }>()
 defineEmits<{ bot: []; join: []; kick: []; leave: [] }>()
 
 // The running total rolls up to each new value like an odometer
@@ -28,7 +28,7 @@ const idle = computed(() => !(props.result || playing.value))
   <div
     class="kd-slot relative flex items-center"
     :class="[
-      compact ? 'h-[118px] flex-col gap-1 rounded-2xl p-2 text-center' : ['h-16 gap-3 rounded-2xl pl-[9px]', player && !canKick && !canLeave ? 'pr-3' : 'pr-[15px]'],
+      compact ? ['flex-col gap-1 rounded-2xl p-2 text-center', started ? (quiet ? 'h-[90px]' : 'h-[118px]') : 'h-[110px]'] : ['h-16 gap-3 rounded-2xl pl-[9px]', player && !canKick && !canLeave ? 'pr-3' : 'pr-[15px]'],
       quiet ? '' : winner ? 'is-winner' : lead ? 'is-lead' : '',
       compact && 'is-compact',
       idle && 'is-idle',
@@ -93,7 +93,8 @@ const idle = computed(() => !(props.result || playing.value))
   border: 1px solid transparent;
   transition:
     background-color var(--dur-slow) var(--ease-out),
-    border-color var(--dur-slow) var(--ease-out);
+    border-color var(--dur-slow) var(--ease-out),
+    height var(--dur-slow) var(--ease-out);
 }
 /* half of the coins line and its gap */
 .kd-slot-who {
