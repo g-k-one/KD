@@ -15,7 +15,6 @@ const session = useSessionStore()
 const ui = useUiStore()
 const toast = useToast()
 const sfx = useSfx()
-const ex = useExtrude()
 
 const { data, refresh, error } = await useFetch<BattleResponse>(() => `/api/battles/${id.value}`, { key: `battle-${id.value}` })
 if (error.value) {
@@ -163,120 +162,15 @@ watch(done, (d) => {
 
 // the seconds before the first round (the page's clock ticks late, so a fresh start would read 4: never above 3)
 const countdown = computed(() => (b.value.status !== 'waiting' && b.value.startedAt && clock.value.round < 0 ? Math.min(3, Math.max(0, Math.ceil((Date.parse(b.value.startedAt) - now.value) / 1000))) : 0))
-// The numbers are pseudo-3D (Extrude): the 3 spins in, each next flips out of the one before it while the whole label swings
-// to the other side, a full second each on real timers, not the page's 200 ms clock. The VS comes the same way, out of the 1.
-// Then it sinks onto the arena's own badge, smoke rolls out from under it as it lands, and only then the reels start. The
-// label is mounted ahead, while the seats fill, so the first number does not pay for the shader. No WebGL: the plain number
-const COUNT_LOOK = {
-  font: '800 {s}px Rubik, ui-sans-serif, system-ui, sans-serif',
-  charset: '0123456789VS',
-  face: ['#fff6e0', '#ffc46b', '#ff7a1a'],
-  side: ['#d9480f', '#2a0e00'],
-  metal: 0.2,
-  gloss: 0.55,
-  bevel: 2,
-  depth: 17,
-  yaw: -22,
-  pitch: 12,
-  persp: 700,
-  drag: false,
-}
 const howOpen = ref(false)
 const countEl = useTemplateRef<HTMLElement>('countEl')
 const arena = useTemplateRef<HTMLElement>('arena')
-// the page's shared layer: the smoke must not stop at the arena's frame
 const fx = useForge()
 // the drops' rank effects behind the reels: one canvas, one WebGL context and one atlas upload however many seats there are
 const arenaFx = useTemplateRef<HTMLElement>('arenaFx')
 provide(FORGE_KEY, useForge(arenaFx))
-let countLabel: ExtrudeHandle | null = null
-let countReady: Promise<void> | null = null
-let countFresh = true
-let countSide = 1
-let countTimers: ReturnType<typeof setTimeout>[] = []
-const count3d = ref(false)
-const countArmed = ref(false)
-// what stands in the arena now: 3, 2, 1, then 0, the VS (countFade); the arena's badge steps aside until the VS is nearly on it
-const countShown = ref(0)
-const countFade = ref(false)
-const countSink = ref(false)
-const countHome = ref(false)
-function dropCountLabel() {
-  countLabel?.destroy()
-  countLabel = null
-  countReady = null
-  countFresh = true
-  count3d.value = false
-  countShown.value = 0
-  countFade.value = false
-  countSink.value = false
-  countHome.value = false
-}
-function prepareCount() {
-  countReady ??= (async () => {
-    if (!countEl.value) return
-    countLabel = await ex.mount(countEl.value, { ...COUNT_LOOK, size: isMobile.value ? 88 : 124, quality: isMobile.value ? 'low' : 'auto', text: '3' })
-    await countLabel?.ready
-    count3d.value = !!countLabel
-  })()
-  return countReady
-}
-// The shader and Forge's canvas block the page while they build: never in the frames a room opens (Recreate stuttered), but
-// once the browser is idle. A countdown that starts sooner asks for the label itself.
-const whenIdle = (f: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 1500 }) : setTimeout(f, 500))
-// the stage went (a countdown that was already running when the page opened): the label went with it
-watch(countEl, (el) => (el ? whenIdle(prepareCount) : dropCountLabel()))
-async function countBeat(n: number) {
-  countShown.value = n
-  if (!n) countFade.value = true
-  sfx.count(n <= 1)
-  await prepareCount()
-  if (!countLabel) return
-  const text = n ? String(n) : 'VS'
-  countSide = -countSide
-  countLabel.set({ yaw: 22 * countSide })
-  if (countFresh) {
-    countFresh = false
-    if (countLabel.text !== text) countLabel.set({ text })
-    countLabel.play('pop')
-  } else {
-    countLabel.swap(text, { style: 'flip' })
-    countLabel.rotate(240 * countSide, 0, true)
-  }
-}
-function countLanded() {
-  const r = arena.value?.getBoundingClientRect()
-  dropCountLabel()
-  // the sound a case makes as its drop lands
-  sfx.reveal(0)
-  if (r) fx.play('kdPuff', { x: r.left + r.width / 2, y: r.top + r.height / 2, size: r.height * 1.7 })
-}
-// in ms before the first reel: a second for each number, then the VS, and the smoke has its time before the reels move
-function runCount() {
-  const left = Date.parse(b.value.startedAt!) - Date.now()
-  const at = (ms: number, f: () => void) => left > ms - 900 && countTimers.push(setTimeout(f, Math.max(0, left - ms)))
-  countTimers.forEach(clearTimeout)
-  countTimers = []
-  countHome.value = true
-  prepareCount()
-  at(3800, () => countBeat(3))
-  at(2800, () => countBeat(2))
-  at(1800, () => countBeat(1))
-  at(800, () => countBeat(0))
-  at(460, () => (countSink.value = true))
-  at(110, () => (countHome.value = false))
-  at(40, countLanded)
-}
-watch(countdown, (n, old) => n > 0 && !old && nextTick(runCount))
-onMounted(() => {
-  // finished rooms too: Replay plays the same countdown
-  whenIdle(() => fx.preload())
-  if (countdown.value > 0) nextTick(runCount)
-})
-onBeforeUnmount(() => {
-  countTimers.forEach(clearTimeout)
-  dropCountLabel()
-})
+// the 3, 2, 1 and the VS over the arena
+const { count3d, countArmed, countShown, countFade, countSink, countHome, prepareCount } = useBattleCountdown({ el: countEl, arena, fx, isMobile, seconds: countdown, startedAt: () => b.value.startedAt })
 
 // Same cases and seats in one click once the battle is over (Skin.club "Recreate")
 const recreating = ref(false)

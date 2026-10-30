@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Figma "Chip": presets, multipliers, filters, on/off switches. Sizes match buttons (S 32 / M 40 / L 48).
 // Tone colours the border by risk (success/warning/danger); coin and gold only tint the pressed state
-// (the ⚡ fast and the KURWADROP switches). Active = tinted fill + soft inner rim. Optional leading icon.
+// (the Fast and KURWADROP switches). Active = tinted fill + soft inner rim. Optional leading icon.
 withDefaults(
   defineProps<{
     active?: boolean

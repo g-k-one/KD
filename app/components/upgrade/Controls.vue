@@ -5,7 +5,7 @@ import { upgradeKeep } from '#shared/upgrade'
 /*
  * The upgrade's control panel, after Stake Dice / Limbo (docs/ux-audit-v2.md), sized so the whole game
  * fits on one phone screen:
- *   CTA      — "Upgrade · 68.9%" (the result is a skin, never coins back), ↺ reset, ⚡ fast spin
+ *   CTA      — "Upgrade · 68.9%" (the result is a skin, never coins back), reset, fast spin
  *   Chance   — one 1–80% bar (the cap, shared/upgrade.ts). Only the span the stake can reach is lit (the rest is shaded); dragging aims at the closest skin and
  *              the thumb settles on its real chance when let go. Under the bar ×10 · ×5 · ×3 · ×2 · ×1.5
  *              sit at their chances and aim there on tap — the scale explains itself.

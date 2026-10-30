@@ -41,7 +41,8 @@ function load(): Promise<ExtrudeEngine | null> {
   const b = useRuntimeConfig().app.baseURL || '/'
   loading ??= new Promise((resolve) => {
     const s = document.createElement('script')
-    s.src = `${b.endsWith('/') ? b : `${b}/`}vendor/extrude/extrude.js`
+    const v = useRuntimeConfig().public.vendorV
+    s.src = `${b.endsWith('/') ? b : `${b}/`}vendor/extrude/extrude.js${v ? `?v=${v}` : ''}`
     s.onload = () => resolve(window.Extrude ?? null)
     s.onerror = () => resolve(null)
     document.head.appendChild(s)

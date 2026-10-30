@@ -47,17 +47,20 @@ declare global {
 }
 
 let loading: Promise<boolean> | null = null
+let version = ''
 function loadScript(src: string) {
   return new Promise<void>((resolve, reject) => {
     const s = document.createElement('script')
-    s.src = src
+    s.src = version ? `${src}?v=${version}` : src
     s.onload = () => resolve()
     s.onerror = () => reject(new Error(`Forge: ${src}`))
     document.head.appendChild(s)
   })
 }
 function baseUrl() {
-  const b = useRuntimeConfig().app.baseURL || '/'
+  const config = useRuntimeConfig()
+  version = config.public.vendorV
+  const b = config.app.baseURL || '/'
   return `${b.endsWith('/') ? b : `${b}/`}vendor/forge/`
 }
 /** Forge packs we ship (from the Pawn repo: `npm run forge` → dist-forge, *.min.js copied here without .min):

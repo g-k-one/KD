@@ -20,6 +20,19 @@ const imageVersions = (dir = 'public/img'): Record<string, string> =>
       }),
   )
 
+// Pages: the same for the vendored engines' scripts, so a browser never keeps an old engine beside new code
+const vendorVersion = (dir = 'public/vendor') =>
+  createHash('md5')
+    .update(
+      readdirSync(dir, { recursive: true, withFileTypes: true })
+        .filter((e) => e.isFile() && e.name.endsWith('.js'))
+        .map((e) => readFileSync(join(e.parentPath, e.name), 'utf8'))
+        .sort()
+        .join(''),
+    )
+    .digest('hex')
+    .slice(0, 8)
+
 export default defineNuxtConfig({
   ...(artifact && {
     ssr: false,
@@ -29,7 +42,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     // debug: the 🐞 dock and /debug, /fx tools. On for the prototype; NUXT_PUBLIC_DEBUG=false hides them.
-    public: { clientMock: artifact, debug: true },
+    public: { clientMock: artifact, debug: true, vendorV: pages ? vendorVersion() : '' },
   },
 
   experimental: {
