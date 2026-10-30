@@ -227,7 +227,7 @@ if (import.meta.client) {
 
       <!-- one stage: the odds, the reel, the controls and the next hook, one step apart (12 px phones, 16 desktop),
            its top pulled up to the bar's 16 px instead of the page gap -->
-      <section ref="reelSection" class="-mt-2 flex scroll-mt-24 flex-col gap-3 lg:-mt-6 lg:gap-4">
+      <section ref="reelSection" class="-mt-2 flex scroll-mt-24 flex-col gap-3 lg:-mt-6 lg:gap-6">
         <CaseTransparency :data="cs" />
         <CaseReel
           ref="reel"
