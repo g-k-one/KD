@@ -67,7 +67,6 @@ function onClick(e: MouseEvent) {
     <!-- rounds: the count in a circle -->
     <div class="kd-brow-rounds flex items-center px-2 pt-2 lg:justify-center lg:p-0">
       <span class="kd-rounds grid size-11 shrink-0 place-items-center rounded-full lg:size-19" :title="roundsTip">
-        <span class="kd-rounds-sheen" />
         <span class="kd-rounds-n tabular-nums" :class="battle.status === 'live' ? 'type-12-caps lg:type-20-caps' : 'type-20-caps lg:type-28'">{{ battle.status === 'live' ? `${round}/${battle.rounds.length}` : battle.rounds.length }}</span>
       </span>
     </div>
@@ -187,43 +186,24 @@ function onClick(e: MouseEvent) {
 .kd-brow-mode {
   color: var(--mc);
 }
-/* the rounds' circle: a sphere in the mode's colour, lit from the top left, in a dark channel with a comet running round
-   it. The comet is a crescent: a hole set off-centre leaves it thick at the white-hot head and hair-thin at the far side,
-   and it turns as one piece. Its light slides along the sphere's edge on the same beat. Only transform and opacity move.
-   Live, red, faster, breathing; still and grey once over */
+/* the rounds' circle: a disc lit softly from the middle in the mode's colour, and a slow conic gradient turning as its rim.
+   The hole in the rim sits a little off-centre, so it is thick where the light is and hair-thin across from it. Only
+   transform and opacity move. Live, red, faster, breathing; still and grey once over */
 .kd-rounds {
   --glow: var(--mc);
   --turn: 7s;
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: color-mix(in srgb, var(--glow) 12%, var(--cell));
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 24%, var(--cell)), var(--cell));
 }
 .kd-rounds::before {
   content: '';
   position: absolute;
   inset: 0;
-  z-index: -2;
-  background: conic-gradient(color-mix(in srgb, var(--glow) 55%, #fff), var(--glow) 8%, transparent 24%, transparent 48%, var(--glow) 92%, color-mix(in srgb, var(--glow) 55%, #fff));
-  mask-image: radial-gradient(44% 44% at 50% 54.5%, transparent 96%, #000 100%);
-  animation: kd-rounds-turn var(--turn) linear infinite;
-}
-.kd-rounds::after {
-  content: '';
-  position: absolute;
-  inset: 10%;
   z-index: -1;
-  border-radius: inherit;
-  background:
-    radial-gradient(34% 26% at 35% 24%, rgb(255 255 255 / 0.3), transparent),
-    radial-gradient(circle at 38% 30%, color-mix(in srgb, var(--glow) 52%, var(--cell)), color-mix(in srgb, var(--glow) 18%, var(--cell)) 55%, #07080b 100%);
-  box-shadow: inset -2px -3px 6px rgb(0 0 0 / 0.5);
-}
-.kd-rounds-sheen {
-  position: absolute;
-  inset: 10%;
-  border-radius: 50%;
-  background: radial-gradient(70% 34% at 50% 0%, color-mix(in srgb, var(--glow) 60%, transparent), transparent);
+  background: conic-gradient(from -151deg, transparent 0 15%, var(--glow) 42%, transparent 62%, color-mix(in srgb, var(--glow) 50%, transparent) 86%, transparent);
+  mask-image: radial-gradient(46.5% 46.5% at 50% 52.5%, transparent 97%, #000 100%);
   animation: kd-rounds-turn var(--turn) linear infinite;
 }
 .kd-brow.is-live .kd-rounds {
@@ -238,8 +218,7 @@ function onClick(e: MouseEvent) {
 .kd-brow.is-finished .kd-rounds {
   --glow: var(--color-neutral-5);
 }
-.kd-brow.is-finished .kd-rounds::before,
-.kd-brow.is-finished .kd-rounds-sheen {
+.kd-brow.is-finished .kd-rounds::before {
   animation: none;
 }
 @keyframes kd-rounds-turn {
@@ -257,7 +236,6 @@ function onClick(e: MouseEvent) {
 }
 @media (prefers-reduced-motion: reduce) {
   .kd-rounds::before,
-  .kd-rounds-sheen,
   .kd-brow.is-live .kd-rounds::before {
     animation: none;
   }
@@ -265,7 +243,6 @@ function onClick(e: MouseEvent) {
 .kd-rounds-n {
   position: relative;
   color: var(--color-neutral-15);
-  text-shadow: 0 1px 3px rgb(0 0 0 / 0.6);
 }
 .kd-brow.is-finished .kd-rounds-n {
   color: var(--color-neutral-11);
