@@ -1,8 +1,9 @@
 import type { Rarity } from '#shared/types/api'
+import { KD_ATLAS } from './forgeAtlas'
 import { RARITY_HEX } from './rarity'
 
 /*
- * KurwaDROP's own Forge effects (docs/motion.md → VFX), drawn from our atlas 'kd'
+ * KurwaDROP's own Forge effects (docs/motion.md → VFX), drawn from our atlas KD_ATLAS
  * (scripts/build-forge-atlas.mjs): the KD coin and its edge, a golden-chicken feather, and white masks
  * (glow, ring, spark, rays, ember) tinted per particle. Authored in the usual 360×360 square, centre (180, 180).
  *
@@ -149,7 +150,7 @@ export function defineKdEffects(engine: Engine) {
   }
 
   engine.define('kdJackpot', (h) => ({
-    atlas: 'kd',
+    atlas: KD_ATLAS,
     period: 3.8,
     // The Golden Chicken: a crisp shockwave of small sparks (no upscaled ring texture), a cloud of gold
     // feathers that bursts up and then drifts down swaying, and a handful of KD coins thrown higher than
@@ -210,7 +211,7 @@ export function defineKdEffects(engine: Engine) {
   }))
 
   engine.define('kdReveal', (h) => ({
-    atlas: 'kd',
+    atlas: KD_ATLAS,
     period: 1.6,
     // Cheap by design: ≤ 70 particles at the top level, all small spark sprites near native size.
     init: (s) => Object.assign(s, { fired: 0, wave: [] as Particle[], motes: [] as Particle[], tint: GOLD, level: 1 }),
@@ -262,7 +263,7 @@ export function defineKdEffects(engine: Engine) {
   }))
 
   engine.define('kdCoins', (h) => ({
-    atlas: 'kd',
+    atlas: KD_ATLAS,
     init: (s) => Object.assign(s, { fired: false, coins: [] as Coin[] }),
     update(s, dt) {
       const { R, PI } = h
@@ -290,7 +291,7 @@ export function defineKdEffects(engine: Engine) {
   }))
 
   engine.define('kdAura', (h) => ({
-    atlas: 'kd',
+    atlas: KD_ATLAS,
     init: (s) => Object.assign(s, { sp: [] as Particle[], tint: GOLD }),
     update(s, dt, at) {
       const { R } = h
@@ -329,7 +330,7 @@ export function defineKdEffects(engine: Engine) {
   }))
 
   engine.define('kdWin', (h) => ({
-    atlas: 'kd',
+    atlas: KD_ATLAS,
     period: 2.2,
     init: (s) => Object.assign(s, { fired: false, sp: [] as Particle[] }),
     update(s, dt, at) {
@@ -354,7 +355,7 @@ export function defineKdEffects(engine: Engine) {
   }))
 
   engine.define('kdBurn', (h) => ({
-    atlas: 'kd',
+    atlas: KD_ATLAS,
     init: (s) => Object.assign(s, { em: [] as Particle[], lick: [] as Particle[] }),
     update(s, dt, at) {
       const { R } = h
@@ -377,7 +378,7 @@ export function defineKdEffects(engine: Engine) {
   // A calm flame behind a big win's skin (home, top 3), in the rarity's colour (opts.color): slower than the stock
   // plate's blaze, smaller licks in the plain colour (no whitening: hot licks read as white balls), a faint glow
   engine.define('kdFlame', (h) => ({
-    atlas: 'kd',
+    atlas: KD_ATLAS,
     rate: 0.4,
     init(s) {
       const o = (s as State & { o: { color?: string } }).o
@@ -409,7 +410,7 @@ export function defineKdEffects(engine: Engine) {
   // Fast out, then almost still: the air stops the smoke. Normal blending: smoke is matter, not light
   const SMOKE: Rgb = [1, 1, 1]
   engine.define('kdPuff', (h) => ({
-    atlas: 'kd',
+    atlas: KD_ATLAS,
     period: 1.4,
     init: (s) => Object.assign(s, { fired: false, sp: [] as Particle[] }),
     update(s, dt, at) {
@@ -433,7 +434,7 @@ export function defineKdEffects(engine: Engine) {
   }))
 
   engine.define('kdBlaze', (h) => ({
-    atlas: 'kd',
+    atlas: KD_ATLAS,
     // a slower burn: the licks and embers rise at 70% speed
     rate: 0.7,
     // opts.color: burn in that colour (a rarity's) — the licks in it and a hotter version of it, embers likewise

@@ -34,7 +34,7 @@ provide(FORGE_KEY, {
   at: (...a: Parameters<ForgeLayer['at']>) => layer().at(...a),
   stopAll: () => (homeFx?.stopAll(), beltFx.stopAll()),
   killAll: () => (homeFx?.killAll(), beltFx.killAll()),
-  preload: (atlas: string) => layer().preload(atlas),
+  preload: (atlas?: string) => layer().preload(atlas),
 })
 
 

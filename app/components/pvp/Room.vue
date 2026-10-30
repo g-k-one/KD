@@ -245,7 +245,7 @@ function runCount() {
 watch(countdown, (n, old) => n > 0 && !old && nextTick(runCount))
 onMounted(() => {
   // finished rooms too: Replay plays the same countdown
-  whenIdle(() => fx.preload('kd'))
+  whenIdle(() => fx.preload())
   if (countdown.value > 0) nextTick(runCount)
 })
 onBeforeUnmount(() => {
@@ -464,7 +464,7 @@ const roundLine = computed(() => {
       </div>
     </section>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
-    <section ref="arena" class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
+    <section ref="arena" class="kd-arena relative overflow-hidden rounded-5xl" :class="(done || b.status === 'waiting' || countdown > 0) && 'is-rest'">
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
         <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="[done && winners.includes(s.slot) && 'is-winner', leaders.includes(s.slot) && 'is-lead', isTeam && s.slot === 2 && 'is-team-split']">
           <!-- a free seat while it waits: an empty lane, no second Join: the action is on the seat's plate under it -->
@@ -868,22 +868,23 @@ const roundLine = computed(() => {
   z-index: 2;
   transition:
     opacity var(--dur-base) var(--ease-out),
-    transform var(--dur-slow) var(--ease-out);
+    translate var(--dur-slow) var(--ease-out);
 }
-/* the battle is over: the frame goes plain grey and the arrows slip out, as on a case's drop screen */
-.kd-arena.is-done {
+/* nothing spins, before the reels start or after they stop: the frame goes plain grey and the arrows slip out, as on a case's
+   drop screen; they glide in with the first spin */
+.kd-arena.is-rest {
   background:
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
     linear-gradient(var(--color-neutral-4), var(--color-neutral-4)) border-box;
 }
-.kd-arena.is-done .kd-amark {
+.kd-arena.is-rest .kd-amark {
   opacity: 0;
 }
-.kd-arena.is-done .kd-amark.left-0 {
-  transform: translateX(-12px);
+.kd-arena.is-rest .kd-amark.left-0 {
+  translate: -19px -50%;
 }
-.kd-arena.is-done .kd-amark.right-0 {
-  transform: translateX(12px);
+.kd-arena.is-rest .kd-amark.right-0 {
+  translate: 19px -50%;
 }
 /* the turned picture keeps its 28 px box: 3 px of it stick out past the turned 22, 4 more reach the frame's outer edge */
 .kd-amark.left-0 {

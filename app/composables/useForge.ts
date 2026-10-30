@@ -9,6 +9,8 @@
  *
  * Effects are authored in a 360×360 square. Reduced motion → every call is a no-op.
  */
+import { KD_ATLAS, KD_ATLAS_MAP } from '~/utils/forgeAtlas'
+
 export interface ForgeHandle {
   stop(): void
   kill(): void
@@ -40,6 +42,8 @@ declare global {
     Forge?: ForgeEngine
     makeForge?: (host: HTMLElement | null) => ForgeEngine
   }
+  /** the engine's atlas maps, a global of forge.js */
+  const FX_ATLAS: Record<string, unknown>
 }
 
 let loading: Promise<boolean> | null = null
@@ -61,11 +65,14 @@ function baseUrl() {
  *  gold burst (goldboom, feathers) · rarity — rarity beam under a drop (lootbeam), rarity frame / reveal, appear / vanish ·
  *  motion — hits of the second round and the rank reveal (tier), which our kdRank colours per rarity */
 const PACKS = ['image', 'hits', 'matter', 'rarity', 'motion']
-/** Loads the engine (with its atlas map), our own atlas, then the packs — once, in order (classic scripts sharing globals). */
+/** Loads the engine (with its atlas map), adds our own atlas, then the packs — once, in order (classic scripts sharing globals). */
 function ensureForge(base: string) {
   loading ??= loadScript(`${base}forge.js`)
-    // our own atlas (KD coin, feather, glow masks), see scripts/build-forge-atlas.mjs — adds FX_ATLAS.kd, so after the engine
-    .then(() => loadScript(`${base}kd-atlas.js`))
+    // our own atlas (KD coin, feather, glow masks, smoke), see scripts/build-forge-atlas.mjs: its map ships with this code and
+    // its picture is named by its hash, so a browser's cache can't pair them wrongly; the engine's map exists from here on
+    .then(() => {
+      FX_ATLAS[KD_ATLAS] = KD_ATLAS_MAP
+    })
     .then(() => PACKS.reduce((p, n) => p.then(() => loadScript(`${base}forge-${n}.js`)), Promise.resolve()))
     .then(() => {
       if (!window.Forge) return false
@@ -181,7 +188,7 @@ export function useForge(host?: Ref<HTMLElement | null | undefined>) {
       e.then((x) => x?.destroy?.())
     })
 
-  return { play, at, stopAll, killAll, preload: async (atlas: string) => (await get())?.preload(atlas) }
+  return { play, at, stopAll, killAll, preload: async (atlas = KD_ATLAS) => (await get())?.preload(atlas) }
 }
 
 /** sizeEl sizes it by another element; lift moves it up by that share of its size; follow keeps it on el as el moves */

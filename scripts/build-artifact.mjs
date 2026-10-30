@@ -27,9 +27,9 @@ for (const f of ['200.html', '404.html', '_robots.txt']) rmSync(join(out, f), { 
 // The artifact host caps a version at 511 files. Forge loads atlases lazily by effect name and the app only
 // plays our own kd* effects, so the stock atlases stay out (fx-strips is always loaded by the engine).
 if (!pages) {
-  const FORGE_KEEP = new Set(['forge.js', 'forge-image.js', 'forge-hits.js', 'forge-matter.js', 'forge-rarity.js', 'forge-motion.js', 'kd-atlas.js', 'fx-kd.webp', 'fx-aura.webp', 'fx-noise.png', 'fx-strips.webp'])
+  const FORGE_KEEP = new Set(['forge.js', 'forge-image.js', 'forge-hits.js', 'forge-matter.js', 'forge-rarity.js', 'forge-motion.js', 'fx-aura.webp', 'fx-noise.png', 'fx-strips.webp'])
   const forgeDir = join(out, 'vendor', 'forge')
-  if (existsSync(forgeDir)) for (const n of readdirSync(forgeDir)) if (!FORGE_KEEP.has(n)) rmSync(join(forgeDir, n), { force: true })
+  if (existsSync(forgeDir)) for (const n of readdirSync(forgeDir)) if (!FORGE_KEEP.has(n) && !n.startsWith('fx-kd-')) rmSync(join(forgeDir, n), { force: true })
 
   // Pictures that live in the artifact's asset store (app/mock/artifact-assets.json) stay out of the files
   const stored = Object.keys(JSON.parse(readFileSync(join(root, 'app', 'mock', 'artifact-assets.json'), 'utf8')))
