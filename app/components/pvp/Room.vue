@@ -363,8 +363,8 @@ const laneCols = computed(() => {
           <span v-if="countdown <= 0 && !countHome && s.slot > 0 && (!isTeam || s.slot === 2)" :key="`${clock.round}`" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="isTeam && 'is-team'">{{ $t('pvp.vs') }}</span>
         </span>
       </div>
-      <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 left-0 -rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
-      <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 right-0 rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
+      <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 left-0 -rotate-90" />
+      <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 right-0 rotate-90" />
 
       <!-- The countdown: the VS badge, big, in the middle of the dimmed arena; three seats have no badge there, so it fades -->
       <div v-if="countdown > 0 || countHome" class="kd-countdown pointer-events-none absolute inset-0 z-10 grid place-items-center" :class="[countHome && 'is-home', b.size === 3 && 'is-off-line']" :style="{ '--mc': PVP_MODE_COLOR[b.mode] }">
@@ -796,7 +796,11 @@ const laneCols = computed(() => {
     linear-gradient(var(--color-neutral-1), var(--color-neutral-1)) padding-box,
     linear-gradient(180deg, var(--color-neutral-4) 15%, rgb(255 95 31 / 0.85) 50%, var(--color-neutral-4) 85%) border-box;
 }
+/* the case reel's marker, turned: 28 × 22, its base on the frame's outer edge */
 .kd-amark {
+  width: 28px;
+  height: 22px;
+  max-width: none;
   translate: 0 -50%;
   z-index: 2;
   transition:
@@ -818,12 +822,12 @@ const laneCols = computed(() => {
 .kd-arena.is-done .kd-amark.right-0 {
   transform: translateX(12px);
 }
-/* the arrows sit on the frame's line, base flush with it (the rotated picture leaves a side gap of its own) */
+/* the turned picture keeps its 28 px box: 3 px of it stick out past the turned 22, 4 more reach the frame's outer edge */
 .kd-amark.left-0 {
-  translate: calc(-1 * var(--mark-in, 5px)) -50%;
+  translate: -7px -50%;
 }
 .kd-amark.right-0 {
-  translate: var(--mark-in, 5px) -50%;
+  translate: 7px -50%;
 }
 .kd-arena-seat + .kd-arena-seat {
   border-left: 1px solid var(--color-neutral-4);
