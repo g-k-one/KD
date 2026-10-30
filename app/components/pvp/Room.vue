@@ -138,18 +138,43 @@ const countdown = computed(() =>
 const howOpen = ref(false)
 const countHome = ref(false)
 const countBadge = useTemplateRef<HTMLElement>('countBadge')
+// the fire round the badge: Forge on its own canvas in the arena, under the badge and over the dimmed reels
+const fxHost = useTemplateRef<HTMLElement>('fxHost')
+const fx = useForge(fxHost)
+const MODE_HEX = { classic: '#fdb022', crazy: RARITY_HEX.classified, team: RARITY_HEX.milspec }
+const fireAt = () => {
+  const el = fxHost.value
+  return el ? { x: el.offsetWidth / 2, y: el.offsetHeight / 2, size: el.offsetHeight, color: MODE_HEX[b.value.mode] } : null
+}
+let countFire: Promise<ForgeHandle | null> | null = null
+function stokeFire(level: number) {
+  const at = fireAt()
+  if (!at) return
+  countFire ??= fx.play('kdCharge', { ...at, loop: true })
+  countFire.then((h) => h?.set('level', level))
+}
+function endFire() {
+  const at = fireAt()
+  countFire?.then((h) => h?.stop())
+  countFire = null
+  if (at) fx.play('kdChargeHit', at)
+}
 let countTimer: ReturnType<typeof setTimeout> | undefined
 watch(countdown, (n, old) => {
   if (n > 0 && n !== old) {
     sfx.count(n === 1)
+    stokeFire(4 - n)
     if (old > 0) countBadge.value?.animate({ scale: [0.84, 1.14, 1] }, { duration: 460, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' })
   } else if (n === 0 && old > 0) {
+    endFire()
     countHome.value = true
     clearTimeout(countTimer)
     countTimer = setTimeout(() => (countHome.value = false), 800)
   }
 })
 onBeforeUnmount(() => clearTimeout(countTimer))
+// the atlas ready before the first second, or the first flames play unseen
+onMounted(() => done.value || fx.preload('kd'))
 
 // Same cases and seats in one click once the battle is over (Skin.club "Recreate")
 const recreating = ref(false)
@@ -371,7 +396,8 @@ const laneCols = computed(() => {
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 right-0 rotate-90" />
 
       <!-- The countdown: the VS badge, big, in the middle of the dimmed arena; three seats have no badge there, so it fades -->
-      <div v-if="countdown > 0 || countHome" class="kd-countdown pointer-events-none absolute inset-0 z-10 grid place-items-center" :class="[countHome && 'is-home', b.size === 3 && 'is-off-line']" :style="{ '--mc': PVP_MODE_COLOR[b.mode] }">
+      <div ref="fxHost" class="pointer-events-none absolute inset-0 z-[11]" />
+      <div v-if="countdown > 0 || countHome" class="kd-countdown pointer-events-none absolute inset-0 grid place-items-center" :class="[countHome && 'is-home', b.size === 3 && 'is-off-line']" :style="{ '--mc': PVP_MODE_COLOR[b.mode] }">
         <div ref="countBadge" class="kd-count relative rounded-full">
           <span class="absolute inset-0 overflow-hidden rounded-full">
             <span class="kd-count-fill absolute" :style="{ '--level': countdown ? (4 - countdown) / 3 : 1 }" />
@@ -661,6 +687,7 @@ const laneCols = computed(() => {
   content: '';
   position: absolute;
   inset: 0;
+  z-index: 10;
   background: rgb(12 13 16 / 0.6);
   animation: kd-count-dim 300ms var(--ease-out) both;
 }
@@ -681,6 +708,7 @@ const laneCols = computed(() => {
 .kd-count {
   --home: 0.409;
   --vs-font: 29.3px;
+  z-index: 12;
   width: 88px;
   height: 88px;
   background: var(--color-neutral-3);
