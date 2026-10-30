@@ -679,3 +679,42 @@ html body {
 .is-streamer .kd-private:focus-within {
   filter: none;
 }
+
+/* Shared keyframes: one definition each, used from the components' own styles */
+@keyframes kd-skip-nudge {
+  50% {
+    transform: translateX(3px);
+  }
+}
+@keyframes kd-drop-float {
+  50% {
+    translate: 0 -6px;
+  }
+}
+@keyframes kd-float {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes kd-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+@keyframes kd-verdict {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+@keyframes kd-breathe {
+  50% {
+    opacity: 0.7;
+  }
+}
+@keyframes kd-blink {
+  50% {
+    opacity: 0.3;
+  }
+}

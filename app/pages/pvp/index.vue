@@ -167,9 +167,4 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
   background: var(--color-danger);
   animation: kd-blink 1.4s ease-in-out infinite;
 }
-@keyframes kd-blink {
-  50% {
-    opacity: 0.3;
-  }
-}
 </style>

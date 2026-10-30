@@ -76,14 +76,8 @@ const sparks = computed(() => {
   margin: calc(var(--size) * -0.55);
   background: radial-gradient(circle, color-mix(in srgb, var(--c) 55%, transparent), transparent 68%);
   animation:
-    kd-aura-in 700ms var(--ease-out) both,
+    kd-pop-in 700ms var(--ease-out) both,
     kd-aura-breathe 2.4s ease-in-out 700ms infinite;
-}
-@keyframes kd-aura-in {
-  from {
-    opacity: 0;
-    transform: scale(0.5);
-  }
 }
 @keyframes kd-aura-breathe {
   50% {

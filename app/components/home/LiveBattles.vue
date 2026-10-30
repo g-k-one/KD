@@ -34,11 +34,6 @@ const liveCount = computed(() => (data.value?.battles ?? []).filter((b) => b.sta
   height: 6px;
   border-radius: 9999px;
   background: var(--color-danger);
-  animation: kd-live 1.6s ease-in-out infinite;
-}
-@keyframes kd-live {
-  50% {
-    opacity: 0.3;
-  }
+  animation: kd-blink 1.6s ease-in-out infinite;
 }
 </style>

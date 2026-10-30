@@ -443,12 +443,7 @@ function poke(e: MouseEvent) {
   height: 260px;
   background: radial-gradient(closest-side, rgb(255 184 72 / 0.75), rgb(255 120 30 / 0.24) 60%, transparent);
   transform: translate3d(calc(var(--px, 0) * 4px), calc(var(--py, 0) * 3px), 0);
-  animation: kd-hen-glow 4.2s var(--ease-in-out) infinite;
-}
-@keyframes kd-hen-glow {
-  50% {
-    opacity: 0.7;
-  }
+  animation: kd-breathe 4.2s var(--ease-in-out) infinite;
 }
 .kd-hen-lean {
   transform: translate3d(calc(var(--px, 0) * 10px), calc(var(--py, 0) * 6px), 0);
@@ -468,12 +463,7 @@ function poke(e: MouseEvent) {
 }
 /* hovering: the whole bird rides up and down */
 .kd-hen-bob {
-  animation: kd-hen-bob 3.2s var(--ease-in-out) infinite;
-}
-@keyframes kd-hen-bob {
-  50% {
-    transform: translateY(-8px);
-  }
+  animation: kd-float 3.2s var(--ease-in-out) infinite;
 }
 
 /* tablets and phones: the band above the words — the chicken centred in it */

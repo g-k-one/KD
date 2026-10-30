@@ -1,20 +1,9 @@
-import type { Battle, BattleCaseRef } from '#shared/types/api'
+import type { Battle } from '#shared/types/api'
 
 /** Each battle mode's icon (its colour is the card's .kd-mode): the trophy for the most value, a falling line for the least, people for the teams */
 export const PVP_MODE_ICON = { classic: 'mode-classic', crazy: 'mode-crazy', team: 'mode-team' } as const
 /** …and its colour, as the cards wear it */
 export const PVP_MODE_COLOR = { classic: 'var(--color-coin)', crazy: 'var(--color-item-classified)', team: 'var(--color-item-milspec)' } as const
-
-/** Collapses consecutive rounds of the same case into thumbnails with a quantity badge. */
-export function groupRounds(rounds: BattleCaseRef[]) {
-  const out: Array<BattleCaseRef & { qty: number; from: number }> = []
-  rounds.forEach((r, i) => {
-    const last = out[out.length - 1]
-    if (last && last.slug === r.slug) last.qty += 1
-    else out.push({ ...r, qty: 1, from: i })
-  })
-  return out
-}
 
 /** Which round is playing right now (−1 before start, rounds.length when done). */
 export function battleClock(b: Battle, now: number) {

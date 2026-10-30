@@ -327,12 +327,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
 }
 .kd-live {
   background: var(--color-success);
-  animation: kd-live 1.6s ease-in-out infinite;
-}
-@keyframes kd-live {
-  50% {
-    opacity: 0.3;
-  }
+  animation: kd-blink 1.6s ease-in-out infinite;
 }
 .kd-step {
   animation: kd-rise var(--dur-slow) var(--ease-out) both;

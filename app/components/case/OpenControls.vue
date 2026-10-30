@@ -87,11 +87,6 @@ const COUNT_OPTIONS = ([1, 2, 3, 4, 5] as const).map((n) => ({ value: n, label: 
 .kd-skip-icon {
   animation: kd-skip-nudge 900ms ease-in-out infinite;
 }
-@keyframes kd-skip-nudge {
-  50% {
-    transform: translateX(3px);
-  }
-}
 /* Height animates from 0 with grid rows, so nothing below jumps */
 .kd-unfold {
   display: grid;

@@ -862,11 +862,6 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
      The glow stays put; no float until the reveal is over (the last wave and the bloom end by ~1.4 s) */
   animation: kd-drop-float 3.2s var(--ease-sine) 1500ms infinite;
 }
-@keyframes kd-drop-float {
-  50% {
-    translate: 0 -6px;
-  }
-}
 .kd-reel-card.is-sold[data-win] {
   opacity: 0.4;
   filter: grayscale(0.85);
@@ -888,7 +883,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   /* static shadow (an animated drop-shadow repaints every frame); the case stays clear of the frame */
   filter: drop-shadow(0 12px 14px rgb(0 0 0 / 0.6));
   animation:
-    kd-case-float 3.6s var(--ease-sine) infinite,
+    kd-float 3.6s var(--ease-sine) infinite,
     kd-stack-in var(--dur-slow) var(--ease-spring) both;
   animation-delay: var(--float-delay, 0s), var(--in-delay, 0s);
   /* the stack re-fans when the amount changes */
@@ -908,11 +903,6 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 }
 /* Centring comes from the utilities' `translate` property, so the float only touches `transform`; it rises 0–8 px, so
    the case sits 4 px under the stage's centre and its float is centred on it */
-@keyframes kd-case-float {
-  50% {
-    transform: translateY(-8px);
-  }
-}
 .kd-reel.spinning {
   cursor: pointer;
 }

@@ -190,7 +190,7 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
   animation: kd-art-star-sway 6s var(--ease-sine) infinite;
 }
 .kd-art.is-float .kd-art-glow {
-  animation: kd-art-breathe 4.2s var(--ease-sine) infinite;
+  animation: kd-breathe 4.2s var(--ease-sine) infinite;
 }
 @keyframes kd-art-sway {
   0%,
@@ -208,11 +208,6 @@ const waves = computed(() => Math.min(3, Math.max(0, step.value)))
   }
   50% {
     transform: translate(-50%, -50%) rotate(10deg);
-  }
-}
-@keyframes kd-art-breathe {
-  50% {
-    opacity: 0.7;
   }
 }
 @media (prefers-reduced-motion: reduce) {

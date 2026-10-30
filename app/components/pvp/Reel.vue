@@ -177,11 +177,6 @@ watch([height, cell], () => {
 .kd-preel-card[data-win] > .kd-art :deep(.kd-art-img) {
   animation: kd-drop-float 3.2s var(--ease-sine) 1500ms infinite;
 }
-@keyframes kd-drop-float {
-  50% {
-    translate: 0 -6px;
-  }
-}
 /* Same frame language as the case reel: it warms up towards the markers, so they sit on it */
 .kd-preel {
   border: 3px solid transparent;

@@ -156,10 +156,4 @@ async function copy(v: string) {
     transform: translateY(8px);
   }
 }
-@keyframes kd-verdict {
-  from {
-    opacity: 0;
-    transform: scale(0.94);
-  }
-}
 </style>

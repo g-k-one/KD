@@ -243,14 +243,9 @@ if (import.meta.client) {
 .kd-feed-tile {
   background: var(--color-neutral-3);
   border-color: var(--color-neutral-4);
-  animation: kd-feed-in 300ms var(--ease-out) backwards;
+  animation: kd-page-in 300ms var(--ease-out) backwards;
 }
 /* a tile fades in where it lands (the track's slide brings it in from the left) */
-@keyframes kd-feed-in {
-  from {
-    opacity: 0;
-  }
-}
 @media (hover: hover) {
   .kd-feed-tile:hover {
     background: var(--color-neutral-4);

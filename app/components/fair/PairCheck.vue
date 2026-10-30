@@ -166,22 +166,10 @@ const value = (e: HistoryEntry) => (e.ticket != null ? spaced(e.ticket) : (e.rol
   font-variant-numeric: tabular-nums;
 }
 .kd-pairtick {
-  animation: kd-pairtick var(--dur-base) var(--ease-spring) both;
+  animation: kd-pop-in var(--dur-base) var(--ease-spring) both;
 }
 /* the verdict lands with a small pop, as the verifier's does */
 .kd-verdict {
   animation: kd-verdict 520ms var(--ease-spring) both;
-}
-@keyframes kd-pairtick {
-  from {
-    opacity: 0;
-    transform: scale(0.5);
-  }
-}
-@keyframes kd-verdict {
-  from {
-    opacity: 0;
-    transform: scale(0.94);
-  }
 }
 </style>

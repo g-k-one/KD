@@ -307,11 +307,6 @@ const canReset = computed(() => !!(props.input || props.target))
 .kd-skip-icon {
   animation: kd-skip-nudge 900ms ease-in-out infinite;
 }
-@keyframes kd-skip-nudge {
-  50% {
-    transform: translateX(3px);
-  }
-}
 /* 24 px like every panel of the page (stake, target, inventory). The text sits 24 px in from the sides, level with what the
    top row's centring gives it from the top; the input's box hangs 8 px out, 16 px from the top and the side, its value on the 24 px line */
 .kd-panel {
