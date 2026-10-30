@@ -410,7 +410,7 @@ export function defineKdEffects(engine: Engine) {
   engine.define('kdPuff', (h) => ({
     atlas: 'kd',
     period: 2,
-    init: (s) => Object.assign(s, { fired: false, sp: [] as Particle[] }),
+    init: (s) => Object.assign(s, { fired: false, sp: [] as Particle[], soft: !!(s as State & { o: { soft?: boolean } }).o.soft }),
     update(s, dt, at) {
       const { R, pick } = h
       const sp = s.sp as Particle[]
@@ -418,10 +418,11 @@ export function defineKdEffects(engine: Engine) {
         s.fired = true
         const clubs = [at.map.smoke1, at.map.smoke2, at.map.smoke3, at.map.smoke4]
         const first = R(0, 6.28)
-        for (let i = 0; i < 26; i++) {
-          const a = first + (i / 26) * 6.28 + R(-0.14, 0.14)
-          const v = R(130, 420) * (i % 4 ? 1 : 0.45)
-          h.spawn(sp, { x: 180 + Math.cos(a) * 34, y: 196 + Math.sin(a) * 12, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.32 - R(6, 26), drag: 3.8, size: R(90, 170), sc: [[0, 0.45], [0.25, 0.9], [1, 1.6]], life: R(1, 1.7), rot: R(0, 6.28), vr: R(-0.35, 0.35), cells: [pick(clubs)], add: 0, alpha: 0.5, tint: SMOKE, fadeIn: 0.05, fadeOut: 0.8 })
+        const n = s.soft ? 12 : 26
+        for (let i = 0; i < n; i++) {
+          const a = first + (i / n) * 6.28 + R(-0.14, 0.14)
+          const v = R(130, 420) * (i % 4 ? 1 : 0.45) * (s.soft ? 0.45 : 1)
+          h.spawn(sp, { x: 180 + Math.cos(a) * 34, y: 196 + Math.sin(a) * 12, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.32 - R(6, 26), drag: 3.8, size: R(90, 170), sc: [[0, 0.45], [0.25, 0.9], [1, 1.6]], life: R(1, 1.7), rot: R(0, 6.28), vr: R(-0.35, 0.35), cells: [pick(clubs)], add: 0, alpha: s.soft ? 0.34 : 0.5, tint: SMOKE, fadeIn: 0.05, fadeOut: 0.8 })
         }
       }
       h.step(sp, dt)

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BattleResponse, BattleShare, BattleSlot, CaseItem, CaseResponse } from '#shared/types/api'
 import { BATTLE_LEAD_MS } from '#shared/utils/battle'
+import type { CountLab } from '~/composables/useCountLab'
 
 // Battle room (after csgogem; the page app/pages/pvp/[id].vue shows it inside a Suspense with its skeleton): the mode as the title; one meta line (cost and pot · the case strip · viewers and
 // rounds); a short stage so the players and their drops stay on screen; every action once — join / call a bot in
@@ -16,6 +17,7 @@ const ui = useUiStore()
 const toast = useToast()
 const sfx = useSfx()
 const ex = useExtrude()
+const lab = useCountLab()
 
 const { data, refresh, error } = await useFetch<BattleResponse>(() => `/api/battles/${id.value}`, { key: `battle-${id.value}` })
 if (error.value) {
@@ -174,6 +176,7 @@ const countArmed = ref(false)
 const countShown = ref(0)
 const countFade = ref(false)
 const countSink = ref(false)
+const splitVs = computed(() => b.value.size === 3 && lab.value.three === 'split')
 const countHome = ref(false)
 function dropCountLabel() {
   countLabel?.destroy()
@@ -204,6 +207,13 @@ async function countBeat(n: number) {
   await prepareCount()
   if (!countLabel) return
   const text = n ? String(n) : 'VS'
+  if (!n && lab.value.swap === 'slam') {
+    const label = countLabel
+    await label.play('flipout', { each: 0 })
+    if (countLabel !== label) return
+    label.set({ text, yaw: 0, pitch: 6 })
+    return label.play('slam', { time: 0.3, each: 0 })
+  }
   countSide = -countSide
   countLabel.set({ yaw: 22 * countSide })
   if (countFresh) {
@@ -211,14 +221,15 @@ async function countBeat(n: number) {
     if (countLabel.text !== text) countLabel.set({ text })
     countLabel.play('pop')
   } else {
-    countLabel.swap(text, { style: 'flip' })
+    countLabel.swap(text, { style: n ? 'flip' : lab.value.swap })
     countLabel.rotate(240 * countSide, 0, true)
   }
 }
-function countLanded() {
+function countSmoke(when: CountLab['when']) {
   const host = fxHost.value
-  dropCountLabel()
-  if (host) fx.play('kdPuff', { x: host.offsetWidth / 2, y: host.offsetHeight / 2, size: host.offsetHeight * 1.9 })
+  const { smoke } = lab.value
+  if (!host || smoke === 'none' || when !== lab.value.when) return
+  fx.play('kdPuff', { x: host.offsetWidth / 2, y: host.offsetHeight / 2, size: host.offsetHeight * (smoke === 'soft' ? 1.4 : 1.9), soft: smoke === 'soft' })
 }
 // in ms before the first reel: a second for each number, then the VS, and the smoke has its time before the reels move
 function runCount() {
@@ -228,13 +239,13 @@ function runCount() {
   countTimers = []
   countHome.value = true
   prepareCount()
-  at(4500, () => countBeat(3))
-  at(3500, () => countBeat(2))
-  at(2500, () => countBeat(1))
-  at(1500, () => countBeat(0))
-  at(1000, () => (countSink.value = true))
-  at(650, () => (countHome.value = false))
-  at(580, countLanded)
+  at(4200, () => countBeat(3))
+  at(3200, () => countBeat(2))
+  at(2200, () => countBeat(1))
+  at(1200, () => (countBeat(0), countSmoke('vs')))
+  at(700, () => ((countSink.value = true), countSmoke('sink')))
+  at(350, () => (countHome.value = false))
+  at(280, () => (dropCountLabel(), countSmoke('landing')))
 }
 watch(countdown, (n, old) => n > 0 && !old && nextTick(runCount))
 onMounted(() => {
@@ -496,13 +507,13 @@ const laneCols = computed(() => {
       <div ref="fxHost" class="pointer-events-none absolute inset-0 z-[11]" />
       <!-- The arena dims and the number stands in its middle. The stage stays in the page while seats fill, unseen, so its 3D
            label is ready before the first second -->
-      <div v-if="b.status === 'waiting' || countArmed || countdown > 0 || countFade" class="kd-countdown pointer-events-none absolute inset-0 grid place-items-center" :class="[countdown > 0 && countHome && 'is-on', countFade && 'is-fade', countSink && 'is-sink', b.size === 3 && 'is-split']">
+      <div v-if="b.status === 'waiting' || countArmed || countdown > 0 || countFade" class="kd-countdown pointer-events-none absolute inset-0 grid place-items-center" :class="[countdown > 0 && countHome && 'is-on', countFade && 'is-fade', countSink && 'is-sink', splitVs && 'is-split']">
         <div class="kd-count-stage relative grid size-40 place-items-center lg:size-52">
           <div ref="countEl" class="absolute inset-0" />
           <span v-if="!count3d && countShown" :key="countShown" class="kd-count-plain text-[56px] leading-none font-extrabold tabular-nums lg:text-[80px]">{{ countShown }}</span>
         </div>
         <!-- three seats have two badges and none in the middle: the VS parts in two and each half slides onto its line -->
-        <template v-if="b.size === 3 && countSink">
+        <template v-if="splitVs && countSink">
           <span v-for="side in ['is-l', 'is-r']" :key="side" class="kd-count-twin absolute inset-0 grid place-items-center" :class="side">
             <span class="kd-count-twin-vs type-12-caps grid size-9 place-items-center rounded-full">{{ $t('pvp.vs') }}</span>
           </span>
@@ -599,12 +610,16 @@ const laneCols = computed(() => {
       </div>
       </div>
     </section>
-    <UiModal v-model="leaveOpen" :title="$t(isCreator ? 'pvp.cancelTitle' : 'pvp.leaveTitle')" :width="420">
-      <p class="type-14-regular text-neutral-12">{{ $t(isCreator ? 'pvp.cancelText' : 'pvp.leaveText', { amount: formatCoins(b.cost) }) }}</p>
-      <div class="mt-4 grid grid-cols-2 gap-2">
-        <UiButton variant="secondary" block @click="leaveOpen = false">{{ $t('pvp.stay') }}</UiButton>
-        <UiButton block :loading="leaving" @click="leave">{{ $t(isCreator ? 'pvp.cancelBattle' : 'pvp.leaveBattle') }}</UiButton>
+    <!-- the kit's confirm: what happens in the description, the money in the sale's row, red for the step you can't take back -->
+    <UiModal v-model="leaveOpen" :title="$t(isCreator ? 'pvp.cancelTitle' : 'pvp.leaveTitle')" :description="$t(isCreator ? 'pvp.cancelText' : 'pvp.leaveText')">
+      <div class="flex items-center justify-between rounded-2xl bg-neutral-3 px-4 py-3">
+        <span class="type-12-caps text-neutral-11">{{ $t('pvp.stakeBack') }}</span>
+        <UiPrice :amount="b.cost" size="xl" tone="success" />
       </div>
+      <template #actions>
+        <UiButton variant="secondary" size="l" class="flex-1" @click="leaveOpen = false">{{ $t('pvp.stay') }}</UiButton>
+        <UiButton variant="danger" size="l" class="flex-1" :loading="leaving" @click="leave">{{ $t(isCreator ? 'pvp.cancelBattle' : 'pvp.leaveBattle') }}</UiButton>
+      </template>
     </UiModal>
     <PvpVerifyModal v-model="verifyOpen" :battle="b" />
   </div>

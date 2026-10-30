@@ -29,7 +29,7 @@ const idle = computed(() => !(props.result || playing.value))
   <div
     class="kd-slot relative flex items-center"
     :class="[
-      compact ? ['flex-col justify-center rounded-2xl text-center', player ? 'gap-2 px-1 py-3' : 'gap-1 p-2', 'min-h-[110px]'] : ['h-16 gap-3 rounded-2xl pl-[9px]', player ? 'pr-3' : 'pr-[15px]'],
+      compact ? ['flex-col justify-center rounded-2xl text-center', player ? 'gap-2 px-1 py-3' : 'gap-1 p-2', 'min-h-[110px]'] : ['h-16 gap-3 rounded-2xl pl-[9px]', player && !canKick && !canLeave ? 'pr-3' : 'pr-[15px]'],
       quiet ? '' : winner ? 'is-winner' : lead ? 'is-lead' : '',
       compact && 'is-compact',
       idle && 'is-idle',
@@ -56,8 +56,8 @@ const idle = computed(() => !(props.result || playing.value))
         <span class="tabular-nums" :class="[compact ? 'type-14' : 'type-20-caps', lead ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15']">{{ Math.round(chanceShown) }}%</span>
         <span v-if="!compact" class="type-10-caps whitespace-nowrap text-neutral-11">{{ $t('pvp.toWin') }}</span>
       </span>
-      <!-- before the start, the seat's one action as an icon at its end: the creator clears a seat, your own seat is your way
-           out. Phones: small in the left corner, clear of the level on the right, the three lines stay centred -->
+      <!-- before the start, the seat's one action as an icon at its end, placed as a free seat's button: 32 px, 16 from the
+           plate's top, bottom and right. The creator clears a seat, your own seat is your way out. Phones: small in the left corner, clear of the level on the right, the three lines stay centred -->
       <UiButton v-if="canKick || canLeave" variant="secondary" size="s" :icon="canLeave ? 'logout' : 'close'" icon-only :class="compact ? 'absolute! top-1 left-1 size-6!' : 'shrink-0'" :title="canLeave ? $t('pvp.leaveBattle') : $t('pvp.kick', { name: player.nickname })" :aria-label="canLeave ? $t('pvp.leaveBattle') : $t('pvp.kick', { name: player.nickname })" @click="canLeave ? $emit('leave') : $emit('kick')" />
       <!-- once it is over: what happened, not a 100% / 0% -->
       <span v-if="result && !quiet" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end gap-1'">
@@ -74,7 +74,7 @@ const idle = computed(() => !(props.result || playing.value))
       <span v-if="!compact" class="type-14 min-w-0 flex-1 truncate text-neutral-12">{{ $t('pvp.freeSlot') }}</span>
       <!-- 32 px high, 16 px from the plate's top, bottom and right; wide, so the seat's one action is easy to hit -->
       <UiButton v-if="canJoin" size="s" :block="compact" :class="!compact && 'w-28'" :loading="busy" @click="$emit('join')">{{ $t('pvp.join') }}</UiButton>
-      <UiButton v-else-if="canCallBot" variant="secondary" size="s" :block="compact" :class="!compact && 'w-28'" :loading="busy" @click="$emit('bot')">{{ $t('pvp.callBot') }}</UiButton>
+      <UiButton v-else-if="canCallBot" variant="secondary" size="s" :block="compact" :class="!compact && 'w-28'" :loading="busy" @click="$emit('bot')">{{ $t(compact ? 'pvp.callBotShort' : 'pvp.callBot') }}</UiButton>
     </template>
   </div>
 </template>

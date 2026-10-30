@@ -32,6 +32,13 @@ onKeyStroke((e) => e.shiftKey && e.key === 'D' && !(e.target as HTMLElement).clo
 const session = useSessionStore()
 const toast = useToast()
 const consent = useConsent()
+const lab = useCountLab()
+const LAB = [
+  { key: 'swap', label: '1 into VS', options: ['flip', 'morph', 'roll', 'pop', 'slam'] },
+  { key: 'smoke', label: 'Smoke', options: ['none', 'soft', 'wide'] },
+  { key: 'when', label: 'Smoke starts', options: ['vs', 'sink', 'landing'] },
+  { key: 'three', label: '3 seats', options: ['split', 'fade'] },
+] as const
 const force = ref<Force>({ cases: [], upgrade: null, battle: null })
 
 async function load() {
@@ -201,6 +208,15 @@ const resetDaily = async () => {
           <div class="grid grid-cols-2 gap-1">
             <UiButton size="s" variant="secondary" icon="pvp" @click="newBattle(false)">New · waiting</UiButton>
             <UiButton size="s" variant="secondary" icon="live" @click="newBattle(true)">New · live</UiButton>
+          </div>
+        </section>
+
+        <section class="flex flex-col gap-2">
+          <span class="dock-h">PvP countdown</span>
+          <span class="dock-note">Change it, then Replay in a room.</span>
+          <div v-for="g in LAB" :key="g.key" class="flex flex-wrap items-center gap-1">
+            <span class="dock-note w-full">{{ g.label }}</span>
+            <UiChip v-for="o in g.options" :key="o" :active="lab[g.key] === o" @click="lab = { ...lab, [g.key]: o }">{{ o }}</UiChip>
           </div>
         </section>
 
