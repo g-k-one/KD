@@ -285,10 +285,8 @@ export function useSfx() {
       const now = performance.now()
       if (now - lastLaunch < 300) return
       lastLaunch = now
-      // the tick and the coin's first note together, on the press itself; the coin's second note right after
-      blip(1400, 0.035, 0.06, 'square')
-      blip(1320, 0.08, 0.07)
-      setTimeout(() => blip(1760, 0.12, 0.06), 60)
+      // every launch (a case, a battle's reels, an upgrade) is the countdown's beep
+      blip(700, 0.12, 0.09)
     },
     /** The reel hangs on a card edge: a low tense pulse */
     tense: () => blip(110, 0.22, 0.14, 'sine'),

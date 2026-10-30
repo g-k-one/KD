@@ -49,7 +49,7 @@ const SOUNDS: [string, () => void][] = [
   ['count', () => sfx.count()],
   ['count last', () => sfx.count(true)],
   ['lose', sfx.lose],
-  ['launch (tick + coin)', sfx.riser],
+  ['launch (count)', sfx.riser],
   ['tense', sfx.tense],
   ['claim', sfx.claim],
   ['win', sfx.win],
