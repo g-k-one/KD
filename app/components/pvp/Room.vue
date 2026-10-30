@@ -14,6 +14,8 @@ const session = useSessionStore()
 const ui = useUiStore()
 const toast = useToast()
 const sfx = useSfx()
+const ex = useExtrude()
+const fx = useForge()
 
 const { data, refresh, error } = await useFetch<BattleResponse>(() => `/api/battles/${id.value}`, { key: `battle-${id.value}` })
 if (error.value) {
@@ -119,7 +121,60 @@ watch(done, (d) => {
 const countdown = computed(() =>
   b.value.status !== 'waiting' && b.value.startedAt && clock.value.round < 0 ? Math.max(0, Math.ceil((Date.parse(b.value.startedAt) - now.value) / 1000)) : 0,
 )
-watch(countdown, (n, old) => n > 0 && n !== old && sfx.count(n === 1))
+// Each number is 3D metal (Extrude) and slams into the arena; the last one blasts apart over a mini explosion (Forge), and
+// the first round spins up behind it. No WebGL or reduced motion: the plain number, no blast
+const COUNT_LOOK = {
+  font: '800 {s}px Rubik, ui-sans-serif, system-ui, sans-serif',
+  charset: '0123456789',
+  face: ['#fff6e0', '#ffc46b', '#ff7a1a'],
+  side: ['#d9480f', '#2a0e00'],
+  metal: 0.35,
+  gloss: 0.7,
+  bevel: 3,
+  depth: 26,
+  pad: 0.7,
+  strokes: [{ color: '#2a1400', width: 1.4, inset: 0 }],
+  glow: { color: '#ff5f1f', size: 18, strength: 0.65 },
+  yaw: -12,
+  pitch: 10,
+  persp: 700,
+  drag: false,
+}
+const arenaEl = useTemplateRef<HTMLElement>('arenaEl')
+const countEl = useTemplateRef<HTMLElement>('countEl')
+let countLabel: ExtrudeHandle | null = null
+const count3d = ref(false)
+const countBlast = ref(false)
+function dropCountLabel() {
+  countLabel?.destroy()
+  countLabel = null
+  count3d.value = false
+  countBlast.value = false
+}
+async function countBeat(n: number) {
+  await nextTick()
+  if (!countLabel && countEl.value) {
+    countLabel = await ex.mount(countEl.value, { ...COUNT_LOOK, text: String(n) })
+    await countLabel?.ready
+    count3d.value = !!countLabel
+  } else countLabel?.set({ text: String(n) })
+  // a slow first mount: a newer second has already taken over
+  if (countdown.value === n) countLabel?.play('slam')
+}
+async function countEnd() {
+  if (!countLabel) return
+  countBlast.value = true
+  fx.at('kdStart', arenaEl.value, isMobile.value ? 1 : 0.6)
+  await countLabel.play('blast')
+  dropCountLabel()
+}
+watch(countdown, (n, old) => {
+  if (n > 0 && n !== old) {
+    sfx.count(n === 1)
+    countBeat(n)
+  } else if (n === 0 && old > 0) countEnd()
+})
+onBeforeUnmount(dropCountLabel)
 
 // Same cases and seats in one click once the battle is over (Skin.club "Recreate")
 const recreating = ref(false)
@@ -303,7 +358,7 @@ const laneCols = computed(() => {
     </div>
     </div>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
-    <section class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
+    <section ref="arenaEl" class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
         <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="[done && winners.includes(s.slot) && 'is-winner', leaders.includes(s.slot) && 'is-lead', isTeam && s.slot === 2 && 'is-team-split']">
           <span :key="revealed" class="kd-seat-flash pointer-events-none absolute inset-0" aria-hidden="true" />
@@ -337,8 +392,11 @@ const laneCols = computed(() => {
 
       <!-- The countdown: the arena dims and each number lands big in its middle, one beat a second -->
       <Transition name="kd-countdown">
-        <div v-if="countdown > 0" class="kd-countdown pointer-events-none absolute inset-0 z-10 grid place-items-center">
-          <span :key="countdown" class="kd-count text-[72px] leading-none font-extrabold tabular-nums lg:text-[112px]">{{ countdown }}</span>
+        <div v-if="countdown > 0 || countBlast" class="kd-countdown pointer-events-none absolute inset-0 z-10 grid place-items-center" :class="countBlast && 'is-blast'">
+          <div class="relative grid size-44 place-items-center lg:size-72">
+            <div ref="countEl" class="absolute inset-0" />
+            <span v-if="!count3d" :key="countdown" class="kd-count text-[72px] leading-none font-extrabold tabular-nums lg:text-[112px]">{{ countdown }}</span>
+          </div>
         </div>
       </Transition>
 
@@ -364,12 +422,12 @@ const laneCols = computed(() => {
               {{ $t('pvp.recreate') }}
               <span class="btn-value"><UiPrice :amount="b.cost" size="s" tone="inverse" /></span>
             </UiButton>
-            <!-- phones: Replay and Check as icons, so the row fits the arena -->
-            <UiButton v-if="data!.battle.status === 'finished'" variant="secondary" size="m" icon="demo" :icon-only="isMobile" :aria-label="$t('pvp.replay')" @click="replay">
-              <template v-if="!isMobile">{{ $t('pvp.replay') }}</template>
-            </UiButton>
+            <!-- phones: Check and Replay as icons, so the row fits the arena -->
             <UiButton variant="fair" size="m" icon="shield-check" :icon-only="isMobile" :aria-label="$t('pvp.checkBattle')" @click="verifyOpen = true">
               <template v-if="!isMobile">{{ $t('pvp.checkBattle') }}</template>
+            </UiButton>
+            <UiButton v-if="data!.battle.status === 'finished'" variant="secondary" size="m" icon="demo" :icon-only="isMobile" :aria-label="$t('pvp.replay')" @click="replay">
+              <template v-if="!isMobile">{{ $t('pvp.replay') }}</template>
             </UiButton>
           </div>
         </div>
@@ -508,8 +566,16 @@ const laneCols = computed(() => {
   color: var(--color-neutral-11);
   white-space: nowrap;
 }
-.kd-countdown {
+.kd-countdown::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: radial-gradient(40% 70% at 50% 50%, rgb(255 95 31 / 0.2), rgb(12 13 16 / 0.72));
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+/* the arena comes back the moment the last number blasts: the first round is already spinning under it */
+.kd-countdown.is-blast::before {
+  opacity: 0;
 }
 .kd-countdown-enter-active,
 .kd-countdown-leave-active {
