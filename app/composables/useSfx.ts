@@ -274,11 +274,13 @@ export function useSfx() {
     },
     /** Countdown beep; the last one is higher */
     count: (last = false) => blip(last ? 1040 : 700, last ? 0.25 : 0.12, 0.09),
-    /** Something heavy lands: a low thump falling away, its knock on top, the dust it throws up */
+    /** Something heavy lands: a sharp crack on top so it cuts through, the metal ringing, the body falling away, its dust */
     thud: () => {
-      glide(150, 42, 0.36, 0.5, 'sine')
-      glide(320, 90, 0.07, 0.16, 'triangle')
-      swish(1100, 140, 0.34, 0.14, 'lowpass')
+      glide(1800, 240, 0.05, 0.2, 'square')
+      swish(5200, 700, 0.1, 0.34, 'bandpass')
+      glide(640, 520, 0.3, 0.1, 'triangle')
+      glide(210, 58, 0.3, 0.42, 'sine')
+      swish(2600, 260, 0.42, 0.16, 'lowpass')
     },
     lose: () => blip(180, 0.35, 0.12, 'sawtooth'),
     /** Rewards claimed, a PvP win, a level up: the reveal arpeggio they always used */
