@@ -2,10 +2,10 @@
 import type { Battle } from '#shared/types/api'
 
 // A battle as a row of the lobby (components/pvp/Table.vue), on skin.club's row in our colours and corners: the rounds
-// (the count on a round plate with a soft glow in the mode's colour; live, red, pulsing and "1/15"), the battle
-// scenario as case cells (the case alone, close together, its name on hover; a run of one case as one cell, ×N, while
-// seats are open), the players (the seats, overlapping only in 2v2, where four and VS must fit, the mode under them) and
-// the cost over the button — Join (a guest signs in first), Watch or View. The row is one card in the house's way (24 px, 8 in; phones 20):
+// (a deck in the mode's colour: the count on its top card, a card under it for every round to come, up to three, and
+// they peel away as the rounds are played; live, red, breathing and "1/15"), the battle scenario as case cells (each
+// round's case, close together, its name on hover), the players (the mode over a plate of seats) and the cost over the
+// button — Join (a guest signs in first), Watch or View. The row is one card in the house's way (24 px, 8 in; phones 20):
 // neutral-2, the cases standing on it without tiles. The small print is gone: the button says the status, the seats say
 // how many have joined, the coin says it is the cost. Desktop: one 24 px inset all round the 124 px row: the 76 px ring,
 // the seats over the mode and the cost over the button all start and end on the same two lines.
@@ -27,20 +27,11 @@ const round = computed(() => (mounted.value ? Math.min(props.battle.rounds.lengt
 // rounds played, by the clock alone (the room replays from the same start and round length)
 const played = computed(() => (props.battle.status === 'finished' ? props.battle.rounds.length : props.battle.status === 'live' && mounted.value ? Math.max(0, clock.value.round) : 0))
 
-type Cell = { key: string; image: string; name: string; qty: number; state: 'next' | 'now' | 'done' }
-const cells = computed<Cell[]>(() => {
-  const b = props.battle
-  if (b.status === 'waiting') {
-    const runs: Cell[] = []
-    b.rounds.forEach((r, i) => {
-      const last = runs.at(-1)
-      if (last && b.rounds[i - 1]!.slug === r.slug) last.qty += 1
-      else runs.push({ key: `r${i}`, image: r.image, name: r.name, qty: 1, state: 'next' })
-    })
-    return runs
-  }
-  return b.rounds.map((r, i) => ({ key: `r${i}`, image: r.image, name: r.name, qty: 1, state: i < played.value ? 'done' : b.status === 'live' && i === played.value ? 'now' : 'next' }))
-})
+// the cards under the deck's top one: a round still to come each, three at most
+const deck = computed(() => Math.min(3, Math.max(0, props.battle.rounds.length - played.value - 1)))
+
+type Cell = { key: string; image: string; name: string; state: 'next' | 'now' | 'done' }
+const cells = computed<Cell[]>(() => props.battle.rounds.map((r, i) => ({ key: `r${i}`, image: r.image, name: r.name, state: i < played.value ? 'done' : props.battle.status === 'live' && i === played.value ? 'now' : 'next' })))
 // Live, the band slides so the case opening now sits second; it stops once the last cell is in view. Transform only.
 // The cell width is CSS (100 / 84 px); the slide is worked out once mounted (the server renders at a phone's width).
 const isLg = useMediaQuery('(min-width: 1024px)')
@@ -76,9 +67,10 @@ function onClick(e: MouseEvent) {
     :class="[`is-${battle.mode}`, `is-${battle.status}`]"
     @click.capture="onClick"
   >
-    <!-- rounds: the count on a round plate -->
-    <div class="kd-brow-rounds flex items-center px-2 pt-2 lg:justify-center lg:p-0">
-      <span class="kd-rounds grid size-11 shrink-0 place-items-center rounded-full lg:size-19" :title="roundsTip">
+    <!-- rounds: a deck, the count on its top card -->
+    <div class="kd-brow-rounds flex items-center px-2 pt-3 lg:justify-center lg:p-0 lg:pt-3">
+      <span class="kd-rounds grid h-11 w-13 shrink-0 place-items-center rounded-xl lg:h-16 lg:w-19 lg:rounded-2xl" :title="roundsTip">
+        <span v-for="n in 3" :key="n" class="kd-rounds-card" :class="n > deck && 'is-gone'" :style="{ '--n': n }" aria-hidden="true" />
         <span class="kd-rounds-n tabular-nums" :class="battle.status === 'live' ? 'type-12-caps lg:type-20-caps' : 'type-20-caps lg:type-28'">{{ battle.status === 'live' ? `${round}/${battle.rounds.length}` : battle.rounds.length }}</span>
       </span>
     </div>
@@ -95,10 +87,9 @@ function onClick(e: MouseEvent) {
           class="kd-cell relative grid h-[84px] w-[84px] shrink-0 place-items-center rounded-2xl lg:h-full lg:w-[100px] lg:rounded-3xl"
           :class="`is-${c.state}`"
           :style="{ '--i': i }"
-          :title="c.qty > 1 ? `${c.name} ×${c.qty}` : c.name"
+          :title="c.name"
         >
           <img :src="c.image" :alt="c.name" draggable="false" class="kd-cell-img size-[76px] object-contain lg:size-[92px]" />
-          <span v-if="c.qty > 1" class="kd-cell-qty type-10-caps absolute top-1.5 right-1.5 rounded-md px-1 tabular-nums">×{{ c.qty }}</span>
         </div>
         <span
           v-if="mounted && battle.status === 'live'"
@@ -202,51 +193,76 @@ function onClick(e: MouseEvent) {
 .kd-brow-mode {
   color: var(--mc);
 }
-/* the rounds' plate: the cell colour under the count, a soft radial glow in the mode's colour behind it; live, the glow
-   goes red and breathes (opacity and scale only, on its own layer); grey once over */
+/* the rounds' deck: the top card in the mode's colour, the cards under it stepping up and narrowing, each paler; they
+   peel off upwards as the rounds are played (transform and opacity only). Live, red, a glow breathing on the top card;
+   grey once over */
 .kd-rounds {
   --glow: var(--mc);
+  --step: 3px;
   position: relative;
-  background: var(--cell);
-  transition: background-color var(--dur-base) var(--ease-out);
+  isolation: isolate;
+}
+@media (min-width: 64rem) {
+  .kd-rounds {
+    --step: 5px;
+  }
 }
 .kd-rounds::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 26%, transparent), transparent);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--glow) 42%, var(--cell)), color-mix(in srgb, var(--glow) 10%, var(--cell)));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    0 6px 12px -6px rgb(0 0 0 / 0.6);
+}
+.kd-rounds-card {
+  position: absolute;
+  inset: 0;
+  z-index: calc(var(--n) * -1);
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--glow) 34%, var(--cell));
+  opacity: calc(1 - var(--n) * 0.24);
+  transform: translateY(calc(var(--n) * var(--step) * -1)) scaleX(calc(1 - var(--n) * 0.09));
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+.kd-rounds-card.is-gone {
+  opacity: 0;
+  transform: translateY(calc(var(--n) * var(--step) * -1 - 12px)) scaleX(calc(1 - var(--n) * 0.09));
 }
 .kd-brow.is-live .kd-rounds {
   --glow: var(--color-danger);
 }
-.kd-brow.is-live .kd-rounds::before {
+.kd-brow.is-live .kd-rounds::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 40%, transparent), transparent);
   animation: kd-rounds-pulse 1.4s ease-in-out infinite alternate;
 }
-.kd-brow.is-finished .kd-rounds::before {
-  content: none;
+.kd-brow.is-finished .kd-rounds {
+  --glow: var(--color-neutral-6);
 }
 @keyframes kd-rounds-pulse {
   from {
-    opacity: 0.45;
-    transform: scale(0.86);
+    opacity: 0.35;
   }
   to {
     opacity: 1;
-    transform: scale(1.04);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .kd-brow.is-live .kd-rounds::before {
+  .kd-brow.is-live .kd-rounds::after {
     animation: none;
   }
 }
 .kd-rounds-n {
   position: relative;
   color: var(--color-neutral-15);
-}
-.kd-brow.is-live .kd-rounds-n {
-  color: var(--color-danger);
 }
 .kd-brow.is-finished .kd-rounds-n {
   color: var(--color-neutral-11);
@@ -296,11 +312,6 @@ function onClick(e: MouseEvent) {
   .kd-cell-mark.is-bottom {
     bottom: -8px;
   }
-}
-.kd-cell-qty {
-  color: var(--color-neutral-15);
-  background: color-mix(in srgb, var(--mc) 55%, var(--color-neutral-3));
-  line-height: 16px;
 }
 .kd-band-fade {
   background: linear-gradient(to right, transparent, var(--row));
