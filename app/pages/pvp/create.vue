@@ -139,9 +139,9 @@ async function create() {
 
     <div class="grid items-start gap-4 lg:grid-cols-[1fr_340px] lg:gap-6">
       <div class="flex min-w-0 flex-col gap-4">
-        <!-- The mode as three cards, each in its colour with its rule in plain text (phones: the chosen one's, under
-             them); the players under them, team mode fixed at 4 -->
-        <div class="kd-pvp-dock flex flex-col gap-3 xl:flex-row xl:items-stretch">
+        <!-- The mode as three cards, each in its colour with its rule in plain text; team mode fixed at 4 players.
+             Phones: two lines only, the modes as one row of buttons, then the chosen rule beside the players -->
+        <div class="kd-pvp-dock flex flex-col gap-2 lg:gap-3 xl:flex-row xl:items-stretch">
           <div class="grid min-w-0 grid-cols-3 gap-2 lg:gap-3 xl:flex-1" role="radiogroup" :aria-label="$t('pvp.mode')">
             <button
               v-for="m in MODES"
@@ -149,22 +149,22 @@ async function create() {
               type="button"
               role="radio"
               :aria-checked="mode === m"
-              class="kd-mode kd-press flex min-w-0 flex-col items-center gap-1 rounded-2xl border px-2 py-3 text-center lg:h-20 lg:flex-row lg:gap-3 lg:px-4 lg:py-0 lg:text-left"
+              class="kd-mode kd-press flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-2xl border px-2 lg:h-20 lg:justify-start lg:gap-3 lg:px-4 lg:text-left"
               :class="[`is-${m}`, mode === m && 'is-on']"
               @click="mode = m"
             >
-              <UiIcon :name="PVP_MODE_ICON[m]" :size="24" class="kd-mode-ink shrink-0" />
+              <UiIcon :name="PVP_MODE_ICON[m]" :size="isLg ? 24 : 16" class="kd-mode-ink kd-mode-icon shrink-0" />
               <span class="flex min-w-0 flex-col gap-0.5">
                 <span class="kd-mode-ink type-12-caps lg:type-14-caps truncate">{{ $t(`pvp.modeName.${m}`) }}</span>
                 <span class="type-14-regular truncate max-lg:hidden" :class="mode === m ? 'text-neutral-15' : 'text-neutral-12'">{{ $t(`pvp.modeRule.${m}`) }}</span>
               </span>
             </button>
           </div>
-          <p class="type-14-regular text-center text-neutral-12 lg:hidden">{{ $t(`pvp.modeRule.${mode}`) }}</p>
           <!-- wide screens: a plate of the cards' height beside them -->
           <div class="flex items-center justify-between gap-3 xl:h-20 xl:w-32 xl:shrink-0 xl:flex-col xl:items-stretch xl:justify-center xl:gap-1 xl:rounded-2xl xl:bg-neutral-3 xl:px-2">
-            <span class="type-12-caps px-1 text-neutral-11">{{ $t('pvp.players') }}</span>
-            <UiSegmented :model-value="size" :options="playerOptions" size="s" block class="max-lg:w-32" @update:model-value="players = $event" />
+            <span class="type-14-regular min-w-0 truncate text-neutral-13 lg:hidden">{{ $t(`pvp.modeRule.${mode}`) }}</span>
+            <span class="type-12-caps px-1 text-neutral-11 max-lg:hidden">{{ $t('pvp.players') }}</span>
+            <UiSegmented :model-value="size" :options="playerOptions" size="s" block class="kd-dock-players shrink-0 max-xl:w-32" :aria-label="$t('pvp.players')" @update:model-value="players = $event" />
           </div>
         </div>
         <!-- the cases in the upgrade's panel: its bar over the grid -->
@@ -276,6 +276,15 @@ async function create() {
 @media (min-width: 64rem) {
   .kd-pvp-dock {
     padding: 16px;
+  }
+}
+/* the smallest phones: the names and the rule whole, without the icons */
+@media (max-width: 359.98px) {
+  .kd-mode-icon {
+    display: none;
+  }
+  .kd-dock-players {
+    width: 96px;
   }
 }
 /* the mode's colour: the same three as the lobby */

@@ -18,7 +18,7 @@ const isSm = useMediaQuery('(min-width: 640px)')
 </script>
 
 <template>
-  <div class="flex h-14 items-center gap-2 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
+  <div class="kd-filter-row flex h-16 items-center gap-2 border-b border-neutral-4 px-3 lg:h-18 lg:pr-4 lg:pl-6">
     <UiIcon :name="icon" :size="isLg ? 24 : 20" class="text-neutral-13 max-lg:hidden lg:mr-1" />
     <span class="type-14 lg:type-16-medium mr-1 whitespace-nowrap max-lg:hidden">{{ title }}</span>
     <UiSelect v-if="sortOptions" v-model="sort" :options="sortOptions" menu-width="fit" class="kd-sort-select shrink-0 sm:w-44">
@@ -29,7 +29,7 @@ const isSm = useMediaQuery('(min-width: 640px)')
     </UiButton>
     <Transition name="kd-search" mode="out-in">
       <UiInput v-if="open" id="market-search" key="s" v-model="search" icon="search" clearable :placeholder="$t('upgrade.search')" class="min-w-0 flex-1" @keydown.esc="open = false" />
-      <div v-else key="f" class="flex min-w-0 flex-1 items-center gap-2">
+      <div v-else key="f" class="kd-filter-row flex min-w-0 flex-1 items-center gap-2">
         <!-- the price range shares the line on every width: on phones the two fields split what the colours and search leave,
              without the coin (the placeholder and the prices around say it) -->
         <UiInput id="price-from" v-model="from" :coin="isSm" inputmode="decimal" :placeholder="$t('upgrade.from')" class="min-w-0 flex-1 sm:w-24 sm:flex-none" />
@@ -82,6 +82,12 @@ const isSm = useMediaQuery('(min-width: 640px)')
   }
   :deep(.kd-dots-select button[aria-haspopup] > :last-child) {
     display: none;
+  }
+}
+/* the smallest phones: tighter gaps, so From fits whole */
+@media (max-width: 359.98px) {
+  .kd-filter-row {
+    gap: 4px;
   }
 }
 .kd-rdot-enter-active,

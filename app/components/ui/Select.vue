@@ -20,7 +20,7 @@ const props = withDefaults(
     label?: string
     placeholder?: string
     multiple?: boolean
-    /** fit: as wide as its longest option, one line each, kept to the trigger's right edge (a select narrower than its options) */
+    /** fit: as wide as its longest option, one line each, kept to the trigger's right edge, or its left when the screen ends first (a select narrower than its options) */
     menuWidth?: 'trigger' | 'fixed' | 'fit'
     /** the "filter is set" look, shared with UiChip variant=field */
     active?: boolean
@@ -38,12 +38,18 @@ const root = useTemplateRef<HTMLElement>('root')
 // Opens upward when the screen has no room for the menu below the trigger and more above it (a select at the page's
 // very bottom, as the footer's language, was cut off by the screen's edge)
 const up = ref(false)
-watch(open, (v) => {
+const menu = useTemplateRef<HTMLElement>('menu')
+const fromLeft = ref(false)
+watch(open, async (v) => {
   if (!v || !root.value) return
   const r = root.value.getBoundingClientRect()
   const need = Math.min(320, props.options.length * 38 + 8) + 8
   const below = window.innerHeight - r.bottom
   up.value = props.placement === 'up' || (below < need && r.top > below)
+  if (props.menuWidth !== 'fit') return
+  fromLeft.value = false
+  await nextTick()
+  fromLeft.value = (menu.value?.getBoundingClientRect().left ?? 0) < 8
 })
 onClickOutside(root, () => (open.value = false))
 // Escape closes the menu only, not a modal it sits in
@@ -91,10 +97,11 @@ const isSelected = (o: SelectOption<T>) => (props.multiple ? many.value.includes
     <Transition name="kd-menu">
       <ul
         v-if="open"
+        ref="menu"
         role="listbox"
         :aria-multiselectable="multiple"
         class="kd-menu absolute z-30 flex max-h-80 flex-col gap-0.5 overflow-auto rounded-2xl border border-neutral-5 bg-neutral-2 p-1 shadow-[0_8px_12px_rgb(0_0_0/0.64)]"
-        :class="[{ trigger: 'inset-x-0', fixed: 'left-0 w-54', fit: 'right-0 w-max min-w-full' }[menuWidth], up ? 'is-up bottom-full mb-2 origin-bottom' : 'top-full mt-2 origin-top']"
+        :class="[{ trigger: 'inset-x-0', fixed: 'left-0 w-54', fit: [fromLeft ? 'left-0' : 'right-0', 'w-max min-w-full'] }[menuWidth], up ? 'is-up bottom-full mb-2 origin-bottom' : 'top-full mt-2 origin-top']"
       >
         <li v-for="(o, i) in options" :key="o.value" :style="{ '--i': i }">
           <button

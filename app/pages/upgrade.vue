@@ -585,7 +585,7 @@ async function runUpgrade() {
     </div>
     <section class="kd-dimmable -mt-2 grid gap-4 lg:mt-0 lg:grid-cols-2 lg:gap-x-6 lg:gap-y-5" :class="state === 'spinning' && 'is-dimmed'">
       <div class="flex flex-col rounded-5xl bg-neutral-2 lg:pb-4" :class="panelTab !== 'mine' && 'max-lg:hidden'">
-        <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
+        <div class="flex h-16 items-center gap-3 border-b border-neutral-4 px-3 lg:h-18 lg:pr-4 lg:pl-6">
           <!-- phones: the sheet's tab already names the panel, so the header keeps only its tools -->
           <UiIcon name="inventory" :size="isLg ? 24 : 20" class="text-neutral-13 max-lg:hidden" />
           <span class="type-14 lg:type-16-medium max-lg:hidden">{{ $t('upgrade.mySkins') }} ({{ inventory.length }})</span>
