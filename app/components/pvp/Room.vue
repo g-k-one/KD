@@ -57,6 +57,8 @@ watch(
 )
 
 // Replay clock
+// how long a landed drop holds before the next round: the full rarity reveal, as in a case, and it lands on the seat's list
+const ROUND_HOLD_MS = 1500
 const now = useClock(200)
 const clock = computed(() => battleClock(b.value, now.value))
 const done = computed(() => b.value.status === 'finished' || clock.value.round >= b.value.rounds.length)
@@ -79,7 +81,7 @@ const strip = computed(() => {
 const revealed = computed(() => {
   if (done.value) return b.value.rounds.length
   if (clock.value.round < 0) return 0
-  return clock.value.round + (clock.value.inRound > b.value.roundMs - 900 ? 1 : 0)
+  return clock.value.round + (clock.value.inRound > b.value.roundMs - ROUND_HOLD_MS ? 1 : 0)
 })
 const totals = computed(() => slotTotals(b.value, revealed.value))
 const pot = computed(() => totals.value.reduce((a, x) => a + x, 0))
@@ -346,7 +348,7 @@ const laneCols = computed(() => {
             :case-ref="b.rounds[roundIdx] ?? null"
             :target="clock.round >= 0 || done ? (b.results?.[roundIdx]?.drops[s.slot] ?? null) : null"
             :spin-key="done ? 'done' : `${clock.round}`"
-            :spin-ms="b.roundMs - 1300"
+            :spin-ms="b.roundMs - ROUND_HOLD_MS - 300"
             :instant="done"
             :compact="isMobile"
             :waiting="b.status === 'waiting' || (clock.round < 0 && !done)"

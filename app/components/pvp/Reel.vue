@@ -59,7 +59,7 @@ async function dropFx(it: Item) {
   await nextTick()
   const card = root.value?.querySelector<HTMLElement>('[data-win]')
   if (!card) return
-  const scale = props.compact ? 1 : 1.5
+  const scale = props.compact ? 1 : 1.3
   rarityRank(fxBack, card.querySelector<HTMLElement>('.kd-art img') ?? card, it.rarity, scale).then((h) => (landed.value ? (beam = h) : h?.kill()))
 }
 
