@@ -84,6 +84,8 @@ const revealed = computed(() => {
 })
 const totals = computed(() => slotTotals(b.value, revealed.value))
 const pot = computed(() => totals.value.reduce((a, x) => a + x, 0))
+// the battle's dearest skin, for the finished battle's stats
+const bestDrop = computed(() => Math.max(0, ...(b.value.results ?? []).flatMap((r) => r.drops.map((d) => d?.price ?? 0))))
 // the server and hydration answer at the phone width the ssr-width plugin provides (most players are on phones),
 // so a phone gets its own layout from the first paint instead of the desktop one switching after mount
 const isMobile = useMediaQuery('(max-width: 767px)')
@@ -343,9 +345,7 @@ const laneCols = computed(() => {
 
     <!-- Meta line: who is watching and the round · the battle's cases (the current one lit, spent ones dim) · what a
          seat costs and what is in the pot (the money on the right, as in the lobby's plate). Once the battle is over it
-         folds away: the result in the arena says the pot, Recreate the cost -->
-    <div class="kd-fold" :class="done && 'is-gone'">
-    <div class="min-h-0">
+         stays as the battle's stats: the pot is in the arena's result by then, so the best drop takes its place -->
     <section class="kd-dock flex flex-wrap items-center justify-between gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
       <div class="type-12-caps flex gap-2 tabular-nums max-lg:w-full">
         <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center"><UiIcon name="eye" :size="16" /><span class="text-neutral-15">{{ b.viewers }}</span></span>
@@ -358,11 +358,10 @@ const laneCols = computed(() => {
       </div>
       <div class="type-12-caps flex justify-end gap-2 max-lg:w-full">
         <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="m" /></span>
-        <span class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" class="kd-pot tabular-nums" /></span>
+        <span v-if="done" class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.bestDrop') }} <UiPrice :amount="bestDrop" size="m" tone="coin" class="tabular-nums" /></span>
+        <span v-else class="kd-dock-stat max-lg:flex-1 max-lg:justify-center">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" class="kd-pot tabular-nums" /></span>
       </div>
     </section>
-    </div>
-    </div>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
     <section ref="arenaEl" class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
@@ -409,26 +408,25 @@ const laneCols = computed(() => {
       <!-- The result, inside the arena: who took the pot, how much, and the same battle again -->
       <Transition name="kd-result">
         <div v-if="done && b.winnerSlot != null" class="kd-arena-result absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-4 text-center">
-          <!-- who took it: their face(s) under a crown, the name, the pot; one 12 px step down the block, the name's caption
-               held to it -->
-          <div class="kd-result-title flex flex-col items-center gap-4">
-            <span v-if="!isMobile" class="flex -space-x-3">
+          <!-- who took it: their face(s) beside the caption and the name, then the pot and the actions; one 12 px step down -->
+          <div class="kd-result-title flex items-center gap-4 text-left">
+            <span class="flex shrink-0 -space-x-3">
               <span v-for="w in winners" :key="w" class="kd-result-face relative block overflow-hidden rounded-full bg-neutral-7" :class="isMobile ? 'size-12' : 'size-16'">
                 <img :src="b.slots[w]?.player?.avatar" alt="" class="size-full object-cover" :class="b.slots[w]?.player?.bot && 'scale-75 object-contain'" />
               </span>
             </span>
-            <span class="flex flex-col items-center">
+            <span class="flex min-w-0 flex-col items-start">
               <span class="type-12-caps text-success">{{ winners.length > 1 ? $t('pvp.battleWonTeam') : $t('pvp.battleWon') }}</span>
               <span class="text-[22px] leading-7 font-extrabold uppercase lg:type-28">{{ winners.map(nameOf).join(' & ') }}</span>
             </span>
           </div>
           <UiPrice :amount="pot" :size="isMobile ? 'l' : 'xl'" tone="coin" class="kd-result-pot" />
-          <div class="kd-result-pot mt-1 flex flex-wrap justify-center gap-2">
+          <!-- phones: Check and Replay as icons, so the row fits the arena -->
+          <div class="kd-result-pot mt-1 flex justify-center gap-2">
             <UiButton size="m" icon="refresh" :loading="recreating" @click="recreate">
               {{ $t('pvp.recreate') }}
               <span class="btn-value"><UiPrice :amount="b.cost" size="s" tone="inverse" /></span>
             </UiButton>
-            <!-- phones: Check and Replay as icons, so the row fits the arena -->
             <UiButton variant="fair" size="m" icon="shield-check" :icon-only="isMobile" :aria-label="$t('pvp.checkBattle')" @click="verifyOpen = true">
               <template v-if="!isMobile">{{ $t('pvp.checkBattle') }}</template>
             </UiButton>
@@ -441,12 +439,12 @@ const laneCols = computed(() => {
     </section>
 
 
-    <!-- Player bars: who sits where and what they have so far; join or call a bot on a free seat. One 12 px step from the
-         arena down through the plates and every tile, sideways too -->
-    <section class="kd-lanes max-lg:-mt-1 lg:-mt-3" :style="{ gridTemplateColumns: laneCols }">
+    <!-- Player bars: who sits where and what they have so far; join or call a bot on a free seat. Desktop: 24 px around the
+         columns, down from the arena as between them; phones: one 12 px step down through the plates and tiles -->
+    <section class="kd-lanes max-lg:-mt-1" :style="{ gridTemplateColumns: laneCols }">
       <!-- each seat is one column on desktop: a 24 px panel, 12 px in, so the plate and the tiles inside take 12 px corners
            (24 = 12 + 12); under the bar, its drops, newest first -->
-      <div v-for="s in b.slots" :key="s.slot" class="flex flex-col gap-3 lg:rounded-5xl lg:bg-neutral-2 lg:p-3">
+      <div v-for="s in b.slots" :key="s.slot" class="kd-seat flex flex-col gap-3 lg:rounded-5xl lg:bg-neutral-2 lg:p-3" :class="done && winners.includes(s.slot) && 'is-won'">
       <PvpPlayerSlot
         :player="s.player"
         :total="totals[s.slot]"
@@ -461,9 +459,10 @@ const laneCols = computed(() => {
         @join="join(s.slot)"
         @bot="bot(s.slot)"
       />
-      <!-- once it is over, the losers' drops step back: they go to the winner -->
+      <!-- once it is over, the losers' drops step back: they go to the winner. Under desktop the edge columns are a touch
+           wider than the middle ones, so the tiles get one height instead of following their width: the rows stay level -->
       <TransitionGroup v-if="revealed > 0" tag="div" name="kd-drop" class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]" :class="done && !winners.includes(s.slot) && 'is-lost'">
-        <ItemTile v-for="ri in Array.from({ length: revealed }, (_, k) => revealed - 1 - k)" :key="ri" :item="b.results![ri]!.drops[s.slot]!" readonly />
+        <ItemTile v-for="ri in Array.from({ length: revealed }, (_, k) => revealed - 1 - k)" :key="ri" :item="b.results![ri]!.drops[s.slot]!" readonly class="max-lg:!aspect-auto max-lg:h-25" />
       </TransitionGroup>
       </div>
     </section>
@@ -507,6 +506,12 @@ const laneCols = computed(() => {
 .kd-rounds.is-cut.is-more {
   mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent);
 }
+/* the winner's column: green from the crown's corner, down into the plain panel */
+@media (min-width: 64rem) {
+  .kd-seat.is-won {
+    background: linear-gradient(155deg, rgb(18 183 106 / 0.24), transparent 55%), var(--color-neutral-2);
+  }
+}
 .kd-seat-drops {
   transition: opacity var(--dur-slow) var(--ease-out);
 }
@@ -520,28 +525,6 @@ const laneCols = computed(() => {
 @keyframes kd-free-seat {
   50% {
     opacity: 0.5;
-  }
-}
-/* the meta line folds away when the battle is over (rows to 0 and the column's gap taken back) */
-.kd-fold {
-  display: grid;
-  grid-template-rows: 1fr;
-  transition:
-    grid-template-rows var(--dur-slow) var(--ease-out),
-    opacity var(--dur-base) var(--ease-out),
-    margin var(--dur-slow) var(--ease-out);
-}
-.kd-fold > div {
-  overflow: hidden;
-}
-.kd-fold.is-gone {
-  grid-template-rows: 0fr;
-  opacity: 0;
-  margin-bottom: -16px;
-}
-@media (min-width: 64rem) {
-  .kd-fold.is-gone {
-    margin-bottom: -20px;
   }
 }
 /* the plate is the case page's dock: 24px radius, 12px padding; its chips are 48px high with a 12px radius (24 − 12) */
