@@ -86,9 +86,9 @@ const explorer = computed(() => (props.battle.seed.eosBlock == null ? null : `ht
       <div class="grid gap-1 sm:grid-cols-[150px_minmax(0,1fr)] sm:items-center sm:gap-3">
         <dt class="type-12-caps text-neutral-11">{{ $t('pvp.eosBlock') }}</dt>
         <dd v-if="explorer" class="min-w-0">
-          <a :href="explorer" target="_blank" rel="noopener" class="inline-flex items-center gap-1 font-mono text-xs text-neutral-13 underline decoration-neutral-7 underline-offset-2 hover:text-neutral-15">
+          <UiLink :to="explorer" class="inline-flex items-center gap-1 font-mono text-xs">
             #{{ spaced(battle.seed.eosBlock!) }}<UiIcon name="arrow-square-out" :size="12" />
-          </a>
+          </UiLink>
         </dd>
         <dd v-else class="font-mono text-xs text-neutral-10">{{ $t('pvp.eosAfter') }}</dd>
       </div>

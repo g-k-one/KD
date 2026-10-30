@@ -141,7 +141,7 @@ async function pay() {
           <!-- one line and the rules (the long version lives in the AML policy) -->
           <i18n-t keypath="deposit.sharedWarning" scope="global">
             <template #notAllow><span class="text-danger">{{ $t('deposit.notAllow') }}</span></template>
-            <template #rules><NuxtLink to="/aml" class="text-brand-light underline-offset-2 hover:underline">{{ $t('deposit.rules') }}</NuxtLink></template>
+            <template #rules><UiLink to="/aml">{{ $t('deposit.rules') }}</UiLink></template>
           </i18n-t>
         </p>
         <div class="type-12-regular flex flex-col gap-2 px-2 text-neutral-10 lg:type-14-regular lg:gap-1.5 lg:px-4">
@@ -201,7 +201,7 @@ async function pay() {
           </div>
 
           <UiCheckbox v-model="agree">
-            {{ $t('deposit.agree') }} <NuxtLink to="/refund" class="text-brand-light hover:underline">{{ $t('deposit.refundPolicy') }}</NuxtLink>
+            {{ $t('deposit.agree') }} <UiLink to="/refund">{{ $t('deposit.refundPolicy') }}</UiLink>
           </UiCheckbox>
           <UiButton size="l" block :disabled="!agree || !amount" :loading="paying" @click="pay">
             {{ $t('deposit.pay', { amount: fmtFiat(amount || 0) }) }}

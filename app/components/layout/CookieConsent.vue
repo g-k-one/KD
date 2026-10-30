@@ -47,7 +47,7 @@ const CATEGORIES: Array<{ key: ConsentCategory | 'necessary'; always?: boolean }
         </h2>
         <p class="type-14-regular text-neutral-11">
           {{ $t('cookies.text') }}
-          <NuxtLink to="/privacy#cookies" class="text-neutral-13 underline underline-offset-2 hover:text-neutral-15">{{ $t('cookies.policy') }}</NuxtLink>
+          <UiLink to="/privacy#cookies">{{ $t('cookies.policy') }}</UiLink>
         </p>
       </div>
 

@@ -90,7 +90,7 @@ const left = computed(() => {
           <UiInput id="trade-link" v-model="link" size="l" icon="steam" class="kd-private" inputmode="url" clearable :error="!!link && !valid" :placeholder="$t('withdraw.linkPlaceholder')" />
           <span v-if="!saved" class="type-12-regular text-neutral-11">
             {{ $t('withdraw.whereLink') }}
-            <a href="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" target="_blank" rel="noopener" class="text-brand-light underline-offset-2 hover:underline">{{ $t('withdraw.openSteam') }}</a>
+            <UiLink to="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url">{{ $t('withdraw.openSteam') }}</UiLink>
           </span>
         </div>
       </div>
