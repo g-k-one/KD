@@ -188,6 +188,10 @@ html body {
     outline: 2px solid var(--color-brand-light);
     outline-offset: 2px;
   }
+  /* fast tapping no longer reads as a double tap that zooms the page; pinch zoom stays */
+  * {
+    touch-action: manipulation;
+  }
   /* touch screens: a field under 16 px makes iOS zoom the page in on focus (and the layout jumps) — 16 px stops it */
   @media (pointer: coarse) {
     input,
