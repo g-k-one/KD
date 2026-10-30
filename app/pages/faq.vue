@@ -53,12 +53,14 @@ const groups = computed(() => {
         <UiEmptyState v-else-if="!groups.length" :text="t('help.faqEmpty')" art="empty-search">
           <UiButton variant="secondary" to="/contact">{{ t('nav.contact') }}</UiButton>
         </UiEmptyState>
-        <section v-for="g in groups" v-else :key="g.id" class="flex flex-col gap-3">
-          <h2 class="type-16-medium px-1">{{ g.title }}</h2>
-          <div class="flex flex-col gap-2">
-            <UiAccordion v-for="i in g.items" :key="i.q" :title="i.q">{{ i.a }}</UiAccordion>
-          </div>
-        </section>
+        <div v-else class="flex flex-col gap-8 lg:gap-10">
+          <section v-for="g in groups" :key="g.id" class="flex flex-col gap-4">
+            <UiSectionHeader :title="g.title" />
+            <div class="flex flex-col gap-2">
+              <UiAccordion v-for="i in g.items" :key="i.q" :title="i.q">{{ i.a }}</UiAccordion>
+            </div>
+          </section>
+        </div>
 
         <div class="flex flex-col items-center gap-3 rounded-5xl bg-neutral-2 p-4 text-center lg:flex-row lg:px-6 lg:text-left">
           <p class="type-14-regular flex-1 text-neutral-12">{{ t('help.faqMore') }}</p>
