@@ -378,6 +378,7 @@
     "paymentMethod": "Payment method",
     "country": "Country",
     "amount": "Amount",
+    "currency": "Currency",
     "promoCode": "Promo code",
     "apply": "Apply",
     "applied": "Applied",

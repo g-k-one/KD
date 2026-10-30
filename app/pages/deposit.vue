@@ -24,6 +24,7 @@ const countryOptions = [
 
 const country = ref('PL')
 const currency = ref<FiatCurrency>('PLN')
+const currencyLabel = computed(() => currencyOptions.find((o) => o.value === currency.value)?.label)
 const methodId = ref('blik')
 const amount = ref(200)
 const PRESETS = [20, 50, 100, 200, 500, 1000]
@@ -153,12 +154,14 @@ async function pay() {
         <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
           <UiIcon name="coins" :size="20" class="text-neutral-13 lg:!size-6" />
           <span class="type-14 lg:type-16-medium flex-1">{{ $t('deposit.amount') }}</span>
+          <span class="type-12-caps text-neutral-11">{{ $t('deposit.currency') }}:</span>
+          <UiSelect v-model="currency" :options="currencyOptions" menu-width="fit" class="kd-inline-select w-24" />
         </div>
         <div class="flex flex-col gap-4 px-4 lg:px-6 lg:pt-2">
-          <!-- the sum and its currency read as one, "1000 PLN zł", in the middle of the field; the currency is the picker -->
+          <!-- the sum and its currency read as one, "1000 PLN zł", in the middle of the field; the picker is in the header -->
           <UiInput id="deposit-amount" v-model.number="amount" size="l" type="number" inputmode="decimal" class="kd-amount" :style="{ '--len': String(amount ?? '').length || 1 }">
             <template #trailing>
-              <UiSelect v-model="currency" :options="currencyOptions" menu-width="fit" class="kd-inline-select w-24" />
+              <span class="type-12-caps text-neutral-11">{{ currencyLabel }}</span>
             </template>
           </UiInput>
           <div class="grid grid-cols-6 gap-1 lg:gap-1.5">
