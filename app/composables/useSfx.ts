@@ -35,6 +35,9 @@ const POKE: Record<'gawk' | 'bukbuk' | 'kurwawk' | 'kurwa' | 'puff', [number, nu
   puff: [4.365, 0.281],
 }
 let pokeBuf: Promise<AudioBuffer | null> | null = null
+// The VS landing: recorded hits (public/sfx/vs-*.mp3, KREA · Seed Audio), trimmed to start on the blow
+export type VsHit = 'a' | 'b' | 'c'
+const vsBufs = new Map<VsHit, Promise<AudioBuffer | null>>()
 // the last launch: the case page plays it on the press and the reel again as it starts, the second within 300 ms is dropped
 let lastLaunch = 0
 
@@ -51,6 +54,20 @@ export function useSfx() {
       .then((b) => a.decodeAudioData(b))
       .catch(() => (henBuf = null))
     return henBuf
+  }
+  function vsLoad(hit: VsHit = 'a') {
+    const a = audio()
+    if (!a) return Promise.resolve(null)
+    if (!vsBufs.has(hit)) {
+      vsBufs.set(
+        hit,
+        fetch(`${base.endsWith('/') ? base : `${base}/`}sfx/vs-${hit}.mp3`)
+          .then((r) => r.arrayBuffer())
+          .then((b) => a.decodeAudioData(b))
+          .catch(() => (vsBufs.delete(hit), null)),
+      )
+    }
+    return vsBufs.get(hit)!
   }
   /** Loads and decodes the poke sprite once (the banner asks when it mounts) */
   function pokeLoad() {
@@ -274,13 +291,22 @@ export function useSfx() {
     },
     /** Countdown beep; the last one is higher */
     count: (last = false) => blip(last ? 1040 : 700, last ? 0.25 : 0.12, 0.09),
-    /** Something heavy lands: a sharp crack on top so it cuts through, the metal ringing, the body falling away, its dust */
-    thud: () => {
-      glide(1800, 240, 0.05, 0.2, 'square')
-      swish(5200, 700, 0.1, 0.34, 'bandpass')
-      glide(640, 520, 0.3, 0.1, 'triangle')
-      glide(210, 58, 0.3, 0.42, 'sine')
-      swish(2600, 260, 0.42, 0.16, 'lowpass')
+    /** Decodes a VS hit ahead, so the blow plays on the frame it lands */
+    vsLoad,
+    /** The VS lands */
+    vsHit: (hit: VsHit = 'a') => {
+      const s = settings.settings
+      const a = audio()
+      if (!a || !s.sound || s.volume <= 0) return
+      vsLoad(hit).then((buf) => {
+        if (!buf) return
+        const src = a.createBufferSource()
+        const g = a.createGain()
+        src.buffer = buf
+        g.gain.value = 0.8 * (s.volume / 100)
+        src.connect(g).connect(a.destination)
+        src.start()
+      })
     },
     lose: () => blip(180, 0.35, 0.12, 'sawtooth'),
     /** Rewards claimed, a PvP win, a level up: the reveal arpeggio they always used */
