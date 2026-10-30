@@ -29,7 +29,7 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
   <div
     class="kd-slot relative flex items-center"
     :class="[
-      compact ? ['flex-col justify-center rounded-2xl text-center', player ? 'gap-2 px-1 py-3' : 'gap-1 p-2'] : 'h-16 gap-3 rounded-2xl pr-3 pl-[9px]',
+      compact ? ['flex-col justify-center rounded-2xl text-center', player ? 'gap-2 px-1 py-3' : 'gap-1 p-2'] : ['h-16 gap-3 rounded-2xl pl-[9px]', player ? 'pr-3' : 'pr-[15px]'],
       winner ? 'is-winner' : lead ? 'is-lead' : '',
     ]"
   >
@@ -71,8 +71,9 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
         <span class="type-14 text-neutral-12">{{ $t('pvp.freeSlot') }}</span>
         <span class="type-12-regular truncate text-neutral-11">{{ $t('pvp.waitingForPlayer') }}</span>
       </span>
-      <UiButton v-if="canJoin" :size="compact ? 's' : 'm'" :block="compact" :loading="busy" @click="$emit('join')">{{ $t('pvp.join') }}</UiButton>
-      <UiButton v-else-if="canCallBot" variant="secondary" :size="compact ? 's' : 'm'" :block="compact" :loading="busy" @click="$emit('bot')">{{ $t('pvp.callBot') }}</UiButton>
+      <!-- 32 px high, 16 px from the plate's top, bottom and right; wide, so the seat's one action is easy to hit -->
+      <UiButton v-if="canJoin" size="s" :block="compact" :class="!compact && 'w-28'" :loading="busy" @click="$emit('join')">{{ $t('pvp.join') }}</UiButton>
+      <UiButton v-else-if="canCallBot" variant="secondary" size="s" :block="compact" :class="!compact && 'w-28'" :loading="busy" @click="$emit('bot')">{{ $t('pvp.callBot') }}</UiButton>
     </template>
   </div>
 </template>
