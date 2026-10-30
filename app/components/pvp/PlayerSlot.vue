@@ -28,7 +28,7 @@ const idle = computed(() => !(props.result || playing.value))
   <div
     class="kd-slot relative flex items-center"
     :class="[
-      compact ? 'h-[110px] flex-col gap-1 rounded-2xl p-2 text-center' : ['h-16 gap-3 rounded-2xl pl-[9px]', player && !canKick && !canLeave ? 'pr-3' : 'pr-[15px]'],
+      compact ? 'h-[118px] flex-col gap-1 rounded-2xl p-2 text-center' : ['h-16 gap-3 rounded-2xl pl-[9px]', player && !canKick && !canLeave ? 'pr-3' : 'pr-[15px]'],
       quiet ? '' : winner ? 'is-winner' : lead ? 'is-lead' : '',
       compact && 'is-compact',
       idle && 'is-idle',
@@ -58,8 +58,8 @@ const idle = computed(() => !(props.result || playing.value))
       <!-- phones, on every seat the same rows: the picture, the name, and at the bottom one thing on one line: before the start
            the seat's button, as a free seat's, then the coins over the chance or the result -->
       <UiButton v-if="compact && (canKick || canLeave)" variant="secondary" size="s" :icon="canLeave ? 'logout' : 'close'" icon-only block class="mt-auto" :title="canLeave ? $t('pvp.leaveBattle') : $t('pvp.kick', { name: player.nickname })" :aria-label="canLeave ? $t('pvp.leaveBattle') : $t('pvp.kick', { name: player.nickname })" @click="canLeave ? $emit('leave') : $emit('kick')" />
-      <span v-else-if="compact" class="mt-auto flex h-9 flex-col items-center justify-end">
-        <UiPrice v-if="!idle" :amount="Math.round(totalShown)" size="s" :tone="winner ? 'default' : result ? 'muted' : 'coin'" class="tabular-nums" />
+      <span v-else-if="compact" class="mt-auto flex flex-col items-center gap-1">
+        <UiPrice :amount="Math.round(totalShown)" size="s" :tone="winner ? 'default' : result || idle ? 'muted' : 'coin'" class="tabular-nums" />
         <span v-if="result && !quiet" class="type-12-caps" :class="result === 'won' ? 'text-success' : 'text-neutral-11'">{{ result === 'won' ? $t('pvp.won') : $t('pvp.lost') }}</span>
         <span v-else-if="!quiet && chance != null" class="type-14 tabular-nums" :class="lead ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15'">{{ Math.round(chanceShown) }}%</span>
       </span>

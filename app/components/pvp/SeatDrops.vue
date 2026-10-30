@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { Item } from '#shared/types/api'
 
-// A seat's drops, round by round: nothing before the first one, no empty slots ahead. The block's height follows its
-// content, so a new row opens smoothly instead of pushing the page. lost: the drops step back, they go to the winner.
+// A seat's drops, the newest first: nothing before the first one, no empty slots ahead. The block's height follows its
+// content, so a new row opens smoothly instead of pushing the page, and the older tiles slide along to make room. lost: the drops step back, they go to the winner.
 // tight: the team seats' 4 px on phones.
 const props = defineProps<{ items: Item[]; lost?: boolean; tight?: boolean }>()
 
+const newestFirst = computed(() => props.items.map((item, round) => ({ item, round })).reverse())
 const inner = useTemplateRef<HTMLElement>('inner')
 // unset until it is measured: a battle opened midway shows its drops at once
 const height = ref<number | null>(null)
@@ -22,7 +23,7 @@ useResizeObserver(inner, () => (height.value = inner.value?.offsetHeight ?? 0))
         class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-2 pt-2 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))] lg:gap-3 lg:pt-3"
         :class="[props.lost && 'is-lost', tight && 'max-md:gap-1 max-md:pt-1']"
       >
-        <div v-for="(item, i) in items" :key="i" class="h-25 lg:h-[105px]">
+        <div v-for="{ item, round } in newestFirst" :key="round" class="h-25 lg:h-[105px]">
           <ItemTile :item="item" readonly class="!aspect-auto !h-full" />
         </div>
       </TransitionGroup>
@@ -43,6 +44,9 @@ useResizeObserver(inner, () => (height.value = inner.value?.offsetHeight ?? 0))
 }
 .kd-seat-drops.is-lost {
   opacity: 0.4;
+}
+.kd-drop-move {
+  transition: transform var(--dur-slow) var(--ease-out);
 }
 .kd-drop-enter-active {
   transition:
