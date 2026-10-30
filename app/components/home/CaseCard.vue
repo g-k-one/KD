@@ -89,7 +89,7 @@ function onArtLeave() {
     @pointermove="onArtPointer"
     @pointerleave="onArtLeave"
   >
-    <span v-if="tint" class="kd-case-tint" :class="`tint-${tint}`" aria-hidden="true" />
+    <span v-if="tint" class="kd-case-tint" :style="{ '--tint': tint }" aria-hidden="true" />
     <!-- full art: the scene behind everything, darkened at the foot where the text sits -->
     <img v-if="full" :src="full" :alt="item.name" loading="lazy" draggable="false" class="kd-case-full" />
     <video v-if="playing && clip" :src="clip" class="kd-case-full kd-case-clip" :class="animReady && 'is-ready'" muted loop autoplay playsinline disablepictureinpicture aria-hidden="true" @playing="animReady = true" />
@@ -374,24 +374,6 @@ function onArtLeave() {
     radial-gradient(80% 60% at 50% 36%, color-mix(in srgb, var(--tint) 52%, transparent), transparent 74%),
     linear-gradient(180deg, color-mix(in srgb, var(--tint) 24%, transparent), transparent 72%);
   transition: opacity var(--dur-base) var(--ease-out);
-}
-.tint-orange {
-  --tint: #ff5f1f;
-}
-.tint-violet {
-  --tint: #8b3dff;
-}
-.tint-lime {
-  --tint: #9be21f;
-}
-.tint-teal {
-  --tint: #1fd6b4;
-}
-.tint-red {
-  --tint: #ff2d55;
-}
-.tint-gold {
-  --tint: #f5b82e;
 }
 @media (hover: hover) {
   .kd-case-card:hover .kd-case-tint {

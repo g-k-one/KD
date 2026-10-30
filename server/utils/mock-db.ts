@@ -228,13 +228,13 @@ const CS_DEFS: CaseDef[] = [
   looped(csCase(32, 'elo-climb', 'ELO Climb', 1290, 'high', undefined, 'full')),
   looped(csCase(33, 'faceit-level-10', 'FACEIT Lvl 10', 2490, 'extreme', 'new', 'full')),
   // Halloween: big glossy 3D heroes, no chests (section 12)
-  { ...csCase(34, 'trick-or-frag', 'Trick or Frag', 190, 'low', 'new'), tint: 'violet' },
-  { ...csCase(35, 'pumpkin-head', 'Pumpkin Head', 490, 'medium'), tint: 'teal' },
-  { ...csCase(36, 'dead-chat', 'Dead Chat', 890, 'medium', 'hot'), tint: 'violet' },
-  { ...csCase(37, 'voodoo-bot', 'Voodoo Bot', 1490, 'high'), tint: 'orange' },
-  { ...csCase(38, 'baba-jaga', 'Baba Jaga', 2490, 'high', undefined, 'wide'), tint: 'lime' },
-  { ...csCase(39, 'grim-reaper', 'Grim Reaper', 3490, 'high', undefined, 'tall'), tint: 'lime' },
-  { ...csCase(40, 'strzyga', 'Strzyga', 4990, 'extreme', 'new', 'wide'), tint: 'orange' },
+  { ...csCase(34, 'trick-or-frag', 'Trick or Frag', 190, 'low', 'new'), tint: '#8b3dff' },
+  { ...csCase(35, 'pumpkin-head', 'Pumpkin Head', 490, 'medium'), tint: '#1fd6b4' },
+  { ...csCase(36, 'dead-chat', 'Dead Chat', 890, 'medium', 'hot'), tint: '#8b3dff' },
+  { ...csCase(37, 'voodoo-bot', 'Voodoo Bot', 1490, 'high'), tint: '#ff5f1f' },
+  { ...csCase(38, 'baba-jaga', 'Baba Jaga', 2490, 'high', undefined, 'wide'), tint: '#9be21f' },
+  { ...csCase(39, 'grim-reaper', 'Grim Reaper', 3490, 'high', undefined, 'tall'), tint: '#9be21f' },
+  { ...csCase(40, 'strzyga', 'Strzyga', 4990, 'extreme', 'new', 'wide'), tint: '#ff5f1f' },
 ]
 
 /**

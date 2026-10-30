@@ -12,7 +12,6 @@ import type {
   AdminUsers,
   BigWin,
   CaseTag,
-  CaseTint,
   GameRules,
   HomeCardKind,
   Item,
@@ -49,7 +48,6 @@ const clamp = (v: unknown, lo: number, hi: number, fallback = lo) => {
 }
 const RISKS: RiskLevel[] = ['low', 'medium', 'high', 'extreme']
 const CARDS: HomeCardKind[] = ['standard', 'full', 'wide', 'tall']
-const TINTS: CaseTint[] = ['orange', 'violet', 'lime', 'teal', 'red', 'gold']
 /** Known skin ids, each once */
 const skinIds = (ids: unknown) => [...new Set((Array.isArray(ids) ? ids : []).map(String))].filter((id) => findItem(id))
 
@@ -123,7 +121,7 @@ export function setAdminCase(slug: string, input: Partial<AdminCaseInput>) {
   const endsAt = input.endsAt ? Date.parse(input.endsAt) : NaN
   if (Number.isNaN(endsAt)) delete def.endsAt
   else def.endsAt = new Date(endsAt).toISOString()
-  if (input.tint && TINTS.includes(input.tint)) def.tint = input.tint
+  if (typeof input.tint === 'string' && /^#[0-9a-f]{6}$/i.test(input.tint)) def.tint = input.tint.toLowerCase()
   else if (input.tint === null) delete def.tint
   if (input.odds === 'manual') {
     def.preset = scaleTickets(picked)
