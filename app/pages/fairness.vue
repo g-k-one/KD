@@ -53,6 +53,25 @@ async function rotate() {
   }
 }
 const when = (iso: string) => new Date(iso).toLocaleString(locale.value, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+const day = (iso: string) => new Date(iso).toLocaleDateString(locale.value, { day: 'numeric', month: 'short' })
+const period = (from: string, to: string) => (day(from) === day(to) ? day(to) : `${day(from)} – ${day(to)}`)
+// a seed reads by its two ends (the whole of it is one tap away, copied)
+const shortSeed = (v: string) => (v.length > 20 ? `${v.slice(0, 8)}…${v.slice(-8)}` : v)
+
+// The seed log, newest first: the pair in use (its seed sealed, so its hash stands in) then each revealed one
+const pairs = computed(() => {
+  const s = seeds.value
+  if (!s) return []
+  return [{ ...s.active, server: s.active.serverSeedHash, revealed: null }, ...s.history.map((h) => ({ ...h, server: h.serverSeed, revealed: h }))]
+})
+// Every revealed seed against the hash shown before its first roll, here in the browser: proof with no tap
+const hashOk = ref<Record<string, boolean>>({})
+async function checkHashes() {
+  for (const h of seeds.value?.history ?? []) hashOk.value[h.serverSeedHash] ??= (await sha256Hex(h.serverSeed)) === h.serverSeedHash
+}
+onMounted(checkHashes)
+watch(seeds, checkHashes)
+
 async function copy(v: string) {
   try {
     await navigator.clipboard.writeText(v)
@@ -140,66 +159,47 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
       </div>
     </section>
 
-    <!-- Seed log, built as Your rolls is (the history table): the header line, then inside the card's 12 px the column
-         names over thin lines, a row per pair at the table's height, newest first — the one in use (its hash only, the
-         rolls so far, its check waiting in grey), then each past pair with its period, the rolls it covered, its client
-         seed (and whether you changed it) and its revealed server seed, which checks in one tap with the same green chip -->
+    <!-- Seed log, a timeline and not a table: a row per pair, newest first, on a rail. On the left what a player cares
+         about (how many rolls, when), in the middle the two seeds each under its own name with the whole value a tap to
+         copy, on the right the one thing to do: Reveal for the pair in use, Check for a past one. A revealed seed says at
+         once that it matches the hash promised before its first roll -->
     <section v-if="session.user" class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
       <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
         <UiIcon name="seeds" :size="24" class="shrink-0 text-neutral-13" />
         <span class="type-14 lg:type-16-medium">{{ $t('fair.history') }}</span>
       </div>
-      <div v-if="seeds" class="p-3">
-        <!-- the column names (desktop): wrapped, as the grid class sets its own display -->
-        <div class="hidden lg:block">
-          <div class="kd-seedgrid type-10-caps h-9 border-b border-neutral-4 px-3 text-neutral-11">
-            <span>{{ $t('fair.period') }}</span>
-            <span>{{ $t('fair.nonces') }}</span>
-            <span>{{ $t('fair.clientSeed') }}</span>
-            <span>{{ $t('fair.serverSeed') }}</span>
-            <span />
-          </div>
-        </div>
-        <TransitionGroup tag="ul" name="kd-hist" class="flex flex-col">
-          <!-- the pair in use now -->
-          <li key="active" class="kd-seedgrid kd-seedrow">
-            <span class="flex min-w-0 flex-col">
-              <span class="type-14 flex items-center gap-1.5 text-success"><span class="kd-live" />{{ $t('fair.inUse') }}</span>
-              <span class="type-12-regular truncate text-neutral-11">{{ $t('fair.since', { when: timeAgo(seeds.active.createdAt) }) }}</span>
-            </span>
-            <span class="type-14 tabular-nums max-lg:text-right" :class="!seeds.active.nonce && 'text-neutral-10'">{{ seeds.active.nonce ? `1–${seeds.active.nonce}` : $t('fair.noRolls') }}</span>
-            <span class="kd-seedmono truncate max-lg:hidden">{{ seeds.active.clientSeed }}</span>
-            <span class="flex min-w-0 items-center gap-2 max-lg:col-span-2">
-              <span class="type-10-caps shrink-0 text-neutral-11">SHA-256</span>
-              <span class="kd-seedmono truncate text-neutral-12">{{ seeds.active.serverSeedHash }}</span>
-              <span class="kd-check is-sealed ml-auto grid size-8 shrink-0 place-items-center rounded-lg lg:hidden" :title="$t('fair.hiddenTill')"><UiIcon name="shield" :size="16" /></span>
-            </span>
-            <span class="kd-check is-sealed type-12-caps flex h-8 items-center gap-1.5 justify-self-end rounded-lg px-2.5 max-lg:hidden" :title="$t('fair.hiddenTill')">
-              <UiIcon name="shield" :size="16" class="shrink-0" />{{ $t('fair.check') }}
-            </span>
-          </li>
-          <li v-for="(h, i) in seeds.history" :key="h.serverSeedHash" class="kd-seedgrid kd-seedrow">
-            <span class="flex min-w-0 flex-col">
-              <span class="type-14">{{ $t('fair.pairN', { n: seeds.history.length - i }) }}</span>
-              <span class="type-12-regular truncate text-neutral-11">{{ when(h.createdAt) }} → {{ when(h.rotatedAt) }}</span>
-            </span>
-            <span class="type-14 tabular-nums max-lg:text-right" :class="!h.nonce && 'text-neutral-10'">{{ h.nonce ? `1–${h.nonce}` : $t('fair.noRolls') }}</span>
-            <span class="flex min-w-0 items-center gap-2 max-lg:hidden">
-              <span class="kd-seedmono truncate">{{ h.clientSeed }}</span>
-              <span v-if="h.clientChanged" class="type-10-caps shrink-0 rounded-md bg-neutral-3 px-1.5 py-0.5 text-neutral-11">{{ $t('fair.changed') }}</span>
-            </span>
-            <span class="flex min-w-0 items-center gap-2 max-lg:col-span-2">
-              <span class="kd-seedmono truncate">{{ h.serverSeed }}</span>
-              <button type="button" class="kd-press grid size-7 shrink-0 place-items-center rounded-md text-neutral-11 hover:text-neutral-15" :aria-label="$t('fair.copy')" @click="copy(h.serverSeed)"><UiIcon name="copy" :size="16" /></button>
-              <!-- phones: the check beside the seed it checks, the icon alone -->
-              <button type="button" class="kd-check kd-press ml-auto grid size-8 shrink-0 place-items-center rounded-lg lg:hidden" :aria-label="$t('fair.check')" :disabled="!h.nonce" @click="openVerifier({ serverSeed: h.serverSeed, clientSeed: h.clientSeed, nonce: h.nonce })"><UiIcon name="shield-check" :size="16" /></button>
-            </span>
-            <button type="button" class="kd-check kd-press type-12-caps flex h-8 items-center gap-1.5 justify-self-end rounded-lg px-2.5 max-lg:hidden" :disabled="!h.nonce" @click="openVerifier({ serverSeed: h.serverSeed, clientSeed: h.clientSeed, nonce: h.nonce })">
-              <UiIcon name="shield-check" :size="16" class="shrink-0" />{{ $t('fair.check') }}
-            </button>
-          </li>
-        </TransitionGroup>
-      </div>
+      <TransitionGroup v-if="seeds" tag="ul" name="kd-hist" class="flex flex-col p-3">
+        <li v-for="p in pairs" :key="p.serverSeedHash" class="kd-seedrow">
+          <span class="kd-seeddot" :class="!p.revealed && 'kd-live'" />
+          <span class="flex min-w-0 flex-col">
+            <span class="type-14 lg:type-16-medium lg:font-semibold" :class="!p.nonce && 'text-neutral-11'">{{ $t('fair.pairRolls', { n: p.nonce }, p.nonce) }}</span>
+            <span v-if="p.revealed" class="type-12-regular truncate text-neutral-11" :title="`${when(p.revealed.createdAt)} → ${when(p.revealed.rotatedAt)}`">{{ period(p.revealed.createdAt, p.revealed.rotatedAt) }}</span>
+            <span v-else class="type-12-regular truncate text-neutral-11"><span class="text-success">{{ $t('fair.inUse') }}</span> · {{ $t('fair.since', { when: timeAgo(p.createdAt) }) }}</span>
+          </span>
+          <dl class="kd-seedvals">
+            <dt class="type-12-caps text-neutral-11">{{ p.revealed ? $t('fair.serverSeed') : $t('fair.serverHash') }}</dt>
+            <dd class="flex min-w-0 items-center gap-2">
+              <button type="button" class="kd-seedcopy kd-press" :title="p.server" :aria-label="$t('fair.copy')" @click="copy(p.server)">
+                <span class="kd-seedmono truncate">{{ shortSeed(p.server) }}</span><UiIcon name="copy" :size="14" class="shrink-0" />
+              </button>
+              <span v-if="!p.revealed" class="kd-seedtag type-10-caps bg-neutral-3 text-neutral-11" :title="$t('fair.hiddenTill')"><UiIcon name="lock" :size="12" class="shrink-0" /><span class="max-lg:hidden">{{ $t('fair.sealedTag') }}</span></span>
+              <span v-else-if="hashOk[p.serverSeedHash] === true" class="kd-seedtag type-10-caps bg-success-24 text-success" :title="$t('fair.hashMatchesHint')"><UiIcon name="check" :size="12" class="shrink-0" /><span class="max-lg:hidden">{{ $t('fair.hashMatches') }}</span></span>
+              <span v-else-if="hashOk[p.serverSeedHash] === false" class="kd-seedtag type-10-caps bg-danger-24 text-danger"><UiIcon name="x-circle" :size="12" class="shrink-0" /><span class="max-lg:hidden">{{ $t('fair.hashMismatch') }}</span></span>
+            </dd>
+            <dt class="type-12-caps text-neutral-11">{{ $t('fair.clientSeed') }}</dt>
+            <dd class="flex min-w-0 items-center gap-2">
+              <button type="button" class="kd-seedcopy kd-press" :aria-label="$t('fair.copy')" @click="copy(p.clientSeed)">
+                <span class="kd-seedmono truncate">{{ p.clientSeed }}</span><UiIcon name="copy" :size="14" class="shrink-0" />
+              </button>
+              <span v-if="p.revealed?.clientChanged" class="kd-seedtag type-10-caps bg-neutral-3 text-neutral-11">{{ $t('fair.changed') }}</span>
+            </dd>
+          </dl>
+          <button v-if="p.revealed" type="button" class="kd-check kd-press type-12-caps flex h-8 items-center justify-center gap-1.5 justify-self-end rounded-lg max-lg:w-8 lg:w-26" :aria-label="$t('fair.check')" :disabled="!p.nonce" @click="openVerifier({ serverSeed: p.server, clientSeed: p.clientSeed, nonce: p.nonce })">
+            <UiIcon name="shield-check" :size="16" class="shrink-0" /><span class="max-lg:hidden">{{ $t('fair.check') }}</span>
+          </button>
+          <UiButton v-else-if="p.nonce" variant="fair" size="s" icon="refresh" :loading="rotating" class="justify-self-end lg:w-26" :title="$t('fair.hiddenTill')" @click="rotate">{{ $t('fair.reveal') }}</UiButton>
+        </li>
+      </TransitionGroup>
     </section>
     </div>
 
@@ -217,48 +217,104 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
 </template>
 
 <style scoped>
-/* the seed log: one grid for the column names and every row, with the history table's gaps, lines and height */
-.kd-seedgrid {
+/* the seed log: the rail, who and when, the seeds, the action; on a phone the seeds drop under the first two */
+.kd-seedrow {
+  position: relative;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px 12px;
+  padding: 12px 8px;
 }
-@media (min-width: 64rem) {
-  .kd-seedgrid {
-    grid-template-columns: 220px 100px minmax(0, 1fr) minmax(0, 1.4fr) 120px;
-  }
+.kd-seedvals {
+  grid-column: 2 / -1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 8px;
 }
-@media (min-width: 64rem) {
-  .kd-seedgrid {
-    gap: 16px;
-  }
+.kd-seeddot {
+  align-self: start;
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 9999px;
+  background: var(--color-neutral-6);
 }
-.kd-seedrow {
-  padding: 10px 8px;
-  border-bottom: 1px solid var(--color-neutral-3);
-}
-.kd-seedrow:last-child {
-  border-bottom: 0;
+/* the rail: from under one dot to the next */
+.kd-seedrow:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 31px;
+  bottom: -13px;
+  left: 12px;
+  width: 2px;
+  border-radius: 9999px;
+  background: var(--color-neutral-4);
 }
 @media (min-width: 64rem) {
   .kd-seedrow {
-    height: 62px;
-    padding: 0 12px;
+    grid-template-columns: 10px 200px minmax(0, 1fr) 104px;
+    gap: 16px;
+    padding: 14px 12px;
+  }
+  .kd-seedvals {
+    grid-column: auto;
+    grid-row: auto;
+    grid-template-columns: 104px minmax(0, 1fr);
+  }
+  .kd-seeddot {
+    margin-top: 7px;
+  }
+  .kd-seedrow:not(:last-child)::after {
+    top: 35px;
+    bottom: -15px;
+    left: 16px;
   }
 }
 .kd-seedmono {
-  font: 500 14px/20px ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font: 500 13px/20px ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   color: var(--color-neutral-13);
 }
-/* the check: the history table's green chip; grey while the seed is still secret */
+/* a value and its copy icon are one button; an invisible ring makes the 24 px line easier to hit */
+.kd-seedcopy {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  height: 24px;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-neutral-11);
+  transition: color var(--dur-base) var(--ease-out);
+}
+.kd-seedcopy::before {
+  content: '';
+  position: absolute;
+  inset: -4px -6px;
+}
+@media (hover: hover) {
+  .kd-seedcopy:hover {
+    color: var(--color-neutral-15);
+  }
+}
+.kd-seedtag {
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 20px;
+  align-items: center;
+  gap: 4px;
+  border-radius: 6px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+/* the check: the history table's green chip */
 .kd-check {
   color: var(--color-success);
   background: rgb(18 183 106 / 0.12);
   transition: background-color var(--dur-base) var(--ease-out);
 }
-.kd-check:disabled,
-.kd-check.is-sealed {
+.kd-check:disabled {
   color: var(--color-neutral-11);
   background: var(--color-neutral-3);
 }
@@ -268,9 +324,6 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
   }
 }
 .kd-live {
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
   background: var(--color-success);
   animation: kd-live 1.6s ease-in-out infinite;
 }
