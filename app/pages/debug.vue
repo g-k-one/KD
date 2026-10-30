@@ -33,6 +33,7 @@ const settingsStore = useSettingsStore()
 const ui = useUiStore()
 const toast = useToast()
 const { refresh: refreshFeed } = useLiveFeed()
+const consent = useConsent()
 
 // --- Mock state ------------------------------------------------------------------------------
 const feedPaused = ref(false)
@@ -264,6 +265,17 @@ const motionKey = ref(0)
           <div class="flex flex-wrap gap-2">
             <UiButton size="s" variant="secondary" @click="settingsStore.reset()">Reset settings</UiButton>
             <UiButton size="s" variant="danger" @click="wipeStorage">Clear kd_* storage</UiButton>
+          </div>
+        </section>
+
+        <section class="dbg-card">
+          <h2 class="dbg-h">Cookies <span class="dbg-note">{{ consent.open.value ? 'banner up' : 'decided' }}</span></h2>
+          <pre class="dbg-pre">{{ consent.current.value }}</pre>
+          <div class="flex flex-wrap gap-2">
+            <UiButton size="s" variant="secondary" @click="consent.reset()">First visit banner</UiButton>
+            <UiButton size="s" variant="secondary" @click="consent.reopen()">Cookie settings</UiButton>
+            <UiButton size="s" variant="ghost" @click="consent.acceptAll()">Accept all</UiButton>
+            <UiButton size="s" variant="ghost" @click="consent.rejectAll()">Reject all</UiButton>
           </div>
         </section>
 

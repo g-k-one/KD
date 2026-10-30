@@ -31,6 +31,7 @@ useEventListener(import.meta.client ? document : null, 'click', (e: MouseEvent) 
 onKeyStroke((e) => e.shiftKey && e.key === 'D' && !(e.target as HTMLElement).closest?.('input, textarea'), () => (shown.value = !shown.value))
 const session = useSessionStore()
 const toast = useToast()
+const consent = useConsent()
 const force = ref<Force>({ cases: [], upgrade: null, battle: null })
 
 async function load() {
@@ -234,6 +235,7 @@ const resetDaily = async () => {
             <UiButton size="s" variant="secondary" icon="settings" to="/admin" @click="open = false">Admin panel</UiButton>
             <UiButton size="s" variant="secondary" icon="sound" @click="testFeel">Sound + buzz</UiButton>
             <UiButton size="s" variant="secondary" icon="fire" to="/fx" @click="open = false">Forge FX</UiButton>
+            <UiButton size="s" variant="secondary" class="col-span-2" @click="consent.reset()">Cookie banner</UiButton>
             <UiButton size="s" variant="secondary" class="col-span-2" to="/debug" @click="open = false">Full debug page</UiButton>
           </div>
         </section>

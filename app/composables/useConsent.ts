@@ -23,5 +23,10 @@ export function useConsent() {
     rejectAll: () => decide({ analytics: false, marketing: false }),
     save: (choice: Record<ConsentCategory, boolean>) => decide(choice),
     reopen: () => (editing.value = true),
+    /** back to a first visit: no choice made, the banner up (debug) */
+    reset: () => {
+      store.value = { v: 1, decided: false, analytics: false, marketing: false }
+      editing.value = false
+    },
   }
 }
