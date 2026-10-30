@@ -39,6 +39,8 @@ export interface CaseSummary {
   endsAt?: string
   /** A colour gradient behind the art on its plain, wide or tall card; the plain plate when absent */
   tint?: CaseTint
+  /** A short silent loop of its full scene, played over the still scene on the card */
+  video?: string
   createdAt: string
 }
 

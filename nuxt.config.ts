@@ -12,7 +12,7 @@ const pages = !!process.env.KD_PAGES
 const imageVersions = (dir = 'public/img'): Record<string, string> =>
   Object.fromEntries(
     readdirSync(dir, { recursive: true, withFileTypes: true })
-      .filter((e) => e.isFile() && /\.(webp|png|jpg|svg)$/.test(e.name))
+      .filter((e) => e.isFile() && /\.(webp|png|jpg|svg|mp4)$/.test(e.name))
       .map((e) => {
         const p = join(e.parentPath, e.name)
         // keyed without the leading slash, as the pages build leaves picture paths (scripts/build-artifact.mjs)

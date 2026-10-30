@@ -6,7 +6,7 @@ import type { MaybeElementRef } from '@vueuse/core'
  * view, and a card that scrolls away hands its slot to the next one waiting. Fewer slots on touch
  * devices (weaker CPUs), none at all with reduced motion.
  */
-const MAX_PLAYING = { fine: 4, coarse: 2 }
+const MAX_PLAYING = { fine: 5, coarse: 2 }
 
 interface Entry { playing: Ref<boolean> }
 const waiting: Entry[] = []

@@ -186,6 +186,8 @@ const csCase = (n: number, slug: string, name: string, price: number, risk: Case
   id: `cs${n}`, slug, name, image: `/img/cases/${slug}.webp`, price, risk, ...(tag && { tag }), targetRtp: 9200, createdAt: '2026-10-29',
   art: shaped ? { ...CS_ART, [shaped]: `/img/cases/${shaped}/${slug}.webp` } : CS_ART,
 })
+// A full scene that moves: a short loop beside its picture (section 11)
+const looped = (def: CaseDef): CaseDef => ({ ...def, video: `/img/cases/full/${def.slug}.mp4` })
 // Old school is back for a limited time: the whole line closes on a real date, nothing restarts the clock
 const OLD_SCHOOL_ENDS = '2026-11-11T18:00:00.000Z'
 const oldSchool = (def: CaseDef): CaseDef => ({ ...def, endsAt: OLD_SCHOOL_ENDS })
@@ -220,11 +222,11 @@ const CS_DEFS: CaseDef[] = [
   csCase(27, 'vitality', 'Vitality', 6900, 'medium', 'new', 'full'),
   csCase(28, 'navi', 'NAVI', 9900, 'medium', 'hot', 'full'),
   // FACEIT: the brand's glossy 3D chicken in FACEIT orange (section 11), the risk climbing with the level
-  csCase(29, 'faceit-level-1', 'FACEIT Lvl 1', 149, 'low', 'new', 'full'),
-  csCase(30, 'match-found', 'Match Found', 390, 'medium', undefined, 'full'),
-  csCase(31, 'anti-cheat', 'Anti-Cheat', 690, 'medium', 'hot', 'full'),
-  csCase(32, 'elo-climb', 'ELO Climb', 1290, 'high', undefined, 'full'),
-  csCase(33, 'faceit-level-10', 'FACEIT Lvl 10', 2490, 'extreme', 'new', 'full'),
+  looped(csCase(29, 'faceit-level-1', 'FACEIT Lvl 1', 149, 'low', 'new', 'full')),
+  looped(csCase(30, 'match-found', 'Match Found', 390, 'medium', undefined, 'full')),
+  looped(csCase(31, 'anti-cheat', 'Anti-Cheat', 690, 'medium', 'hot', 'full')),
+  looped(csCase(32, 'elo-climb', 'ELO Climb', 1290, 'high', undefined, 'full')),
+  looped(csCase(33, 'faceit-level-10', 'FACEIT Lvl 10', 2490, 'extreme', 'new', 'full')),
   // Halloween: big glossy 3D heroes, no chests (section 12)
   { ...csCase(34, 'trick-or-frag', 'Trick or Frag', 190, 'low', 'new'), tint: 'violet' },
   { ...csCase(35, 'pumpkin-head', 'Pumpkin Head', 490, 'medium'), tint: 'teal' },

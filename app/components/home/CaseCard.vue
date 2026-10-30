@@ -41,7 +41,9 @@ const stock = computed(() => {
 // first frame is drawn (and after it stops, or if it never loads) the static WebP stays in place.
 const artBox = useTemplateRef<HTMLElement>('artBox')
 const rigCanvas = useTemplateRef<HTMLCanvasElement>('rigCanvas')
-const playing = useArtPlayback(artBox, () => !full.value && !!(props.item.rig || props.item.animation))
+/** A full scene's silent loop: it fades in over the still scene once it really plays; a closed case stays still */
+const clip = computed(() => (full.value && !stock.value?.out && !ended.value ? props.item.video : undefined))
+const playing = useArtPlayback(artBox, () => !!clip.value || (!full.value && !!(props.item.rig || props.item.animation)))
 const animReady = ref(false)
 watch(playing, (v) => !v && !props.item.rig && (animReady.value = false))
 // The rig is square: fit it into the art box like object-contain, drawn at device resolution
@@ -90,6 +92,7 @@ function onArtLeave() {
     <span v-if="tint" class="kd-case-tint" :class="`tint-${tint}`" aria-hidden="true" />
     <!-- full art: the scene behind everything, darkened at the foot where the text sits -->
     <img v-if="full" :src="full" :alt="item.name" loading="lazy" draggable="false" class="kd-case-full" />
+    <video v-if="playing && clip" :src="clip" class="kd-case-full kd-case-clip" :class="animReady && 'is-ready'" muted loop autoplay playsinline disablepictureinpicture aria-hidden="true" @playing="animReady = true" />
     <span v-if="full" class="kd-case-scrim" aria-hidden="true" />
     <div ref="artBox" class="kd-case-art-box relative aspect-square w-full lg:aspect-auto" :class="shape === 'tall' ? 'lg:min-h-55 lg:flex-1' : 'lg:h-55'">
       <!-- coop: a low wooden pedestal under the case, drawn in CSS (its side, its lit top), behind the art -->
@@ -413,6 +416,15 @@ function onArtLeave() {
   object-fit: cover;
   object-position: 50% 30%;
   transition: transform var(--dur-slow) var(--ease-out);
+}
+.kd-case-clip {
+  opacity: 0;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+.kd-case-clip.is-ready {
+  opacity: 1;
 }
 .kd-case-scrim {
   background: linear-gradient(180deg, transparent 42%, rgb(10 11 14 / 0.72) 68%, rgb(10 11 14 / 0.94));

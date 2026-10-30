@@ -145,11 +145,14 @@ export function setAdminCase(slug: string, input: Partial<AdminCaseInput>) {
   }
   if (input.art && typeof input.art === 'object') {
     def.art ??= {}
+    const scene = def.art.full
     for (const k of ['wide', 'tall', 'full'] as const) {
       const v = input.art[k]
       if (v === null) def.art[k] = null
       else if (isPic(v) && v !== `/img/cases/${k}/${def.artSlug ?? def.slug}.webp`) def.art[k] = v
     }
+    // the loop was made from the old scene
+    if (def.art.full !== scene) delete def.video
   }
   if (input.card && CARDS.includes(input.card)) setCaseCard(slug, input.card)
   rebuildCase(def)
