@@ -561,8 +561,22 @@
       "pvp": "No battles yet.",
       "deposit": "No deposits yet.",
       "sell": "No skins sold yet.",
-      "withdraw": "No withdrawals yet."
+      "withdraw": "No withdrawals yet.",
+      "narrowed": "Nothing matches these filters."
     },
+    "historySearch": "Search by name",
+    "periods": {
+      "all": "All time",
+      "day": "Last 24 hours",
+      "week": "Last 7 days",
+      "month": "Last 30 days"
+    },
+    "outcomes": {
+      "all": "Any result",
+      "won": "Won",
+      "lost": "Lost"
+    },
+    "clearFilters": "Clear filters",
     "date": "Date",
     "game": "Game",
     "bet": "Bet",

@@ -122,13 +122,31 @@ async function onWithdrawn() {
 type GameFilter = HistoryGame | 'pvp' | 'all'
 const FILTERS: GameFilter[] = ['all', 'case', 'upgrade', 'pvp', 'deposit', 'sell', 'withdraw']
 const gameFilter = ref<GameFilter>(FILTERS.includes(route.query.game as GameFilter) ? (route.query.game as GameFilter) : 'all')
-const filteredHistory = computed(() =>
-  history.value.filter((h) => {
-    if (gameFilter.value === 'all') return true
-    if (gameFilter.value === 'pvp') return !!h.battleId
-    return h.game === gameFilter.value && !(gameFilter.value === 'case' && h.battleId)
-  }),
-)
+// and three more on top of the game: a skin or case by name, how far back, won or lost (rounds only: a payment has no profit)
+const historyQuery = ref('')
+const PERIODS = { all: 0, day: 86_400_000, week: 7 * 86_400_000, month: 30 * 86_400_000 }
+const period = ref<keyof typeof PERIODS>('all')
+const periodOptions = computed(() => (Object.keys(PERIODS) as (keyof typeof PERIODS)[]).map((v) => ({ value: v, label: t(`account.periods.${v}`) })))
+const outcome = ref<'all' | 'won' | 'lost'>('all')
+const outcomeOptions = computed(() => (['all', 'won', 'lost'] as const).map((v) => ({ value: v, label: t(`account.outcomes.${v}`) })))
+const historyNarrowed = computed(() => !!historyQuery.value.trim() || period.value !== 'all' || outcome.value !== 'all')
+function clearHistoryFilters() {
+  historyQuery.value = ''
+  period.value = 'all'
+  outcome.value = 'all'
+}
+const filteredHistory = computed(() => {
+  const q = historyQuery.value.trim().toLowerCase()
+  const since = period.value === 'all' ? 0 : Date.now() - PERIODS[period.value]
+  return history.value.filter((h) => {
+    if (gameFilter.value === 'pvp' ? !h.battleId : gameFilter.value !== 'all' && (h.game !== gameFilter.value || (gameFilter.value === 'case' && h.battleId))) return false
+    if (since && Date.parse(h.at) < since) return false
+    if (q && !`${h.title} ${h.result?.name ?? ''}`.toLowerCase().includes(q)) return false
+    if (outcome.value === 'all') return true
+    if (h.game !== 'case' && h.game !== 'upgrade') return false
+    return outcome.value === 'won' ? h.payout > h.bet : h.payout <= h.bet
+  })
+})
 
 // --- Stats (from the history the profile already loads) ------------------------------
 const stats = computed(() => {
@@ -299,12 +317,22 @@ async function saveTrade() {
       <!-- Game history, the full width: what the player did, newest first; a roll opens its check -->
       <section>
         <div ref="historyEl" class="flex min-w-0 scroll-mt-36 flex-col rounded-5xl bg-neutral-2">
-          <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
-            <UiIcon name="history" :size="24" class="text-neutral-13" />
-            <span class="type-14 lg:type-16-medium">{{ $t('account.history') }}</span>
-            <UiSelect v-model="gameFilter" :options="gameOptions" menu-width="fixed" class="ml-auto w-36 lg:w-40" :active="gameFilter !== 'all'" />
+          <!-- the title, then the filters: on one line on desktop, under it on phones -->
+          <div class="flex flex-col gap-3 border-b border-neutral-4 p-4 lg:h-18 lg:flex-row lg:items-center lg:py-0 lg:pr-4 lg:pl-6">
+            <div class="flex items-center gap-3">
+              <UiIcon name="history" :size="24" class="text-neutral-13" />
+              <span class="type-14 lg:type-16-medium">{{ $t('account.history') }}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 lg:ml-auto lg:flex">
+              <UiInput v-model="historyQuery" icon="search" clearable inputmode="search" :placeholder="$t('account.historySearch')" class="lg:w-56" />
+              <UiSelect v-model="period" :options="periodOptions" menu-width="fit" class="lg:w-36" :active="period !== 'all'" />
+              <UiSelect v-model="outcome" :options="outcomeOptions" menu-width="fit" class="lg:w-32" :active="outcome !== 'all'" />
+              <UiSelect v-model="gameFilter" :options="gameOptions" menu-width="fit" class="lg:w-36" :active="gameFilter !== 'all'" />
+            </div>
           </div>
-          <UiEmptyState v-if="!filteredHistory.length" :text="$t(`account.emptyHistory.${gameFilter}`)" art="empty-history" class="m-3" />
+          <UiEmptyState v-if="!filteredHistory.length" :text="$t(`account.emptyHistory.${historyNarrowed ? 'narrowed' : gameFilter}`)" :art="historyNarrowed ? 'empty-search' : 'empty-history'" class="m-3">
+            <UiButton v-if="historyNarrowed" variant="secondary" size="m" @click="clearHistoryFilters">{{ $t('account.clearFilters') }}</UiButton>
+          </UiEmptyState>
           <!-- the table: game · drop · stake · payout · profit · time · check; a roll opens its check -->
           <!-- no top padding on desktop: the sticky headers stop at the panel's hairline, nothing shows over them -->
           <div v-else class="kd-history overflow-y-auto p-3 lg:pt-0">
