@@ -21,6 +21,8 @@ const totalShown = useTransition(totalSrc, { duration: 700, transition: [0.22, 1
 const chanceSrc = computed(() => props.chance ?? 0)
 const chanceShown = useTransition(chanceSrc, { duration: 700, transition: [0.22, 1, 0.36, 1] })
 const playing = computed(() => (props.total ?? 0) > 0)
+// nothing dropped yet: no coins line, so the rest stands in the plate's middle and makes room as the line fades in
+const idle = computed(() => !(props.result || playing.value))
 </script>
 
 <template>
@@ -29,26 +31,28 @@ const playing = computed(() => (props.total ?? 0) > 0)
     :class="[
       compact ? ['flex-col justify-center rounded-2xl text-center', player ? 'gap-2 px-1 py-3' : 'gap-1 p-2', 'min-h-[110px]'] : ['h-16 gap-3 rounded-2xl pl-[9px]', player ? 'pr-3' : 'pr-[15px]'],
       quiet ? '' : winner ? 'is-winner' : lead ? 'is-lead' : '',
+      compact && 'is-compact',
+      idle && 'is-idle',
     ]"
   >
     <template v-if="player">
-      <span class="relative shrink-0">
+      <span class="kd-slot-pic relative shrink-0">
         <span class="block overflow-hidden rounded-full bg-neutral-7" :class="compact ? 'size-8' : 'size-11'">
           <img :src="player.avatar" alt="" class="size-full object-cover" :class="player.bot && 'scale-75 object-contain'" />
         </span>
         <span v-if="compact" class="absolute -top-1.5 -right-2.5 flex origin-top-right scale-75"><UiLevelBadge :level="player.level" /></span>
         <span v-if="winner && !quiet" class="kd-crown absolute -top-1.5 -left-1.5 grid size-5 place-items-center rounded-full text-success"><UiIcon name="crown-fill" :size="14" /></span>
       </span>
-      <span class="flex min-w-0 max-w-full flex-col" :class="compact ? 'items-center gap-2' : 'flex-1 items-start gap-0.5'">
+      <span class="kd-slot-who flex min-w-0 max-w-full flex-col" :class="compact ? 'items-center gap-2' : 'flex-1 items-start gap-0.5'">
         <span class="flex min-w-0 max-w-full items-center gap-1.5">
           <span class="min-w-0 max-w-full truncate" :class="compact ? 'type-12' : 'type-16-medium'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
           <UiLevelBadge v-if="!compact" :level="player.level" class="shrink-0" />
         </span>
-        <!-- the line is kept from the start and only fades in, so the name above it never jumps -->
-        <UiPrice :amount="Math.round(totalShown)" :size="compact ? 's' : 'm'" :tone="winner ? 'default' : result ? 'muted' : 'coin'" class="tabular-nums transition-opacity duration-300" :class="!(result || playing) && 'opacity-0'" />
+        <!-- the line is kept from the start and only fades in, so the plate's height never changes -->
+        <UiPrice :amount="Math.round(totalShown)" :size="compact ? 's' : 'm'" :tone="winner ? 'default' : result ? 'muted' : 'coin'" class="tabular-nums transition-opacity duration-300" :class="idle && 'opacity-0'" />
       </span>
       <!-- the chance to win, from the first second to the last round -->
-      <span v-if="!quiet && !result && chance != null" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end gap-1 pl-1'">
+      <span v-if="!quiet && !result && chance != null" class="kd-slot-odds flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end gap-1 pl-1'">
         <span class="tabular-nums" :class="[compact ? 'type-14' : 'type-20-caps', lead ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15']">{{ Math.round(chanceShown) }}%</span>
         <span v-if="!compact" class="type-10-caps whitespace-nowrap text-neutral-11">{{ $t('pvp.toWin') }}</span>
       </span>
@@ -80,6 +84,22 @@ const playing = computed(() => (props.total ?? 0) > 0)
   transition:
     background-color var(--dur-slow) var(--ease-out),
     border-color var(--dur-slow) var(--ease-out);
+}
+/* half of the coins line and its gap */
+.kd-slot-pic,
+.kd-slot-who,
+.kd-slot-odds {
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.kd-slot.is-idle .kd-slot-who {
+  transform: translateY(11px);
+}
+.kd-slot.is-idle.is-compact .kd-slot-pic,
+.kd-slot.is-idle.is-compact .kd-slot-who {
+  transform: translateY(12px);
+}
+.kd-slot.is-idle.is-compact .kd-slot-odds {
+  transform: translateY(-12px);
 }
 /* the green plate of the seat ahead: a layer that fades, a gradient itself cannot */
 .kd-slot::before {

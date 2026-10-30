@@ -86,6 +86,8 @@ const totals = computed(() => slotTotals(b.value, revealed.value))
 const pot = computed(() => totals.value.reduce((a, x) => a + x, 0))
 // Who plays together: 2 vs 2 is two teams of two, every other mode each seat for itself
 const seatGroups = computed(() => (isTeam.value ? [b.value.slots.slice(0, 2), b.value.slots.slice(2, 4)] : b.value.slots.map((s) => [s])))
+// what a seat has dropped so far, in round order
+const seatDrops = (slot: number) => (b.value.results ?? []).slice(0, Math.max(0, revealed.value)).flatMap((r) => r.drops[slot] ?? [])
 const groupTotal = (g: BattleSlot[]) => g.reduce((a, s) => a + (totals.value[s.slot] ?? 0), 0)
 // the two sides of CS2, each in its colour
 const TEAM_SIDE = ['ct', 't'] as const
@@ -495,7 +497,7 @@ const laneCols = computed(() => {
           <img :src="`/img/teams/${TEAM_SIDE[gi]}.svg`" alt="" class="block size-8 rounded-full lg:size-11" draggable="false" />
           <span v-if="teamState(g) === 'won'" class="kd-team-crown absolute -top-1.5 -left-1.5 grid size-5 place-items-center rounded-full text-success"><UiIcon name="crown-fill" :size="14" /></span>
         </span>
-        <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span class="kd-team-who flex min-w-0 flex-1 flex-col gap-0.5" :class="revealed === 0 && 'is-idle'">
           <span class="kd-team-name truncate" :class="[isMobile ? 'type-12-caps' : 'type-16-caps', `is-${TEAM_SIDE[gi]}`]">{{ $t(`pvp.team.${TEAM_SIDE[gi]}${isMobile ? 'Short' : ''}`) }}</span>
           <UiPrice :amount="groupTotal(g)" :size="isMobile ? 's' : 'm'" :tone="teamState(g) === 'lost' ? 'muted' : teamState(g) === 'won' ? 'default' : 'coin'" class="kd-fade tabular-nums" :class="revealed > 0 && 'is-on'" />
         </span>
@@ -505,7 +507,7 @@ const laneCols = computed(() => {
         </span>
       </div>
       <div :class="isTeam && ['kd-team-seats grid', gi === 1 && 'is-right']">
-      <div v-for="s in g" :key="s.slot" class="flex min-w-0 flex-col gap-3" :class="isTeam && 'max-md:gap-1'">
+      <div v-for="s in g" :key="s.slot" class="flex min-w-0 flex-col">
       <PvpPlayerSlot
         :quiet="isTeam"
         :player="s.player"
@@ -521,17 +523,8 @@ const laneCols = computed(() => {
         @join="join(s.slot)"
         @bot="bot(s.slot)"
       />
-      <!-- a slot for every round from the start, so nothing grows when the first drops land: each settles into its own
-           slot. Once it is over, the losers' drops step back: they go to the winner -->
-      <div class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]" :class="[done && !winners.includes(s.slot) && 'is-lost', isTeam && 'max-md:gap-1']">
-        <div v-for="(_, ri) in b.rounds" :key="ri" class="kd-drop-slot relative h-25 rounded-2xl lg:h-[105px]">
-          <Transition name="kd-drop">
-            <div v-if="ri < revealed && b.results?.[ri]?.drops[s.slot]" class="absolute inset-0">
-              <ItemTile :item="b.results[ri]!.drops[s.slot]!" readonly class="!aspect-auto !h-full" />
-            </div>
-          </Transition>
-        </div>
-      </div>
+      <!-- the seat's drops, each as it lands; once it is over, the losers' step back -->
+      <PvpSeatDrops :items="seatDrops(s.slot)" :lost="done && !winners.includes(s.slot)" :tight="isTeam" />
       </div>
       </div>
       </div>
@@ -630,6 +623,18 @@ const laneCols = computed(() => {
 }
 .kd-team-head.is-won {
   background: var(--color-success-24);
+}
+/* no coins yet: the name in the plate's middle, up as the sum fades in */
+.kd-team-who {
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.kd-team-who.is-idle {
+  transform: translateY(9px);
+}
+@media (min-width: 64rem) {
+  .kd-team-who.is-idle {
+    transform: translateY(11px);
+  }
 }
 /* the two seats of a team stand on the arena's line: its 4 px frame and the gap between the teams move their middle
    off the team's own, so the outer seat is the wider one */
@@ -904,23 +909,6 @@ const laneCols = computed(() => {
     opacity: 0;
     transform: scale(0.9);
   }
-}
-.kd-drop-slot {
-  background: var(--color-neutral-3);
-}
-@media (min-width: 64rem) {
-  .kd-drop-slot {
-    background: rgb(255 255 255 / 0.025);
-  }
-}
-.kd-drop-enter-active {
-  transition:
-    opacity var(--dur-slow) var(--ease-out),
-    transform 520ms var(--ease-spring);
-}
-.kd-drop-enter-from {
-  opacity: 0;
-  transform: translateY(-14px) scale(0.86);
 }
 /* what appears in a line that already holds its place */
 .kd-fade {
