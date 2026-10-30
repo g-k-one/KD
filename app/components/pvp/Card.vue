@@ -2,8 +2,8 @@
 import type { Battle } from '#shared/types/api'
 
 // A battle as a row of the lobby (components/pvp/Table.vue), on skin.club's row in our colours and corners: the rounds
-// (a deck in the mode's colour: the count on its top card, a card under it for every round to come, up to three, and
-// they peel away as the rounds are played; live, red, breathing and "1/15"), the battle scenario as case cells (each
+// (the count in a circle whose rim is a slow gradient turning in the mode's colour; live, red, faster, breathing and
+// "1/15"), the battle scenario as case cells (each
 // round's case, close together, its name on hover), the players (the mode over a plate of seats) and the cost over the
 // button — Join (a guest signs in first), Watch or View. The row is one card in the house's way (24 px, 8 in; phones 20):
 // neutral-2, the cases standing on it without tiles. The small print is gone: the button says the status, the seats say
@@ -26,9 +26,6 @@ const clock = computed(() => battleClock(props.battle, now.value))
 const round = computed(() => (mounted.value ? Math.min(props.battle.rounds.length, Math.max(1, clock.value.round + 1)) : 1))
 // rounds played, by the clock alone (the room replays from the same start and round length)
 const played = computed(() => (props.battle.status === 'finished' ? props.battle.rounds.length : props.battle.status === 'live' && mounted.value ? Math.max(0, clock.value.round) : 0))
-
-// the cards under the deck's top one: a round still to come each, three at most
-const deck = computed(() => Math.min(3, Math.max(0, props.battle.rounds.length - played.value - 1)))
 
 type Cell = { key: string; image: string; name: string; state: 'next' | 'now' | 'done' }
 const cells = computed<Cell[]>(() => props.battle.rounds.map((r, i) => ({ key: `r${i}`, image: r.image, name: r.name, state: i < played.value ? 'done' : props.battle.status === 'live' && i === played.value ? 'now' : 'next' })))
@@ -67,10 +64,9 @@ function onClick(e: MouseEvent) {
     :class="[`is-${battle.mode}`, `is-${battle.status}`]"
     @click.capture="onClick"
   >
-    <!-- rounds: a deck, the count on its top card -->
-    <div class="kd-brow-rounds flex items-center px-2 pt-3 lg:justify-center lg:p-0 lg:pt-3">
-      <span class="kd-rounds grid h-11 w-13 shrink-0 place-items-center rounded-xl lg:h-16 lg:w-19 lg:rounded-2xl" :title="roundsTip">
-        <span v-for="n in 3" :key="n" class="kd-rounds-card" :class="n > deck && 'is-gone'" :style="{ '--n': n }" aria-hidden="true" />
+    <!-- rounds: the count in a circle -->
+    <div class="kd-brow-rounds flex items-center px-2 pt-2 lg:justify-center lg:p-0">
+      <span class="kd-rounds grid size-11 shrink-0 place-items-center rounded-full lg:size-19" :title="roundsTip">
         <span class="kd-rounds-n tabular-nums" :class="battle.status === 'live' ? 'type-12-caps lg:type-20-caps' : 'type-20-caps lg:type-28'">{{ battle.status === 'live' ? `${round}/${battle.rounds.length}` : battle.rounds.length }}</span>
       </span>
     </div>
@@ -110,10 +106,10 @@ function onClick(e: MouseEvent) {
       <span class="kd-brow-mode type-12-caps flex items-center gap-1 lg:hidden"><UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="14" />{{ $t(`pvp.modeName.${battle.mode}`) }}</span>
     </div>
 
-    <!-- the players: on desktop the mode over the seats, as the cost stands over the button beside them. The seats are a
-         plate of the button's height and radius, one 6 px step between every avatar in every mode -->
+    <!-- the players: on desktop the mode over the seats, as the cost stands over the button beside them. One 6 px step
+         between every avatar in every mode, on the button's line -->
     <div class="kd-brow-who flex min-w-0 items-center px-2 pb-2 lg:h-19 lg:flex-col-reverse lg:justify-between lg:self-center lg:p-0">
-      <span class="kd-brow-seats flex h-10 items-center justify-center gap-1.5 rounded-lg px-2 lg:w-full lg:px-1">
+      <span class="flex h-10 items-center justify-center gap-1.5 lg:w-full">
         <template v-for="(side, k) in sides" :key="k">
           <span v-if="k > 0" class="type-10-caps text-neutral-11">{{ $t('pvp.vs') }}</span>
           <span class="flex items-center gap-1.5">
@@ -181,9 +177,6 @@ function onClick(e: MouseEvent) {
 .kd-brow-cost {
   grid-area: cost;
 }
-.kd-brow-seats {
-  background: var(--color-neutral-3);
-}
 .kd-brow-who {
   grid-area: who;
 }
@@ -193,70 +186,64 @@ function onClick(e: MouseEvent) {
 .kd-brow-mode {
   color: var(--mc);
 }
-/* the rounds' deck: the top card in the mode's colour, the cards under it stepping up and narrowing, each paler; they
-   peel off upwards as the rounds are played (transform and opacity only). Live, red, a glow breathing on the top card;
+/* the rounds' circle: a slow conic gradient turns behind a disc that leaves 2 px of it as the rim, the disc itself lit
+   softly from the middle in the mode's colour. Only transform and opacity move. Live, red, faster, breathing; still and
    grey once over */
 .kd-rounds {
   --glow: var(--mc);
-  --step: 3px;
+  --turn: 7s;
   position: relative;
   isolation: isolate;
-}
-@media (min-width: 64rem) {
-  .kd-rounds {
-    --step: 5px;
-  }
+  overflow: hidden;
+  background: var(--cell);
 }
 .kd-rounds::before {
   content: '';
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(160deg, color-mix(in srgb, var(--glow) 42%, var(--cell)), color-mix(in srgb, var(--glow) 10%, var(--cell)));
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.14),
-    0 6px 12px -6px rgb(0 0 0 / 0.6);
+  inset: -25%;
+  z-index: -2;
+  background: conic-gradient(from 0deg, transparent 0 15%, var(--glow) 42%, transparent 62%, color-mix(in srgb, var(--glow) 50%, transparent) 86%, transparent);
+  animation: kd-rounds-turn var(--turn) linear infinite;
 }
-.kd-rounds-card {
+.kd-rounds::after {
+  content: '';
   position: absolute;
-  inset: 0;
-  z-index: calc(var(--n) * -1);
+  inset: 2px;
+  z-index: -1;
   border-radius: inherit;
-  background: color-mix(in srgb, var(--glow) 34%, var(--cell));
-  opacity: calc(1 - var(--n) * 0.24);
-  transform: translateY(calc(var(--n) * var(--step) * -1)) scaleX(calc(1 - var(--n) * 0.09));
-  transition:
-    opacity var(--dur-slow) var(--ease-out),
-    transform var(--dur-slow) var(--ease-out);
-}
-.kd-rounds-card.is-gone {
-  opacity: 0;
-  transform: translateY(calc(var(--n) * var(--step) * -1 - 12px)) scaleX(calc(1 - var(--n) * 0.09));
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 24%, var(--cell)), var(--cell));
 }
 .kd-brow.is-live .kd-rounds {
   --glow: var(--color-danger);
+  --turn: 2.4s;
 }
-.kd-brow.is-live .kd-rounds::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 40%, transparent), transparent);
-  animation: kd-rounds-pulse 1.4s ease-in-out infinite alternate;
+.kd-brow.is-live .kd-rounds::before {
+  animation:
+    kd-rounds-turn var(--turn) linear infinite,
+    kd-rounds-pulse 1.4s ease-in-out infinite alternate;
 }
 .kd-brow.is-finished .kd-rounds {
-  --glow: var(--color-neutral-6);
+  --glow: var(--color-neutral-5);
+}
+.kd-brow.is-finished .kd-rounds::before {
+  animation: none;
+}
+@keyframes kd-rounds-turn {
+  to {
+    transform: rotate(1turn);
+  }
 }
 @keyframes kd-rounds-pulse {
   from {
-    opacity: 0.35;
+    opacity: 0.5;
   }
   to {
     opacity: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .kd-brow.is-live .kd-rounds::after {
+  .kd-rounds::before,
+  .kd-brow.is-live .kd-rounds::before {
     animation: none;
   }
 }
