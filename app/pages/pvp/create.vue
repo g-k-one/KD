@@ -35,7 +35,12 @@ const priceFrom = ref('')
 const priceTo = ref('')
 const risks = ref<RiskLevel[]>([])
 const sort = ref<CaseSort>('priceAsc')
-const sortOptions = computed(() => (['priceAsc', 'priceDesc', 'newest', 'payback'] as const).map((s) => ({ value: s, label: t(`filters.sortOptions.${s}`) })))
+const sortOptions = computed(() => [
+  { value: 'priceAsc' as const, label: t('upgrade.sortAsc') },
+  { value: 'priceDesc' as const, label: t('upgrade.sortDesc') },
+  { value: 'newest' as const, label: t('filters.sortOptions.newest') },
+  { value: 'payback' as const, label: t('filters.sortOptions.payback') },
+])
 const ORDER: Partial<Record<CaseSort, (a: CaseSummary, b: CaseSummary) => number>> = {
   priceAsc: (a, b) => a.price - b.price,
   priceDesc: (a, b) => b.price - a.price,
@@ -144,20 +149,20 @@ async function create() {
               type="button"
               role="radio"
               :aria-checked="mode === m"
-              class="kd-mode kd-press flex min-w-0 flex-col items-center gap-1 rounded-2xl border px-2 py-3 text-center lg:h-20 lg:flex-row lg:gap-2 lg:px-3 lg:py-0 lg:text-left"
+              class="kd-mode kd-press flex min-w-0 flex-col items-center gap-1 rounded-2xl border px-2 py-3 text-center lg:h-20 lg:flex-row lg:gap-3 lg:px-4 lg:py-0 lg:text-left"
               :class="[`is-${m}`, mode === m && 'is-on']"
               @click="mode = m"
             >
-              <UiIcon :name="PVP_MODE_ICON[m]" :size="28" class="kd-mode-ink shrink-0" />
+              <UiIcon :name="PVP_MODE_ICON[m]" :size="24" class="kd-mode-ink shrink-0" />
               <span class="flex min-w-0 flex-col gap-0.5">
                 <span class="kd-mode-ink type-12-caps lg:type-14-caps truncate">{{ $t(`pvp.modeName.${m}`) }}</span>
-                <span class="type-14-regular truncate text-neutral-12 max-lg:hidden">{{ $t(`pvp.modeRule.${m}`) }}</span>
+                <span class="type-14-regular truncate max-lg:hidden" :class="mode === m ? 'text-neutral-15' : 'text-neutral-12'">{{ $t(`pvp.modeRule.${m}`) }}</span>
               </span>
             </button>
           </div>
           <p class="type-14-regular text-center text-neutral-12 lg:hidden">{{ $t(`pvp.modeRule.${mode}`) }}</p>
           <!-- wide screens: a plate of the cards' height beside them -->
-          <div class="flex items-center justify-between gap-3 xl:h-20 xl:w-36 xl:shrink-0 xl:flex-col xl:items-stretch xl:justify-center xl:gap-1 xl:rounded-2xl xl:bg-neutral-3 xl:px-2">
+          <div class="flex items-center justify-between gap-3 xl:h-20 xl:w-32 xl:shrink-0 xl:flex-col xl:items-stretch xl:justify-center xl:gap-1 xl:rounded-2xl xl:bg-neutral-3 xl:px-2">
             <span class="type-12-caps px-1 text-neutral-11">{{ $t('pvp.players') }}</span>
             <UiSegmented :model-value="size" :options="playerOptions" size="s" block class="max-lg:w-32" @update:model-value="players = $event" />
           </div>
@@ -180,6 +185,8 @@ async function create() {
               <img :src="c.image" :alt="c.name" class="kd-ctile-art h-28 w-full object-contain lg:h-36" />
               <span class="type-12-caps lg:type-14-caps w-full truncate text-center">{{ c.name }}</span>
               <UiPrice :amount="c.price" size="l" tone="coin" />
+              <!-- the risk as on the home page's cards: peppers under the price -->
+              <UiRiskPeppers :level="c.risk" :size="16" />
             </button>
             <!-- added: how many rounds of it, and a minus in the other corner -->
             <Transition name="kd-badge">
