@@ -406,7 +406,7 @@ async function runUpgrade() {
     <!-- Stake · Gauge · Target. Phones: the two cards side by side (what goes in → what comes out), big
          enough to read and to tap, the dial under them; the pickers open in a sheet from the cards and the
          card that is the next step glows. -->
-    <section class="grid grid-cols-2 items-center gap-2 lg:grid-cols-[400px_1fr_400px] lg:grid-rows-[auto_auto] lg:items-stretch lg:gap-x-4 lg:gap-y-3">
+    <section class="grid grid-cols-2 items-center gap-2 lg:grid-cols-[400px_1fr_400px] lg:grid-rows-[auto_auto] lg:items-stretch lg:gap-x-6 lg:gap-y-3">
       <button type="button" class="kd-mini kd-press lg:hidden" :class="[state !== 'idle' && `is-${state}`, nextStep === 'stake' && 'is-next']" :disabled="state === 'spinning'" @click="openSheet('mine')">
         <template v-if="selectedItems.length || extra">
           <!-- a fan of what is in: the skins a touch smaller, the coins a size under them (their picture fills its square) -->
@@ -575,7 +575,7 @@ async function runUpgrade() {
     />
     <UiButton variant="ghost" size="s" icon="close" icon-only :aria-label="$t('common.close')" @click="sheetOpen = false" />
     </div>
-    <section class="kd-dimmable -mt-2 grid gap-4 lg:mt-0 lg:grid-cols-2 lg:gap-5" :class="state === 'spinning' && 'is-dimmed'">
+    <section class="kd-dimmable -mt-2 grid gap-4 lg:mt-0 lg:grid-cols-2 lg:gap-x-6 lg:gap-y-5" :class="state === 'spinning' && 'is-dimmed'">
       <div class="flex flex-col rounded-5xl bg-neutral-2 lg:pb-4" :class="panelTab !== 'mine' && 'max-lg:hidden'">
         <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
           <!-- phones: the sheet's tab already names the panel, so the header keeps only its tools -->
