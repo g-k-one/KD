@@ -747,6 +747,8 @@
     "result": "Result",
     "pot": "Pot",
     "bestDrop": "Best drop",
+    "mode": "Mode",
+    "noCases": "No cases match these filters.",
     "team": {
       "ct": "Counter-Terrorists",
       "t": "Terrorists",

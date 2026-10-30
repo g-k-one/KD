@@ -11,7 +11,7 @@ defineProps<{ battles: Battle[] }>()
 
 <template>
   <div class="kd-pvp-table flex min-w-0 flex-col gap-2 lg:gap-3">
-    <div class="kd-th type-10-caps hidden h-8 items-center gap-1.5 px-2 text-neutral-11 lg:grid">
+    <div class="kd-th type-12-caps hidden h-8 items-center gap-1.5 px-2 text-neutral-11 lg:grid">
       <!-- over the round plate's left edge, 24 px in like everything in the row -->
       <span class="pl-4">{{ $t('pvp.rounds') }}</span>
       <span class="pl-1">{{ $t('pvp.scenario') }}</span>

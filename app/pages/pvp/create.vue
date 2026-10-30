@@ -22,20 +22,18 @@ const mode = ref<BattleMode>('classic')
 const players = ref<2 | 3 | 4>(2)
 // a team battle is always 2 vs 2
 const size = computed(() => (mode.value === 'team' ? 4 : players.value))
-const modeOptions = computed(() => (['classic', 'crazy', 'team'] as const).map((m) => ({ value: m, label: t(`pvp.modeName.${m}`) })))
-const playerOptions = computed(() => ([2, 3, 4] as const).map((n) => ({ value: n, label: t(`pvp.modes.${n}`) })))
+const MODES = ['classic', 'crazy', 'team'] as const
+const playerOptions = computed(() => ([2, 3, 4] as const).map((n) => ({ value: n, label: String(n), disabled: mode.value === 'team' && n !== 4 })))
 /** The rounds, in play order: a case slug per round */
 const order = ref<string[]>([])
 const qty = computed(() => order.value.reduce<Record<string, number>>((m, s) => ((m[s] = (m[s] ?? 0) + 1), m), {}))
-const search = ref('')
+// the home page's filters, the same component and the same rules
+const { price, risks, affordable, sort, query, apply, reset } = useCaseFilters()
 // an admin setting (GET /api/rules)
 const rules = useGameRules()
 const MAX_ROUNDS = computed(() => rules.value.pvp.maxRounds)
 
-const visible = computed(() => {
-  const q = search.value.trim().toLowerCase()
-  return cases.value.filter((c) => !q || c.name.toLowerCase().includes(q))
-})
+const visible = computed(() => apply(cases.value))
 const rounds = computed(() => order.value.length)
 const bySlug = computed(() => new Map(cases.value.map((c) => [c.slug, c])))
 const cost = computed(() => order.value.reduce((a, s) => a + (bySlug.value.get(s)?.price ?? 0), 0))
@@ -105,18 +103,32 @@ async function create() {
 
     <div class="grid items-start gap-4 lg:grid-cols-[1fr_340px] lg:gap-6">
       <div class="flex min-w-0 flex-col gap-4">
-        <!-- The mode, in the case page's dock language: the kit's segmented controls, the rule spelled out -->
-        <div class="kd-pvp-dock flex flex-col gap-3 lg:flex-row lg:items-center">
-          <UiSegmented v-model="mode" :options="modeOptions" block class="lg:w-80" />
-          <Transition name="kd-fade" mode="out-in">
-            <UiSegmented v-if="mode !== 'team'" v-model="players" :options="playerOptions" block class="lg:w-80" />
-            <span v-else class="type-12-caps flex h-12 items-center justify-center gap-2 rounded-2xl bg-neutral-3 px-4 text-neutral-13 lg:w-80">
-              <UiIcon name="pvp" :size="16" />{{ $t('pvp.modes.4') }}
-            </span>
-          </Transition>
-          <Transition name="kd-fade" mode="out-in">
-            <span :key="mode" class="type-12-caps text-neutral-12 lg:flex-1 lg:text-right">{{ $t(`pvp.modeTip.${mode}`) }}</span>
-          </Transition>
+        <!-- The mode as three cards, each in its colour with its rule in plain text (phones: the chosen one's, under
+             them); the players under them, team mode fixed at 4 -->
+        <div class="kd-pvp-dock flex flex-col gap-3">
+          <div class="grid grid-cols-3 gap-2 lg:gap-3" role="radiogroup" :aria-label="$t('pvp.mode')">
+            <button
+              v-for="m in MODES"
+              :key="m"
+              type="button"
+              role="radio"
+              :aria-checked="mode === m"
+              class="kd-mode kd-press flex min-w-0 flex-col items-center gap-1 rounded-2xl border px-2 py-3 text-center lg:flex-row lg:gap-3 lg:px-4 lg:text-left"
+              :class="[`is-${m}`, mode === m && 'is-on']"
+              @click="mode = m"
+            >
+              <UiIcon :name="PVP_MODE_ICON[m]" :size="28" class="kd-mode-ink shrink-0" />
+              <span class="flex min-w-0 flex-col gap-0.5">
+                <span class="kd-mode-ink type-12-caps lg:type-14-caps truncate">{{ $t(`pvp.modeName.${m}`) }}</span>
+                <span class="type-14-regular text-neutral-12 max-lg:hidden">{{ $t(`pvp.modeRule.${m}`) }}</span>
+              </span>
+            </button>
+          </div>
+          <p class="type-14-regular text-center text-neutral-12 lg:hidden">{{ $t(`pvp.modeRule.${mode}`) }}</p>
+          <div class="flex items-center gap-3">
+            <span class="type-12-caps px-1 text-neutral-11">{{ $t('pvp.players') }}</span>
+            <UiSegmented :model-value="size" :options="playerOptions" block class="flex-1" @update:model-value="players = $event" />
+          </div>
         </div>
         <!-- the cases, in the lobby's and the home page's card language: a section header, 24px cards -->
         <UiSectionHeader :title="$t('pvp.chooseCases')">
@@ -124,9 +136,12 @@ async function create() {
             <span class="type-12-caps text-neutral-11 tabular-nums">{{ rounds }} / {{ MAX_ROUNDS }}</span>
           </template>
         </UiSectionHeader>
-        <UiInput id="pvp-search" v-model="search" icon="search" clearable size="l" :placeholder="$t('pvp.search')" />
+        <HomeCaseFilters v-model:price="price" v-model:risks="risks" v-model:affordable="affordable" v-model:sort="sort" v-model:query="query" class="kd-create-filters" />
 
-        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:gap-3">
+        <UiEmptyState v-if="data && !visible.length" :text="$t('pvp.noCases')" art="empty-search">
+          <UiButton variant="secondary" size="m" @click="reset">{{ $t('filters.reset') }}</UiButton>
+        </UiEmptyState>
+        <div v-else class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:gap-3">
           <div v-for="c in visible" :key="c.slug" class="relative">
             <button
               type="button"
@@ -158,14 +173,17 @@ async function create() {
         </div>
       </div>
 
-      <!-- Summary -->
-      <aside class="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-20 flex flex-col gap-2 border-t border-neutral-5 bg-neutral-2 px-4 py-3 lg:sticky lg:gap-3 lg:top-24 lg:bottom-auto lg:rounded-5xl lg:border lg:border-neutral-4 lg:bg-neutral-2 lg:p-4">
-        <div class="flex items-center justify-between gap-2">
-          <h2 class="type-16-caps max-lg:hidden">{{ $t('pvp.summary') }}</h2>
+      <!-- Summary: the profile's panel on desktop, a header row over a hairline (the 32 px Clear 20 px from its top, bottom and
+           right), then a line per number -->
+      <aside class="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-20 flex flex-col gap-2 border-t border-neutral-5 bg-neutral-2 px-4 py-3 lg:sticky lg:top-24 lg:bottom-auto lg:gap-0 lg:rounded-5xl lg:border-0 lg:p-0">
+        <div class="flex items-center justify-between gap-3 lg:h-18 lg:border-b lg:border-neutral-4 lg:pr-5 lg:pl-6">
+          <UiIcon name="pvp" :size="24" class="text-neutral-13 max-lg:hidden" />
+          <h2 class="type-16-medium flex-1 max-lg:hidden">{{ $t('pvp.summary') }}</h2>
           <!-- phones keep the bar low: the round count stands here instead of the totals list -->
           <span class="type-12-caps text-neutral-11 tabular-nums lg:hidden">{{ $t('pvp.rounds') }} <span class="text-neutral-15">{{ rounds }} / {{ MAX_ROUNDS }}</span></span>
-          <button v-if="rounds" type="button" class="type-12-caps kd-hit relative ml-auto text-neutral-11 hover:text-neutral-15" @click="clearRounds">{{ $t('pvp.clearRounds') }}</button>
+          <UiButton v-if="rounds" variant="secondary" size="s" class="ml-auto" @click="clearRounds">{{ $t('pvp.clearRounds') }}</UiButton>
         </div>
+        <div class="flex flex-col gap-2 lg:gap-3 lg:p-4 lg:pt-3">
         <!-- the rounds in play order; a tap takes one out. Phones: one swipeable line over the button -->
         <TransitionGroup
           v-if="rounds"
@@ -182,18 +200,21 @@ async function create() {
           </li>
         </TransitionGroup>
         <p v-else class="type-12-regular text-neutral-11">{{ $t('pvp.pickHint') }}</p>
-        <dl class="type-14 flex gap-6 max-lg:hidden lg:flex-col lg:gap-2">
-          <div class="flex flex-col lg:flex-row lg:justify-between">
-            <dt class="type-12-caps text-neutral-11">{{ $t('pvp.rounds') }}</dt>
-            <dd class="tabular-nums">{{ rounds }} / {{ MAX_ROUNDS }}</dd>
+        <dl class="flex flex-col px-2 max-lg:hidden">
+          <div class="flex h-14 items-center gap-3">
+            <UiIcon name="cases" :size="20" class="shrink-0 text-neutral-12" />
+            <dt class="type-12-caps flex-1 text-neutral-11">{{ $t('pvp.rounds') }}</dt>
+            <dd class="type-20-caps tabular-nums">{{ rounds }} / {{ MAX_ROUNDS }}</dd>
           </div>
-          <div class="flex flex-col lg:flex-row lg:justify-between">
-            <dt class="type-12-caps text-neutral-11">{{ $t('pvp.players') }}</dt>
-            <dd>{{ $t(`pvp.modeName.${mode}`) }} · {{ $t(`pvp.modes.${size}`) }}</dd>
+          <div class="flex h-14 items-center gap-3 border-t border-neutral-4">
+            <UiIcon name="user" :size="20" class="shrink-0 text-neutral-12" />
+            <dt class="type-12-caps flex-1 text-neutral-11">{{ $t('pvp.players') }}</dt>
+            <dd class="type-20-caps tabular-nums">{{ size }}</dd>
           </div>
-          <div class="flex flex-col lg:flex-row lg:justify-between">
-            <dt class="type-12-caps text-neutral-11">{{ $t('pvp.value') }}</dt>
-            <dd><UiPrice :amount="cost * size" size="s" /></dd>
+          <div class="flex h-14 items-center gap-3 border-t border-neutral-4">
+            <UiIcon name="wallet" :size="20" class="shrink-0 text-neutral-12" />
+            <dt class="type-12-caps flex-1 text-neutral-11">{{ $t('pvp.value') }}</dt>
+            <dd><UiPrice :amount="cost * size" size="xl" tone="coin" /></dd>
           </div>
         </dl>
         <!-- no rounds yet: grey, and it names the next step instead of "Create for 0" -->
@@ -204,6 +225,7 @@ async function create() {
           </template>
           <template v-else>{{ $t('pvp.pickCase') }}</template>
         </UiButton>
+        </div>
       </aside>
     </div>
   </div>
@@ -221,13 +243,43 @@ async function create() {
     padding: 16px;
   }
 }
-.kd-fade-enter-active,
-.kd-fade-leave-active {
-  transition: opacity var(--dur-base) var(--ease-out);
+/* the page's column is narrower than the home page's: the dropdowns share the row evenly, the search takes less */
+@media (min-width: 64rem) {
+  .kd-create-filters :deep(.kd-fsel) {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 0;
+  }
+  .kd-create-filters :deep(.kd-fsearch) {
+    width: 148px;
+  }
 }
-.kd-fade-enter-from,
-.kd-fade-leave-to {
-  opacity: 0;
+/* the mode's colour: the same three as the lobby */
+.kd-mode {
+  --mc: var(--color-coin);
+  background: var(--color-neutral-3);
+  border-color: transparent;
+  transition:
+    background-color var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+}
+.kd-mode.is-crazy {
+  --mc: var(--color-item-classified);
+}
+.kd-mode.is-team {
+  --mc: var(--color-item-milspec);
+}
+.kd-mode-ink {
+  color: var(--mc);
+}
+.kd-mode.is-on {
+  background: color-mix(in srgb, var(--mc) 16%, var(--color-neutral-3));
+  border-color: color-mix(in srgb, var(--mc) 70%, transparent);
+}
+@media (hover: hover) {
+  .kd-mode:not(.is-on):hover {
+    border-color: var(--color-neutral-6);
+  }
 }
 .kd-ctile {
   background: var(--color-neutral-2);
