@@ -665,7 +665,6 @@
     "callBot": "Call bot",
     "round": "Round",
     "you": "You",
-    "winner": "Winner",
     "youWon": "You won {amount}",
     "youLost": "{name} took the pot",
     "empty": "No battles here yet.",
