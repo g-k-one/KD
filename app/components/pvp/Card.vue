@@ -119,20 +119,21 @@ function onClick(e: MouseEvent) {
       <span class="kd-brow-mode type-12-caps flex items-center gap-1 lg:hidden"><UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="14" />{{ $t(`pvp.modeName.${battle.mode}`) }}</span>
     </div>
 
-    <!-- the players: on desktop the mode over the seats, as the cost stands over the button beside them -->
+    <!-- the players: on desktop the mode over the seats, as the cost stands over the button beside them. The seats are a
+         plate of the button's height and radius, one 4 px step between every avatar in every mode -->
     <div class="kd-brow-who flex min-w-0 items-center px-2 pb-2 lg:h-19 lg:flex-col-reverse lg:justify-between lg:self-center lg:p-0">
-      <span class="flex items-center gap-1.5">
+      <span class="kd-brow-seats flex h-10 items-center justify-center gap-1 rounded-lg px-2 lg:w-full">
         <template v-for="(side, k) in sides" :key="k">
           <span v-if="k > 0" class="type-10-caps text-neutral-11">{{ $t('pvp.vs') }}</span>
-          <span class="flex items-center" :class="battle.mode === 'team' ? '-space-x-2' : 'gap-1'">
+          <span class="flex items-center gap-1">
           <template v-for="s in side" :key="s.slot">
-            <span v-if="s.player" class="kd-av relative size-8 lg:size-9" :class="[winners.includes(s.slot) && 'is-won', battle.status === 'finished' && !winners.includes(s.slot) && 'is-lost']" :title="s.player.nickname">
+            <span v-if="s.player" class="kd-av relative size-7" :class="[winners.includes(s.slot) && 'is-won', battle.status === 'finished' && !winners.includes(s.slot) && 'is-lost']" :title="s.player.nickname">
               <span class="block size-full overflow-hidden rounded-full bg-neutral-7">
                 <img :src="s.player.avatar" alt="" class="size-full object-cover" :class="s.player.bot && 'scale-75 object-contain'" />
               </span>
               <UiIcon v-if="winners.includes(s.slot)" name="crown-fill" :size="12" class="kd-av-crown absolute -top-2.5 left-1/2 -translate-x-1/2" />
             </span>
-            <span v-else class="kd-av kd-av-free relative grid size-8 place-items-center rounded-full border border-dashed lg:size-9"><UiIcon name="plus" :size="14" /></span>
+            <span v-else class="kd-av kd-av-free relative grid size-7 place-items-center rounded-full border border-dashed"><UiIcon name="plus" :size="12" /></span>
           </template>
           </span>
         </template>
@@ -188,6 +189,9 @@ function onClick(e: MouseEvent) {
 }
 .kd-brow-cost {
   grid-area: cost;
+}
+.kd-brow-seats {
+  background: var(--color-neutral-3);
 }
 .kd-brow-who {
   grid-area: who;
