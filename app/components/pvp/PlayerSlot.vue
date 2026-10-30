@@ -3,9 +3,9 @@ import type { BattlePlayerRef } from '#shared/types/api'
 
 // Figma "BattlePlayer": Desktop = column header, Compact = mobile column header.
 // Empty shows Call bot; Winner = success tint + 1px success stroke.
-// The seat says one thing on the right at a time, big: the chance to win before the first round, the coins won so far
-// once rounds land (the chance small under it), WON / LOST at the end (the total then sits under the name). No line along
-// the bottom and no coin with a 0 before anything has dropped.
+// Who sits on the left, the name over the coins so far (no coin with a 0 before anything has dropped); on the right, away
+// from the name and big: the chance to win, WON / LOST at the end. Whoever is ahead gets a crown on the avatar and a warm
+// plate, every seat of a leading team alike.
 const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost'; busy?: boolean }>()
 defineEmits<{ bot: []; join: [] }>()
 
@@ -33,13 +33,13 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
       <!-- Winner: burst of sparks and a WINNER tag (Skin.club) -->
       <FxBurst v-if="celebrate" :tier="3" color="var(--color-success)" :size="compact ? 90 : 160" />
       <span v-if="winner" class="kd-winner-tag type-10-caps absolute -top-2 left-1/2 rounded-sm bg-success px-1.5 py-0.5 text-neutral-1">{{ $t('pvp.winner') }}</span>
-      <Transition name="kd-lead">
-        <span v-if="lead && !winner" class="kd-lead-tag type-10-caps absolute -top-2 left-1/2 rounded-sm bg-brand-base px-1.5 py-0.5 text-neutral-15">{{ $t('pvp.lead') }}</span>
-      </Transition>
       <span class="relative shrink-0">
         <span class="block overflow-hidden rounded-full bg-neutral-7" :class="compact ? 'size-8' : 'size-11'">
           <img :src="player.avatar" alt="" class="size-full object-cover" :class="player.bot && 'scale-75 object-contain'" />
         </span>
+        <Transition name="kd-lead">
+          <span v-if="lead && !winner" class="kd-lead-crown absolute -top-1.5 -left-1.5 grid size-5 place-items-center rounded-full text-coin"><UiIcon name="crown-fill" :size="14" /></span>
+        </Transition>
       </span>
       <span class="flex min-w-0 max-w-full flex-col gap-0.5" :class="compact ? 'items-center' : 'flex-1 items-start'">
         <!-- phones: the level under the name, so a narrow seat cuts the name instead of running it into the next seat -->
@@ -48,17 +48,12 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
           <span class="min-w-0 max-w-full truncate" :class="compact ? 'type-12' : 'type-16-medium'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
           <UiLevelBadge :level="player.level" class="shrink-0" :class="compact && 'scale-90'" />
         </span>
-        <UiPrice v-if="result" :amount="Math.round(totalShown)" :size="compact ? 'xs' : 'm'" :tone="winner ? 'success' : 'default'" class="tabular-nums" />
+        <UiPrice v-if="result || playing" :amount="Math.round(totalShown)" :size="compact ? 'xs' : 'm'" :tone="winner ? 'success' : result ? 'default' : 'coin'" class="tabular-nums" />
       </span>
-      <!-- while it plays: the coins won so far, big, the chance small under them -->
-      <span v-if="!result && playing" class="flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end'">
-        <UiPrice :amount="Math.round(totalShown)" :size="compact ? 's' : 'l'" tone="coin" class="tabular-nums" />
-        <span v-if="chance != null" class="type-10-caps tabular-nums text-neutral-11">{{ Math.round(chanceShown) }}% {{ compact ? '' : $t('pvp.toWin') }}</span>
-      </span>
-      <!-- before the first round: the chance to win -->
-      <span v-else-if="!result && chance != null" class="kd-chance flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end'">
-        <span class="tabular-nums" :class="[compact ? 'type-12' : 'type-20-caps', chanceShown >= 50 ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15']">{{ Math.round(chanceShown) }}%</span>
-        <span v-if="!compact" class="type-10-caps text-neutral-11">{{ $t('pvp.toWin') }}</span>
+      <!-- the chance to win, from the first second to the last round -->
+      <span v-if="!result && chance != null" class="flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end pl-3'">
+        <span class="tabular-nums" :class="[compact ? 'type-14' : 'type-20-caps', chanceShown >= 50 ? 'text-success' : chanceShown <= 15 ? 'text-neutral-11' : 'text-neutral-15']">{{ Math.round(chanceShown) }}%</span>
+        <span v-if="!compact" class="type-10-caps whitespace-nowrap text-neutral-11">{{ $t('pvp.toWin') }}</span>
       </span>
       <!-- once it is over: what happened, not a 100% / 0% -->
       <span v-if="result" class="flex shrink-0 flex-col" :class="compact ? 'items-center pb-1' : 'items-end'">
@@ -85,28 +80,41 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
 
 <style scoped>
 .kd-slot {
+  isolation: isolate;
   background: var(--color-neutral-3);
   border: 1px solid transparent;
   transition:
     background-color var(--dur-slow) var(--ease-out),
     border-color var(--dur-slow) var(--ease-out);
 }
-.kd-slot.is-lead {
-  border-color: rgb(255 95 31 / 0.45);
+/* the warm plate of the seat ahead: a layer that fades, a gradient itself cannot */
+.kd-slot::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgb(255 95 31 / 0.28), rgb(255 95 31 / 0.04) 70%);
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
 }
-.kd-lead-tag {
-  transform: translateX(-50%);
+.kd-slot.is-lead::before {
+  opacity: 1;
+}
+.kd-lead-crown {
+  background: var(--color-neutral-1);
+  box-shadow: 0 0 0 1px rgb(255 178 42 / 0.4);
 }
 .kd-lead-enter-active,
 .kd-lead-leave-active {
   transition:
     opacity var(--dur-base) var(--ease-out),
-    translate var(--dur-slow) var(--ease-spring);
+    scale var(--dur-slow) var(--ease-spring);
 }
 .kd-lead-enter-from,
 .kd-lead-leave-to {
   opacity: 0;
-  translate: 0 6px;
+  scale: 0.4;
 }
 .kd-slot.is-winner {
   background: var(--color-success-24);

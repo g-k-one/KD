@@ -742,7 +742,6 @@
       "crazy": "Least value wins it all",
       "team": "2 vs 2 · the team with more value wins"
     },
-    "lead": "Leads",
     "vs": "VS",
     "teamWon": "{a} & {b} won",
     "toWin": "to win",

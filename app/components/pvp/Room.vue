@@ -256,6 +256,13 @@ const roundLine = computed(() => {
   return { label: `${t('pvp.round')} ${Math.min(b.value.rounds.length, clock.value.round + 1)}/${b.value.rounds.length}`, r }
 })
 
+// The seats below the arena stand on its lines: each column ends where a lane does. The arena's 4 px frame sits outside
+// its lanes, so the first and last columns are that much wider than the ones between them
+const laneCols = computed(() => {
+  const n = b.value.size
+  const edge = `calc((100% - 8px) / ${n} + 4px)`
+  return [edge, ...Array.from({ length: n - 2 }, () => `calc((100% - 8px) / ${n})`), edge].join(' ')
+})
 </script>
 
 <template>
@@ -346,19 +353,22 @@ const roundLine = computed(() => {
 
       <!-- The result, inside the arena: who took the pot, how much, and the same battle again -->
       <Transition name="kd-result">
-        <div v-if="done && b.winnerSlot != null" class="kd-arena-result absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-4 text-center lg:gap-4">
-          <!-- who took it: their face(s) under a crown, the name, the pot -->
-          <div class="kd-result-title flex flex-col items-center gap-2">
+        <div v-if="done && b.winnerSlot != null" class="kd-arena-result absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-4 text-center">
+          <!-- who took it: their face(s) under a crown, the name, the pot; one 12 px step down the block, the name's caption
+               held to it -->
+          <div class="kd-result-title flex flex-col items-center gap-4">
             <span v-if="!isMobile" class="flex -space-x-3">
               <span v-for="w in winners" :key="w" class="kd-result-face relative block overflow-hidden rounded-full bg-neutral-7" :class="isMobile ? 'size-12' : 'size-16'">
                 <img :src="b.slots[w]?.player?.avatar" alt="" class="size-full object-cover" :class="b.slots[w]?.player?.bot && 'scale-75 object-contain'" />
               </span>
             </span>
-            <span class="type-12-caps text-success max-lg:-mb-1">{{ winners.length > 1 ? $t('pvp.battleWonTeam') : $t('pvp.battleWon') }}</span>
-            <span class="text-[22px] leading-7 font-extrabold uppercase lg:type-28">{{ winners.map(nameOf).join(' & ') }}</span>
+            <span class="flex flex-col items-center">
+              <span class="type-12-caps text-success">{{ winners.length > 1 ? $t('pvp.battleWonTeam') : $t('pvp.battleWon') }}</span>
+              <span class="text-[22px] leading-7 font-extrabold uppercase lg:type-28">{{ winners.map(nameOf).join(' & ') }}</span>
+            </span>
           </div>
           <UiPrice :amount="pot" :size="isMobile ? 'l' : 'xl'" tone="coin" class="kd-result-pot" />
-          <div class="kd-result-pot flex flex-wrap justify-center gap-2">
+          <div class="kd-result-pot mt-1 flex flex-wrap justify-center gap-2">
             <UiButton size="m" icon="refresh" :loading="recreating" @click="recreate">
               {{ $t('pvp.recreate') }}
               <span class="btn-value"><UiPrice :amount="b.cost" size="s" tone="inverse" /></span>
@@ -377,7 +387,7 @@ const roundLine = computed(() => {
 
 
     <!-- Player bars: who sits where and what they have so far; join or call a bot on a free seat -->
-    <section class="grid gap-2 md:gap-4 lg:-mt-3 lg:gap-6" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
+    <section class="kd-lanes lg:-mt-3" :style="{ gridTemplateColumns: laneCols }">
       <PvpPlayerSlot
         v-for="s in b.slots"
         :key="s.slot"
@@ -398,7 +408,7 @@ const roundLine = computed(() => {
 
     <!-- Drops: each player's right under their bar, newest first -->
     <section v-if="revealed > 0" class="-mt-1 lg:-mt-3">
-      <div class="grid gap-2 md:gap-4 lg:gap-6" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
+      <div class="kd-lanes" :style="{ gridTemplateColumns: laneCols }">
         <!-- once it is over, the losers' drops step back: they go to the winner -->
         <TransitionGroup v-for="seat in b.slots" :key="seat.slot" tag="div" name="kd-drop" class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-2 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]" :class="done && !winners.includes(seat.slot) && 'is-lost'">
           <ItemTile v-for="ri in Array.from({ length: revealed }, (_, k) => revealed - 1 - k)" :key="ri" :item="b.results![ri]!.drops[seat.slot]!" readonly />
@@ -410,6 +420,31 @@ const roundLine = computed(() => {
 </template>
 
 <style scoped>
+/* a column to each lane; the gap between two seats is split evenly around the arena's line */
+.kd-lanes {
+  --lane-gap: 8px;
+  display: grid;
+}
+@media (min-width: 48rem) {
+  .kd-lanes {
+    --lane-gap: 16px;
+  }
+}
+@media (min-width: 64rem) {
+  .kd-lanes {
+    --lane-gap: 24px;
+  }
+}
+.kd-lanes > * {
+  min-width: 0;
+  margin-inline: calc(var(--lane-gap) / 2);
+}
+.kd-lanes > :first-child {
+  margin-left: 0;
+}
+.kd-lanes > :last-child {
+  margin-right: 0;
+}
 /* earlier rounds went out of view on the left: the first tile fades in from the edge */
 .kd-rounds.is-cut {
   mask-image: linear-gradient(90deg, transparent, #000 48px);
