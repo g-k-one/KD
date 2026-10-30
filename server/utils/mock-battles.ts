@@ -5,7 +5,7 @@
 // exists, with the block ID read from the chain; the mock stands a random 64-hex ID in for it.
 import type { Battle, BattleCaseRef, BattleMode, BattlePlayerRef, BattleRoundResult, CreateBattleRequest } from '#shared/types/api'
 import { avatarFor } from '#shared/utils/avatar'
-import { BATTLE_LEAD_MS, battleTie, battleTotals, battleWinners, splitWin } from '#shared/utils/battle'
+import { BATTLE_LEAD_MS, BATTLE_WAIT_MS, battleTie, battleTotals, battleWinners, splitWin } from '#shared/utils/battle'
 import { pickByTicket, pfTicket, randomSeed, sha256Hex } from '#shared/utils/pf'
 import { adminSettings, getCase, getMockState, lobbyCaseSlugs, MockError, record, spend, syncSkinsValue, takeForcedBattle, toInventory } from './mock-db'
 
@@ -121,6 +121,23 @@ function refreshStatus(b: StoredBattle) {
   }
 }
 
+/**
+ * Rooms still not full 10 minutes after they opened close: the player's stake comes back, and the lobby's fake rooms make way for
+ * fresh ones, so the mock's lobby never runs dry. The Go backend: a timer per room, a refund for every seat, a push to the room.
+ */
+async function closeStale() {
+  const cut = Date.now() - BATTLE_WAIT_MS
+  for (const b of battles.filter((x) => x.status === 'waiting' && Date.parse(x.createdAt) <= cut)) {
+    const fake = !b.slots.some((s) => s.player?.you)
+    if (!fake) getMockState().user.balance += b.cost
+    battles.splice(battles.indexOf(b), 1)
+    if (!fake) continue
+    const fresh = await newBattle(b.size, b.rounds, b.mode)
+    fresh.slots = b.slots
+    battles.unshift(fresh)
+  }
+}
+
 /** Fake audience: live rooms draw a crowd that drifts, waiting rooms a few, finished ones empty out. */
 function viewersOf(b: StoredBattle) {
   const base = (Number(b.id) * 37) % 50
@@ -176,6 +193,7 @@ function ensureSeeded() {
 // fairness check is the room's). The Go backend: the same, or the summary pushed over the lobby's WebSocket.
 export async function listBattles(loggedIn: boolean) {
   await ensureSeeded()
+  await closeStale()
   const order = { waiting: 0, live: 1, finished: 2 }
   return {
     battles: battles
@@ -192,6 +210,7 @@ function find(id: string) {
 
 export async function getBattle(id: string, loggedIn: boolean) {
   await ensureSeeded()
+  await closeStale()
   return { battle: publicBattle(find(id), loggedIn) }
 }
 
@@ -216,6 +235,7 @@ export async function createBattle(req: CreateBattleRequest) {
 
 export async function joinBattle(id: string, slot?: number) {
   await ensureSeeded()
+  await closeStale()
   const b = find(id)
   if (b.status !== 'waiting') throw new MockError(409, 'This battle has already started')
   if (b.slots.some((s) => s.player?.you)) throw new MockError(409, 'You are already in this battle')

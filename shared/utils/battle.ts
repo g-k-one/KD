@@ -34,6 +34,8 @@ export function splitWin<T extends { price: number }>(drops: T[], winners: numbe
 
 /** From the last seat filling to the first reel: the countdown's 3, 2, 1, the VS and its smoke */
 export const BATTLE_LEAD_MS = 3800
+/** A room the seats never fill closes by itself this long after it opened, and every stake comes back */
+export const BATTLE_WAIT_MS = 10 * 60_000
 
 export function battleWinners(mode: BattleMode, totals: number[], tie: number): number[] {
   if (mode === 'team') {

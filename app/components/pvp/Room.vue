@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BattleResponse, BattleShare, BattleSlot, CaseItem, CaseResponse } from '#shared/types/api'
-import { BATTLE_LEAD_MS } from '#shared/utils/battle'
+import { BATTLE_LEAD_MS, BATTLE_WAIT_MS } from '#shared/utils/battle'
 
 // Battle room (after csgogem; the page app/pages/pvp/[id].vue shows it inside a Suspense with its skeleton): the mode as the title; one meta line (cost and pot · the case strip · viewers and
 // rounds); a short stage so the players and their drops stay on screen; every action once — join / call a bot in
@@ -29,8 +29,11 @@ if (error.value) {
 // ?replay=1 link (only once it is over: a link to a battle still running just watches it). The room just runs its own
 // clock from now, so the button works the moment the room's last round ends, before the next poll says finished.
 const replayAt = ref<number | null>(route.query.replay && data.value!.battle.status === 'finished' ? Date.now() : null)
+// the last answer stays up once the battle is gone (it closed by itself, or its creator cancelled it), until the page moves on
+const battle = shallowRef(data.value!.battle)
+watch(data, (d) => d && (battle.value = d.battle))
 const b = computed(() => {
-  const x = data.value!.battle
+  const x = battle.value
   return replayAt.value ? { ...x, status: 'live' as const, startedAt: new Date(replayAt.value + BATTLE_LEAD_MS).toISOString() } : x
 })
 const router = useRouter()
@@ -68,6 +71,24 @@ watch(
 const ROUND_HOLD_MS = 1500
 const now = useClock(200)
 const clock = computed(() => battleClock(b.value, now.value))
+// A room the seats never fill closes by itself and every stake comes back: the server's rule on a real clock, not a hurry-up
+const closesIn = computed(() => (b.value.status === 'waiting' ? Math.max(0, Date.parse(b.value.createdAt) + BATTLE_WAIT_MS - now.value) : null))
+const closesText = computed(() => {
+  const s = Math.ceil((closesIn.value ?? 0) / 1000)
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+})
+watch(
+  () => closesIn.value === 0,
+  (over) => over && refresh(),
+)
+watch(error, (e) => {
+  if (e?.statusCode !== 404) return
+  pause()
+  const seated = b.value.slots.some((s) => s.player?.you)
+  session.refresh()
+  toast.show(t(seated ? 'pvp.closedBack' : 'pvp.closed', { amount: formatCoins(b.value.cost) }), seated ? 'success' : undefined, 5000)
+  navigateTo('/pvp')
+})
 const done = computed(() => b.value.status === 'finished' || clock.value.round >= b.value.rounds.length)
 const roundIdx = computed(() => Math.min(b.value.rounds.length - 1, Math.max(0, clock.value.round)))
 // The round strip shows what fits (a 56 px tile + 8 px gap): a window that keeps the current round in view, faded on
@@ -458,6 +479,9 @@ const roundLine = computed(() => {
         <PvpCaseThumb v-for="i in strip.idx" :key="i" :image="b.rounds[i]!.image" :name="`${b.rounds[i]!.name} · ${formatCoins(b.rounds[i]!.price)}`" size="m" :state="roundState(i)" />
       </div>
       <div class="type-12-caps flex justify-end gap-2 max-lg:w-full">
+        <span v-if="closesIn != null" class="kd-dock-stat tabular-nums" :title="$t('pvp.closesHint')" :aria-label="$t('pvp.closesHint')">
+          <UiIcon name="clock" :size="16" /><span :class="closesIn < 60_000 ? 'text-warning' : 'text-neutral-15'" data-allow-mismatch="text">{{ closesText }}</span>
+        </span>
         <span class="kd-dock-stat max-lg:flex-1">{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="m" :compact="isMobile" /></span>
         <span v-if="done" class="kd-dock-stat max-lg:flex-1">{{ $t('pvp.bestDrop') }} <UiPrice :amount="bestDrop" size="m" tone="coin" :compact="isMobile" class="tabular-nums" /></span>
         <span v-else class="kd-dock-stat max-lg:flex-1">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" :compact="isMobile" class="kd-pot tabular-nums" /></span>
