@@ -4,8 +4,8 @@ import type { BattlePlayerRef } from '#shared/types/api'
 // Figma "BattlePlayer": Desktop = column header, Compact = mobile column header.
 // Empty shows Call bot; Winner = success tint + 1px success stroke.
 // Who sits on the left, the name over the coins so far (no coin with a 0 before anything has dropped); on the right, away
-// from the name and big: the chance to win, WON / LOST at the end. Whoever is ahead gets a crown on the avatar, a green
-// plate and a green chance, every seat of a leading team alike: green is the leader's alone, one signal for who is ahead. The level stands after the name. Phones: one column, the same three lines
+// from the name and big: the chance to win, WON / LOST at the end. Whoever is ahead gets a green plate and a green chance,
+// every seat of a leading team alike: one signal for who is ahead. The crown is the winner's: on the avatar's corner. The level stands after the name. Phones: one column, the same three lines
 // on every seat (the picture with the level small on its top right corner, the name, the chance), an even 8 px between
 // them and 12 from the top and
 // the bottom; a free seat is its plus in the middle and Join across the bottom, 8 px from the three edges around it.
@@ -29,7 +29,7 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
   <div
     class="kd-slot relative flex items-center"
     :class="[
-      compact ? ['flex-col justify-center rounded-2xl text-center', player ? 'gap-2 px-1 py-3' : 'gap-1 p-2'] : 'h-16 gap-3 rounded-5xl pr-3 pl-[9px]',
+      compact ? ['flex-col justify-center rounded-2xl text-center', player ? 'gap-2 px-1 py-3' : 'gap-1 p-2'] : 'h-16 gap-3 rounded-2xl pr-3 pl-[9px]',
       winner ? 'is-winner' : lead ? 'is-lead' : '',
     ]"
   >
@@ -41,17 +41,14 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
           <img :src="player.avatar" alt="" class="size-full object-cover" :class="player.bot && 'scale-75 object-contain'" />
         </span>
         <span v-if="compact" class="absolute -top-1.5 -right-2.5 flex origin-top-right scale-75"><UiLevelBadge :level="player.level" /></span>
-        <Transition name="kd-lead">
-          <span v-if="compact ? lead || winner : lead && !winner" class="kd-lead-crown absolute -top-1.5 -left-1.5 grid size-5 place-items-center rounded-full text-success"><UiIcon name="crown-fill" :size="14" /></span>
-        </Transition>
+        <span v-if="winner" class="kd-crown absolute -top-1.5 -left-1.5 grid size-5 place-items-center rounded-full text-success"><UiIcon name="crown-fill" :size="14" /></span>
       </span>
       <span class="flex min-w-0 max-w-full flex-col" :class="compact ? 'items-center gap-2' : 'flex-1 items-start gap-0.5'">
         <span class="flex min-w-0 max-w-full items-center gap-1.5">
-          <UiIcon v-if="winner && !compact" name="crown" :size="16" class="kd-crown shrink-0 text-success" />
           <span class="min-w-0 max-w-full truncate" :class="compact ? 'type-12' : 'type-16-medium'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
           <UiLevelBadge v-if="!compact" :level="player.level" class="shrink-0" />
         </span>
-        <UiPrice v-if="result || playing" :amount="Math.round(totalShown)" :size="compact ? 'xs' : 'm'" :tone="winner ? 'success' : result ? 'default' : 'coin'" class="tabular-nums" />
+        <UiPrice v-if="result || playing" :amount="Math.round(totalShown)" :size="compact ? 's' : 'm'" :tone="winner ? 'success' : result ? 'default' : 'coin'" class="tabular-nums" />
       </span>
       <!-- the chance to win, from the first second to the last round -->
       <span v-if="!result && chance != null" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end pl-1'">
@@ -102,28 +99,15 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
 .kd-slot.is-lead::before {
   opacity: 1;
 }
-.kd-lead-crown {
-  background: var(--color-neutral-1);
-  box-shadow: 0 0 0 1px rgb(18 183 106 / 0.4);
-}
-.kd-lead-enter-active,
-.kd-lead-leave-active {
-  transition:
-    opacity var(--dur-base) var(--ease-out),
-    scale var(--dur-slow) var(--ease-spring);
-}
-.kd-lead-enter-from,
-.kd-lead-leave-to {
-  opacity: 0;
-  scale: 0.4;
-}
 .kd-slot.is-winner {
   background: var(--color-success-24);
   border-color: transparent;
   animation: kd-winner 900ms var(--ease-spring);
 }
-/* Crown drops in big and settles next to the name (Skin.club "show-crown") */
+/* Crown drops in big and settles on the avatar's corner (Skin.club "show-crown") */
 .kd-crown {
+  background: var(--color-neutral-1);
+  box-shadow: 0 0 0 1px rgb(18 183 106 / 0.4);
   animation: kd-crown-in 1.1s var(--ease-spring) both;
 }
 @keyframes kd-crown-in {
