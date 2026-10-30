@@ -18,7 +18,8 @@ const props = withDefaults(
     label?: string
     placeholder?: string
     multiple?: boolean
-    menuWidth?: 'trigger' | 'fixed'
+    /** fit: as wide as its longest option, one line each, kept to the trigger's right edge (a select narrower than its options) */
+    menuWidth?: 'trigger' | 'fixed' | 'fit'
     /** the "filter is set" look, shared with UiChip variant=field */
     active?: boolean
     /** up: always open above the trigger (a select at the very bottom of the page); auto: below unless there is no room */
@@ -91,7 +92,7 @@ const isSelected = (o: SelectOption<T>) => (props.multiple ? many.value.includes
         role="listbox"
         :aria-multiselectable="multiple"
         class="kd-menu absolute z-30 flex max-h-80 flex-col gap-0.5 overflow-auto rounded-2xl border border-neutral-5 bg-neutral-2 p-1 shadow-[0_8px_12px_rgb(0_0_0/0.64)]"
-        :class="[menuWidth === 'trigger' ? 'inset-x-0' : 'left-0 w-54', up ? 'is-up bottom-full mb-2 origin-bottom' : 'top-full mt-2 origin-top']"
+        :class="[{ trigger: 'inset-x-0', fixed: 'left-0 w-54', fit: 'right-0 w-max min-w-full' }[menuWidth], up ? 'is-up bottom-full mb-2 origin-bottom' : 'top-full mt-2 origin-top']"
       >
         <li v-for="(o, i) in options" :key="o.value" :style="{ '--i': i }">
           <button
@@ -111,7 +112,7 @@ const isSelected = (o: SelectOption<T>) => (props.multiple ? many.value.includes
             <span v-if="o.swatch" class="size-2.5 shrink-0 rounded-full" :style="{ background: o.swatch }" />
             <UiIcon v-if="o.icon" :name="o.icon" :size="16" class="shrink-0" :style="o.iconColor ? { color: o.iconColor } : undefined" />
             <UiCoin v-if="o.coin" :size="16" />
-            <span class="flex-1 text-sm leading-5" :class="isSelected(o) ? 'font-semibold text-neutral-15' : 'text-neutral-13'">
+            <span class="flex-1 text-sm leading-5" :class="[isSelected(o) ? 'font-semibold text-neutral-15' : 'text-neutral-13', menuWidth === 'fit' && 'whitespace-nowrap']">
               {{ o.label }}
             </span>
             <UiIcon v-if="!multiple && isSelected(o)" name="check" :size="16" class="text-brand-base" />

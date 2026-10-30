@@ -63,7 +63,7 @@ function clearPromo() {
 }
 onMounted(() => promoInput.value && applyPromo())
 
-const fmtFiat = (n: number) => `${n.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${currency.value}`
+const fmtFiat = (n: number) => `${n.toLocaleString('en-US', { maximumFractionDigits: 2 }).replace(/,/g, ' ')} ${currency.value}`
 const limits = (m: PaymentMethod) =>
   m.max ? t('deposit.limits', { min: m.min, max: `${m.max.toLocaleString('en-US').replace(/,/g, ' ')} ${currency.value}` }) : t('deposit.limitsFrom', { min: `${m.min} ${currency.value}` })
 
@@ -153,11 +153,14 @@ async function pay() {
         <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
           <UiIcon name="coins" :size="20" class="text-neutral-13 lg:!size-6" />
           <span class="type-14 lg:type-16-medium flex-1">{{ $t('deposit.amount') }}</span>
-          <span class="type-12-caps text-neutral-11">{{ $t('deposit.currency') }}:</span>
-          <UiSelect v-model="currency" :options="currencyOptions" class="kd-inline-select w-24" />
         </div>
         <div class="flex flex-col gap-4 px-4 lg:px-6 lg:pt-2">
-          <UiInput id="deposit-amount" v-model.number="amount" size="l" type="number" inputmode="decimal" class="kd-amount" />
+          <!-- the sum and its currency read as one, "1000 PLN zł", in the middle of the field; the currency is the picker -->
+          <UiInput id="deposit-amount" v-model.number="amount" size="l" type="number" inputmode="decimal" class="kd-amount" :style="{ '--len': String(amount ?? '').length || 1 }">
+            <template #trailing>
+              <UiSelect v-model="currency" :options="currencyOptions" menu-width="fit" class="kd-inline-select w-24" />
+            </template>
+          </UiInput>
           <div class="grid grid-cols-6 gap-1 lg:gap-1.5">
             <UiChip v-for="p in PRESETS" :key="p" :active="amount === p" class="w-full" @click="amount = p">{{ p.toLocaleString('en-US').replace(',', ' ') }}</UiChip>
           </div>
@@ -207,10 +210,21 @@ async function pay() {
 </template>
 
 <style scoped>
+.kd-amount {
+  justify-content: center;
+}
+/* the input is as wide as its digits (--len), so the currency stands right after them */
 .kd-amount :deep(input) {
-  text-align: center;
+  flex: none;
+  width: calc(var(--len) * 1ch + 8px);
+  max-width: 50%;
+  text-align: right;
   font-size: 16px;
   font-weight: 600;
+  -moz-appearance: textfield;
+}
+.kd-amount :deep(input::-webkit-inner-spin-button) {
+  display: none;
 }
 /* The total pops each time the quote changes, so the user sees the bonus land. */
 .kd-total {
@@ -249,8 +263,5 @@ async function pay() {
 .kd-method[aria-checked='true'] {
   background: var(--color-brand-24);
   border-color: var(--color-brand-base);
-}
-input[type='number']::-webkit-inner-spin-button {
-  display: none;
 }
 </style>
