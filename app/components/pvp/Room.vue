@@ -444,9 +444,10 @@ const laneCols = computed(() => {
     <!-- Player bars: who sits where and what they have so far; join or call a bot on a free seat. One 12 px step from the
          arena down through the plates and every tile, sideways too -->
     <section class="kd-lanes max-lg:-mt-1 lg:-mt-3" :style="{ gridTemplateColumns: laneCols }">
+      <!-- each seat is one column on desktop: a 24 px panel, 12 px in, so the plate and the tiles inside take 12 px corners
+           (24 = 12 + 12); under the bar, its drops, newest first -->
+      <div v-for="s in b.slots" :key="s.slot" class="flex flex-col gap-3 lg:rounded-5xl lg:bg-neutral-2 lg:p-3">
       <PvpPlayerSlot
-        v-for="s in b.slots"
-        :key="s.slot"
         :player="s.player"
         :total="totals[s.slot]"
         :winner="done && winners.includes(s.slot)"
@@ -460,15 +461,10 @@ const laneCols = computed(() => {
         @join="join(s.slot)"
         @bot="bot(s.slot)"
       />
-    </section>
-
-    <!-- Drops: each player's right under their bar, newest first -->
-    <section v-if="revealed > 0" class="-mt-1 lg:-mt-3">
-      <div class="kd-lanes" :style="{ gridTemplateColumns: laneCols }">
-        <!-- once it is over, the losers' drops step back: they go to the winner -->
-        <TransitionGroup v-for="seat in b.slots" :key="seat.slot" tag="div" name="kd-drop" class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]" :class="done && !winners.includes(seat.slot) && 'is-lost'">
-          <ItemTile v-for="ri in Array.from({ length: revealed }, (_, k) => revealed - 1 - k)" :key="ri" :item="b.results![ri]!.drops[seat.slot]!" readonly />
-        </TransitionGroup>
+      <!-- once it is over, the losers' drops step back: they go to the winner -->
+      <TransitionGroup v-if="revealed > 0" tag="div" name="kd-drop" class="kd-seat-drops grid min-w-0 grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]" :class="done && !winners.includes(s.slot) && 'is-lost'">
+        <ItemTile v-for="ri in Array.from({ length: revealed }, (_, k) => revealed - 1 - k)" :key="ri" :item="b.results![ri]!.drops[s.slot]!" readonly />
+      </TransitionGroup>
       </div>
     </section>
     <PvpVerifyModal v-model="verifyOpen" :battle="b" />
