@@ -161,8 +161,9 @@ const COUNT_LOOK = {
 }
 const howOpen = ref(false)
 const countEl = useTemplateRef<HTMLElement>('countEl')
-const fxHost = useTemplateRef<HTMLElement>('fxHost')
-const fx = useForge(fxHost)
+const arena = useTemplateRef<HTMLElement>('arena')
+// the page's shared layer: the smoke must not stop at the arena's frame
+const fx = useForge()
 let countLabel: ExtrudeHandle | null = null
 let countReady: Promise<void> | null = null
 let countFresh = true
@@ -219,9 +220,9 @@ async function countBeat(n: number) {
   }
 }
 function countLanded() {
-  const host = fxHost.value
+  const r = arena.value?.getBoundingClientRect()
   dropCountLabel()
-  if (host) fx.play('kdPuff', { x: host.offsetWidth / 2, y: host.offsetHeight / 2, size: host.offsetHeight * 1.9 })
+  if (r) fx.play('kdPuff', { x: r.left + r.width / 2, y: r.top + r.height / 2, size: r.height * 1.9 })
 }
 // in ms before the first reel: a second for each number, then the VS, and the smoke has its time before the reels move
 function runCount() {
@@ -460,7 +461,7 @@ const roundLine = computed(() => {
       </div>
     </section>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
-    <section class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
+    <section ref="arena" class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
         <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="[done && winners.includes(s.slot) && 'is-winner', leaders.includes(s.slot) && 'is-lead', isTeam && s.slot === 2 && 'is-team-split']">
           <!-- a free seat while it waits: an empty lane, no second Join: the action is on the seat's plate under it -->
@@ -492,7 +493,6 @@ const roundLine = computed(() => {
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 left-0 -rotate-90" />
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 right-0 rotate-90" />
 
-      <div ref="fxHost" class="pointer-events-none absolute inset-0 z-[11]" />
       <!-- The arena dims and the number stands in its middle. The stage stays in the page while seats fill, unseen, so its 3D
            label is ready before the first second -->
       <div v-if="b.status === 'waiting' || countArmed || countdown > 0 || countFade" class="kd-countdown pointer-events-none absolute inset-0 grid place-items-center" :class="[countdown > 0 && countHome && 'is-on', countFade && 'is-fade', countSink && 'is-sink']">
