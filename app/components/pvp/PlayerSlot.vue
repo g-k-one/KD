@@ -67,10 +67,7 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
           <UiIcon name="plus" :size="compact ? 16 : 20" />
         </span>
       </span>
-      <span v-if="!compact" class="flex min-w-0 flex-1 flex-col">
-        <span class="type-14 text-neutral-12">{{ $t('pvp.freeSlot') }}</span>
-        <span class="type-12-regular truncate text-neutral-11">{{ $t('pvp.waitingForPlayer') }}</span>
-      </span>
+      <span v-if="!compact" class="type-14 min-w-0 flex-1 truncate text-neutral-12">{{ $t('pvp.freeSlot') }}</span>
       <!-- 32 px high, 16 px from the plate's top, bottom and right; wide, so the seat's one action is easy to hit -->
       <UiButton v-if="canJoin" size="s" :block="compact" :class="!compact && 'w-28'" :loading="busy" @click="$emit('join')">{{ $t('pvp.join') }}</UiButton>
       <UiButton v-else-if="canCallBot" variant="secondary" size="s" :block="compact" :class="!compact && 'w-28'" :loading="busy" @click="$emit('bot')">{{ $t('pvp.callBot') }}</UiButton>
