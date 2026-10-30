@@ -225,8 +225,8 @@ if (import.meta.client) {
         </UiPageBar>
       </div>
 
-      <!-- one stage: the odds, the reel, the controls and the next hook, one step apart (12 px phones, 16 desktop),
-           its top pulled up to the bar's 16 px instead of the page gap -->
+      <!-- one stage: the odds, the reel, the controls and the next hook, one step apart (12 px phones, 24 desktop; on
+           desktop the controls sit 12 px under the reel they drive), its top pulled up to the bar's 16 px instead of the page gap -->
       <section ref="reelSection" class="-mt-2 flex scroll-mt-24 flex-col gap-3 lg:-mt-6 lg:gap-6">
         <CaseTransparency :data="cs" />
         <CaseReel
@@ -246,6 +246,7 @@ if (import.meta.client) {
         />
         <CaseOpenControls
           ref="controlsEl"
+          class="lg:-mt-3"
           v-model:count="count"
           v-model:fast="fast"
           v-model:kurwadrop="kurwadrop"
