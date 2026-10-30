@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { RiskLevel } from '#shared/types/api'
-import { PRICE_RANGES, RISK_LEVELS, type CaseSort, type PriceRange } from '~/composables/useCaseFilters'
+import { PRICE_RANGES, RISK_LEVELS, RISK_SWATCH, type CaseSort, type PriceRange } from '~/composables/useCaseFilters'
 
 // Case filters (docs/ux-audit-v2.md). Desktop: a short row of dropdowns — price (one choice), risk (several,
 // each with its colour), a "fits my balance" switch, sorting — so nothing is cut off at any width.
@@ -16,12 +16,6 @@ const query = defineModel<string>('query', { required: true })
 const { t } = useI18n()
 const session = useSessionStore()
 
-const RISK_SWATCH: Record<RiskLevel, string> = {
-  low: 'var(--color-success)',
-  medium: 'var(--color-coin)',
-  high: 'var(--color-brand-light)',
-  extreme: 'var(--color-danger)',
-}
 const priceLabel = (r: PriceRange) => (r === 'any' ? t('filters.anyPrice') : r.replace('-', '–'))
 const priceOptions = computed(() => PRICE_RANGES.map((r) => ({ value: r, label: priceLabel(r), coin: r !== 'any' })))
 const riskOptions = computed(() => RISK_LEVELS.map((r) => ({ value: r, label: t(`risk.${r}`), swatch: RISK_SWATCH[r] })))

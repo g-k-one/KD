@@ -640,37 +640,7 @@ async function runUpgrade() {
       </div>
 
       <div class="flex flex-col rounded-5xl bg-neutral-2 lg:pb-4" :class="panelTab !== 'desired' && 'max-lg:hidden'">
-        <div class="flex h-14 items-center gap-2 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
-          <UiIcon name="gem" :size="isLg ? 24 : 20" class="text-neutral-13 max-lg:hidden lg:mr-1" />
-          <span class="type-14 lg:type-16-medium mr-1 whitespace-nowrap max-lg:hidden">{{ $t('upgrade.desiredSkin') }}</span>
-          <UiButton variant="ghost" :size="isLg ? 'm' : 's'" icon-only :aria-label="$t(sortDesc ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="sortDesc = !sortDesc">
-            <UiSortArrows :desc="sortDesc" />
-          </UiButton>
-          <Transition name="kd-search" mode="out-in">
-            <UiInput v-if="searchOpen" id="market-search" key="s" v-model="search" icon="search" clearable :placeholder="$t('upgrade.search')" class="min-w-0 flex-1" @keydown.esc="searchOpen = false" />
-            <div v-else key="f" class="flex min-w-0 flex-1 items-center gap-2">
-              <!-- the price range shares the line on every width: on phones the two fields split what the rarity and search leave,
-                   without the coin (the placeholder and the prices around say it) -->
-              <UiInput id="price-from" v-model="priceFrom" :coin="isSm" inputmode="decimal" :placeholder="$t('upgrade.from')" class="min-w-0 flex-1 sm:w-24 sm:flex-none" />
-              <UiInput id="price-to" v-model="priceTo" :coin="isSm" inputmode="decimal" :placeholder="$t('upgrade.to')" class="min-w-0 flex-1 sm:w-24 sm:flex-none" />
-              <UiSelect v-model:values="rarities" multiple :options="rarityOptions" class="kd-rarity-select shrink-0 sm:min-w-20" menu-width="fixed">
-                <template #leading>
-                  <!-- The trigger shows the choice: every colour dimmed = all rarities, otherwise just the picked ones -->
-                  <TransitionGroup tag="span" name="kd-rdot" class="flex items-center gap-0.5">
-                    <span
-                      v-for="r in rarities.length ? rarities : RARITIES"
-                      :key="r"
-                      class="shrink-0 rounded-full"
-                      :class="rarities.length ? 'size-1.5' : 'size-1.5 opacity-45'"
-                      :style="{ background: RARITY_COLOR[r] }"
-                    />
-                  </TransitionGroup>
-                </template>
-              </UiSelect>
-            </div>
-          </Transition>
-          <UiButton variant="ghost" :size="isLg ? 'm' : 's'" :icon="searchOpen ? 'close' : 'search'" icon-only :aria-label="$t(searchOpen ? 'common.close' : 'upgrade.search')" @click="searchOpen = !searchOpen" />
-        </div>
+        <UiFilterBar v-model:desc="sortDesc" v-model:search="search" v-model:open="searchOpen" v-model:from="priceFrom" v-model:to="priceTo" v-model:values="rarities" icon="gem" :title="$t('upgrade.desiredSkin')" :options="rarityOptions" />
         <!-- Always a full page of slots (empty ones on the last page), so paging never changes the height -->
         <div class="relative">
         <TransitionGroup tag="div" name="kd-grid" class="relative grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:p-4" :class="market && !filteredMarket.length && 'opacity-30'">
@@ -905,42 +875,5 @@ async function runUpgrade() {
 /* the page's old tiles leave the layout at once: kept in the grid for their leave they doubled its height */
 .kd-grid-leave-active {
   display: none;
-}
-.kd-search-enter-active,
-.kd-search-leave-active {
-  transition:
-    opacity var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
-}
-.kd-search-enter-from,
-.kd-search-leave-to {
-  opacity: 0;
-  transform: translateX(6px);
-}
-:deep(.kd-rarity-select button[aria-haspopup] .type-14) {
-  display: none;
-}
-/* phones: the dots alone in the field (no chevron), so From and To get the room */
-@media (max-width: 639.98px) {
-  :deep(.kd-rarity-select button[aria-haspopup]) {
-    padding-inline: 10px;
-  }
-  :deep(.kd-rarity-select button[aria-haspopup] > :last-child) {
-    display: none;
-  }
-}
-.kd-rdot-enter-active,
-.kd-rdot-leave-active {
-  transition:
-    opacity var(--dur-fast) var(--ease-out),
-    scale var(--dur-base) var(--ease-spring);
-}
-.kd-rdot-enter-from,
-.kd-rdot-leave-to {
-  opacity: 0;
-  scale: 0.3;
-}
-.kd-rdot-leave-active {
-  position: absolute;
 }
 </style>

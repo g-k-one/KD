@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { BattleMode, BattleResponse, CasesResponse } from '#shared/types/api'
+import type { BattleMode, BattleResponse, CaseSummary, CasesResponse, RiskLevel } from '#shared/types/api'
+import { RISK_LEVELS, RISK_SWATCH, type CaseSort } from '~/composables/useCaseFilters'
 
 // Figma "BattleCaseTile" picker: Default → Added (brand tint + counter). Summary sticks to the side
 // on desktop and to the bottom on phones.
@@ -27,13 +28,42 @@ const playerOptions = computed(() => ([2, 3, 4] as const).map((n) => ({ value: n
 /** The rounds, in play order: a case slug per round */
 const order = ref<string[]>([])
 const qty = computed(() => order.value.reduce<Record<string, number>>((m, s) => ((m[s] = (m[s] ?? 0) + 1), m), {}))
-// the home page's filters, the same component and the same rules
-const { price, risks, affordable, sort, query, apply, reset } = useCaseFilters()
+// the cases are picked from the upgrade's panel: the same bar, the same rules
+const search = ref('')
+const searchOpen = ref(false)
+const priceFrom = ref('')
+const priceTo = ref('')
+const risks = ref<RiskLevel[]>([])
+const sort = ref<CaseSort>('priceAsc')
+const sortOptions = computed(() => (['priceAsc', 'priceDesc', 'newest', 'payback'] as const).map((s) => ({ value: s, label: t(`filters.sortOptions.${s}`) })))
+const ORDER: Partial<Record<CaseSort, (a: CaseSummary, b: CaseSummary) => number>> = {
+  priceAsc: (a, b) => a.price - b.price,
+  priceDesc: (a, b) => b.price - a.price,
+  newest: (a, b) => b.createdAt.localeCompare(a.createdAt),
+  payback: (a, b) => b.payback - a.payback,
+}
+const riskOptions = computed(() => RISK_LEVELS.map((r) => ({ value: r, label: t(`risk.${r}`), swatch: RISK_SWATCH[r] })))
+function resetFilters() {
+  search.value = ''
+  searchOpen.value = false
+  priceFrom.value = ''
+  priceTo.value = ''
+  risks.value = []
+}
 // an admin setting (GET /api/rules)
 const rules = useGameRules()
 const MAX_ROUNDS = computed(() => rules.value.pvp.maxRounds)
 
-const visible = computed(() => apply(cases.value))
+const visible = computed(() => {
+  const from = Number.parseFloat(priceFrom.value) * 100 || 0
+  const to = Number.parseFloat(priceTo.value) * 100 || Number.POSITIVE_INFINITY
+  const q = search.value.trim().toLowerCase()
+  return cases.value
+    .filter((c) => c.price >= from && c.price <= to)
+    .filter((c) => !risks.value.length || risks.value.includes(c.risk))
+    .filter((c) => !q || c.name.toLowerCase().includes(q))
+    .sort(ORDER[sort.value])
+})
 const rounds = computed(() => order.value.length)
 const bySlug = computed(() => new Map(cases.value.map((c) => [c.slug, c])))
 const cost = computed(() => order.value.reduce((a, s) => a + (bySlug.value.get(s)?.price ?? 0), 0))
@@ -106,47 +136,43 @@ async function create() {
       <div class="flex min-w-0 flex-col gap-4">
         <!-- The mode as three cards, each in its colour with its rule in plain text (phones: the chosen one's, under
              them); the players under them, team mode fixed at 4 -->
-        <div class="kd-pvp-dock flex flex-col gap-3">
-          <div class="grid grid-cols-3 gap-2 lg:gap-3" role="radiogroup" :aria-label="$t('pvp.mode')">
+        <div class="kd-pvp-dock flex flex-col gap-3 xl:flex-row xl:items-stretch">
+          <div class="grid min-w-0 grid-cols-3 gap-2 lg:gap-3 xl:flex-1" role="radiogroup" :aria-label="$t('pvp.mode')">
             <button
               v-for="m in MODES"
               :key="m"
               type="button"
               role="radio"
               :aria-checked="mode === m"
-              class="kd-mode kd-press flex min-w-0 flex-col items-center gap-1 rounded-2xl border px-2 py-3 text-center lg:flex-row lg:gap-3 lg:px-4 lg:text-left"
+              class="kd-mode kd-press flex min-w-0 flex-col items-center gap-1 rounded-2xl border px-2 py-3 text-center lg:h-20 lg:flex-row lg:gap-2 lg:px-3 lg:py-0 lg:text-left"
               :class="[`is-${m}`, mode === m && 'is-on']"
               @click="mode = m"
             >
               <UiIcon :name="PVP_MODE_ICON[m]" :size="28" class="kd-mode-ink shrink-0" />
               <span class="flex min-w-0 flex-col gap-0.5">
                 <span class="kd-mode-ink type-12-caps lg:type-14-caps truncate">{{ $t(`pvp.modeName.${m}`) }}</span>
-                <span class="type-14-regular text-neutral-12 max-lg:hidden">{{ $t(`pvp.modeRule.${m}`) }}</span>
+                <span class="type-14-regular truncate text-neutral-12 max-lg:hidden">{{ $t(`pvp.modeRule.${m}`) }}</span>
               </span>
             </button>
           </div>
           <p class="type-14-regular text-center text-neutral-12 lg:hidden">{{ $t(`pvp.modeRule.${mode}`) }}</p>
-          <div class="flex items-center gap-3">
+          <!-- wide screens: a plate of the cards' height beside them -->
+          <div class="flex items-center justify-between gap-3 xl:h-20 xl:w-36 xl:shrink-0 xl:flex-col xl:items-stretch xl:justify-center xl:gap-1 xl:rounded-2xl xl:bg-neutral-3 xl:px-2">
             <span class="type-12-caps px-1 text-neutral-11">{{ $t('pvp.players') }}</span>
-            <UiSegmented :model-value="size" :options="playerOptions" block class="flex-1" @update:model-value="players = $event" />
+            <UiSegmented :model-value="size" :options="playerOptions" size="s" block class="max-lg:w-32" @update:model-value="players = $event" />
           </div>
         </div>
-        <!-- the cases, in the lobby's and the home page's card language: a section header, 24px cards -->
-        <UiSectionHeader :title="$t('pvp.chooseCases')">
-          <template #actions>
-            <span class="type-12-caps text-neutral-11 tabular-nums">{{ rounds }} / {{ MAX_ROUNDS }}</span>
-          </template>
-        </UiSectionHeader>
-        <HomeCaseFilters v-model:price="price" v-model:risks="risks" v-model:affordable="affordable" v-model:sort="sort" v-model:query="query" class="kd-create-filters" />
-
-        <UiEmptyState v-if="data && !visible.length" :text="$t('pvp.noCases')" art="empty-search">
-          <UiButton variant="secondary" size="m" @click="reset">{{ $t('filters.reset') }}</UiButton>
-        </UiEmptyState>
-        <div v-else class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:gap-3">
+        <!-- the cases in the upgrade's panel: its bar over the grid -->
+        <div class="flex flex-col rounded-5xl bg-neutral-2">
+          <UiFilterBar v-model:sort="sort" :sort-options="sortOptions" v-model:search="search" v-model:open="searchOpen" v-model:from="priceFrom" v-model:to="priceTo" v-model:values="risks" icon="cases" :title="$t('pvp.chooseCases')" :options="riskOptions" />
+          <UiEmptyState v-if="data && !visible.length" :text="$t('pvp.noCases')" art="empty-search" class="bg-transparent">
+            <UiButton variant="secondary" size="m" @click="resetFilters">{{ $t('filters.reset') }}</UiButton>
+          </UiEmptyState>
+          <div v-else class="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 md:grid-cols-4 lg:gap-3 lg:p-4">
           <div v-for="c in visible" :key="c.slug" class="relative">
             <button
               type="button"
-              class="kd-ctile kd-press group flex w-full flex-col items-center gap-2 rounded-5xl border p-3 lg:p-4"
+              class="kd-ctile kd-press group flex w-full flex-col items-center gap-2 rounded-2xl border p-3 lg:p-4"
               :class="{ 'is-added': !!qty[c.slug] }"
               :aria-label="`${$t('pvp.add')} ${c.name}`"
               @click="add(c.slug)"
@@ -170,6 +196,7 @@ async function create() {
                 <UiIcon name="minus" :size="16" />
               </button>
             </Transition>
+          </div>
           </div>
         </div>
       </div>
@@ -244,17 +271,6 @@ async function create() {
     padding: 16px;
   }
 }
-/* the page's column is narrower than the home page's: the dropdowns share the row evenly, the search takes less */
-@media (min-width: 64rem) {
-  .kd-create-filters :deep(.kd-fsel) {
-    width: auto;
-    min-width: 0;
-    flex: 1 1 0;
-  }
-  .kd-create-filters :deep(.kd-fsearch) {
-    width: 148px;
-  }
-}
 /* the mode's colour: the same three as the lobby */
 .kd-mode {
   --mc: var(--color-coin);
@@ -283,8 +299,8 @@ async function create() {
   }
 }
 .kd-ctile {
-  background: var(--color-neutral-2);
-  border-color: var(--color-neutral-4);
+  background: var(--color-neutral-3);
+  border-color: transparent;
   transition:
     background-color var(--dur-base) var(--ease-out),
     border-color var(--dur-base) var(--ease-out);

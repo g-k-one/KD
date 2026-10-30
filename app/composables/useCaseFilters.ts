@@ -14,6 +14,12 @@ const RANGES: Record<Exclude<PriceRange, 'any'>, [number, number]> = {
 
 export const PRICE_RANGES = ['any', ...Object.keys(RANGES)] as PriceRange[]
 export const RISK_LEVELS: RiskLevel[] = ['low', 'medium', 'high', 'extreme']
+export const RISK_SWATCH: Record<RiskLevel, string> = {
+  low: 'var(--color-success)',
+  medium: 'var(--color-coin)',
+  high: 'var(--color-brand-light)',
+  extreme: 'var(--color-danger)',
+}
 
 export function useCaseFilters() {
   const price = ref<PriceRange>('any')
