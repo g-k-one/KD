@@ -272,7 +272,7 @@ async function saveTrade() {
           </form>
           <!-- the numbers first, big, each over a one-line label; hairlines instead of plates inside the plate -->
           <dl class="grid grid-cols-3 rounded-5xl bg-neutral-2 py-4 lg:py-5">
-            <div v-for="(s, i) in statCards.slice(1, 4)" :key="s.key" class="flex min-w-0 flex-col-reverse items-center gap-1 px-1 text-center" :class="i && 'border-l border-neutral-4'">
+            <div v-for="(s, i) in statCards.slice(1, 4)" :key="s.key" class="flex min-w-0 flex-col-reverse items-center gap-1 px-1 text-center" :class="i > 0 && 'border-l border-neutral-4'">
               <dt class="type-10-caps whitespace-nowrap text-neutral-11">{{ s.label }}</dt>
               <dd class="type-20-caps tabular-nums" :class="s.coin && 'text-coin'">{{ s.value }}</dd>
             </div>

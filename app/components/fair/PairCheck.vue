@@ -91,7 +91,7 @@ const value = (e: HistoryEntry) => (e.ticket != null ? spaced(e.ticket) : (e.rol
         <span class="type-20-caps tabular-nums">{{ done }} <span class="text-neutral-11">/ {{ loaded ? total : pair?.nonce }}</span></span>
         <span class="type-12-regular text-neutral-11">{{ period }}</span>
       </div>
-      <span class="kd-pairbar" :class="bad && 'is-bad'"><span :style="{ transform: `scaleX(${total ? done / total : 0})` }" /></span>
+      <span class="kd-pairbar" :class="bad > 0 && 'is-bad'"><span :style="{ transform: `scaleX(${total ? done / total : 0})` }" /></span>
     </div>
 
     <span v-if="!loaded" class="kd-skeleton h-[264px] rounded-2xl" aria-hidden="true" />
