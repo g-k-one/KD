@@ -339,14 +339,18 @@ const laneCols = computed(() => {
     <!-- the bar's shield is the general fairness page, as on every page; this battle's own check is Check PvP in the result -->
     <UiPageBar
       class="lg:-mb-2"
-      :title="$t(`pvp.modeName.${b.mode}`)"
-      :subtitle="`${$t(`pvp.modeRule.${b.mode}`)} · #${b.id}`"
       fixed-sides
       :left="[
         { label: $t('pvp.back'), icon: 'arrow-left', to: '/pvp' },
         { label: $t('case.share'), icon: 'share', onClick: shareBattle },
       ]"
-    />
+    >
+      <!-- the mode stays in the bar's middle as on every page, the battle's number hangs beside it -->
+      <span class="relative">
+        <h1 class="type-16-caps md:type-20-caps">{{ $t(`pvp.modeName.${b.mode}`) }}</h1>
+        <span class="type-12 absolute top-1/2 left-full ml-2 -translate-y-1/2 text-neutral-11 tabular-nums md:type-14 md:ml-3">#{{ b.id }}</span>
+      </span>
+    </UiPageBar>
 
 
     <!-- Meta line: who is watching and the round · the battle's cases (the current one lit, spent ones dim) · what a
