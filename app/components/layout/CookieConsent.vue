@@ -69,14 +69,14 @@ const CATEGORIES: Array<{ key: ConsentCategory | 'necessary'; always?: boolean }
         <UiButton block @click="consent.acceptAll()">{{ $t('cookies.acceptAll') }}</UiButton>
         <UiButton v-if="view === 'short'" variant="secondary" block @click="consent.rejectAll()">{{ $t('cookies.rejectAll') }}</UiButton>
         <UiButton v-else variant="secondary" block @click="consent.save({ ...choice })">{{ $t('cookies.save') }}</UiButton>
-        <UiButton
-          variant="secondary"
+        <UiChip
+          variant="field"
+          size="m"
           icon="sliders"
-          icon-only
-          :class="view === 'settings' && 'kd-consent-on'"
+          class="kd-consent-toggle !px-0"
+          :active="view === 'settings'"
           :title="$t('cookies.settings')"
           :aria-label="$t('cookies.settings')"
-          :aria-pressed="view === 'settings'"
           @click="view = view === 'settings' ? 'short' : 'settings'"
         />
       </div>
@@ -88,9 +88,8 @@ const CATEGORIES: Array<{ key: ConsentCategory | 'necessary'; always?: boolean }
 .kd-consent {
   box-shadow: 0 12px 32px rgb(0 0 0 / 0.6);
 }
-.kd-consent-on {
-  box-shadow: inset 0 0 0 1.5px var(--color-brand-base);
-  color: var(--color-brand-light);
+.kd-consent-toggle {
+  aspect-ratio: 1;
 }
 .kd-consent-enter-active {
   transition:
