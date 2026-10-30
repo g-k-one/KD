@@ -11,6 +11,7 @@ import {
   getCaseSections,
   getFeed,
   getHistory,
+  getHistoryStats,
   getPairRolls,
   getHomeLayout,
   resetHomeLayout,
@@ -175,7 +176,11 @@ export async function mockRoute(method: string, path: string, body: Body, query:
 
   if (m === 'GET' && path === '/api/history') {
     authed()
-    return getHistory()
+    return getHistory(query)
+  }
+  if (m === 'GET' && path === '/api/history/stats') {
+    authed()
+    return getHistoryStats()
   }
   if (m === 'GET' && path === '/api/market') return getMarket()
   if (m === 'POST' && path === '/api/upgrade') {

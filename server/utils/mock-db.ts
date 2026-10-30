@@ -19,6 +19,8 @@ import type {
   FeedResponse,
   FiatCurrency,
   HistoryEntry,
+  HistoryResponse,
+  HistoryStats,
   HistoryItem,
   InventoryItem,
   Item,
@@ -667,13 +669,40 @@ export function record(e: Omit<HistoryEntry, "id" | "at">) {
   historySeq += 1
   const entry = { id: `h${historySeq}`, at: new Date().toISOString(), ...e }
   state.history.unshift(entry)
-  state.history.splice(200)
+  state.history.splice(1000)
   if (e.seedHash) (state.pairRolls[e.seedHash] ??= []).push(entry)
 }
 
-export async function getHistory() {
+const HISTORY_PERIODS: Record<string, number> = { day: 86_400_000, week: 7 * 86_400_000, month: 30 * 86_400_000 }
+
+export async function getHistory(q: Record<string, string> = {}): Promise<HistoryResponse> {
   await ensureSeed()
-  return { entries: state.history }
+  const name = (q.q ?? '').trim().toLowerCase()
+  const since = HISTORY_PERIODS[q.period ?? ''] ? Date.now() - HISTORY_PERIODS[q.period!]! : 0
+  const rows = state.history.filter((h) => {
+    if (q.game === 'pvp' ? !h.battleId : q.game && (h.game !== q.game || (q.game === 'case' && h.battleId))) return false
+    if (since && Date.parse(h.at) < since) return false
+    if (name && !`${h.title} ${h.result?.name ?? ''}`.toLowerCase().includes(name)) return false
+    if (!q.outcome) return true
+    if (h.game !== 'case' && h.game !== 'upgrade') return false
+    return q.outcome === 'won' ? h.payout > h.bet : h.payout <= h.bet
+  })
+  const limit = Math.min(Number(q.limit) || 200, 200)
+  const from = q.cursor ? rows.findIndex((h) => h.id === q.cursor) + 1 : 0
+  const entries = rows.slice(from, from + limit)
+  return { entries, nextCursor: from + limit < rows.length ? entries.at(-1)!.id : null, total: rows.length }
+}
+
+export async function getHistoryStats(): Promise<HistoryStats> {
+  await ensureSeed()
+  const played = state.history.filter((h) => h.game === 'case' || h.game === 'upgrade')
+  const ups = played.filter((h) => h.game === 'upgrade')
+  return {
+    cases: played.length - ups.length,
+    upgrades: ups.length,
+    upgradesWon: ups.filter((h) => h.status === 'won').length,
+    topX: played.reduce((m, h) => (h.bet > 0 ? Math.max(m, h.payout / h.bet) : m), 0),
+  }
 }
 
 async function freshServerSeed() {
@@ -1277,7 +1306,6 @@ export function makeDrop(overrides: Partial<FeedDrop> & Partial<Item> = {}): Fee
     })
   }
   const drop: FeedDrop = {
-    id: `d${dropSeq}`,
     itemName: it.weapon,
     skinName: it.skin,
     rarity: it.rarity,
@@ -1290,6 +1318,8 @@ export function makeDrop(overrides: Partial<FeedDrop> & Partial<Item> = {}): Fee
     createdAt: new Date().toISOString(),
     userAvatar: '',
     ...overrides,
+    // after the overrides: an override spreads a skin, whose own id would repeat along the strip
+    id: `d${dropSeq}`,
   }
   // the case it came from, for the hover card (a PvP drop names its case after "PvP · ")
   const caseName = drop.caseSlug === 'pvp' ? drop.caseName.replace(/^PvP · /, '') : null

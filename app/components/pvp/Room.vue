@@ -307,18 +307,10 @@ const laneCols = computed(() => {
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
         <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="[done && winners.includes(s.slot) && 'is-winner', leaders.includes(s.slot) && 'is-lead', isTeam && s.slot === 2 && 'is-team-split']">
           <span :key="revealed" class="kd-seat-flash pointer-events-none absolute inset-0" aria-hidden="true" />
-          <!-- a free seat while it waits: a dashed stage with Join, as the lobby's New battle tile (not the case picture
-               standing in every barrel) -->
-          <div v-if="!s.player && b.status === 'waiting'" class="flex items-center justify-center p-2" :class="isMobile ? 'h-50' : 'h-72'">
-            <button
-              type="button"
-              class="kd-press kd-free-seat flex size-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed text-neutral-11"
-              :disabled="youIn && !isCreator"
-              @click="youIn ? isCreator && bot(s.slot) : join(s.slot)"
-            >
-              <span class="grid size-10 place-items-center rounded-full bg-brand-base text-neutral-1 lg:size-12"><UiIcon name="plus" :size="22" /></span>
-              <span class="type-12-caps">{{ youIn ? (isCreator ? $t('pvp.callBot') : $t('pvp.waitingForPlayer')) : $t('pvp.join') }}</span>
-            </button>
+          <!-- a free seat while it waits: an empty lane, no second Join: the action is on the seat's plate under it -->
+          <div v-if="!s.player && b.status === 'waiting'" class="flex flex-col items-center justify-center gap-3 text-neutral-10" :class="isMobile ? 'h-50' : 'h-72'">
+            <UiIcon name="user" :size="isMobile ? 32 : 48" class="kd-free-seat" />
+            <span class="type-12-caps max-lg:hidden">{{ $t('pvp.waitingForPlayer') }}</span>
           </div>
           <PvpReel
             v-else
@@ -461,13 +453,13 @@ const laneCols = computed(() => {
 .kd-seat-drops.is-lost {
   opacity: 0.4;
 }
+/* the free seat breathes while it waits */
 .kd-free-seat {
-  border-color: var(--color-neutral-5);
-  transition: border-color var(--dur-base) var(--ease-out);
+  animation: kd-free-seat 2400ms ease-in-out infinite;
 }
-@media (hover: hover) {
-  .kd-free-seat:hover:not(:disabled) {
-    border-color: var(--color-brand-base);
+@keyframes kd-free-seat {
+  50% {
+    opacity: 0.5;
   }
 }
 /* the meta line folds away when the battle is over (rows to 0 and the column's gap taken back) */

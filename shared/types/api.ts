@@ -402,8 +402,37 @@ export interface HistoryEntry {
   battleId?: string
 }
 
+/**
+ * GET /api/history: newest first, one page at a time; the filters run on the server, so they reach every line and not
+ * only the loaded ones. All are optional. Without `limit`: the latest 200.
+ */
+export interface HistoryQuery {
+  /** the last line of the previous page: its `nextCursor` */
+  cursor?: string
+  limit?: number
+  /** 'pvp' is a case line with a battle; 'case' leaves those out */
+  game?: HistoryGame | 'pvp'
+  period?: 'day' | 'week' | 'month'
+  /** rounds only: a payment has no profit, so it drops out */
+  outcome?: 'won' | 'lost'
+  /** a case or a skin by name */
+  q?: string
+}
 export interface HistoryResponse {
   entries: HistoryEntry[]
+  /** null on the last page */
+  nextCursor: string | null
+  /** how many lines match, all pages together */
+  total: number
+}
+
+/** GET /api/history/stats: the player's numbers, over the whole history */
+export interface HistoryStats {
+  cases: number
+  upgrades: number
+  upgradesWon: number
+  /** the best payout ÷ stake of a case or an upgrade; 0 before the first round */
+  topX: number
 }
 
 // --- PvP battles ----------------------------------------------------------------

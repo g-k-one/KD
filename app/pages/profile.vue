@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Imported, not resolveComponent(): the static artifact build left that as a literal <nuxtlink> tag
-import type { HistoryEntry, HistoryGame, HistoryResponse, InventoryItem, InventoryResponse, SellResponse } from '#shared/types/api'
+import type { HistoryEntry, HistoryGame, HistoryQuery, HistoryResponse, HistoryStats, InventoryItem, InventoryResponse, SellResponse } from '#shared/types/api'
 
 // Profile: one header — who, the level (and what it takes to the next one), Deposit, the money. Under it the skins,
 // and beside them the Steam trade link (where withdrawals go) with the player's numbers; the game history runs the
@@ -30,15 +30,17 @@ onMounted(() => route.query.tab === 'settings' && (settingsOpen.value = true))
 
 const inventory = ref<InventoryItem[]>([])
 const history = ref<HistoryEntry[]>([])
+const stats = ref<HistoryStats | null>(null)
 // Client only: server-side $fetch would go out without the session cookie and get a 401
 const loading = ref(true)
 async function load() {
   if (import.meta.server) return
   if (!session.user) return (loading.value = false)
   try {
-    const [inv, hist] = await Promise.all([$fetch<InventoryResponse>('/api/inventory'), $fetch<HistoryResponse>('/api/history')])
+    const [inv, numbers] = await Promise.all([$fetch<InventoryResponse>('/api/inventory'), $fetch<HistoryStats>('/api/history/stats')])
     inventory.value = inv.items
-    history.value = hist.entries
+    stats.value = numbers
+    await loadHistory()
   } catch {
     /* signed out meanwhile */
   } finally {
@@ -122,7 +124,8 @@ async function onWithdrawn() {
 type GameFilter = HistoryGame | 'pvp' | 'all'
 const FILTERS: GameFilter[] = ['all', 'case', 'upgrade', 'pvp', 'deposit', 'sell', 'withdraw']
 const gameFilter = ref<GameFilter>(FILTERS.includes(route.query.game as GameFilter) ? (route.query.game as GameFilter) : 'all')
-// and three more on top of the game: a skin or case by name, how far back, won or lost (rounds only: a payment has no profit)
+// and three more on top of the game: a skin or case by name, how far back, won or lost (rounds only: a payment has no
+// profit). The server filters and sends a page at a time: the next one comes as the list nears its end, inside its panel
 const historyQuery = ref('')
 const PERIODS = { all: 0, day: 86_400_000, week: 7 * 86_400_000, month: 30 * 86_400_000 }
 const period = ref<keyof typeof PERIODS>('all')
@@ -135,46 +138,49 @@ function clearHistoryFilters() {
   period.value = 'all'
   outcome.value = 'all'
 }
-const filteredHistory = computed(() => {
-  const q = historyQuery.value.trim().toLowerCase()
-  const since = period.value === 'all' ? 0 : Date.now() - PERIODS[period.value]
-  return history.value.filter((h) => {
-    if (gameFilter.value === 'pvp' ? !h.battleId : gameFilter.value !== 'all' && (h.game !== gameFilter.value || (gameFilter.value === 'case' && h.battleId))) return false
-    if (since && Date.parse(h.at) < since) return false
-    if (q && !`${h.title} ${h.result?.name ?? ''}`.toLowerCase().includes(q)) return false
-    if (outcome.value === 'all') return true
-    if (h.game !== 'case' && h.game !== 'upgrade') return false
-    return outcome.value === 'won' ? h.payout > h.bet : h.payout <= h.bet
-  })
-})
-
-// --- Stats (from the history the profile already loads) ------------------------------
-const stats = computed(() => {
-  const cases = history.value.filter((h) => h.game === 'case')
-  const ups = history.value.filter((h) => h.game === 'upgrade')
-  const wins = ups.filter((h) => h.status === 'won')
-  const played = [...cases, ...ups]
-  const best = played.reduce<HistoryEntry | null>((b, h) => (!b || h.payout > b.payout ? h : b), null)
-  const topX = played.reduce((m, h) => (h.bet > 0 ? Math.max(m, h.payout / h.bet) : m), 0)
-  return {
-    cases: cases.length,
-    upgrades: `${wins.length} / ${ups.length}`,
-    best,
-    topX,
-    wagered: played.reduce((a, h) => a + h.bet, 0),
+const HISTORY_PAGE = 30
+const historyName = refDebounced(historyQuery, 250)
+const historyParams = computed<HistoryQuery>(() => ({
+  limit: HISTORY_PAGE,
+  game: gameFilter.value === 'all' ? undefined : gameFilter.value,
+  period: period.value === 'all' ? undefined : period.value,
+  outcome: outcome.value === 'all' ? undefined : outcome.value,
+  q: historyName.value.trim() || undefined,
+}))
+const historyNext = ref<string | null>(null)
+const historyBusy = ref(true)
+const historyBox = useTemplateRef<HTMLElement>('historyBox')
+const historyEnd = useTemplateRef<HTMLElement>('historyEnd')
+// a newer request wins: a slow answer to the old filters must not land over the new ones
+let historyAsk = 0
+async function loadHistory(more = false) {
+  const ask = ++historyAsk
+  historyBusy.value = true
+  try {
+    const res = await $fetch<HistoryResponse>('/api/history', { query: { ...historyParams.value, cursor: more ? (historyNext.value ?? undefined) : undefined } })
+    if (ask !== historyAsk) return
+    history.value = more ? [...history.value, ...res.entries] : res.entries
+    historyNext.value = res.nextCursor
+    if (!more) historyBox.value?.scrollTo({ top: 0 })
+  } catch {
+    /* signed out meanwhile */
+  } finally {
+    if (ask === historyAsk) historyBusy.value = false
   }
+}
+watch(historyParams, () => loadHistory())
+useIntersectionObserver(historyEnd, ([e]) => e?.isIntersecting && historyNext.value && !historyBusy.value && loadHistory(true), { root: historyBox, rootMargin: '240px' })
+
+// --- Stats -------------------------------------------------------------------------
+/** The player's numbers, a line each */
+const statCards = computed(() => {
+  const topX = stats.value?.topX ?? 0
+  return [
+    { key: 'cases', icon: 'cases', label: t('account.statCases'), value: String(stats.value?.cases ?? 0) },
+    { key: 'ups', icon: 'upgrade', label: t('account.statUpgrades'), value: `${stats.value?.upgradesWon ?? 0} / ${stats.value?.upgrades ?? 0}` },
+    { key: 'topx', icon: 'fire', label: t('account.statTopX'), value: topX ? `x${topX.toFixed(topX >= 10 ? 0 : 2)}` : '—', coin: true },
+  ]
 })
-
-/** The stats as small label | number cards (csgogem's profile) */
-const statCards = computed(() => [
-  { key: 'played', icon: 'wallet', label: t('account.statWagered'), price: stats.value.wagered },
-  { key: 'cases', icon: 'cases', label: t('account.statCases'), value: String(stats.value.cases) },
-  { key: 'ups', icon: 'upgrade', label: t('account.statUpgrades'), value: stats.value.upgrades },
-  { key: 'topx', icon: 'fire', label: t('account.statTopX'), value: stats.value.topX ? `x${stats.value.topX.toFixed(stats.value.topX >= 10 ? 0 : 2)}` : '—', coin: true },
-  { key: 'best', icon: 'trophy', label: t('account.statBest'), price: stats.value.best?.payout ?? 0, title: stats.value.best?.title },
-  { key: 'skins', icon: 'inventory', label: t('account.skinsValue'), price: session.user?.skinsValue ?? 0 },
-])
-
 
 // --- Steam trade link (settings) --------------------------------------------------------
 const TRADE_RE = /^https:\/\/steamcommunity\.com\/tradeoffer\/new\/\?partner=\d+&token=[\w-]{6,}$/
@@ -305,7 +311,7 @@ async function saveTrade() {
           </form>
           <!-- the player's numbers: a line each, what on the left, how much on the right, hairlines between -->
           <dl class="flex flex-col rounded-5xl bg-neutral-2 px-4 py-2 lg:flex-1 lg:px-6">
-            <div v-for="(s, i) in statCards.slice(1, 4)" :key="s.key" class="flex min-h-14 flex-1 items-center gap-3" :class="i > 0 && 'border-t border-neutral-4'">
+            <div v-for="(s, i) in statCards" :key="s.key" class="flex min-h-14 flex-1 items-center gap-3" :class="i > 0 && 'border-t border-neutral-4'">
               <UiIcon :name="s.icon" :size="20" class="shrink-0 text-neutral-12" />
               <dt class="type-12-caps min-w-0 flex-1 truncate text-neutral-11">{{ s.label }}</dt>
               <dd class="type-20-caps tabular-nums" :class="s.coin && 'text-coin'">{{ s.value }}</dd>
@@ -330,13 +336,18 @@ async function saveTrade() {
               <UiSelect v-model="gameFilter" :options="gameOptions" menu-width="fit" class="lg:w-36" :active="gameFilter !== 'all'" />
             </div>
           </div>
-          <UiEmptyState v-if="!filteredHistory.length" :text="$t(`account.emptyHistory.${historyNarrowed ? 'narrowed' : gameFilter}`)" :art="historyNarrowed ? 'empty-search' : 'empty-history'" class="m-3">
+          <div v-if="!history.length && historyBusy" class="flex flex-col gap-2 p-3" aria-hidden="true">
+            <span v-for="n in 6" :key="n" class="kd-skeleton h-[62px] rounded-xl" />
+          </div>
+          <UiEmptyState v-else-if="!history.length" :text="$t(`account.emptyHistory.${historyNarrowed ? 'narrowed' : gameFilter}`)" :art="historyNarrowed ? 'empty-search' : 'empty-history'" class="m-3">
             <UiButton v-if="historyNarrowed" variant="secondary" size="m" @click="clearHistoryFilters">{{ $t('account.clearFilters') }}</UiButton>
           </UiEmptyState>
           <!-- the table: game · drop · stake · payout · profit · time · check; a roll opens its check -->
           <!-- no top padding on desktop: the sticky headers stop at the panel's hairline, nothing shows over them -->
-          <div v-else class="kd-history overflow-y-auto p-3 lg:pt-0">
-            <HistoryTable :entries="filteredHistory" :link="(h) => (h.battleId ? `/pvp/${h.battleId}?check=1` : h.nonce ? `/fairness?roll=${h.id}` : undefined)" />
+          <div v-else ref="historyBox" class="kd-history overflow-y-auto p-3 lg:pt-0" :class="historyBusy && !historyNext && 'is-busy'">
+            <HistoryTable :entries="history" :link="(h) => (h.battleId ? `/pvp/${h.battleId}?check=1` : h.nonce ? `/fairness?roll=${h.id}` : undefined)" />
+            <div ref="historyEnd" class="h-px" aria-hidden="true" />
+            <span v-if="historyNext" class="kd-skeleton mt-2 block h-[62px] rounded-xl" aria-hidden="true" />
           </div>
         </div>
       </section>
@@ -424,6 +435,11 @@ async function saveTrade() {
 /* the history scrolls inside its panel, so the two panels stay about the same height */
 .kd-history {
   max-height: 520px;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+/* new filters: the old lines stay in place, dimmed, until the answer comes */
+.kd-history.is-busy {
+  opacity: 0.6;
 }
 .kd-bar-enter-active {
   transition:

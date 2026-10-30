@@ -9,8 +9,7 @@ const entries = ref<HistoryEntry[]>([])
 async function load() {
   if (!session.user) return (entries.value = [])
   try {
-    const res = await $fetch<HistoryResponse>('/api/history')
-    entries.value = res.entries.filter((e) => e.game === 'upgrade').slice(0, 8)
+    entries.value = (await $fetch<HistoryResponse>('/api/history', { query: { game: 'upgrade', limit: 8 } })).entries
   } catch {
     entries.value = []
   }
