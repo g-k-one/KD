@@ -51,6 +51,7 @@ const SOUNDS: [string, () => void][] = [
   ['lose', sfx.lose],
   ['launch (tick + coin)', sfx.riser],
   ['tense', sfx.tense],
+  ['VS lands', sfx.thud],
   ['claim', sfx.claim],
   ['win', sfx.win],
   ['level up', sfx.levelUp],

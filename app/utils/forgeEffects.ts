@@ -421,7 +421,7 @@ export function defineKdEffects(engine: Engine) {
         for (let i = 0; i < 9; i++) {
           const a = first + (i / 9) * 6.28 + R(-0.2, 0.2)
           const v = R(150, 320)
-          h.spawn(sp, { x: 180 + Math.cos(a) * 34, y: 180 + Math.sin(a) * 20, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.6, drag: 3.2, size: R(135, 185), sc: [[0, 0.5], [0.3, 0.9], [1, 1.4]], life: R(0.9, 1.3), rot: R(0, 6.28), vr: R(-0.35, 0.35), cells: [pick(clubs)], add: 0, alpha: 0.46, tint: SMOKE, fadeIn: 0.05, fadeOut: 0.8 })
+          h.spawn(sp, { x: 180 + Math.cos(a) * 34, y: 180 + Math.sin(a) * 20, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.6, drag: 3.2, size: R(115, 155), sc: [[0, 0.5], [0.3, 0.9], [1, 1.4]], life: R(0.9, 1.3), rot: R(0, 6.28), vr: R(-0.35, 0.35), cells: [pick(clubs)], add: 0, alpha: 0.46, tint: SMOKE, fadeIn: 0.05, fadeOut: 0.8 })
         }
       }
       h.step(sp, dt)
