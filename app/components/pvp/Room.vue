@@ -186,6 +186,9 @@ const countEl = useTemplateRef<HTMLElement>('countEl')
 const arena = useTemplateRef<HTMLElement>('arena')
 // the page's shared layer: the smoke must not stop at the arena's frame
 const fx = useForge()
+// the drops' rank effects behind the reels: one canvas, one WebGL context and one atlas upload however many seats there are
+const arenaFx = useTemplateRef<HTMLElement>('arenaFx')
+provide(FORGE_KEY, useForge(arenaFx))
 let countLabel: ExtrudeHandle | null = null
 let countReady: Promise<void> | null = null
 let countFresh = true
@@ -490,6 +493,7 @@ const roundLine = computed(() => {
     </section>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
     <section ref="arena" class="kd-arena relative overflow-hidden rounded-5xl" :class="(done || b.status === 'waiting' || countdown > 0) && 'is-rest'">
+      <div ref="arenaFx" class="pointer-events-none absolute inset-0" />
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
         <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="[done && winners.includes(s.slot) && 'is-winner', leaders.includes(s.slot) && 'is-lead', isTeam && s.slot === 2 && 'is-team-split']">
           <!-- a free seat while it waits: an empty lane, no second Join: the action is on the seat's plate under it -->

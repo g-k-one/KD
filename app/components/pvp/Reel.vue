@@ -48,7 +48,9 @@ const landed = ref(false)
 // The drop gets the same rarity grade as a case drop: the rank reveal on its rarity shape (more layers the rarer),
 // on a layer under the strip so it bursts from behind the skin
 const fxHost = useTemplateRef<HTMLElement>('fxHost')
-const fxBack = useForge(fxHost)
+// in the room's arena every reel draws on the arena's one canvas; a reel on its own has its own
+const arenaFx = inject(FORGE_KEY, null)
+const fxBack = arenaFx ?? useForge(fxHost)
 let beam: Awaited<ReturnType<typeof rarityRank>> = null
 function stopBeam() {
   beam?.stop()
@@ -134,7 +136,7 @@ watch([height, cell], () => {
       <img v-if="caseRef" :src="caseRef.image" alt="" class="kd-preel-wait object-contain" :class="compact ? 'size-16 max-w-[62%]' : 'size-28'" />
     </div>
     <template v-else>
-      <div ref="fxHost" class="pointer-events-none absolute inset-0" />
+      <div v-if="!arenaFx" ref="fxHost" class="pointer-events-none absolute inset-0" />
       <div ref="track" class="absolute inset-x-0 top-0" :class="!landed && 'will-change-transform'">
         <div
           v-for="(it, i) in strip"

@@ -230,7 +230,7 @@ const canReset = computed(() => !!(props.input || props.target))
         @keydown="onKey"
       >
         <div class="kd-track absolute inset-x-0 top-1/2 h-3 -translate-y-1/2 overflow-hidden rounded-full">
-          <span class="kd-win-zone absolute inset-y-0 left-0" :style="{ width: `${pos(shown)}%` }" />
+          <span class="kd-win-zone absolute inset-0 origin-left" :style="{ transform: `scaleX(${pos(shown) / 100})` }" />
         </div>
         <!-- Outside the reachable span the bar is shaded: no skin sits there -->
         <template v-if="reachable">
@@ -240,7 +240,7 @@ const canReset = computed(() => !!(props.input || props.target))
           </span>
           <span class="kd-shade absolute top-1/2 right-0 rounded-r-full" :style="{ width: `${100 - span.to}%` }" />
         </template>
-        <span v-if="reachable" class="kd-thumb absolute top-1/2" :style="{ left: `${pos(shown || 50)}%` }" />
+        <span v-if="reachable" class="kd-thumb absolute top-1/2 left-0" :style="{ '--at': pos(shown || 50) }" />
         <span v-if="hint" class="type-12 pointer-events-none absolute inset-0 grid place-items-center text-neutral-13">{{ $t(hint) }}</span>
       </div>
       <div class="relative h-7 lg:h-6">
@@ -281,9 +281,9 @@ const canReset = computed(() => !!(props.input || props.target))
         @pointercancel="onBalUp"
       >
         <div class="kd-bal-track absolute inset-x-0 top-1/2 h-3 -translate-y-1/2 overflow-hidden rounded-full">
-          <span class="kd-bal-fill absolute inset-y-0 left-0" :style="{ width: `${balShown}%` }" />
+          <span class="kd-bal-fill absolute inset-0 origin-left" :style="{ transform: `scaleX(${balShown / 100})` }" />
         </div>
-        <span v-if="!balOff" class="kd-thumb absolute top-1/2" :style="{ left: `${balShown}%` }" />
+        <span v-if="!balOff" class="kd-thumb absolute top-1/2 left-0" :style="{ '--at': balShown }" />
       </div>
       <div class="relative h-7 lg:h-6">
         <button
@@ -343,7 +343,7 @@ const canReset = computed(() => !!(props.input || props.target))
 .kd-bal-fill {
   background: linear-gradient(90deg, var(--color-gold-dark), var(--color-coin));
   box-shadow: 0 0 12px rgb(var(--coin-rgb) / 0.45);
-  transition: width var(--dur-slow) var(--ease-out);
+  transition: transform var(--dur-slow) var(--ease-out);
 }
 .kd-bar.is-dragging .kd-bal-fill {
   transition: none;
@@ -372,7 +372,7 @@ const canReset = computed(() => !!(props.input || props.target))
 .kd-win-zone {
   background: linear-gradient(90deg, #0b6b3f, var(--color-success));
   box-shadow: 0 0 14px rgb(var(--success-rgb) / 0.6);
-  transition: width var(--dur-slow) var(--ease-out);
+  transition: transform var(--dur-slow) var(--ease-out);
 }
 .kd-bar.is-dragging .kd-win-zone,
 .kd-bar.is-dragging .kd-thumb {
@@ -385,18 +385,22 @@ const canReset = computed(() => !!(props.input || props.target))
   pointer-events: none;
   transition: width var(--dur-slow) var(--ease-out);
 }
+/* --at, 0 to 100: the thumb's place along the bar, in the bar's own width (a percentage in translate would be the thumb's) */
+.kd-bar {
+  container-type: inline-size;
+}
 .kd-thumb {
   width: 22px;
   height: 28px;
   margin-left: -11px;
-  translate: 0 -50%;
+  translate: calc(var(--at) * 1cqw) -50%;
   border-radius: 8px;
   background: linear-gradient(180deg, #fff, #d9dce2);
   box-shadow:
     0 2px 8px rgb(0 0 0 / 0.5),
     inset 0 -2px 0 rgb(0 0 0 / 0.12);
   transition:
-    left var(--dur-slow) var(--ease-spring),
+    translate var(--dur-slow) var(--ease-spring),
     scale var(--dur-fast) var(--ease-out);
   cursor: grab;
 }

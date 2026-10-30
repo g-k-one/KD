@@ -16,9 +16,24 @@ const sections = computed(() =>
 )
 
 // One Forge canvas for the page body: the big wins' flames, badge flames and the promo coins draw here, under the
-// sticky header
+// sticky header. It covers two screens of the page, not the whole of it (on a phone that was 6500 px tall, past what old
+// GPUs can draw to): the canvas scrolls with the page, so a flame never chases its card, and hops half a screen at a time
+// in the scroll event, before Forge's frame measures it again
+const fxRows = useTemplateRef<HTMLElement>('fxRows')
 const fxHost = useTemplateRef<HTMLElement>('fxHost')
 provideForge(fxHost)
+function placeFx() {
+  const rows = fxRows.value
+  const host = fxHost.value
+  if (!rows || !host) return
+  const h = Math.min(innerHeight * 2, rows.offsetHeight)
+  const step = innerHeight / 2
+  const top = Math.floor(-rows.getBoundingClientRect().top / step) * step - step
+  host.style.height = `${h}px`
+  host.style.top = `${Math.max(0, Math.min(rows.offsetHeight - h, top))}px`
+}
+useEventListener('scroll', placeFx, { passive: true })
+useResizeObserver(fxRows, placeFx)
 
 // Desktop: the filter bar sticks under the header once it would scroll away (a sentinel above it tells when)
 const filtersSentinel = useTemplateRef<HTMLElement>('filtersSentinel')
@@ -96,7 +111,8 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
       <!-- One Forge canvas for the big wins and the cases (a phone keeps one WebGL context per page, not one per block).
            Cases right after the big wins; the cases to continue and the live battles break up the grid further down.
            Phones: the canvas runs edge to edge like the running lines in it, so their fire isn't cut at the side gutters -->
-      <div ref="fxHost" class="relative flex flex-col gap-6 max-lg:-mx-4 max-lg:px-4 lg:gap-10">
+      <div ref="fxRows" class="relative flex flex-col gap-6 max-lg:-mx-4 max-lg:px-4 lg:gap-10">
+      <div ref="fxHost" class="pointer-events-none absolute inset-x-0" aria-hidden="true" />
       <HomeBigWins />
 
       <div ref="casesEl" class="flex scroll-mt-40 flex-col gap-4 lg:gap-10">

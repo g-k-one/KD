@@ -80,7 +80,10 @@ function ensureForge(base: string) {
       defineKdEffects(window.Forge as never)
       return true
     })
-    .catch(() => false)
+    .catch((e) => {
+      console.error('Forge failed to load, effects are off', e)
+      return false
+    })
   return loading
 }
 

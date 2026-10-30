@@ -35,16 +35,14 @@ useResizeObserver(root, measure)
       <span v-if="t.count != null" class="type-12 rounded-md bg-neutral-6 px-1.5 py-0.5 text-neutral-13">{{ t.count }}</span>
     </button>
     <span
-      class="kd-tab-bar bg-brand-gradient pointer-events-none absolute bottom-0 left-0 h-0.5 rounded-full"
-      :style="{ transform: `translateX(${bar.x}px)`, width: `${bar.w}px` }"
+      class="kd-tab-bar bg-brand-gradient pointer-events-none absolute bottom-0 left-0 h-0.5 w-px origin-left"
+      :style="{ transform: `translateX(${bar.x}px) scaleX(${bar.w})` }"
     />
   </div>
 </template>
 
 <style scoped>
 .kd-tab-bar {
-  transition:
-    transform var(--dur-slow) var(--ease-out),
-    width var(--dur-slow) var(--ease-out);
+  transition: transform var(--dur-slow) var(--ease-out);
 }
 </style>

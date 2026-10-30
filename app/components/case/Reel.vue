@@ -787,6 +787,12 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
   background: rgb(var(--dark-rgb) / 0.7);
   backdrop-filter: blur(6px);
 }
+@media (hover: none) {
+  .kd-try-stage {
+    background: rgb(var(--dark-rgb) / 0.82);
+    backdrop-filter: none;
+  }
+}
 /* Phone grid: the outer frame steps aside and every mini reel gets its own */
 .kd-reel.is-grid {
   border: 0;

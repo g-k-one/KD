@@ -385,7 +385,7 @@ Line palette: polished gold, crimson velvet and deep amber, rich sparkle on meta
 
 ### Как генерировать
 
-1. **Образцы:** первым всегда `public/img/_new/ref-chicken.png` (курица в панике); он задаёт только характер курицы, не стиль. Вторым — одобренная проба своей линейки: `vac`, `one-six`, `major`. Она держит стиль внутри линейки.
+1. **Образцы:** первым всегда `docs/art/ref-chicken.png` (курица в панике); он задаёт только характер курицы, не стиль. Вторым — одобренная проба своей линейки: `vac`, `one-six`, `major`. Она держит стиль внутри линейки.
 2. **Промпт:** общий блок → блок курицы (один из двух) → стиль линейки → сцена кейса → палитра линейки.
 3. **Файл и конвертация** — как в разделе 8: `public/img/_new/cases/<slug>.png` (1024×1024, прозрачный) → `python scripts/case-art.py` → `public/img/cases/<slug>.webp`.
 4. **Через fal** (Claude делает сам): `openai/gpt-image-2.5/sunburst/edit`, `quality: medium`, `background: transparent`, 1024×1024, оба образца в `image_urls`.

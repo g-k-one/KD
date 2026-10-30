@@ -293,10 +293,16 @@ function onClick(e: MouseEvent) {
   transition: transform var(--dur-slow) var(--ease-out);
 }
 .kd-cell-img {
+  /* desktop only below: on a phone's 56 px case the shadow is barely there and every row would pay for it */
   filter: drop-shadow(0 8px 10px rgb(0 0 0 / 0.45));
   transition:
     transform var(--dur-slow) var(--ease-spring),
     opacity var(--dur-base) var(--ease-out);
+}
+@media (max-width: 63.98rem) {
+  .kd-cell-img {
+    filter: none;
+  }
 }
 .kd-cell.is-done .kd-cell-img {
   opacity: 0.3;

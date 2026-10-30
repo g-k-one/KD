@@ -201,6 +201,12 @@ function onArtLeave() {
 .kd-try:hover {
   color: var(--color-neutral-15);
 }
+@media (hover: none) {
+  .kd-try {
+    background: rgb(var(--dark-rgb) / 0.82);
+    backdrop-filter: none;
+  }
+}
 /* Badges, three different voices: HOT is fire (orange → red, burning on Forge), a big win today is
    gold like the coin, new is a cool white sheen */
 .kd-badge {

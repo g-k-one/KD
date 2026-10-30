@@ -44,13 +44,20 @@ watch(balance, (now, before) => {
 </template>
 
 <style scoped>
-.kd-balance.is-glowing {
+.kd-balance.is-glowing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgb(var(--success-rgb) / 0.12);
+  box-shadow: 0 0 18px 4px rgb(var(--success-rgb) / 0.55);
+  opacity: 0;
+  pointer-events: none;
   animation: kd-balance-glow 1.2s var(--ease-out);
 }
 @keyframes kd-balance-glow {
   25% {
-    box-shadow: 0 0 18px 4px rgb(var(--success-rgb) / 0.55);
-    background: rgb(var(--success-rgb) / 0.12);
+    opacity: 1;
   }
 }
 .kd-credit {

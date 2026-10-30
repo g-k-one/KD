@@ -29,17 +29,16 @@ defineProps<{ label?: string; disabled?: boolean }>()
 }
 /* Knob travels with a spring and stretches while pressed, like a physical switch. */
 .kd-toggle-knob {
+  transform-origin: left;
   transition:
     transform var(--dur-slow) var(--ease-spring),
-    width var(--dur-base) var(--ease-out);
+    scale var(--dur-base) var(--ease-out);
 }
 .kd-toggle[data-on] .kd-toggle-knob {
   transform: translateX(16px);
+  transform-origin: right;
 }
 .kd-toggle:active .kd-toggle-knob {
-  width: 20px;
-}
-.kd-toggle[data-on]:active .kd-toggle-knob {
-  transform: translateX(12px);
+  scale: 1.25 1;
 }
 </style>
