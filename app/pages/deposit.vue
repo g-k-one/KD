@@ -38,6 +38,8 @@ const agree = ref(false)
 const paying = ref(false)
 
 const method = computed(() => methods.value.find((m) => m.id === methodId.value))
+// where the thumb stands in the three-column grid
+const methodIndex = computed(() => methods.value.findIndex((m) => m.id === methodId.value))
 
 const quoteKey = computed(() => `${amount.value}-${currency.value}-${methodId.value}-${promo.value?.code ?? ''}`)
 const quoteReq = useFetch<DepositQuote>('/api/deposit/quote', {
@@ -114,24 +116,32 @@ async function pay() {
               <template #leading><img :src="countryFlag" alt="" class="h-3.5 w-5 shrink-0" /></template>
             </UiSelect>
           </div>
-          <!-- phones: three small cards a row, so every method shows without a long scroll -->
-          <div class="grid grid-cols-3 gap-2 p-3 lg:gap-3 lg:p-4" role="radiogroup" :aria-label="$t('deposit.paymentMethod')">
-            <span v-for="n in methodsData ? 0 : 6" :key="`s${n}`" class="kd-skeleton h-[88px] rounded-xl sm:h-[130px] lg:h-34 lg:rounded-lg" aria-hidden="true" />
-            <button
-              v-for="m in methods"
-              :key="m.id"
-              type="button"
-              role="radio"
-              :aria-checked="methodId === m.id"
-              class="kd-method kd-press group relative flex flex-col items-center justify-center gap-2 rounded-xl border px-2 py-3 sm:gap-4 sm:px-3 sm:py-5 lg:h-34 lg:rounded-lg"
-              @click="methodId = m.id"
+          <!-- the case amount's control (×1…×5) in two rows: one track, a thumb that slides to the chosen method.
+               Phones: three small cells a row, so every method shows without a long scroll -->
+          <div class="p-3">
+            <div
+              class="kd-pay relative grid grid-cols-3 gap-1 rounded-2xl p-1"
+              role="radiogroup"
+              :aria-label="$t('deposit.paymentMethod')"
+              :style="{ '--col': methodIndex % 3, '--row': Math.floor(methodIndex / 3), '--rows': Math.ceil(methods.length / 3) || 2 }"
             >
-              <span class="grid h-10 w-full max-w-32 place-items-center rounded-sm bg-white-8 transition-transform duration-300 group-hover:-translate-y-0.5 sm:h-14 lg:h-16">
-                <img :src="m.logo" :alt="m.name" class="h-6 w-10 sm:h-8 sm:w-12" />
-              </span>
-              <span class="type-12-regular max-sm:text-[11px] max-sm:leading-4" :class="methodId === m.id ? 'text-neutral-15' : 'text-neutral-12'">{{ limits(m) }}</span>
-              <span v-if="m.bonusBp" class="type-12 absolute top-[7px] right-[7px] rounded-sm bg-neutral-15 px-2 py-0.5 text-neutral-1 max-sm:top-1 max-sm:right-1 max-sm:px-1 max-sm:py-0 max-sm:text-[10px]">+{{ m.bonusBp / 100 }}%</span>
-            </button>
+              <span v-for="n in methodsData ? 0 : 6" :key="`s${n}`" class="kd-skeleton h-22 rounded-lg lg:h-28" aria-hidden="true" />
+              <span v-if="methodIndex >= 0" class="kd-pay-thumb absolute top-1 left-1 rounded-lg" />
+              <button
+                v-for="m in methods"
+                :key="m.id"
+                type="button"
+                role="radio"
+                :aria-checked="methodId === m.id"
+                class="kd-press relative z-[1] flex h-22 flex-col items-center justify-center gap-2 rounded-lg px-2 transition-colors lg:h-28 lg:gap-3"
+                :class="methodId === m.id ? 'text-neutral-15' : 'text-neutral-11 hover:text-neutral-15'"
+                @click="methodId = m.id"
+              >
+                <img :src="m.logo" :alt="m.name" class="h-6 w-10 lg:h-8 lg:w-12" />
+                <span class="type-12-regular max-sm:text-[11px] max-sm:leading-4">{{ limits(m) }}</span>
+                <span v-if="m.bonusBp" class="type-12 absolute top-1 right-1 rounded-sm bg-neutral-15 px-1.5 py-0.5 text-neutral-1 max-sm:py-0 max-sm:text-[10px]">+{{ m.bonusBp / 100 }}%</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -250,22 +260,16 @@ async function pay() {
   font-size: 12px;
   text-transform: uppercase;
 }
-/* Figma "PaymentMethod": Default neutral-2 / neutral-4, Hover neutral-3 / neutral-6, Selected brand-24 + brand border */
-.kd-method {
-  background: var(--color-neutral-2);
-  border-color: var(--color-neutral-4);
-  transition:
-    background-color var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out);
+/* UiSegmented's track and thumb, in a grid: the thumb is one cell and slides along both axes */
+.kd-pay {
+  background: var(--color-neutral-3);
 }
-@media (hover: hover) {
-  .kd-method:hover {
-    background: var(--color-neutral-3);
-    border-color: var(--color-neutral-6);
-  }
-}
-.kd-method[aria-checked='true'] {
-  background: var(--color-brand-24);
-  border-color: var(--color-brand-base);
+.kd-pay-thumb {
+  width: calc((100% - 8px - 2 * 4px) / 3);
+  height: calc((100% - 8px - (var(--rows) - 1) * 4px) / var(--rows));
+  background: var(--color-neutral-6);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  translate: calc(var(--col) * (100% + 4px)) calc(var(--row) * (100% + 4px));
+  transition: translate var(--dur-base) var(--ease-spring);
 }
 </style>
