@@ -90,7 +90,7 @@ async function start(b: StoredBattle) {
   b.winners = out.winners
   b.winnerSlot = b.winners[0]!
   b.status = 'live'
-  b.startedAt = new Date(Date.now() + 3600).toISOString()
+  b.startedAt = new Date(Date.now() + 3000).toISOString()
 
   // The winner takes every drop; a winning team deals them out between its two players, priciest first, in turn.
   // The mock pays the signed-in user at once; the UI reveals it at the end.

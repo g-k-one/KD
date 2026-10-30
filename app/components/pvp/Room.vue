@@ -15,7 +15,6 @@ const ui = useUiStore()
 const toast = useToast()
 const sfx = useSfx()
 const ex = useExtrude()
-const fx = useForge()
 
 const { data, refresh, error } = await useFetch<BattleResponse>(() => `/api/battles/${id.value}`, { key: `battle-${id.value}` })
 if (error.value) {
@@ -30,7 +29,7 @@ if (error.value) {
 const replayAt = ref<number | null>(route.query.replay ? Date.now() : null)
 const b = computed(() => {
   const x = data.value!.battle
-  return replayAt.value && x.status === 'finished' ? { ...x, status: 'live' as const, startedAt: new Date(replayAt.value + 3500).toISOString() } : x
+  return replayAt.value && x.status === 'finished' ? { ...x, status: 'live' as const, startedAt: new Date(replayAt.value + 3000).toISOString() } : x
 })
 const router = useRouter()
 const replayLink = () => new URL(router.resolve({ path: `/pvp/${id.value}`, query: { replay: '1' } }).href, location.href).href
@@ -129,9 +128,10 @@ watch(done, (d) => {
 const countdown = computed(() =>
   b.value.status !== 'waiting' && b.value.startedAt && clock.value.round < 0 ? Math.max(0, Math.ceil((Date.parse(b.value.startedAt) - now.value) / 1000)) : 0,
 )
-// The numbers are 3D metal (Extrude): the first pops in, each next flips out of the one before it, and the last blasts
-// apart in a real explosion (Forge's boom) while the first round spins up behind it. Its canvas spans the arena's height
-// with room to spare, so nothing is cut. No WebGL or reduced motion: the plain number, no blast
+// The numbers are 3D metal (Extrude): the 3 spins in, each next flips out of the one before it while the whole number
+// swings to the other side, and the 1 drifts up into a soft wave of warm light as the first round spins up. The label is
+// mounted ahead, while the seats fill, so the first number does not pay for the shader; its small canvas and the low
+// quality keep the ray marching light. No WebGL or reduced motion: the plain number
 const COUNT_LOOK = {
   font: '800 {s}px Rubik, ui-sans-serif, system-ui, sans-serif',
   charset: '0123456789',
@@ -139,54 +139,69 @@ const COUNT_LOOK = {
   side: ['#d9480f', '#2a0e00'],
   metal: 0.35,
   gloss: 0.7,
-  bevel: 3.5,
-  depth: 30,
+  bevel: 2.5,
+  depth: 18,
   strokes: [{ color: '#2a1400', width: 1.4, inset: 0 }],
   yaw: -12,
   pitch: 10,
   persp: 700,
   drag: false,
 }
-const arenaEl = useTemplateRef<HTMLElement>('arenaEl')
 const countEl = useTemplateRef<HTMLElement>('countEl')
+// the i beside the title: what this mode is
+const modeInfo = ref(false)
+const modeInfoEl = useTemplateRef<HTMLElement>('modeInfoEl')
+onClickOutside(modeInfoEl, () => (modeInfo.value = false))
 let countLabel: ExtrudeHandle | null = null
+let countReady: Promise<void> | null = null
+let countFresh = true
+let countSide = 1
+const COUNT_YAW = 12
 const count3d = ref(false)
-const countBlast = ref(false)
+const countFade = ref(false)
 function dropCountLabel() {
   countLabel?.destroy()
   countLabel = null
+  countReady = null
+  countFresh = true
   count3d.value = false
-  countBlast.value = false
+  countFade.value = false
 }
-async function countBeat(n: number) {
-  await nextTick()
-  if (!countLabel && countEl.value) {
-    countLabel = await ex.mount(countEl.value, { ...COUNT_LOOK, size: isMobile.value ? 112 : 176, text: String(n) })
+function prepareCount() {
+  countReady ??= (async () => {
+    if (!countEl.value) return
+    countLabel = await ex.mount(countEl.value, { ...COUNT_LOOK, size: isMobile.value ? 104 : 150, quality: isMobile.value ? 'low' : 'auto', text: '3' })
     await countLabel?.ready
     count3d.value = !!countLabel
-    countLabel?.play('pop')
-  } else countLabel?.swap(String(n), { style: 'flip' })
+  })()
+  return countReady
+}
+watch(countEl, (el) => el && prepareCount())
+async function countBeat(n: number) {
+  await prepareCount()
+  if (!countLabel) return
+  countSide = -countSide
+  countLabel.set({ yaw: COUNT_YAW * countSide })
+  if (countFresh) {
+    countFresh = false
+    if (countLabel.text !== String(n)) countLabel.set({ text: String(n) })
+    countLabel.play('spin')
+  } else {
+    countLabel.swap(String(n), { style: 'flip' })
+    countLabel.rotate(320 * countSide, 0, true)
+  }
 }
 async function countEnd() {
   if (!countLabel) return
-  countBlast.value = true
-  fx.at('boom', arenaEl.value, isMobile.value ? 1.1 : 0.5)
-  // the flash comes up first: the number goes to pieces inside it
-  await new Promise((r) => setTimeout(r, 120))
-  await countLabel?.play('blast')
-  dropCountLabel()
+  countFade.value = true
+  countLabel.play('fade', { time: 0.4 })
+  setTimeout(dropCountLabel, 700)
 }
 watch(countdown, (n, old) => {
   if (n > 0 && n !== old) {
     sfx.count(n === 1)
     countBeat(n)
   } else if (n === 0 && old > 0) countEnd()
-})
-// both engines ready before the first number: it is 3D from the start, and the blast does not wait for a download
-onMounted(() => {
-  if (done.value) return
-  ex.preload()
-  fx.preload('aura')
 })
 onBeforeUnmount(dropCountLabel)
 
@@ -345,11 +360,20 @@ const laneCols = computed(() => {
         { label: $t('case.share'), icon: 'share', onClick: shareBattle },
       ]"
     >
-      <!-- the mode and the battle's number, one big line in the mode's colour, as in the lobby -->
-      <h1 class="kd-room-title type-16-caps md:type-20-caps flex items-center gap-2 whitespace-nowrap tabular-nums md:gap-3" :class="`is-${b.mode}`">
-        <span>{{ $t(`pvp.modeName.${b.mode}`) }}</span>
-        <span>#{{ b.id }}</span>
-      </h1>
+      <!-- the mode and the battle's number, one big line in the mode's colour, as in the lobby; the i says what the mode
+           is, as the case page's RTP does -->
+      <span ref="modeInfoEl" class="relative flex items-center gap-1 md:gap-2">
+        <h1 class="kd-room-title type-16-caps md:type-20-caps flex items-center gap-2 whitespace-nowrap tabular-nums md:gap-3" :class="`is-${b.mode}`">
+          <span>{{ $t(`pvp.modeName.${b.mode}`) }}</span>
+          <span>#{{ b.id }}</span>
+        </h1>
+        <UiButton variant="ghost" size="s" icon="info" icon-only :aria-label="$t(`pvp.modeTip.${b.mode}`)" :aria-expanded="modeInfo" @click="modeInfo = !modeInfo" />
+        <Transition name="kd-mode-tip">
+          <p v-if="modeInfo" class="type-12-regular absolute top-full left-1/2 z-20 mt-2 w-64 -translate-x-1/2 rounded-2xl border border-neutral-5 bg-neutral-3 p-3 text-center text-neutral-13 shadow-elevation-2">
+            {{ $t(`pvp.modeTip.${b.mode}`) }}
+          </p>
+        </Transition>
+      </span>
     </UiPageBar>
 
 
@@ -374,10 +398,9 @@ const laneCols = computed(() => {
       </div>
     </section>
     <!-- The arena: every seat's reel side by side in one frame, the markers on its edges -->
-    <section ref="arenaEl" class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
+    <section class="kd-arena relative overflow-hidden rounded-5xl" :class="done && 'is-done'">
       <div class="grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }">
         <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="[done && winners.includes(s.slot) && 'is-winner', leaders.includes(s.slot) && 'is-lead', isTeam && s.slot === 2 && 'is-team-split']">
-          <span :key="revealed" class="kd-seat-flash pointer-events-none absolute inset-0" aria-hidden="true" />
           <!-- a free seat while it waits: an empty lane, no second Join: the action is on the seat's plate under it -->
           <div v-if="!s.player && b.status === 'waiting'" class="grid place-items-center px-2 text-center text-neutral-11" :class="isMobile ? 'h-50' : 'h-72'">
             <span class="kd-free-seat max-w-24 text-balance" :class="isMobile ? 'type-10-caps' : 'type-12-caps'">{{ $t('pvp.waitingForPlayer') }}</span>
@@ -400,21 +423,20 @@ const laneCols = computed(() => {
       <!-- VS between the seats (between the two teams in Team 2v2); it beats on every new round -->
       <div class="pointer-events-none absolute inset-0 z-[3] grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }" aria-hidden="true">
         <span v-for="s in b.slots" :key="s.slot" class="relative">
-          <span v-if="countdown <= 0 && !countBlast && s.slot > 0 && (!isTeam || s.slot === 2)" :key="`${clock.round}`" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="isTeam && 'is-team'">{{ $t('pvp.vs') }}</span>
+          <span v-if="countdown <= 0 && s.slot > 0 && (!isTeam || s.slot === 2)" :key="`${clock.round}`" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="isTeam && 'is-team'">{{ $t('pvp.vs') }}</span>
         </span>
       </div>
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 left-0 -rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 right-0 rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
 
-      <!-- The countdown: the arena dims and each number lands big in its middle, one beat a second -->
-      <Transition name="kd-countdown">
-        <div v-if="countdown > 0 || countBlast" class="kd-countdown pointer-events-none absolute inset-0 z-10 grid place-items-center" :class="countBlast && 'is-blast'">
-          <div class="relative grid h-full w-full max-w-[560px] place-items-center">
-            <div ref="countEl" class="absolute inset-0" />
-            <span v-if="!count3d" :key="countdown" class="kd-count text-[72px] leading-none font-extrabold tabular-nums lg:text-[112px]">{{ countdown }}</span>
-          </div>
+      <!-- The countdown: the arena dims and the number stands in its middle. The stage stays in the page while seats fill,
+           unseen, so its 3D label is ready before the first second -->
+      <div v-if="b.status === 'waiting' || countdown > 0 || countFade" class="kd-countdown pointer-events-none absolute inset-0 z-10 grid place-items-center" :class="[countdown > 0 && 'is-on', countFade && 'is-fade']">
+        <div class="kd-count-stage relative grid size-44 place-items-center lg:size-60">
+          <div ref="countEl" class="absolute inset-0" />
+          <span v-if="!count3d && countdown > 0" :key="countdown" class="kd-count text-[56px] leading-none font-extrabold tabular-nums lg:text-[80px]">{{ countdown }}</span>
         </div>
-      </Transition>
+      </div>
 
       <!-- The result, inside the arena: who took the pot, how much, and the same battle again -->
       <Transition name="kd-result">
@@ -514,6 +536,14 @@ const laneCols = computed(() => {
 }
 .kd-room-title.is-team {
   color: var(--color-item-milspec);
+}
+.kd-mode-tip-enter-active,
+.kd-mode-tip-leave-active {
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.kd-mode-tip-enter-from,
+.kd-mode-tip-leave-to {
+  opacity: 0;
 }
 /* a column to each lane; the gap between two seats is split evenly around the arena's line */
 .kd-lanes {
@@ -654,19 +684,41 @@ const laneCols = computed(() => {
   position: absolute;
   inset: 0;
   background: rgb(12 13 16 / 0.72);
+  opacity: 0;
   transition: opacity var(--dur-base) var(--ease-out);
 }
-/* the arena comes back the moment the last number blasts: the first round is already spinning under it */
-.kd-countdown.is-blast::before {
+.kd-countdown.is-on::before {
+  opacity: 1;
+}
+.kd-count-stage {
   opacity: 0;
 }
-.kd-countdown-enter-active,
-.kd-countdown-leave-active {
-  transition: opacity var(--dur-base) var(--ease-out);
+.kd-countdown.is-on .kd-count-stage,
+.kd-countdown.is-fade .kd-count-stage {
+  opacity: 1;
 }
-.kd-countdown-enter-from,
-.kd-countdown-leave-to {
-  opacity: 0;
+/* the end: one soft wave of warm light from the middle, the arena back under it */
+.kd-countdown.is-fade::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 640px;
+  height: 640px;
+  margin: -320px;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgb(255 190 110 / 0.4), rgb(255 120 40 / 0.14) 55%, transparent);
+  animation: kd-count-light 700ms var(--ease-out) both;
+}
+@keyframes kd-count-light {
+  from {
+    opacity: 1;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+  }
 }
 /* lands fast and big, holds, gets out of the way of the next one */
 /* phones: two equal chips, the label on the left edge, the money on the right */
@@ -741,21 +793,6 @@ const laneCols = computed(() => {
 /* Team 2v2: the line between the teams is the strong one */
 .kd-arena-seat.is-team-split {
   border-left: 2px solid rgb(255 95 31 / 0.5);
-}
-/* the seat ahead gets a warm floor while it leads */
-/* every landing flashes the seats once (keyed on the round) */
-.kd-seat-flash {
-  background: radial-gradient(50% 40% at 50% 50%, rgb(255 255 255 / 0.12), transparent);
-  opacity: 0;
-  animation: kd-seat-flash 700ms var(--ease-out);
-}
-@keyframes kd-seat-flash {
-  20% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
 }
 .kd-vs {
   translate: -50% -50%;
