@@ -179,7 +179,7 @@ function contentsFor(def: CaseDef): string[] {
 }
 
 
-// CS cases in five lines, each line in its own look (docs/ART_PROMPTS.md, sections 9 to 11). The square picture, plus a
+// CS cases in six lines, each line in its own look (docs/ART_PROMPTS.md, sections 9 to 12). The square picture, plus a
 // wide or tall one where the home layout gives the case a bento cell, or a 2:3 scene for a full-art card (FACEIT)
 const CS_ART = { wide: null, tall: null, full: null }
 const csCase = (n: number, slug: string, name: string, price: number, risk: CaseSummary['risk'], tag?: CaseSummary['tag'], shaped?: 'wide' | 'tall' | 'full'): CaseDef => ({
@@ -225,6 +225,13 @@ const CS_DEFS: CaseDef[] = [
   csCase(31, 'anti-cheat', 'Anti-Cheat', 690, 'medium', 'hot', 'full'),
   csCase(32, 'elo-climb', 'ELO Climb', 1290, 'high', undefined, 'full'),
   csCase(33, 'faceit-level-10', 'FACEIT Lvl 10', 2490, 'extreme', 'new', 'full'),
+  // Halloween: glossy 3D heroes that fill the whole square, no chests (section 12)
+  csCase(34, 'trick-or-frag', 'Trick or Frag', 190, 'low', 'new'),
+  csCase(35, 'pumpkin-head', 'Pumpkin Head', 490, 'medium'),
+  csCase(36, 'dead-chat', 'Dead Chat', 890, 'medium', 'hot'),
+  csCase(37, 'baba-jaga', 'Baba Jaga', 1490, 'high'),
+  csCase(38, 'voodoo-bot', 'Voodoo Bot', 2490, 'high'),
+  csCase(39, 'strzyga', 'Strzyga', 4990, 'extreme', 'new'),
 ]
 
 /**
@@ -424,11 +431,13 @@ const toSummary = ({ items: _i, odds: _o, oddsVersion: _v, kurwadrop: _k, ...s }
 
 /** The row that fills itself: five cases a week, none of them from the first row */
 export const AUTO_ROW = 'weekly'
-// One row per CS line, FACEIT and Pro scene on top, then the weekly picks and Teams (GK's order), each row closing on the 5-column
-// grid: CS memes is eight cases with Negev wide and Zeus tall (10 cells, two rows), Teams is ten standard cards (two
-// rows), the other three are five standard cards (one row)
+// One row per CS line: the seasonal Halloween row, FACEIT and Pro scene on top, then the weekly picks and Teams (GK's order),
+// each row closing on the 5-column grid: Halloween is six cases, its last one left to the catalog on the 5-column grid
+// (app/pages/index.vue), CS memes is eight cases with Negev wide and Zeus tall (10 cells, two rows), Teams is ten standard
+// cards (two rows), the other three are five standard cards (one row)
 const DEFAULT_HOME_LAYOUT: HomeLayout = {
   sections: [
+    { id: 'halloween', title: 'Halloween', cases: ['trick-or-frag', 'pumpkin-head', 'dead-chat', 'baba-jaga', 'strzyga', 'voodoo-bot'] },
     { id: 'faceit', title: 'FACEIT', cases: ['faceit-level-1', 'match-found', 'anti-cheat', 'elo-climb', 'faceit-level-10'] },
     { id: 'pro-scene', title: 'Pro scene', cases: ['ace', 'clutch', 'smurf', 'tryhard', 'major'] },
     { id: AUTO_ROW, title: 'Weekly picks', theme: 'coop' },

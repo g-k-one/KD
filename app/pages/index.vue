@@ -65,6 +65,8 @@ const SHAPE_CELL = { wide: 'lg:order-first lg:[grid-column:span_2/-2]', tall: 'l
 // Phones: every row is the two-column grid, no sideways swiping. A short row (one desktop row or less) with an odd
 // count drops its last card there, so no case stands alone on a line; the big catalog below still has every case
 const isShortOdd = (s: CaseSection) => s.cases.length <= 5 && s.cases.length % 2 === 1
+// The same on the 5-column grid: six cases would leave the sixth alone on a line
+const isOneOverRow = (s: CaseSection) => s.cases.length === 6
 
 // The home layout editor (prototype, opened from the debug dock): rows and cards are edited where they stand
 const homeLayout = useHomeLayout()
@@ -150,7 +152,7 @@ const scrollToCases = () => casesEl.value?.scrollIntoView({ behavior: 'smooth', 
           <div
             v-show="!collapsed[s.id]"
             class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-flow-dense xl:grid-cols-5"
-            :class="isShortOdd(s) && 'max-sm:[&>*:last-child]:hidden'"
+            :class="[isShortOdd(s) && 'max-sm:[&>*:last-child]:hidden', isOneOverRow(s) && 'xl:[&>*:last-child]:hidden']"
           >
             <template v-if="i < drawn">
               <HomeCaseCard

@@ -2,13 +2,12 @@
 import type { Battle } from '#shared/types/api'
 
 // A battle as a row of the lobby (components/pvp/Table.vue), on skin.club's row in our colours and corners: the rounds
-// (the status over a ring that fills in the mode's colour as the rounds are played, the count in it), the battle
-// scenario as case cells (the case big, its name under it; a run of one case as one cell, ×N, while seats are open), the
-// players (how many over the seats — overlapping, so four and VS fit — the mode under them) and one cell with the cost
-// over the button — Join (a guest signs in first), Watch or View — so the button is not an island in the row. The row is
-// one card in the house's way (24 px, 8 in; phones 20): neutral-2, the cases standing on it without tiles; the rounds,
-// the players and the cost stand on the card itself — a caps label on top on one line for all three,
-// the thing itself in the middle, the second line at the bottom on one line too.
+// (a ring that fills in the mode's colour as the rounds are played, the count in it, red while live), the battle
+// scenario as case cells (the case alone, close together, its name on hover; a run of one case as one cell, ×N, while
+// seats are open), the players (the seats, overlapping so four and VS fit, the mode under them) and the cost over the
+// button — Join (a guest signs in first), Watch or View. The row is one card in the house's way (24 px, 8 in; phones 20):
+// neutral-2, the cases standing on it without tiles. The small print is gone: the button says the status, the seats say
+// how many have joined, the coin says it is the cost.
 // Live, the band shows progress only, as skin.club does: the cases played are dimmed, the one opening now is marked and
 // lifted, and the band slides along with it. No drops here — they are the room's (the lobby gets no results: lighter,
 // and nothing to read ahead of the replay). Phones: skin.club's card — rounds and status, the cost and the mode · the
@@ -39,11 +38,11 @@ const cells = computed<Cell[]>(() => {
   return b.rounds.map((r, i) => ({ key: `r${i}`, image: r.image, name: r.name, qty: 1, state: i < played.value ? 'done' : b.status === 'live' && i === played.value ? 'now' : 'next' }))
 })
 // Live, the band slides so the case opening now sits second; it stops once the last cell is in view. Transform only.
-// The cell width is CSS (132 / 100 px); the slide is worked out once mounted (the server renders at a phone's width).
+// The cell width is CSS (100 / 84 px); the slide is worked out once mounted (the server renders at a phone's width).
 const mounted = useMounted()
 const isLg = useMediaQuery('(min-width: 1024px)')
-const CELL_GAP = 6
-const step = computed(() => (isLg.value ? 132 : 100) + CELL_GAP)
+const CELL_GAP = 4
+const step = computed(() => (isLg.value ? 100 : 84) + CELL_GAP)
 const viewport = useTemplateRef<HTMLElement>('viewport')
 const { width: viewW } = useElementSize(viewport)
 const fits = computed(() => (mounted.value ? Math.max(1, Math.floor((viewW.value + CELL_GAP) / step.value)) : Infinity))
@@ -57,10 +56,9 @@ const ringDash = computed(() => RING_C * (1 - played.value / Math.max(1, props.b
 const winners = computed<number[]>(() => (props.battle.status === 'finished' ? (props.battle.winners ?? (props.battle.winnerSlot != null ? [props.battle.winnerSlot] : [])) : []))
 // the seats in a line, or two with VS between in team mode
 const sides = computed(() => (props.battle.mode === 'team' ? [props.battle.slots.slice(0, 2), props.battle.slots.slice(2)] : [props.battle.slots]))
-const seated = computed(() => props.battle.slots.filter((s) => s.player).length)
 const guestJoin = computed(() => props.battle.status === 'waiting' && !session.user)
 const action = computed(() => (guestJoin.value ? 'pvp.signInToJoin' : { waiting: 'pvp.join', live: 'pvp.watch', finished: 'pvp.view' }[props.battle.status]))
-const status = computed(() => ({ waiting: 'pvp.waiting', live: 'pvp.live', finished: 'pvp.ended' })[props.battle.status])
+const ringTip = computed(() => (props.battle.status === 'live' ? t('pvp.roundShort', { n: round.value, of: props.battle.rounds.length }) : `${props.battle.rounds.length} ${t('pvp.rounds')}`))
 const modeTip = computed(() => t(`pvp.modeTip.${props.battle.mode}`))
 // a guest's Join opens the sign-in instead of a room they cannot sit in
 function onClick(e: MouseEvent) {
@@ -73,25 +71,18 @@ function onClick(e: MouseEvent) {
 <template>
   <NuxtLink
     :to="`/pvp/${battle.id}`"
-    class="kd-brow grid min-w-0 gap-1.5 rounded-4xl p-2 lg:h-[140px] lg:rounded-5xl"
+    class="kd-brow grid min-w-0 gap-1.5 rounded-4xl p-2 lg:h-[124px] lg:rounded-5xl"
     :class="[`is-${battle.mode}`, `is-${battle.status}`]"
     @click.capture="onClick"
   >
-    <!-- rounds: the status, the ring with the count in it, "Rounds" -->
-    <div class="kd-brow-rounds flex items-center gap-2.5 px-2 pt-2 lg:flex-col lg:justify-between lg:gap-0 lg:px-2 lg:py-2">
-      <span class="kd-brow-status type-10-caps flex items-center gap-1 max-lg:hidden">
-        <span v-if="battle.status === 'live'" class="kd-live-dot size-1.5 rounded-full bg-danger" />{{ $t(status) }}
-      </span>
-      <span class="kd-ring relative grid size-11 shrink-0 place-items-center lg:size-16">
+    <!-- rounds: the ring with the count in it (live, the server and the browser read the clock a moment apart) -->
+    <div class="kd-brow-rounds flex items-center px-2 pt-2 lg:justify-center lg:p-0">
+      <span class="kd-ring relative grid size-11 shrink-0 place-items-center lg:size-16" :title="ringTip" data-allow-mismatch>
         <svg viewBox="0 0 60 60" class="absolute inset-0 size-full -rotate-90" aria-hidden="true">
           <circle cx="30" cy="30" :r="RING_R" class="kd-ring-track" fill="none" stroke-width="4" />
           <circle cx="30" cy="30" :r="RING_R" class="kd-ring-fill" fill="none" stroke-width="4" stroke-linecap="round" :stroke-dasharray="RING_C" :stroke-dashoffset="ringDash" />
         </svg>
         <span class="kd-ring-n type-16-caps relative tabular-nums lg:type-20-caps">{{ battle.status === 'live' ? round : battle.rounds.length }}</span>
-      </span>
-      <span class="flex flex-col gap-0.5 lg:items-center">
-        <span class="kd-brow-status type-10-caps flex items-center gap-1 lg:hidden"><span v-if="battle.status === 'live'" class="kd-live-dot size-1.5 rounded-full bg-danger" />{{ $t(status) }}</span>
-        <span class="type-10-caps text-neutral-11">{{ battle.status === 'live' ? $t('pvp.roundShort', { n: round, of: battle.rounds.length }) : $t('pvp.rounds') }}</span>
       </span>
     </div>
 
@@ -103,13 +94,12 @@ function onClick(e: MouseEvent) {
         <div
           v-for="(c, i) in cells"
           :key="c.key"
-          class="kd-cell relative flex h-[112px] w-[100px] shrink-0 flex-col items-center rounded-2xl px-1.5 pt-1.5 lg:h-full lg:w-[132px] lg:rounded-3xl lg:pt-2"
+          class="kd-cell relative grid h-[84px] w-[84px] shrink-0 place-items-center rounded-2xl lg:h-full lg:w-[100px] lg:rounded-3xl"
           :class="`is-${c.state}`"
           :style="{ '--i': i }"
           :title="c.qty > 1 ? `${c.name} ×${c.qty}` : c.name"
         >
-          <img :src="c.image" alt="" draggable="false" class="kd-cell-img size-[76px] object-contain lg:size-[88px]" />
-          <span class="kd-cell-name type-12 mt-auto mb-2 w-full truncate text-center lg:mb-2.5">{{ c.name }}</span>
+          <img :src="c.image" :alt="c.name" draggable="false" class="kd-cell-img size-[76px] object-contain lg:size-[92px]" />
           <span v-if="c.qty > 1" class="kd-cell-qty type-10-caps absolute top-1.5 right-1.5 rounded-md px-1 tabular-nums">×{{ c.qty }}</span>
           <span v-if="c.state === 'now'" class="kd-cell-mark absolute top-0 left-1/2" aria-hidden="true" />
         </div>
@@ -123,9 +113,8 @@ function onClick(e: MouseEvent) {
       <span class="kd-brow-mode type-10-caps flex items-center gap-1 lg:hidden"><UiIcon :name="PVP_MODE_ICON[battle.mode]" :size="12" />{{ $t(`pvp.modeName.${battle.mode}`) }}</span>
     </div>
 
-    <!-- the players: how many over the seats, the mode under them -->
-    <div class="kd-brow-who flex min-w-0 items-center px-2 pb-2 lg:flex-col lg:justify-between lg:px-2 lg:py-2">
-      <span class="type-10-caps text-neutral-11 tabular-nums max-lg:hidden">{{ battle.mode === 'team' ? $t('pvp.twoVsTwo') : `${seated}/${battle.size}` }}</span>
+    <!-- the players: the seats, the mode under them -->
+    <div class="kd-brow-who flex min-w-0 items-center px-2 pb-2 lg:flex-col lg:justify-center lg:gap-2.5 lg:p-0">
       <span class="flex items-center gap-1.5">
         <template v-for="(side, k) in sides" :key="k">
           <span v-if="k > 0" class="type-10-caps text-neutral-11">{{ $t('pvp.vs') }}</span>
@@ -148,8 +137,7 @@ function onClick(e: MouseEvent) {
     </div>
 
     <!-- the cost over the button, one cell the row's height (phones: the button alone, the cost is on top) -->
-    <div class="kd-brow-action flex items-center justify-end px-2 pb-2 lg:flex-col lg:justify-between lg:px-2 lg:py-2">
-      <span class="type-10-caps text-neutral-11 max-lg:hidden">{{ $t('pvp.cost') }}</span>
+    <div class="kd-brow-action flex items-center justify-end px-2 pb-2 lg:flex-col lg:justify-center lg:gap-2 lg:px-2 lg:py-0">
       <UiPrice :amount="battle.cost" size="l" tone="coin" class="max-lg:hidden" />
       <span class="kd-btn type-14-caps inline-flex h-10 w-32 items-center justify-center gap-1.5 rounded-lg lg:w-full" :class="battle.status === 'waiting' ? 'kd-btn-primary' : 'kd-btn-secondary'">
         <UiIcon v-if="battle.status !== 'waiting'" name="eye" :size="16" class="shrink-0" />
@@ -175,7 +163,7 @@ function onClick(e: MouseEvent) {
 /* desktop: rounds · the band · players · cost and button (the header has the same) */
 @media (min-width: 64rem) {
   .kd-brow {
-    grid-template-columns: var(--pvp-cols, 112px minmax(0, 1fr) 168px 184px);
+    grid-template-columns: var(--pvp-cols, 80px minmax(0, 1fr) 160px 176px);
     grid-template-areas: 'rounds band who action';
   }
 }
@@ -200,12 +188,6 @@ function onClick(e: MouseEvent) {
 }
 .kd-brow-action {
   grid-area: action;
-}
-.kd-brow-status {
-  color: var(--color-neutral-11);
-}
-.kd-brow.is-live .kd-brow-status {
-  color: var(--color-danger);
 }
 .kd-brow-mode {
   color: var(--mc);
@@ -241,12 +223,7 @@ function onClick(e: MouseEvent) {
     transform var(--dur-slow) var(--ease-spring),
     opacity var(--dur-base) var(--ease-out);
 }
-.kd-cell-name {
-  color: var(--color-neutral-13);
-  transition: opacity var(--dur-base) var(--ease-out);
-}
-.kd-cell.is-done .kd-cell-img,
-.kd-cell.is-done .kd-cell-name {
+.kd-cell.is-done .kd-cell-img {
   opacity: 0.3;
 }
 .kd-cell.is-now {
@@ -254,9 +231,6 @@ function onClick(e: MouseEvent) {
 }
 .kd-cell.is-now .kd-cell-img {
   transform: translateY(-2px) scale(1.12);
-}
-.kd-cell.is-now .kd-cell-name {
-  color: var(--color-neutral-15);
 }
 .kd-cell-mark {
   width: 12px;
@@ -315,14 +289,6 @@ function onClick(e: MouseEvent) {
   }
   .kd-brow:hover .kd-btn-secondary {
     background: var(--color-neutral-7);
-  }
-}
-.kd-live-dot {
-  animation: kd-live 1.4s ease-in-out infinite;
-}
-@keyframes kd-live {
-  50% {
-    opacity: 0.3;
   }
 }
 </style>
