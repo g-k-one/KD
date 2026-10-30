@@ -626,7 +626,7 @@ Yellow Army из Pro Scene повторял кейс NAVI, поэтому зам
 | `elo-climb` | ELO Climb | 1290 | high | лезет по оранжевой стрелке графика вверх, как альпинист |
 | `faceit-level-10` | FACEIT Lvl 10 | 2490 | extreme | держит над головой значок 10 уровня, как кубок |
 
-`rank-10` (Level 10) из Pro Scene повторял FACEIT Lvl 10, поэтому заменён на Ace. Порядок рядов на главной: FACEIT, Pro Scene, Weekly picks, Teams, CS memes, Old school.
+`rank-10` (Level 10) из Pro Scene повторял FACEIT Lvl 10, поэтому заменён на Ace. Порядок рядов на главной: FACEIT, Weekly picks, Pro Scene, Teams, CS memes, Old school.
 
 ## 12. Halloween: 7 кейсов в глянцевом 3D
 
