@@ -203,18 +203,18 @@ async function saveTrade() {
           <div class="flex min-w-0 flex-1 flex-col gap-1.5">
             <div class="flex items-center gap-2">
               <h1 class="type-16-caps truncate">{{ session.user.nickname }}</h1>
-              <UiLevelBadge :level="session.user.level" />
               <button type="button" class="kd-press kd-icon-nudge type-12 flex shrink-0 items-center gap-1 text-neutral-11 tabular-nums hover:text-neutral-15" :aria-label="$t('account.copyId')" @click="copyId">
                 ID {{ session.user.id }}
                 <UiIcon name="copy" :size="14" class="kd-icon" />
               </button>
             </div>
-            <!-- the bar and where it leads; what levels give is told on the Bonuses page -->
+            <!-- this level, the way to the next one, the next one; what levels give is told on the Bonuses page -->
             <div class="flex max-w-72 items-center gap-2">
+              <UiLevelBadge :level="session.user.level" />
               <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-5">
                 <div class="bg-brand-gradient h-full rounded-full transition-[width] duration-700" :style="{ width: `${session.user.levelProgress}%` }" />
               </div>
-              <span class="type-12-caps shrink-0 text-neutral-12 tabular-nums">{{ $t('account.levelNext', { n: session.user.level + 1 }) }}</span>
+              <span class="type-12-caps shrink-0 text-neutral-11 tabular-nums">{{ session.user.level + 1 }}</span>
             </div>
           </div>
         </div>
