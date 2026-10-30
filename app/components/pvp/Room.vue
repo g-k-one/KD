@@ -115,7 +115,7 @@ watch(done, (d) => {
   }
 })
 
-// 3-2-1 before the first round (Key-Drop's hex countdown)
+// the seconds before the first round, counted down big over the dimmed arena
 const countdown = computed(() =>
   b.value.status !== 'waiting' && b.value.startedAt && clock.value.round < 0 ? Math.max(0, Math.ceil((Date.parse(b.value.startedAt) - now.value) / 1000)) : 0,
 )
@@ -329,18 +329,18 @@ const laneCols = computed(() => {
       <!-- VS between the seats (between the two teams in Team 2v2); it beats on every new round -->
       <div class="pointer-events-none absolute inset-0 z-[3] grid" :style="{ gridTemplateColumns: `repeat(${b.size}, minmax(0, 1fr))` }" aria-hidden="true">
         <span v-for="s in b.slots" :key="s.slot" class="relative">
-          <span v-if="s.slot > 0 && (!isTeam || s.slot === 2)" :key="`${clock.round}`" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="isTeam && 'is-team'">{{ $t('pvp.vs') }}</span>
+          <span v-if="countdown <= 0 && s.slot > 0 && (!isTeam || s.slot === 2)" :key="`${clock.round}`" class="kd-vs type-12-caps absolute top-1/2 left-0 grid size-9 place-items-center rounded-full" :class="isTeam && 'is-team'">{{ $t('pvp.vs') }}</span>
         </span>
       </div>
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 left-0 -rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
       <img src="/img/fx/marker-top.svg" alt="" class="kd-amark absolute top-1/2 right-0 rotate-90" :class="isMobile ? 'w-3' : 'w-5'" />
 
-      <!-- Countdown hex, flips on every second -->
-      <div v-if="countdown > 0" class="pointer-events-none absolute inset-0 z-10 grid place-items-center">
-        <span :key="countdown" class="kd-count grid size-20 place-items-center md:size-24">
-          <span class="type-48-caps text-success">{{ countdown }}</span>
-        </span>
-      </div>
+      <!-- The countdown: the arena dims and each number lands big in its middle, one beat a second -->
+      <Transition name="kd-countdown">
+        <div v-if="countdown > 0" class="kd-countdown pointer-events-none absolute inset-0 z-10 grid place-items-center">
+          <span :key="countdown" class="kd-count text-[72px] leading-none font-extrabold tabular-nums lg:text-[112px]">{{ countdown }}</span>
+        </div>
+      </Transition>
 
       <!-- The result, inside the arena: who took the pot, how much, and the same battle again -->
       <Transition name="kd-result">
@@ -507,27 +507,39 @@ const laneCols = computed(() => {
   color: var(--color-neutral-11);
   white-space: nowrap;
 }
-.kd-count {
-  clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%);
-  background: radial-gradient(circle, rgb(18 183 106 / 0.35), var(--color-neutral-2) 70%);
-  box-shadow: inset 0 0 0 2px var(--color-success);
-  animation: kd-count-flip 900ms var(--ease-out) both;
+.kd-countdown {
+  background: radial-gradient(40% 70% at 50% 50%, rgb(255 95 31 / 0.2), rgb(12 13 16 / 0.72));
 }
-@keyframes kd-count-flip {
+.kd-countdown-enter-active,
+.kd-countdown-leave-active {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.kd-countdown-enter-from,
+.kd-countdown-leave-to {
+  opacity: 0;
+}
+/* lands fast and big, holds, gets out of the way of the next one */
+.kd-count {
+  color: var(--color-neutral-15);
+  text-shadow: 0 0 40px rgb(255 95 31 / 0.7);
+  animation: kd-count-beat 950ms var(--ease-out) both;
+}
+@keyframes kd-count-beat {
   0% {
     opacity: 0;
-    transform: scale(1.6) rotateY(90deg);
+    transform: scale(1.7);
   }
-  30% {
+  18% {
     opacity: 1;
-    transform: scale(1) rotateY(0);
+    transform: scale(1);
   }
-  85% {
+  80% {
     opacity: 1;
+    transform: scale(1);
   }
   100% {
     opacity: 0;
-    transform: scale(0.85);
+    transform: scale(0.9);
   }
 }
 .kd-arena {
