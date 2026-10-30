@@ -71,8 +71,8 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
         <span class="type-14 text-neutral-12">{{ $t('pvp.freeSlot') }}</span>
         <span class="type-12-regular truncate text-neutral-11">{{ $t('pvp.waitingForPlayer') }}</span>
       </span>
-      <UiButton v-if="canJoin" size="s" :block="compact" :loading="busy" @click="$emit('join')">{{ $t('pvp.join') }}</UiButton>
-      <UiButton v-else-if="canCallBot" variant="secondary" size="s" :block="compact" :loading="busy" @click="$emit('bot')">{{ $t('pvp.callBot') }}</UiButton>
+      <UiButton v-if="canJoin" :size="compact ? 's' : 'm'" :block="compact" :loading="busy" @click="$emit('join')">{{ $t('pvp.join') }}</UiButton>
+      <UiButton v-else-if="canCallBot" variant="secondary" :size="compact ? 's' : 'm'" :block="compact" :loading="busy" @click="$emit('bot')">{{ $t('pvp.callBot') }}</UiButton>
     </template>
   </div>
 </template>
