@@ -207,7 +207,8 @@ async function countBeat(n: number) {
   await prepareCount()
   if (!countLabel) return
   const text = n ? String(n) : 'VS'
-  if (!n && lab.value.swap === 'slam') {
+  const { swap } = lab.value
+  if (!n && swap === 'slam') {
     const label = countLabel
     await label.play('flipout', { each: 0 })
     if (countLabel !== label) return
@@ -221,7 +222,7 @@ async function countBeat(n: number) {
     if (countLabel.text !== text) countLabel.set({ text })
     countLabel.play('pop')
   } else {
-    countLabel.swap(text, { style: n ? 'flip' : lab.value.swap })
+    countLabel.swap(text, { style: n || swap === 'slam' ? 'flip' : swap })
     countLabel.rotate(240 * countSide, 0, true)
   }
 }
