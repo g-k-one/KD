@@ -7,6 +7,21 @@ export function timeAgo(iso: string, now = Date.now()) {
   return `${Math.floor(s / 86400)}d`
 }
 
+const monthName = (d: Date) => d.toLocaleDateString('en-US', { month: 'short' })
+
+/** A history line: its age for a week ("5m", "3d"), then the date ("12 Oct"), with the year once it is another year ("Oct 2025") */
+export function historyTime(iso: string, now = Date.now()) {
+  const at = new Date(iso)
+  if (now - at.getTime() < 7 * 86_400_000) return timeAgo(iso, now)
+  return at.getFullYear() === new Date(now).getFullYear() ? `${at.getDate()} ${monthName(at)}` : `${monthName(at)} ${at.getFullYear()}`
+}
+
+/** The full moment, for a hover: "12 Oct 2026, 18:40" */
+export function fullTime(iso: string) {
+  const at = new Date(iso)
+  return `${at.getDate()} ${monthName(at)} ${at.getFullYear()}, ${at.toLocaleTimeString('en-GB', { timeStyle: 'short' })}`
+}
+
 /** "23:59:59" countdown to an ISO time */
 export function countdown(iso: string | null, now = Date.now()) {
   if (!iso) return ''

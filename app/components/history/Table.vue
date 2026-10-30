@@ -42,8 +42,8 @@ const checkable = (e: HistoryEntry) => e.nonce != null || !!e.battleId
 const kind = (e: HistoryEntry) => (props.link?.(e) ? 'link' : props.clickable?.(e) ? 'button' : 'row')
 const cols = computed(() =>
   props.roll
-    ? 'lg:grid-cols-[48px_minmax(0,1.1fr)_minmax(0,1.5fr)_96px_96px_96px_112px_92px]'
-    : 'lg:grid-cols-[48px_minmax(0,1.1fr)_minmax(0,1.6fr)_104px_104px_104px_92px]',
+    ? 'lg:grid-cols-[72px_minmax(0,1.1fr)_minmax(0,1.5fr)_96px_96px_96px_112px_92px]'
+    : 'lg:grid-cols-[72px_minmax(0,1.1fr)_minmax(0,1.6fr)_104px_104px_104px_92px]',
 )
 </script>
 
@@ -70,7 +70,7 @@ const cols = computed(() =>
           :class="[cols, kind(e) !== 'row' && 'kd-tr-hit']"
           @click="kind(e) === 'button' && emit('pick', e)"
         >
-          <span class="type-14-regular text-neutral-11 tabular-nums max-lg:hidden">{{ timeAgo(e.at) }}</span>
+          <span class="type-14-regular whitespace-nowrap text-neutral-11 tabular-nums max-lg:hidden" :title="fullTime(e.at)">{{ historyTime(e.at) }}</span>
           <!-- game (desktop column; on phones its picture sits on the drop) -->
           <span class="flex min-w-0 items-center gap-2.5 max-lg:hidden">
             <!-- an upgrade's arrow or a battle's sword is drawn edge to edge: a 4 px inset so it sits as small as a case -->
@@ -93,7 +93,7 @@ const cols = computed(() =>
               <!-- nothing dropped (a payment, rakeback): its name on phones, a dash in the desktop column (the game says it) -->
               <span v-else class="type-14 truncate"><span class="lg:hidden">{{ e.title }}</span><span class="text-neutral-10 max-lg:hidden">—</span></span>
               <!-- phones: the game and when, under the name -->
-              <span class="type-12-regular truncate text-neutral-11 lg:hidden">{{ e.result ? gameName(e) : $t(`account.games.${e.game}`) }} · {{ timeAgo(e.at) }}<template v-if="roll && rollValue(e)"> · {{ rollValue(e) }}</template></span>
+              <span class="type-12-regular truncate text-neutral-11 lg:hidden">{{ e.result ? gameName(e) : $t(`account.games.${e.game}`) }} · {{ historyTime(e.at) }}<template v-if="roll && rollValue(e)"> · {{ rollValue(e) }}</template></span>
             </span>
           </span>
           <!-- money: stake · payout · profit (desktop), payout over profit (phones) -->
