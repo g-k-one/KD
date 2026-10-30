@@ -174,6 +174,12 @@ watch(countdown, (n, old) => {
     countBeat(n)
   } else if (n === 0 && old > 0) countEnd()
 })
+// both engines ready before the first number: it is 3D from the start, and the blast does not wait for a download
+onMounted(() => {
+  if (done.value) return
+  ex.preload()
+  fx.preload('kd')
+})
 onBeforeUnmount(dropCountLabel)
 
 // Same cases and seats in one click once the battle is over (Skin.club "Recreate")

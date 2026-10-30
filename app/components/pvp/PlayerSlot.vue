@@ -43,7 +43,7 @@ const playing = computed(() => (props.total ?? 0) > 0)
           <span class="min-w-0 max-w-full truncate" :class="compact ? 'type-12' : 'type-16-medium'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
           <UiLevelBadge v-if="!compact" :level="player.level" class="shrink-0" />
         </span>
-        <UiPrice v-if="result || playing" :amount="Math.round(totalShown)" :size="compact ? 's' : 'm'" :tone="winner ? 'success' : result ? 'default' : 'coin'" class="tabular-nums" />
+        <UiPrice v-if="result || playing" :amount="Math.round(totalShown)" :size="compact ? 's' : 'm'" :tone="winner ? 'default' : result ? 'muted' : 'coin'" class="tabular-nums" />
       </span>
       <!-- the chance to win, from the first second to the last round -->
       <span v-if="!result && chance != null" class="flex shrink-0 flex-col" :class="compact ? 'items-center' : 'items-end gap-1 pl-1'">
