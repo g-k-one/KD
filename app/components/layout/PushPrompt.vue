@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Asks to turn on browser notifications: our own card first, the browser's prompt only after a yes, so a "not now" costs
-// nothing (a browser refusal is final). In the cookie banner's corner and never with it; for a signed-in player, away from
-// the games, so it never lands on a spin. Later and the cross put it off for a week.
+// nothing (a browser refusal is final). Desktop: top left under the live feed, where the browser's own prompt will open;
+// phones: above the bottom bar, in reach of the thumb. Never with the cookie banner; for a signed-in player, away from the
+// games, so it never lands on a spin. Later and the cross put it off for a week.
 // TODO(backend): on a yes, send the browser's push subscription to the server; for now only the permission is asked.
 const SNOOZE_MS = 7 * 24 * 60 * 60 * 1000
 const DELAY_MS = 10_000
@@ -55,7 +56,7 @@ async function subscribe() {
       v-if="visible"
       role="dialog"
       aria-labelledby="kd-push-title"
-      class="kd-push fixed inset-x-3 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 flex flex-col gap-3 rounded-5xl border border-neutral-5 bg-neutral-2 p-4 lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-105"
+      class="kd-push fixed inset-x-3 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 flex flex-col gap-3 rounded-5xl border border-neutral-5 bg-neutral-2 p-4 lg:inset-x-auto lg:top-44 lg:bottom-auto lg:left-6 lg:w-105"
     >
       <UiButton variant="ghost" size="s" icon="close" icon-only :aria-label="$t('common.close')" class="absolute top-2.5 right-2.5" @click="later" />
       <div class="flex flex-col gap-1">
@@ -121,5 +122,12 @@ async function subscribe() {
 .kd-push-leave-to {
   opacity: 0;
   transform: translateY(16px);
+}
+/* desktop: it comes down from the top */
+@media (min-width: 64rem) {
+  .kd-push-enter-from,
+  .kd-push-leave-to {
+    transform: translateY(-16px);
+  }
 }
 </style>
