@@ -254,8 +254,8 @@ function onClick(e: MouseEvent) {
 .kd-brow.is-finished .kd-rounds-n {
   color: var(--color-neutral-11);
 }
-/* the band: the cases stand on the row itself, no tile under them; played ones dimmed, the one now lit from behind in
-   the mode's colour, marked, its case lifted. It slides with the round (transform only) */
+/* the band: the cases stand on the row itself, no tile under them; played ones dimmed, the one now marked, its case
+   lifted. It slides with the round (transform only) */
 .kd-band {
   transition: transform var(--dur-slow) var(--ease-out);
 }
@@ -267,9 +267,6 @@ function onClick(e: MouseEvent) {
 }
 .kd-cell.is-done .kd-cell-img {
   opacity: 0.3;
-}
-.kd-cell.is-now {
-  background: radial-gradient(55% 45% at 50% 42%, color-mix(in srgb, var(--mc) 32%, transparent), transparent);
 }
 .kd-cell.is-now .kd-cell-img {
   transform: scale(1.08);
