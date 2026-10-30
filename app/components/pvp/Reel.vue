@@ -131,7 +131,7 @@ watch([height, cell], () => {
 <template>
   <div ref="root" class="relative overflow-hidden" :class="[compact ? 'h-50' : 'h-72', bare ? '' : 'kd-preel rounded-2xl']">
     <div v-if="waiting || !target" class="flex h-full flex-col items-center justify-center gap-3 px-2 text-center">
-      <img v-if="caseRef" :src="caseRef.image" alt="" class="kd-preel-wait object-contain" :class="compact ? 'size-16' : 'size-28'" />
+      <img v-if="caseRef" :src="caseRef.image" alt="" class="kd-preel-wait object-contain" :class="compact ? 'size-16 max-w-[62%]' : 'size-28'" />
     </div>
     <template v-else>
       <div ref="fxHost" class="pointer-events-none absolute inset-0" />

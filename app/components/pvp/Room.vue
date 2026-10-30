@@ -197,7 +197,7 @@ function prepareCount() {
 }
 // The shader and Forge's canvas block the page while they build: never in the frames a room opens (Recreate stuttered), but
 // once the browser is idle. A countdown that starts sooner asks for the label itself.
-const whenIdle = (f: () => void) => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 1500 }) : setTimeout(f, 500))
+const whenIdle = (f: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 1500 }) : setTimeout(f, 500))
 // the stage went (a countdown that was already running when the page opened): the label went with it
 watch(countEl, (el) => (el ? whenIdle(prepareCount) : dropCountLabel()))
 async function countBeat(n: number) {
