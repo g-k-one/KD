@@ -11,6 +11,7 @@ import {
   getCaseSections,
   getFeed,
   getHistory,
+  getPairRolls,
   getHomeLayout,
   resetHomeLayout,
   setHomeLayout,
@@ -195,6 +196,10 @@ export async function mockRoute(method: string, path: string, body: Body, query:
   if (m === 'POST' && path === '/api/seeds/rotate') {
     authed()
     return rotateSeeds(body.clientSeed)
+  }
+  if (m === 'GET' && (match = path.match(/^\/api\/seeds\/(\w+)\/rolls$/))) {
+    authed()
+    return getPairRolls(match[1]!)
   }
 
   if (m === 'GET' && path === '/api/deposit/methods') return { methods: PAYMENT_METHODS }

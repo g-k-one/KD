@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { HistoryEntry, SeedsResponse } from '#shared/types/api'
+import type { HistoryEntry, RevealedSeedPair, SeedsResponse } from '#shared/types/api'
 
 // Figma "Fairness", around one path: the player's own rolls, each with one action (Check, or Reveal and check).
 // Order: hero, Your rolls, how it works in three steps, then the formula, each mode and the seed log (with a manual
@@ -28,7 +28,16 @@ const verifierInit = ref<{ serverSeed?: string; clientSeed?: string; nonce?: num
 function openVerifier(init?: typeof verifierInit.value) {
   verifierInit.value = init ?? { clientSeed: seeds.value?.active.clientSeed, nonce: Math.max(1, seeds.value?.active.nonce ?? 1) }
   seedsOpen.value = false
+  pairOpen.value = false
   verifierOpen.value = true
+}
+
+// Check on a past pair: every roll of it at once
+const pairOpen = ref(false)
+const pairToCheck = ref<RevealedSeedPair | null>(null)
+function checkPair(pair: RevealedSeedPair) {
+  pairToCheck.value = pair
+  pairOpen.value = true
 }
 
 // "Check this roll" on a case or upgrade lands here with ?verify=<nonce>: a roll of the active pair, so
@@ -161,7 +170,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
 
     <!-- Seed log, a timeline and not a table: a row per pair, newest first, on a rail. On the left what a player cares
          about (how many rolls, when), in the middle the two seeds each under its own name with the whole value a tap to
-         copy, on the right the one thing to do: Reveal for the pair in use, Check for a past one. A revealed seed says at
+         copy, on the right the one thing to do: Reveal for the pair in use, Check (all its rolls) for a past one. A revealed seed says at
          once that it matches the hash promised before its first roll -->
     <section v-if="session.user" class="flex min-w-0 flex-col rounded-5xl bg-neutral-2">
       <div class="flex h-14 items-center gap-3 border-b border-neutral-4 px-4 lg:h-18 lg:pr-4 lg:pl-6">
@@ -194,7 +203,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
               <span v-if="p.revealed?.clientChanged" class="kd-seedtag type-10-caps bg-neutral-3 text-neutral-11">{{ $t('fair.changed') }}</span>
             </dd>
           </dl>
-          <button v-if="p.revealed" type="button" class="kd-check kd-press type-12-caps flex h-8 items-center justify-center gap-1.5 justify-self-end rounded-lg max-lg:w-8 lg:w-26" :aria-label="$t('fair.check')" :disabled="!p.nonce" @click="openVerifier({ serverSeed: p.server, clientSeed: p.clientSeed, nonce: p.nonce })">
+          <button v-if="p.revealed" type="button" class="kd-check kd-press type-12-caps flex h-8 items-center justify-center gap-1.5 justify-self-end rounded-lg max-lg:w-8 lg:w-26" :aria-label="$t('fair.check')" :title="$t('fair.pairCheck')" :disabled="!p.nonce" @click="checkPair(p.revealed)">
             <UiIcon name="shield-check" :size="16" class="shrink-0" /><span class="max-lg:hidden">{{ $t('fair.check') }}</span>
           </button>
           <UiButton v-else-if="p.nonce" variant="fair" size="s" icon="refresh" :loading="rotating" class="justify-self-end lg:w-26" :title="$t('fair.hiddenTill')" @click="rotate">{{ $t('fair.reveal') }}</UiButton>
@@ -211,6 +220,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
     </section>
 
     <FairSeedsModal v-model="seedsOpen" v-model:seeds="seeds" />
+    <FairPairCheck v-model="pairOpen" :pair="pairToCheck" :period="pairToCheck ? period(pairToCheck.createdAt, pairToCheck.rotatedAt) : ''" @verify="openVerifier" />
     <FairVerifierModal v-model="verifierOpen" :initial="verifierInit" />
   </div>
   </div>

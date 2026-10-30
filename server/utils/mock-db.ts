@@ -574,6 +574,8 @@ interface MockState {
   /** Drops pushed from /debug or by the user's own opens, served before random ones */
   queuedDrops: FeedDrop[]
   history: HistoryEntry[]
+  /** Every roll by its pair's hash: the game history stops at 200 lines, a pair's check needs them all */
+  pairRolls: Record<string, HistoryEntry[]>
   /** XP inside the current level (coin cents spent) */
   xp: number
   /** When the daily case unlocks again (ms), 0 = now */
@@ -599,6 +601,7 @@ const state: MockState = {
   seedHistory: [],
   queuedDrops: [],
   history: [],
+  pairRolls: {},
   xp: Math.round((DEFAULT_USER.levelProgress / 100) * xpFor(DEFAULT_USER.level)),
   dailyAt: 0,
   welcomeLeft: adminSettings.bonuses.welcome.total,
@@ -662,8 +665,10 @@ const nearestPriced = (cents: number) => CATALOG.reduce((b, c) => (Math.abs(c.pr
 
 export function record(e: Omit<HistoryEntry, "id" | "at">) {
   historySeq += 1
-  state.history.unshift({ id: `h${historySeq}`, at: new Date().toISOString(), ...e })
+  const entry = { id: `h${historySeq}`, at: new Date().toISOString(), ...e }
+  state.history.unshift(entry)
   state.history.splice(200)
+  if (e.seedHash) (state.pairRolls[e.seedHash] ??= []).push(entry)
 }
 
 export async function getHistory() {
@@ -683,14 +688,33 @@ async function ensureSeed() {
     // A couple of past rotations, so the history has something to show on first look
     const day = 86_400_000
     for (const [from, to, rolls, client] of [[9, 2, 37, true], [15, 9, 112, false]] as const) {
-      state.seedHistory.push({
+      const pair = {
         ...(await freshServerSeed()),
         clientSeed: randomSeed(5),
         nonce: rolls,
         createdAt: new Date(Date.now() - from * day).toISOString(),
         rotatedAt: new Date(Date.now() - to * day).toISOString(),
         clientChanged: client,
-      })
+      }
+      state.seedHistory.push(pair)
+      // their rolls, real ones from the pair's own seeds (every fifth an upgrade), for its check; older than the profile's list
+      const stuck = getCase('stuck')
+      const target = nearestPriced(6300)
+      const stake = nearestPriced(2900)
+      const rows: HistoryEntry[] = []
+      for (let nonce = 1; nonce <= rolls; nonce++) {
+        const base = { id: `p${from}-${nonce}`, at: new Date(Date.now() - (from - ((from - to) * nonce) / rolls) * day).toISOString(), nonce, seedHash: pair.serverSeedHash }
+        if (nonce % 5) {
+          const { ticket } = await pfTicket(pair.serverSeed, pair.clientSeed, nonce)
+          const { tickets: _t, ticketFrom: _f, ticketTo: _to, ...item } = pickByTicket(stuck.items, ticket)
+          rows.push({ ...base, game: 'case', title: stuck.name, bet: stuck.price, payout: item.price, status: item.price >= stuck.price ? 'won' : 'lost', ticket, drop: `${item.weapon} | ${item.skin}`, caseImage: stuck.image, result: histItem(item) })
+        } else {
+          const { roll } = await pfRoll(pair.serverSeed, pair.clientSeed, nonce)
+          const win = roll < 46
+          rows.push({ ...base, game: 'upgrade', title: `${target.weapon} | ${target.skin}`, bet: stake.price, payout: win ? target.price : 0, status: win ? 'won' : 'lost', chance: 4600, roll, targetPrice: target.price, stake: [histItem(stake)], result: histItem(target) })
+        }
+      }
+      state.pairRolls[pair.serverSeedHash] = rows
     }
     // A few past rows so the history is not empty on first look: real rolls 1–3 of the active pair
     const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString()
@@ -708,6 +732,7 @@ async function ensureSeed() {
       { id: 'h-s3', at: ago(41), game: 'case', title: 'Stuck', bet: 990, payout: 2200, status: 'won', nonce: 1, seedHash, ticket: await ticket(1), drop: 'AK-47 | Redline', caseImage: opened, result: named('AK-47 | Redline', 2200) },
       { id: 'h-s4', at: ago(65), game: 'deposit', title: 'BLIK', bet: 0, payout: 5727, status: 'done' },
     )
+    state.pairRolls[seedHash] = state.history.filter((e) => e.seedHash === seedHash)
     state.seed.nonce = 3
   })()
   await seedReady
@@ -795,6 +820,13 @@ export async function rotateSeeds(clientSeed?: string) {
     Object.assign(state.seed, await freshServerSeed(), { nonce: 0, clientSeed: next, createdAt: now })
     return getSeeds()
   })
+}
+
+/** Every roll of a revealed pair, in order: a sealed pair's stay shut until its seed is out */
+export async function getPairRolls(hash: string) {
+  await ensureSeed()
+  if (!state.seedHistory.some((h) => h.serverSeedHash === hash)) throw new MockError(404, 'No such revealed pair')
+  return { entries: [...(state.pairRolls[hash] ?? [])].sort((a, b) => a.nonce! - b.nonce!) }
 }
 
 const publicSeed = () => ({ serverSeedHash: state.seed.serverSeedHash, clientSeed: state.seed.clientSeed, nonce: state.seed.nonce })
