@@ -2,7 +2,7 @@
 import type { Battle } from '#shared/types/api'
 
 // A battle as a row of the lobby (components/pvp/Table.vue), on skin.club's row in our colours and corners: the rounds
-// (the count on a round plate, red while live, the plate filling from the foot in the mode's colour as they are played), the battle
+// (the count on a round plate, red while live; the band shows how far it has got), the battle
 // scenario as case cells (the case alone, close together, its name on hover; a run of one case as one cell, ×N, while
 // seats are open), the players (the seats, overlapping only in 2v2, where four and VS must fit, the mode under them) and
 // the cost over the button — Join (a guest signs in first), Watch or View. The row is one card in the house's way (24 px, 8 in; phones 20):
@@ -51,8 +51,6 @@ const fits = computed(() => (mounted.value ? Math.max(1, Math.floor((viewW.value
 const shift = computed(() => (props.battle.status === 'live' ? Math.min(Math.max(0, played.value - 1), Math.max(0, cells.value.length - fits.value)) : 0))
 const overflows = computed(() => mounted.value && (cells.value.length - shift.value) * step.value - CELL_GAP > viewW.value + 1)
 
-// the plate's fill: played of all (open seats: none; over: full, grey)
-const playedShare = computed(() => played.value / Math.max(1, props.battle.rounds.length))
 const winners = computed<number[]>(() => (props.battle.status === 'finished' ? (props.battle.winners ?? (props.battle.winnerSlot != null ? [props.battle.winnerSlot] : [])) : []))
 // the seats in a line, or two with VS between in team mode
 const sides = computed(() => (props.battle.mode === 'team' ? [props.battle.slots.slice(0, 2), props.battle.slots.slice(2)] : [props.battle.slots]))
@@ -75,11 +73,10 @@ function onClick(e: MouseEvent) {
     :class="[`is-${battle.mode}`, `is-${battle.status}`]"
     @click.capture="onClick"
   >
-    <!-- rounds: the count on a round plate, filling from the foot -->
+    <!-- rounds: the count on a round plate -->
     <div class="kd-brow-rounds flex items-center px-2 pt-2 lg:justify-center lg:p-0">
-      <span class="kd-rounds relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-full lg:size-19" :title="roundsTip">
-        <span v-if="played" class="kd-rounds-fill absolute inset-0 origin-bottom" :style="{ transform: `scaleY(${playedShare})` }" />
-        <span class="kd-rounds-n type-20-caps relative tabular-nums lg:type-28">{{ battle.status === 'live' ? round : battle.rounds.length }}</span>
+      <span class="kd-rounds grid size-11 shrink-0 place-items-center rounded-full lg:size-19" :title="roundsTip">
+        <span class="kd-rounds-n type-20-caps tabular-nums lg:type-28">{{ battle.status === 'live' ? round : battle.rounds.length }}</span>
       </span>
     </div>
 
@@ -189,7 +186,7 @@ function onClick(e: MouseEvent) {
 .kd-brow-mode {
   color: var(--mc);
 }
-/* the rounds' plate: the cell colour under the count, red while live, grey once over; the fill steps once a round */
+/* the rounds' plate: the cell colour under the count, red while live, grey once over */
 .kd-rounds {
   background: var(--cell);
   transition: background-color var(--dur-base) var(--ease-out);
@@ -199,13 +196,6 @@ function onClick(e: MouseEvent) {
 }
 .kd-brow.is-live .kd-rounds-n {
   color: var(--color-danger);
-}
-.kd-rounds-fill {
-  background: color-mix(in srgb, var(--mc) 32%, var(--cell));
-  transition: transform var(--dur-slow) var(--ease-out);
-}
-.kd-brow.is-finished .kd-rounds-fill {
-  background: var(--color-neutral-5);
 }
 .kd-brow.is-finished .kd-rounds-n {
   color: var(--color-neutral-11);
