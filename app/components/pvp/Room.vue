@@ -91,7 +91,8 @@ watch(error, (e) => {
 const done = computed(() => b.value.status === 'finished' || clock.value.round >= b.value.rounds.length)
 const roundIdx = computed(() => Math.min(b.value.rounds.length - 1, Math.max(0, clock.value.round)))
 // The round strip shows what fits (a 56 px tile + 8 px gap): a window that keeps the current round in view, faded on
-// the side where more rounds are out of view (no "+N" tile, as in the lobby: Rounds 0/6 beside it gives the count)
+// the side where more rounds are out of view (no "+N" tile, as in the lobby: Rounds 0/6 beside it gives the count).
+// Every round is in the band and the band slides under the window, as in the lobby, so nothing pops in or out
 const stripEl = useTemplateRef<HTMLElement>('stripEl')
 const { width: stripW } = useElementSize(() => stripEl.value?.parentElement ?? null)
 const strip = computed(() => {
@@ -99,10 +100,9 @@ const strip = computed(() => {
   // the strip gets what the cost/pot and the viewers/rounds chips leave of the dock (desktop: its middle column)
   const room = isMobile.value ? stripW.value - 8 : Math.max(0, stripW.value - 2 * 340)
   const fit = Math.max(3, Math.floor((room + 8) / 64))
-  if (n <= fit) return { idx: Array.from({ length: n }, (_, i) => i), more: 0, from: 0 }
-  const shown = fit
-  const from = Math.min(Math.max(0, roundIdx.value - 1), n - shown)
-  return { idx: Array.from({ length: shown }, (_, k) => from + k), more: n - (from + shown), from }
+  if (n <= fit) return { shown: n, more: 0, from: 0 }
+  const from = Math.min(Math.max(0, roundIdx.value - 1), n - fit)
+  return { shown: fit, more: n - (from + fit), from }
 })
 /** Rounds whose result is visible: the current one counts once its reel has stopped */
 const revealed = computed(() => {
@@ -367,19 +367,24 @@ const roundLine = computed(() => {
          stays as the battle's stats: the pot is in the arena's result by then, so the best drop takes its place.
          Phones: the money and the cases only, the strip already shows the round -->
     <section class="kd-dock flex flex-wrap items-center justify-between gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
-      <div class="type-12-caps flex gap-2 tabular-nums max-lg:hidden">
-        <span class="kd-dock-stat"><UiIcon name="eye" :size="16" /><span class="text-neutral-15">{{ b.viewers }}</span></span>
-        <span class="kd-dock-stat">{{ $t('pvp.rounds') }} <span class="text-neutral-15" data-allow-mismatch="text">{{ Math.min(b.rounds.length, revealed) }}/{{ b.rounds.length }}</span></span>
-      </div>
-      <!-- As many rounds as fit, none cut: a window that follows the current round, a "+N" tile for the ones after it,
-           and a soft fade on the side where earlier rounds went out of view -->
-      <div ref="stripEl" class="kd-rounds flex min-w-0 items-center gap-2 overflow-hidden px-1 py-2 max-lg:order-last max-lg:-mx-1 max-lg:-my-2 max-lg:w-[calc(100%+8px)] lg:-my-1 lg:max-w-full lg:py-1" :class="[strip.from > 0 && 'is-cut', strip.more > 0 && 'is-more']">
-        <PvpCaseThumb v-for="i in strip.idx" :key="i" :image="b.rounds[i]!.image" :name="`${b.rounds[i]!.name} · ${formatCoins(b.rounds[i]!.price)}`" size="m" :state="roundState(i)" />
-      </div>
-      <div class="type-12-caps flex justify-end gap-2 max-lg:w-full">
+      <!-- the timer stands here on desktop, so the money keeps its width and the cases stay centred; phones keep only the timer of this group, beside the money -->
+      <div class="type-12-caps flex gap-2 tabular-nums" :class="closesIn == null && 'max-lg:hidden'">
+        <span class="contents max-lg:hidden">
+          <span class="kd-dock-stat"><UiIcon name="eye" :size="16" /><span class="text-neutral-15">{{ b.viewers }}</span></span>
+          <span class="kd-dock-stat">{{ $t('pvp.rounds') }} <span class="text-neutral-15" data-allow-mismatch="text">{{ Math.min(b.rounds.length, revealed) }}/{{ b.rounds.length }}</span></span>
+        </span>
         <span v-if="closesIn != null" class="kd-dock-stat tabular-nums" :title="$t('pvp.closesHint')" :aria-label="$t('pvp.closesHint')">
           <UiIcon name="clock" :size="16" /><span :class="closesIn < 60_000 ? 'text-warning' : 'text-neutral-15'" data-allow-mismatch="text">{{ closesText }}</span>
         </span>
+      </div>
+      <!-- As many rounds as fit, none cut: a window that follows the current round, a "+N" tile for the ones after it,
+           and a soft fade on the side where earlier rounds went out of view -->
+      <div ref="stripEl" class="kd-rounds min-w-0 overflow-hidden px-1 py-2 max-lg:order-last max-lg:-mx-1 max-lg:-my-2 max-lg:w-[calc(100%+8px)] lg:-my-1 lg:w-[var(--strip)] lg:max-w-full lg:py-1" :class="[strip.from > 0 && 'is-cut', strip.more > 0 && 'is-more']" :style="{ '--strip': `${strip.shown * 64}px` }">
+        <div class="kd-rounds-band flex w-max items-center gap-2" :style="{ transform: `translateX(${-strip.from * 64}px)` }">
+          <PvpCaseThumb v-for="(r, i) in b.rounds" :key="i" :image="r.image" :name="`${r.name} · ${formatCoins(r.price)}`" size="m" :state="roundState(i)" />
+        </div>
+      </div>
+      <div class="type-12-caps flex justify-end gap-2 max-lg:min-w-0 max-lg:flex-1">
         <span class="kd-dock-stat max-lg:flex-1">{{ $t('pvp.cost') }} <UiPrice :amount="b.cost" size="m" :compact="isMobile" /></span>
         <span v-if="done" class="kd-dock-stat max-lg:flex-1">{{ $t('pvp.bestDrop') }} <UiPrice :amount="bestDrop" size="m" tone="coin" :compact="isMobile" class="tabular-nums" /></span>
         <span v-else class="kd-dock-stat max-lg:flex-1">{{ $t('pvp.pot') }} <UiPrice :key="pot" :amount="b.status === 'waiting' ? b.cost * b.size : pot" size="m" tone="coin" :compact="isMobile" class="kd-pot tabular-nums" /></span>
@@ -577,14 +582,35 @@ const roundLine = computed(() => {
   min-width: 0;
 }
 /* earlier rounds went out of view on the left: the first tile fades in from the edge */
-.kd-rounds.is-cut {
-  mask-image: linear-gradient(90deg, transparent, #000 48px);
+.kd-rounds-band {
+  transition: transform var(--dur-slow) var(--ease-out);
 }
-.kd-rounds.is-more {
-  mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent);
+/* the fades over the band's ends, in the dock's colour: layers that come and go with opacity, where a mask would snap */
+.kd-rounds {
+  position: relative;
 }
-.kd-rounds.is-cut.is-more {
-  mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent);
+.kd-rounds::before,
+.kd-rounds::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  z-index: 1;
+  width: 48px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+.kd-rounds::before {
+  left: 0;
+  background: linear-gradient(90deg, var(--color-neutral-2), transparent);
+}
+.kd-rounds::after {
+  right: 0;
+  background: linear-gradient(270deg, var(--color-neutral-2), transparent);
+}
+.kd-rounds.is-cut::before,
+.kd-rounds.is-more::after {
+  opacity: 1;
 }
 .kd-team-crown {
   background: var(--color-neutral-1);
