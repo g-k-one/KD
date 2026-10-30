@@ -345,10 +345,10 @@ const laneCols = computed(() => {
         { label: $t('case.share'), icon: 'share', onClick: shareBattle },
       ]"
     >
-      <!-- the mode stays in the bar's middle as on every page, the battle's number hangs beside it -->
-      <span class="relative">
-        <h1 class="type-16-caps md:type-20-caps">{{ $t(`pvp.modeName.${b.mode}`) }}</h1>
-        <span class="type-12 absolute top-1/2 left-full ml-2 -translate-y-1/2 text-neutral-11 tabular-nums md:type-14 md:ml-3">#{{ b.id }}</span>
+      <!-- the mode and the battle's number, centred as one line -->
+      <span class="flex items-center gap-2 md:gap-3">
+        <h1 class="type-16-caps md:type-20-caps whitespace-nowrap">{{ $t(`pvp.modeName.${b.mode}`) }}</h1>
+        <span class="type-12 text-neutral-11 tabular-nums md:type-14">#{{ b.id }}</span>
       </span>
     </UiPageBar>
 
