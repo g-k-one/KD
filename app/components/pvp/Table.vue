@@ -2,16 +2,21 @@
 import type { Battle } from '#shared/types/api'
 
 /*
- * The battle list (the lobby and the home page): a row per battle (components/pvp/Card.vue), each its own block, under
- * the page's own line on the right when it has one. Phones: each battle a card. Nothing to show: the chicken with the
- * knife waits for a fight.
+ * The battle list (the lobby and the home page), skin.club's: a header bar naming the columns on desktop — rounds, the
+ * battle scenario, players — then a row per battle (components/pvp/Card.vue), each its own block. Phones: no header;
+ * each battle a card. Nothing to show: the chicken with the knife waits for a fight.
  */
 defineProps<{ battles: Battle[] }>()
 </script>
 
 <template>
   <div class="kd-pvp-table flex min-w-0 flex-col gap-2 lg:gap-3">
-    <div v-if="$slots.head" class="type-10-caps hidden h-6 items-center justify-end px-2 text-neutral-11 lg:flex"><slot name="head" /></div>
+    <div class="kd-th type-10-caps hidden h-8 items-center gap-1.5 px-2 text-neutral-11 lg:grid">
+      <span class="text-center">{{ $t('pvp.rounds') }}</span>
+      <span class="pl-1">{{ $t('pvp.scenario') }}</span>
+      <span class="text-center">{{ $t('pvp.players') }}</span>
+      <span class="flex justify-center"><slot name="head" /></span>
+    </div>
     <UiEmptyState v-if="!battles.length" :text="$t('pvp.noBattles')" art="empty-pvp" class="rounded-5xl bg-neutral-2 p-3" />
     <TransitionGroup v-else tag="div" name="kd-list" class="relative flex flex-col gap-2 lg:gap-3">
       <PvpCard v-for="b in battles" :key="b.id" :battle="b" />
@@ -20,9 +25,12 @@ defineProps<{ battles: Battle[] }>()
 </template>
 
 <style scoped>
-/* the columns of every row: rounds · the battle scenario · players · the cost over the button */
+/* the columns, shared with every row: rounds · the battle scenario · players · the cost over the button */
 .kd-pvp-table {
-  --pvp-cols: 80px minmax(0, 1fr) 160px 176px;
+  --pvp-cols: 108px minmax(0, 1fr) 160px 176px;
+}
+.kd-th {
+  grid-template-columns: var(--pvp-cols);
 }
 .kd-list-enter-active {
   transition:
