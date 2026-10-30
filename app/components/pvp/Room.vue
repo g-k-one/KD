@@ -308,8 +308,8 @@ const laneCols = computed(() => {
         <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="[done && winners.includes(s.slot) && 'is-winner', leaders.includes(s.slot) && 'is-lead', isTeam && s.slot === 2 && 'is-team-split']">
           <span :key="revealed" class="kd-seat-flash pointer-events-none absolute inset-0" aria-hidden="true" />
           <!-- a free seat while it waits: an empty lane, no second Join: the action is on the seat's plate under it -->
-          <div v-if="!s.player && b.status === 'waiting'" class="grid place-items-center px-2 text-center text-neutral-10" :class="isMobile ? 'h-50' : 'h-72'">
-            <span class="kd-free-seat" :class="isMobile ? 'type-10-caps' : 'type-12-caps'">{{ $t('pvp.waitingForPlayer') }}</span>
+          <div v-if="!s.player && b.status === 'waiting'" class="grid place-items-center px-2 text-center text-neutral-11" :class="isMobile ? 'h-50' : 'h-72'">
+            <span class="kd-free-seat max-w-24 text-balance" :class="isMobile ? 'type-10-caps' : 'type-12-caps'">{{ $t('pvp.waitingForPlayer') }}</span>
           </div>
           <PvpReel
             v-else

@@ -5,8 +5,9 @@ import type { BattlePlayerRef } from '#shared/types/api'
 // Empty shows Call bot; Winner = success tint + 1px success stroke.
 // Who sits on the left, the name over the coins so far (no coin with a 0 before anything has dropped); on the right, away
 // from the name and big: the chance to win, WON / LOST at the end. Whoever is ahead gets a crown on the avatar and a warm
-// plate, every seat of a leading team alike. The level sits on the avatar's corner. Phones: one column, the same three
-// lines on every seat (the picture, the name, a 32 px line with the chance or Join), so a free seat reads like a taken one.
+// plate, every seat of a leading team alike. The level stands after the name. Phones: one column, the same three lines
+// on every seat (the picture with the level small on its top right corner, the name, a 32 px line with the chance or
+// Join), so a free seat reads like a taken one.
 const props = defineProps<{ player: BattlePlayerRef | null; total?: number; winner?: boolean; lead?: boolean; compact?: boolean; canCallBot?: boolean; canJoin?: boolean; chance?: number; result?: 'won' | 'lost'; busy?: boolean }>()
 defineEmits<{ bot: []; join: [] }>()
 
@@ -26,7 +27,7 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
   <div
     class="kd-slot relative flex items-center"
     :class="[
-      compact ? 'flex-col justify-center gap-1 rounded-2xl px-1 py-2 text-center' : 'h-16 gap-4 rounded-5xl px-3',
+      compact ? 'flex-col justify-center gap-1 rounded-2xl px-1 py-2 text-center' : 'h-16 gap-3 rounded-5xl px-3',
       winner ? 'is-winner' : lead ? 'is-lead' : '',
     ]"
   >
@@ -38,7 +39,7 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
         <span class="block overflow-hidden rounded-full bg-neutral-7" :class="compact ? 'size-8' : 'size-11'">
           <img :src="player.avatar" alt="" class="size-full object-cover" :class="player.bot && 'scale-75 object-contain'" />
         </span>
-        <span class="absolute -right-2 -bottom-1.5 flex" :class="compact && 'origin-bottom-right scale-85'"><UiLevelBadge :level="player.level" /></span>
+        <span v-if="compact" class="absolute -top-1.5 -right-2.5 flex origin-top-right scale-75"><UiLevelBadge :level="player.level" /></span>
         <Transition name="kd-lead">
           <span v-if="lead && !winner" class="kd-lead-crown absolute -top-1.5 -left-1.5 grid size-5 place-items-center rounded-full text-coin"><UiIcon name="crown-fill" :size="14" /></span>
         </Transition>
@@ -47,6 +48,7 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
         <span class="flex min-w-0 max-w-full items-center gap-1.5">
           <UiIcon v-if="winner && !compact" name="crown" :size="16" class="kd-crown shrink-0 text-coin" />
           <span class="min-w-0 max-w-full truncate" :class="compact ? 'type-12' : 'type-16-medium'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
+          <UiLevelBadge v-if="!compact" :level="player.level" class="shrink-0" />
         </span>
         <UiPrice v-if="result || playing" :amount="Math.round(totalShown)" :size="compact ? 'xs' : 'm'" :tone="winner ? 'success' : result ? 'default' : 'coin'" class="tabular-nums" />
       </span>
