@@ -205,7 +205,8 @@ const canReset = computed(() => !!(props.input || props.target))
 
     <!-- Chance -->
     <div v-if="is('chance')" class="kd-panel flex flex-col justify-between gap-2">
-      <div class="flex items-baseline justify-between gap-2">
+      <!-- h-8 like the balance row's input, so the two bars stand level -->
+      <div class="flex h-8 items-center justify-between gap-2">
         <span class="type-14-caps lg:type-12-caps text-neutral-11">{{ $t('upgrade.chance') }}</span>
         <span class="flex items-baseline gap-2 tabular-nums">
           <span v-if="multiplier" class="type-14 text-neutral-12">×{{ multiplier.toFixed(2) }}</span>
@@ -260,9 +261,9 @@ const canReset = computed(() => !!(props.input || props.target))
 
     <!-- Balance into the stake: same language as the chance bar -->
     <div v-if="is('balance')" class="kd-panel flex flex-col justify-between gap-2">
-      <div class="flex items-center justify-between gap-2">
+      <div class="flex h-8 items-center justify-between gap-2">
         <span class="type-14-caps lg:type-12-caps text-neutral-11">{{ $t('upgrade.fromBalance') }}</span>
-        <UiInput id="upgrade-extra" v-model="extraText" size="s" coin clearable lazy align="right" inputmode="decimal" placeholder="0" :disabled="busy || !signedIn" class="w-36 lg:w-32" @clear="extra = 0" />
+        <UiInput id="upgrade-extra" v-model="extraText" size="s" coin clearable lazy align="right" inputmode="decimal" placeholder="0" :disabled="busy || !signedIn" class="-mr-2 w-36 lg:w-32" @clear="extra = 0" />
       </div>
       <div
         ref="balBar"
@@ -311,11 +312,12 @@ const canReset = computed(() => !!(props.input || props.target))
     transform: translateX(3px);
   }
 }
-/* 24 px like every panel of the page (stake, target, inventory), 16 px in from every side */
+/* 24 px like every panel of the page (stake, target, inventory). The text sits 24 px in from the sides, level with what the
+   top row's centring gives it from the top; the input's box hangs 8 px out, 16 px from the top and the side, its value on the 24 px line */
 .kd-panel {
   border-radius: 24px;
   background: var(--color-neutral-2);
-  padding: 16px;
+  padding: 16px 24px;
 }
 /* A fixed-height pill, so the percentage never makes the button taller */
 /* Phones: sticks above the bottom nav on a fade of the page ground */
