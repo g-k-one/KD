@@ -42,12 +42,12 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
         </span>
         <span v-if="compact" class="absolute -top-1.5 -right-2.5 flex origin-top-right scale-75"><UiLevelBadge :level="player.level" /></span>
         <Transition name="kd-lead">
-          <span v-if="compact ? lead || winner : lead && !winner" class="kd-lead-crown absolute -top-1.5 -left-1.5 grid size-5 place-items-center rounded-full text-coin"><UiIcon name="crown-fill" :size="14" /></span>
+          <span v-if="compact ? lead || winner : lead && !winner" class="kd-lead-crown absolute -top-1.5 -left-1.5 grid size-5 place-items-center rounded-full text-success"><UiIcon name="crown-fill" :size="14" /></span>
         </Transition>
       </span>
       <span class="flex min-w-0 max-w-full flex-col" :class="compact ? 'items-center gap-2' : 'flex-1 items-start gap-0.5'">
         <span class="flex min-w-0 max-w-full items-center gap-1.5">
-          <UiIcon v-if="winner && !compact" name="crown" :size="16" class="kd-crown shrink-0 text-coin" />
+          <UiIcon v-if="winner && !compact" name="crown" :size="16" class="kd-crown shrink-0 text-success" />
           <span class="min-w-0 max-w-full truncate" :class="compact ? 'type-12' : 'type-16-medium'">{{ player.you ? $t('pvp.you') : player.nickname }}</span>
           <UiLevelBadge v-if="!compact" :level="player.level" class="shrink-0" />
         </span>
@@ -104,7 +104,7 @@ watch(() => props.winner, (v, was) => (celebrate.value = !!v && was === false))
 }
 .kd-lead-crown {
   background: var(--color-neutral-1);
-  box-shadow: 0 0 0 1px rgb(255 178 42 / 0.4);
+  box-shadow: 0 0 0 1px rgb(18 183 106 / 0.4);
 }
 .kd-lead-enter-active,
 .kd-lead-leave-active {
