@@ -38,7 +38,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
 const spec = computed(
   () =>
     ({
-      xs: { coin: 12, gap: 'gap-1', text: 'text-[11px] leading-3 font-semibold' },
+      xs: { coin: 12, gap: 'gap-1', text: 'type-11' },
       s: { coin: 12, gap: 'gap-1', text: 'type-12' },
       m: { coin: 16, gap: 'gap-1.5', text: 'type-14' },
       l: { coin: 20, gap: 'gap-2', text: 'type-16-caps' },

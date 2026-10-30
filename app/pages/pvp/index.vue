@@ -59,6 +59,7 @@ const lobby = computed(() => [...byStatus('waiting'), ...byStatus('live'), ...by
 <template>
   <div class="kd-page kd-page-top gap-5 lg:gap-8">
     <!-- 16 px down to the content on every width, as under the case page's bar -->
+    <h1 class="sr-only">{{ $t('nav.pvp') }}</h1>
     <UiPageBar logo :left="barLeft" :right="barRight" class="max-lg:-mb-1 lg:-mb-4" />
 
     <PvpHowModal v-model="howOpen" />

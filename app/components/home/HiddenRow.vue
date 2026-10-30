@@ -7,7 +7,7 @@ const { patchRow } = useHomeLayout()
 </script>
 
 <template>
-  <div class="kd-hidden-row flex h-14 items-center gap-3 rounded-[18px] pr-3 pl-4">
+  <div class="kd-hidden-row flex h-14 items-center gap-3 rounded-4xl pr-3 pl-4">
     <UiIcon name="eye-slash" :size="18" class="text-neutral-11" />
     <span class="type-16-caps flex-1 truncate text-neutral-11">{{ row.title }}</span>
     <span class="type-12 text-neutral-11 max-sm:hidden">Hidden from players</span>

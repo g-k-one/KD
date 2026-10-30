@@ -77,7 +77,7 @@ let nextKey = 0
 const keys = ref<number[]>([])
 const strip = computed(() => order.value.map((s, i) => ({ key: keys.value[i]!, case: bySlug.value.get(s)! })).filter((r) => r.case))
 
-const isLg = useMediaQuery('(min-width: 1024px)')
+const isLg = useIsLg()
 const haptics = useHaptics()
 function add(slug: string) {
   if (rounds.value >= MAX_ROUNDS.value) return toast.show(t('pvp.maxRounds', { n: MAX_ROUNDS.value }))

@@ -37,6 +37,7 @@ const type = (size: number, line: number, weight: number, caps?: number) => ({
 const rules: Rule[] = [
   // the smallest step: 11px (10px was hard to read on phones), still on a 12px line so tight rows keep their height
   ['type-10-caps', type(11, 12, 600, 0.06)],
+  ['type-11', type(11, 12, 600)],
   ['type-12', type(12, 16, 600)],
   ['type-12-regular', type(12, 16, 400)],
   ['type-12-caps', type(12, 16, 600, 0.04)],

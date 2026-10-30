@@ -9,7 +9,7 @@ const PAGES: { value: Page; label: string }[] = [
   { value: 'battle', label: 'Battle room' },
   { value: 'drops', label: 'Drop cards' },
 ]
-const isSm = useMediaQuery('(min-width: 640px)')
+const isSm = useIsSm()
 </script>
 
 <template>

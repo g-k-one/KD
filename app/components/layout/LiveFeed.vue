@@ -10,7 +10,7 @@ import type { FeedDrop } from '#shared/types/api'
  *   Phones — sticks under the header, slides away while scrolling down and comes back on the way up.
  */
 const { feed, loading, visible } = useLiveFeed()
-const isLg = useMediaQuery('(min-width: 1024px)')
+const isLg = useIsLg()
 const mode = ref<'live' | 'top'>('live')
 
 const mult = (d: FeedDrop) => d.price / Math.max(1, d.casePrice)

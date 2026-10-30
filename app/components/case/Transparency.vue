@@ -36,7 +36,7 @@ useIntersectionObserver(root, ([e]) => e?.isIntersecting && (shown.value = true)
 const fill = (bp: number) => Math.min(100, Math.max(10, Math.sqrt(bp / 10_000) * 100))
 
 const RISK_COLOR = { low: 'var(--color-success)', medium: 'var(--color-coin)', high: 'var(--color-brand-light)', extreme: 'var(--color-danger)' } as const
-const isLg = useMediaQuery('(min-width: 1024px)')
+const isLg = useIsLg()
 </script>
 
 <template>

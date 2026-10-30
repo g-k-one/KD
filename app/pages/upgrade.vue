@@ -72,8 +72,8 @@ const target = ref<Item | null>(null)
 /** Nonce of the last roll, for the dial's "Verify roll" */
 const lastNonce = ref<number | null>(null)
 const fast = useFast()
-const isLg = useMediaQuery('(min-width: 1024px)')
-const isSm = useMediaQuery('(min-width: 640px)')
+const isLg = useIsLg()
+const isSm = useIsSm()
 const panelTab = ref<'mine' | 'desired'>('mine')
 
 const selectedItems = computed(() => inventory.value.filter((i) => selected.value.includes(i.uid)))
@@ -386,6 +386,7 @@ async function runUpgrade() {
   <div class="kd-page kd-page-top gap-6">
     <!-- the logo in the middle, as on the case page: players record short videos of this screen -->
     <!-- 16 px down to the content on every width, as under the case page's bar -->
+    <h1 class="sr-only">{{ $t('nav.upgrade') }}</h1>
     <UiPageBar logo :left="barLeft" :right="barRight" class="-mb-2" />
 
     <!-- How it works: an upgrade in four plain steps, with the real numbers it plays by -->
@@ -586,7 +587,7 @@ async function runUpgrade() {
     <section class="kd-dimmable -mt-2 grid gap-4 lg:mt-0 lg:grid-cols-2 lg:gap-x-6 lg:gap-y-5" :class="state === 'spinning' && 'is-dimmed'">
       <div class="flex flex-col kd-panel lg:pb-4" :class="panelTab !== 'mine' && 'max-lg:hidden'">
         <!-- phones: the sheet's tab already names the panel, so the header keeps only its tools -->
-        <UiPanelHead icon="inventory" :title="`${$t('upgrade.mySkins')} (${inventory.length})`" lg-title>
+        <UiPanelHead icon="inventory" :title="`${$t('upgrade.mySkins')} (${inventory.length})`" tools>
           <!-- nothing to count or sort with fewer than two skins: no "0", no sort arrows -->
           <UiPrice v-if="inventory.length" :amount="inventoryTotal" size="m" tone="coin" class="opacity-64 max-lg:hidden" />
           <!-- phones: coins from the balance go into the stake here, next to the skins (the sheet's footer sums both) -->
@@ -594,7 +595,6 @@ async function runUpgrade() {
             v-if="session.user && !isLg"
             id="sheet-extra"
             v-model="extraText"
-            size="s"
             coin
             clearable
             lazy

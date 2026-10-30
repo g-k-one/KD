@@ -119,7 +119,7 @@ const rankName = (tier: number) => level.value?.ranks[tier]?.name ?? preview.val
 
 // The contents can show any tier: the player's own by default, the others to see what levels bring (locked ones
 // say from which level). Tapping a step of the level's ladder opens its tier here too.
-const isSm = useMediaQuery('(min-width: 640px)')
+const isSm = useIsSm()
 const viewTier = ref<number | null>(null)
 watch(() => daily.value?.tier, () => (viewTier.value = null))
 const shownTier = computed({ get: () => viewTier.value ?? daily.value?.tier ?? 0, set: (v: number) => (viewTier.value = v) })

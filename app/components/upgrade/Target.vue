@@ -12,7 +12,7 @@ import type { Item, Rarity } from '#shared/types/api'
  */
 const props = defineProps<{ item: Item | null; state: 'idle' | 'spinning' | 'win' | 'lose' }>()
 defineEmits<{ clear: [] }>()
-const isLg = useMediaQuery('(min-width: 1024px)')
+const isLg = useIsLg()
 // The card's own Forge layer under the art: the aura while the dial turns and the rank reveal of a won skin
 // (the page calls aura() / rank()). Inside the card, so both scroll with it.
 const fxHost = useTemplateRef<HTMLElement>('fxHost')

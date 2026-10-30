@@ -33,7 +33,7 @@ const pieces = computed<Piece[]>(() => {
 const shown = computed(() => pieces.value.slice(0, SLOTS))
 const layout = computed(() => (pieces.value.length === 0 ? 'empty' : pieces.value.length === 1 ? 'single' : 'grid'))
 const single = computed(() => pieces.value[0])
-const isLg = useMediaQuery('(min-width: 1024px)')
+const isLg = useIsLg()
 
 // Total counts towards the new value instead of jumping
 const totalSrc = computed(() => props.total)

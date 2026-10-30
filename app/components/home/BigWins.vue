@@ -15,7 +15,7 @@ import { FORGE_KEY, type ForgeLayer } from '~/composables/useForge'
 const { data } = useFetch<BigWinsResponse>('/api/wins/today', { key: 'wins-today', lazy: true, server: false })
 // on its way the block keeps its place, so the cases below don't jump down when the wins arrive
 const wins = computed(() => (data.value?.wins ?? []).slice(0, 3).map((win, k) => ({ win, rank: k + 1 })))
-const isLg = useMediaQuery('(min-width: 1024px)')
+const isLg = useIsLg()
 // big enough to fill the left half (the picture is 1⅔ × the size): it stands in the card on its shadow and breaks
 // out over the top edge by about a quarter
 const artSize = () => (isLg.value ? 106 : 62)

@@ -31,7 +31,7 @@ type Cell = { key: string; image: string; name: string; state: 'next' | 'now' | 
 const cells = computed<Cell[]>(() => props.battle.rounds.map((r, i) => ({ key: `r${i}`, image: r.image, name: r.name, state: i < played.value ? 'done' : props.battle.status === 'live' && i === played.value ? 'now' : 'next' })))
 // Live, the band slides so the case opening now sits second; it stops once the last cell is in view. Transform only.
 // The cell width is CSS (100 / 64 px); the slide is worked out once mounted (the server renders at a phone's width).
-const isLg = useMediaQuery('(min-width: 1024px)')
+const isLg = useIsLg()
 const CELL_GAP = 4
 const step = computed(() => (isLg.value ? 100 : 64) + CELL_GAP)
 const viewport = useTemplateRef<HTMLElement>('viewport')

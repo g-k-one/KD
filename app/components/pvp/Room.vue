@@ -125,7 +125,8 @@ const teamState = (g: BattleSlot[]) => (done.value ? (winners.value.includes(g[0
 const bestDrop = computed(() => Math.max(0, ...(b.value.results ?? []).flatMap((r) => r.drops.map((d) => d?.price ?? 0))))
 // the server and hydration answer at the phone width the ssr-width plugin provides (most players are on phones),
 // so a phone gets its own layout from the first paint instead of the desktop one switching after mount
-const isMobile = useMediaQuery('(max-width: 767px)')
+const isMd = useIsMd()
+const isMobile = computed(() => !isMd.value)
 
 // The round's best drop rings its rarity once, when the first reel lands (they land together)
 let rungRound = -1

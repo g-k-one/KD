@@ -102,7 +102,8 @@ const WIN = computed(() => STRIP.value - 7)
 const START = 3
 
 const horizontal = computed(() => props.count === 1)
-const isMobile = useMediaQuery('(max-width: 639.98px)')
+const isSm = useIsSm()
+const isMobile = computed(() => !isSm.value)
 const cardW = computed(() => (isMobile.value ? 184 : 222))
 // Phone grid for x2–x5, inside the same 272px as x1 (h-68; 288 pushed Open under the tab bar on an 812px phone), so switching the amount never moves the page
 const MOBILE_H = 272
@@ -536,7 +537,7 @@ const markerClass = computed(() => (horizontal.value ? 'kd-markers-h' : 'kd-mark
 
     <!-- Horizontal (x1): the strip clips itself (the frame no longer does) -->
     <!-- the window fades out at its top and bottom edges: a reveal growing past them dissolves instead of being cut -->
-    <div v-if="horizontal" class="kd-reel-window absolute inset-0 overflow-hidden rounded-[20px]">
+    <div v-if="horizontal" class="kd-reel-window absolute inset-0 overflow-hidden rounded-4xl">
     <div :ref="(el) => (tracks = el ? [el as HTMLElement] : [])" class="kd-reel-track absolute inset-y-0 left-0 flex items-center" :class="phase === 'spinning' && 'will-change-transform'">
       <div
         v-for="(it, i) in strips[0]"

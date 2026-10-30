@@ -108,7 +108,7 @@ async function pay() {
         <div class="kd-panel">
           <UiPanelHead icon="wallet" :title="$t('deposit.paymentMethod')">
             <span class="type-12-caps ml-auto text-neutral-11 max-sm:hidden">{{ $t('deposit.country') }}:</span>
-            <UiSelect v-model="country" :options="countryOptions" menu-width="fit" class="kd-inline-select w-34">
+            <UiSelect v-model="country" :options="countryOptions" menu-width="fit" class="kd-inline-select w-34 max-sm:ml-auto">
               <template #leading><img :src="countryFlag" alt="" class="h-3.5 w-5 shrink-0" /></template>
             </UiSelect>
           </UiPanelHead>
@@ -127,7 +127,7 @@ async function pay() {
               <span class="grid h-10 w-full max-w-32 place-items-center rounded-sm bg-white-8 transition-transform duration-300 group-hover:-translate-y-0.5 sm:h-14 lg:h-16">
                 <img :src="m.logo" :alt="m.name" class="h-6 w-10 sm:h-8 sm:w-12" />
               </span>
-              <span class="type-12-regular max-sm:text-[11px] max-sm:leading-4" :class="methodId === m.id ? 'text-neutral-15' : 'text-neutral-11'">{{ limits(m) }}</span>
+              <span class="type-12-regular max-sm:type-11 max-sm:leading-4 max-sm:font-normal" :class="methodId === m.id ? 'text-neutral-15' : 'text-neutral-11'">{{ limits(m) }}</span>
               <span v-if="m.bonusBp" class="type-12 absolute top-[7px] right-[7px] rounded-sm bg-neutral-15 px-2 py-0.5 text-neutral-1 max-sm:top-1 max-sm:right-1 max-sm:px-1 max-sm:py-0 max-sm:text-[10px]">+{{ m.bonusBp / 100 }}%</span>
             </button>
           </div>
@@ -154,7 +154,7 @@ async function pay() {
           <span class="type-12-caps ml-auto text-neutral-11">{{ $t('deposit.currency') }}:</span>
           <UiSelect v-model="currency" :options="currencyOptions" menu-width="fit" class="kd-inline-select w-24" />
         </UiPanelHead>
-        <div class="flex flex-col gap-4 px-3 lg:px-6 lg:pt-2">
+        <div class="flex flex-col gap-4 px-4 lg:px-6 lg:pt-2">
           <!-- the sum and its currency read as one, "1000 PLN zł", in the middle of the field; the picker is in the header -->
           <UiInput id="deposit-amount" v-model.number="amount" size="l" type="number" inputmode="decimal" class="kd-amount" :style="{ '--len': String(amount ?? '').length || 1 }">
             <template #trailing>
@@ -203,7 +203,7 @@ async function pay() {
             {{ $t('deposit.pay', { amount: fmtFiat(amount || 0) }) }}
           </UiButton>
         </div>
-        <p class="type-12-regular lg:type-14-regular px-3 pb-3 text-neutral-10 lg:px-6 lg:pb-6">{{ $t('deposit.operator') }}</p>
+        <p class="type-12-regular lg:type-14-regular px-4 pb-4 text-neutral-10 lg:px-6 lg:pb-6">{{ $t('deposit.operator') }}</p>
       </div>
     </div>
   </div>

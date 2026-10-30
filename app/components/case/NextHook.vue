@@ -18,7 +18,7 @@ const emit = defineEmits<{ sellAll: []; check: [] }>()
 // the row stays after selling: the roll can still be checked
 const live = computed(() => props.phase === 'result' && (props.unsold.length > 0 || !!props.rolls?.length))
 const spaced = (n: number) => n.toLocaleString('en-US').replace(/,/g, ' ')
-const isLg = useMediaQuery('(min-width: 1024px)')
+const isLg = useIsLg()
 
 // Sell all, in one tap
 const rules = useGameRules()

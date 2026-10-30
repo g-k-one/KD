@@ -21,7 +21,7 @@ watch(
 
 const seedsOpen = ref(false)
 const route = useRoute()
-const isLg = useMediaQuery('(min-width: 1024px)')
+const isLg = useIsLg()
 const verifierOpen = ref(false)
 const verifierInit = ref<{ serverSeed?: string; clientSeed?: string; nonce?: number; expect?: { ticket?: number; roll?: number }; entry?: HistoryEntry }>({})
 
@@ -137,7 +137,7 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
       <UiPanelHead icon="function" :title="$t('fair.formula')" tag="h3">
         <UiButton variant="secondary" :size="isLg ? 'm' : 's'" icon="function" class="ml-auto" @click="openVerifier()">{{ $t('fair.verify') }}</UiButton>
       </UiPanelHead>
-      <div class="flex flex-col gap-4 p-3 lg:gap-3 lg:p-6">
+      <div class="flex flex-col gap-4 p-4 lg:gap-3 lg:p-6">
         <div class="overflow-x-auto rounded-2xl bg-neutral-1 p-4">
           <pre class="type-14 -my-1 leading-7 whitespace-pre"><span class="text-neutral-15">hash   = HMAC_SHA256(server_seed, client_seed + ":" + nonce)</span>
 <span class="text-neutral-15">number = parseInt(hash.slice(0, 8), 16)</span>        <span class="text-neutral-11">// 0 … 4 294 967 295</span>
@@ -151,9 +151,9 @@ const ROW_LABEL = { Server: 'fair.serverSeed', Client: 'fair.clientSeed', Nonce:
     <section class="grid gap-3 lg:grid-cols-3 lg:gap-4">
       <div v-for="m in shownModes" :key="m.key" class="flex flex-col kd-panel">
         <UiPanelHead v-if="isLg" :icon="m.icon" :title="$t(`fair.${m.key}`)" tag="h3" />
-        <UiPanelHead v-else>
-          <UiSegmented v-model="fairMode" :options="modeOptions" block class="flex-1" />
-        </UiPanelHead>
+        <div v-else class="border-b border-neutral-4 p-3">
+          <UiSegmented v-model="fairMode" :options="modeOptions" block />
+        </div>
         <dl class="flex flex-col px-6 py-2 lg:pb-4">
           <div v-for="(r, i) in ROWS" :key="r" class="flex min-h-12 items-center justify-between gap-4 lg:min-h-11" :class="{ 'border-t border-neutral-4': i > 0 }">
             <dt class="type-12-caps shrink-0 text-neutral-11">{{ $t(ROW_LABEL[r]) }}</dt>

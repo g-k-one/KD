@@ -65,7 +65,7 @@ function again() {
             <UiButton variant="secondary" size="m" @click="again">{{ t('help.sendAnother') }}</UiButton>
           </div>
 
-          <form v-else key="form" class="flex flex-col gap-4 p-3 lg:p-6" @submit.prevent="missing || send()">
+          <form v-else key="form" class="flex flex-col gap-4 p-4 lg:p-6" @submit.prevent="missing || send()">
             <!-- signed in: the account's id goes with the message, filled in and locked, so support knows who writes -->
             <div class="grid gap-4" :class="session.user && 'sm:grid-cols-2'">
               <UiSelect v-model="topic" :label="t('help.topic')" :options="topics" />

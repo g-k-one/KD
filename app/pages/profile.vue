@@ -77,7 +77,8 @@ const sortedInventory = computed(() => {
   return list.sort((a, b) => (invSort.value === 'priceAsc' ? a.price - b.price : b.price - a.price))
 })
 // Three rows of skins beside the right column, the rest behind "Show all": with a big inventory the history would sit far down the page
-const isSm = useMediaQuery('(min-width: 40rem)')
+const isSm = useIsSm()
+const isLg = useIsLg()
 const skinsCap = computed(() => (isSm.value ? 15 : 6))
 const showAllSkins = ref(false)
 const shownInventory = computed(() => (showAllSkins.value ? sortedInventory.value : sortedInventory.value.slice(0, skinsCap.value)))
@@ -226,7 +227,7 @@ async function saveTrade() {
           <UiAvatar :src="session.user.avatar" :size="48" />
           <div class="flex min-w-0 flex-1 flex-col gap-1.5">
             <div class="flex items-center gap-2">
-              <h1 class="type-16-caps truncate">{{ session.user.nickname }}</h1>
+              <h2 class="type-16-caps truncate">{{ session.user.nickname }}</h2>
               <button type="button" class="kd-press kd-icon-nudge type-12 flex shrink-0 items-center gap-1 text-neutral-11 tabular-nums hover:text-neutral-15" :aria-label="$t('account.copyId')" @click="copyId">
                 ID {{ session.user.id }}
                 <UiIcon name="copy" :size="14" class="kd-icon" />
@@ -265,11 +266,11 @@ async function saveTrade() {
         <div class="flex min-w-0 flex-col kd-panel">
           <UiPanelHead icon="inventory" :title="`${$t('upgrade.mySkins')} (${inventory.length})`">
             <!-- Select all and the sort arrows: one height, side by side -->
-            <UiButton v-if="inventory.length" variant="ghost" size="m" class="ml-auto" @click="selected.length ? (selected = []) : selectAll()">
+            <UiButton v-if="inventory.length" variant="ghost" :size="isLg ? 'm' : 's'" class="ml-auto" @click="selected.length ? (selected = []) : selectAll()">
               <UiTextSwap :text="selected.length ? $t('upgrade.clearAll') : $t('upgrade.selectAll')" />
             </UiButton>
             <!-- nothing to sort with fewer than two skins -->
-            <UiButton v-if="inventory.length > 1" variant="ghost" size="m" icon-only :aria-label="$t(invSort === 'priceDesc' ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="invSort = invSort === 'priceDesc' ? 'priceAsc' : 'priceDesc'">
+            <UiButton v-if="inventory.length > 1" variant="ghost" :size="isLg ? 'm' : 's'" icon-only :aria-label="$t(invSort === 'priceDesc' ? 'upgrade.sortDesc' : 'upgrade.sortAsc')" @click="invSort = invSort === 'priceDesc' ? 'priceAsc' : 'priceDesc'">
               <UiSortArrows :desc="invSort === 'priceDesc'" />
             </UiButton>
           </UiPanelHead>
@@ -296,7 +297,7 @@ async function saveTrade() {
             <UiPanelHead icon="steam" :title="$t('withdraw.tradeLink')">
               <UiIcon v-if="session.user.tradeUrl && tradeValid" name="check-circle" :size="18" class="ml-auto text-success" />
             </UiPanelHead>
-            <div class="flex flex-col gap-3 p-3 lg:px-6 lg:pb-6">
+            <div class="flex flex-col gap-3 p-4 lg:px-6 lg:pb-6">
               <UiInput id="profile-trade" v-model="tradeLink" size="l" class="kd-private" inputmode="url" clearable :error="!!tradeLink && !tradeValid" :placeholder="$t('withdraw.linkPlaceholder')" />
               <span class="type-12-regular text-neutral-11">{{ $t('withdraw.whereLink') }}</span>
               <div class="grid grid-cols-2 gap-2 pt-1">
@@ -320,7 +321,7 @@ async function saveTrade() {
       <section>
         <div ref="historyEl" class="flex min-w-0 scroll-mt-36 flex-col kd-panel">
           <!-- the title, then the filters: on one line on desktop, under it on phones -->
-          <UiPanelHead icon="history" :title="$t('account.history')" class="max-lg:h-auto max-lg:flex-wrap max-lg:gap-y-5 max-lg:pt-5 max-lg:pb-3">
+          <UiPanelHead icon="history" :title="$t('account.history')" class="max-lg:h-auto max-lg:flex-wrap max-lg:gap-y-3 max-lg:p-4">
             <div class="grid grid-cols-2 gap-2 max-lg:w-full lg:ml-auto lg:flex">
               <UiInput v-model="historyQuery" icon="search" clearable inputmode="search" :placeholder="$t('account.historySearch')" class="lg:w-56" />
               <UiSelect v-model="period" :options="periodOptions" menu-width="fit" class="lg:w-36" :active="period !== 'all'" />

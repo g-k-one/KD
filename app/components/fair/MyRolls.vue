@@ -16,7 +16,7 @@ const emit = defineEmits<{
 }>()
 
 const session = useSessionStore()
-const isLg = useMediaQuery('(min-width: 1024px)')
+const isLg = useIsLg()
 const entries = ref<HistoryEntry[]>([])
 const loaded = ref(false)
 async function load() {

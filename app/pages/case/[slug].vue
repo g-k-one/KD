@@ -8,7 +8,7 @@ const session = useSessionStore()
 const ui = useUiStore()
 const sfx = useSfx()
 const toast = useToast()
-const isSm = useMediaQuery('(min-width: 640px)')
+const isSm = useIsSm()
 // The bar: two icons a side on phones — back · history · ‹ name › · share · fairness (the upgrade and PvP bars match)
 
 // The page shows at once on a tap from elsewhere: its skeleton stands until the case comes in (the first load,

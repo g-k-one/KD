@@ -80,11 +80,11 @@ const cols = computed(() =>
           </span>
           <!-- the drop: its picture on its rarity, weapon over skin; a missed upgrade target dimmed -->
           <span class="contents lg:flex lg:min-w-0 lg:items-center lg:gap-2.5">
-            <span v-if="e.result" class="kd-thumb relative grid h-10 w-11 shrink-0 place-items-center rounded-[10px] lg:w-13" :class="e.game === 'upgrade' && e.status === 'lost' && 'is-lost'" :style="{ '--rc': RARITY_COLOR[e.result.rarity] }">
+            <span v-if="e.result" class="kd-thumb relative grid h-10 w-11 shrink-0 place-items-center rounded-xl lg:w-13" :class="e.game === 'upgrade' && e.status === 'lost' && 'is-lost'" :style="{ '--rc': RARITY_COLOR[e.result.rarity] }">
               <ItemArt :image="e.result.image" :rarity="e.result.rarity" :size="26" class="w-full" />
               <img v-if="gameArt(e)" :src="gameArt(e)" alt="" class="absolute -right-1.5 -bottom-1.5 size-5 object-contain lg:hidden" />
             </span>
-            <span v-else class="grid h-10 w-11 shrink-0 place-items-center rounded-[10px] bg-neutral-3 text-neutral-12 lg:hidden"><UiIcon :name="GAME_ICON[e.game as keyof typeof GAME_ICON] ?? 'cases'" :size="18" /></span>
+            <span v-else class="grid h-10 w-11 shrink-0 place-items-center rounded-xl bg-neutral-3 text-neutral-12 lg:hidden"><UiIcon :name="GAME_ICON[e.game as keyof typeof GAME_ICON] ?? 'cases'" :size="18" /></span>
             <span class="flex min-w-0 flex-col">
               <template v-if="e.result">
                 <span class="kd-weapon type-10-caps truncate max-lg:hidden">{{ parts(e.result.name).weapon }}</span>

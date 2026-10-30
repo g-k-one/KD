@@ -13,12 +13,12 @@ const from = defineModel<string>('from', { required: true })
 const to = defineModel<string>('to', { required: true })
 const values = defineModel<T[]>('values', { required: true })
 
-const isLg = useMediaQuery('(min-width: 1024px)')
-const isSm = useMediaQuery('(min-width: 640px)')
+const isLg = useIsLg()
+const isSm = useIsSm()
 </script>
 
 <template>
-  <UiPanelHead :icon="icon" :title="title" lg-title class="kd-filter-row">
+  <UiPanelHead :icon="icon" :title="title" tools class="kd-filter-row">
     <UiSelect v-if="sortOptions" v-model="sort" :options="sortOptions" menu-width="fit" class="kd-sort-select shrink-0 sm:w-44">
       <template #leading><UiIcon name="sort" :size="16" class="shrink-0 text-neutral-11" /></template>
     </UiSelect>

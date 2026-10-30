@@ -23,7 +23,7 @@ withDefaults(
     :class="{
       's': 'type-12 h-8 rounded-md px-3',
       'm': 'type-14 h-10 rounded-lg px-3',
-      'l': 'h-12 rounded-[10px] px-3 text-base leading-6 font-bold tracking-[0.02em]',
+      'l': 'h-12 rounded-xl px-3 text-base leading-6 font-bold tracking-[0.02em]',
     }[size]"
     :data-tone="tone === 'none' ? undefined : tone"
     :data-variant="variant === 'field' ? 'field' : undefined"

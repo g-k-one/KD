@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // The case page while its case loads: the bar, the odds strip, the reel, the dock, the hook and the contents grid in
 // their own sizes, so the page doesn't jump when the case comes in.
-const isSm = useMediaQuery('(min-width: 640px)')
+const isSm = useIsSm()
 </script>
 
 <template>
@@ -19,7 +19,7 @@ const isSm = useMediaQuery('(min-width: 640px)')
       <div class="kd-skeleton relative grid h-68 place-items-center rounded-5xl lg:h-[278px]">
         <span class="size-40 rounded-4xl bg-neutral-2/60 lg:size-48" />
       </div>
-      <span class="kd-skeleton h-[188px] rounded-5xl lg:h-20 lg:rounded-[28px]" />
+      <span class="kd-skeleton h-[188px] rounded-5xl lg:h-20" />
       <span class="kd-skeleton h-16 rounded-3xl" />
     </div>
     <div class="flex flex-col gap-4">
