@@ -244,7 +244,8 @@ function runCount() {
 }
 watch(countdown, (n, old) => n > 0 && !old && nextTick(runCount))
 onMounted(() => {
-  if (!done.value) whenIdle(() => fx.preload('kd'))
+  // finished rooms too: Replay plays the same countdown
+  whenIdle(() => fx.preload('kd'))
   if (countdown.value > 0) nextTick(runCount)
 })
 onBeforeUnmount(() => {
