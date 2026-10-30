@@ -132,14 +132,18 @@ watch(done, (d) => {
 const countdown = computed(() =>
   b.value.status !== 'waiting' && b.value.startedAt && clock.value.round < 0 ? Math.min(3, Math.max(0, Math.ceil((Date.parse(b.value.startedAt) - now.value) / 1000))) : 0,
 )
-// The countdown is the arena's VS badge itself: it grows out of its place on the line, the numbers roll inside it, it turns
-// back into VS and shrinks home, where the real badge takes over. Plain DOM, transform and opacity only.
+// The countdown is the arena's VS badge itself: it grows out of its place on the line and charges up, the mode's colour
+// rising in it a third with every second as the numbers roll and the badge kicks; full, it turns back into VS and shrinks
+// home, where the real badge takes over. Plain DOM, transform and opacity only.
 const howOpen = ref(false)
 const countHome = ref(false)
+const countBadge = useTemplateRef<HTMLElement>('countBadge')
 let countTimer: ReturnType<typeof setTimeout> | undefined
 watch(countdown, (n, old) => {
-  if (n > 0 && n !== old) sfx.count(n === 1)
-  else if (n === 0 && old > 0) {
+  if (n > 0 && n !== old) {
+    sfx.count(n === 1)
+    if (old > 0) countBadge.value?.animate({ scale: [0.84, 1.14, 1] }, { duration: 460, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' })
+  } else if (n === 0 && old > 0) {
     countHome.value = true
     clearTimeout(countTimer)
     countTimer = setTimeout(() => (countHome.value = false), 800)
@@ -368,9 +372,9 @@ const laneCols = computed(() => {
 
       <!-- The countdown: the VS badge, big, in the middle of the dimmed arena; three seats have no badge there, so it fades -->
       <div v-if="countdown > 0 || countHome" class="kd-countdown pointer-events-none absolute inset-0 z-10 grid place-items-center" :class="[countHome && 'is-home', b.size === 3 && 'is-off-line']" :style="{ '--mc': PVP_MODE_COLOR[b.mode] }">
-        <div class="kd-count relative rounded-full">
-          <span v-if="countdown > 0" :key="countdown" class="kd-count-ping absolute inset-0 rounded-full" />
+        <div ref="countBadge" class="kd-count relative rounded-full">
           <span class="absolute inset-0 overflow-hidden rounded-full">
+            <span class="kd-count-fill absolute" :style="{ '--level': countdown ? (4 - countdown) / 3 : 1 }" />
             <Transition name="kd-count-roll">
               <span :key="countdown" class="kd-count-n absolute inset-0 grid place-items-center tabular-nums" :class="!countdown && 'is-vs'">{{ countdown || $t('pvp.vs') }}</span>
             </Transition>
@@ -679,8 +683,7 @@ const laneCols = computed(() => {
   --vs-font: 29.3px;
   width: 88px;
   height: 88px;
-  background: var(--color-neutral-2);
-  box-shadow: inset 0 0 0 1px var(--color-neutral-5);
+  background: var(--color-neutral-3);
   animation: kd-count-out 460ms var(--ease-spring) both;
 }
 @media (min-width: 64rem) {
@@ -691,17 +694,45 @@ const laneCols = computed(() => {
     height: 120px;
   }
 }
-/* its rim in the mode's colour, gone by the time it is home */
+/* the real badge's hairline comes back only on the way home: no outline while it counts */
 .kd-count::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 0 0 2px var(--mc);
-  transition: opacity 400ms var(--ease-out);
+  box-shadow: inset 0 0 0 1px var(--color-neutral-5);
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out) 300ms;
 }
 .kd-countdown.is-home .kd-count::before {
+  opacity: 1;
+}
+/* the charge: a big soft square, turning, rises in the badge, so its top reads as a liquid's moving surface */
+.kd-count-fill {
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  border-radius: 44%;
+  background: color-mix(in srgb, var(--mc) 78%, #000);
+  translate: 0 calc((1 - var(--level)) * 50% - 3%);
+  transition:
+    translate 620ms var(--ease-spring),
+    opacity 400ms var(--ease-out) 160ms;
+  animation: kd-count-slosh 2.6s linear infinite;
+}
+@starting-style {
+  .kd-count-fill {
+    translate: 0 50%;
+  }
+}
+.kd-countdown.is-home .kd-count-fill {
   opacity: 0;
+}
+@keyframes kd-count-slosh {
+  to {
+    rotate: 1turn;
+  }
 }
 .kd-countdown.is-home .kd-count {
   animation: kd-count-home 720ms var(--ease-in-out) both;
@@ -734,22 +765,9 @@ const laneCols = computed(() => {
     transform: scale(var(--home));
   }
 }
-/* every second, one ring leaves the badge */
-.kd-count-ping {
-  box-shadow: inset 0 0 0 2px var(--mc);
-  animation: kd-count-ping 800ms var(--ease-out) both;
-}
-@keyframes kd-count-ping {
-  from {
-    opacity: 0.7;
-  }
-  to {
-    opacity: 0;
-    transform: scale(1.6);
-  }
-}
 .kd-count-n {
   color: var(--color-neutral-15);
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.3);
   font-size: 44px;
   font-weight: 800;
   line-height: 1;
@@ -761,6 +779,7 @@ const laneCols = computed(() => {
 }
 .kd-count-n.is-vs {
   color: var(--color-neutral-13);
+  text-shadow: none;
   font-size: var(--vs-font);
   font-weight: 700;
   letter-spacing: 0.04em;
