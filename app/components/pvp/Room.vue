@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { BattleResponse, BattleShare, BattleSlot, CaseItem, CaseResponse } from '#shared/types/api'
 import { BATTLE_LEAD_MS } from '#shared/utils/battle'
-import type { CountLab } from '~/composables/useCountLab'
 
 // Battle room (after csgogem; the page app/pages/pvp/[id].vue shows it inside a Suspense with its skeleton): the mode as the title; one meta line (cost and pot · the case strip · viewers and
 // rounds); a short stage so the players and their drops stay on screen; every action once — join / call a bot in
@@ -17,7 +16,6 @@ const ui = useUiStore()
 const toast = useToast()
 const sfx = useSfx()
 const ex = useExtrude()
-const lab = useCountLab()
 
 const { data, refresh, error } = await useFetch<BattleResponse>(() => `/api/battles/${id.value}`, { key: `battle-${id.value}` })
 if (error.value) {
@@ -176,7 +174,6 @@ const countArmed = ref(false)
 const countShown = ref(0)
 const countFade = ref(false)
 const countSink = ref(false)
-const splitVs = computed(() => b.value.size === 3 && lab.value.three === 'split')
 const countHome = ref(false)
 function dropCountLabel() {
   countLabel?.destroy()
@@ -198,8 +195,11 @@ function prepareCount() {
   })()
   return countReady
 }
+// The shader and Forge's canvas block the page while they build: never in the frames a room opens (Recreate stuttered), but
+// once the browser is idle. A countdown that starts sooner asks for the label itself.
+const whenIdle = (f: () => void) => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 1500 }) : setTimeout(f, 500))
 // the stage went (a countdown that was already running when the page opened): the label went with it
-watch(countEl, (el) => (el ? prepareCount() : dropCountLabel()))
+watch(countEl, (el) => (el ? whenIdle(prepareCount) : dropCountLabel()))
 async function countBeat(n: number) {
   countShown.value = n
   if (!n) countFade.value = true
@@ -207,14 +207,6 @@ async function countBeat(n: number) {
   await prepareCount()
   if (!countLabel) return
   const text = n ? String(n) : 'VS'
-  const { swap } = lab.value
-  if (!n && swap === 'slam') {
-    const label = countLabel
-    await label.play('flipout', { each: 0 })
-    if (countLabel !== label) return
-    label.set({ text, yaw: 0, pitch: 6 })
-    return label.play('slam', { time: 0.3, each: 0 })
-  }
   countSide = -countSide
   countLabel.set({ yaw: 22 * countSide })
   if (countFresh) {
@@ -222,15 +214,14 @@ async function countBeat(n: number) {
     if (countLabel.text !== text) countLabel.set({ text })
     countLabel.play('pop')
   } else {
-    countLabel.swap(text, { style: n || swap === 'slam' ? 'flip' : swap })
+    countLabel.swap(text, { style: 'flip' })
     countLabel.rotate(240 * countSide, 0, true)
   }
 }
-function countSmoke(when: CountLab['when']) {
+function countLanded() {
   const host = fxHost.value
-  const { smoke } = lab.value
-  if (!host || smoke === 'none' || when !== lab.value.when) return
-  fx.play('kdPuff', { x: host.offsetWidth / 2, y: host.offsetHeight / 2, size: host.offsetHeight * (smoke === 'soft' ? 1.4 : 1.9), soft: smoke === 'soft' })
+  dropCountLabel()
+  if (host) fx.play('kdPuff', { x: host.offsetWidth / 2, y: host.offsetHeight / 2, size: host.offsetHeight * 1.9 })
 }
 // in ms before the first reel: a second for each number, then the VS, and the smoke has its time before the reels move
 function runCount() {
@@ -243,14 +234,14 @@ function runCount() {
   at(4200, () => countBeat(3))
   at(3200, () => countBeat(2))
   at(2200, () => countBeat(1))
-  at(1200, () => (countBeat(0), countSmoke('vs')))
-  at(700, () => ((countSink.value = true), countSmoke('sink')))
+  at(1200, () => countBeat(0))
+  at(700, () => (countSink.value = true))
   at(350, () => (countHome.value = false))
-  at(280, () => (dropCountLabel(), countSmoke('landing')))
+  at(280, countLanded)
 }
 watch(countdown, (n, old) => n > 0 && !old && nextTick(runCount))
 onMounted(() => {
-  if (!done.value) fx.preload('kd')
+  if (!done.value) whenIdle(() => fx.preload('kd'))
   if (countdown.value > 0) nextTick(runCount)
 })
 onBeforeUnmount(() => {
@@ -479,7 +470,8 @@ const laneCols = computed(() => {
         <div v-for="s in b.slots" :key="s.slot" class="kd-arena-seat relative min-w-0" :class="[done && winners.includes(s.slot) && 'is-winner', leaders.includes(s.slot) && 'is-lead', isTeam && s.slot === 2 && 'is-team-split']">
           <!-- a free seat while it waits: an empty lane, no second Join: the action is on the seat's plate under it -->
           <div v-if="!s.player && b.status === 'waiting'" class="grid place-items-center px-2 text-center text-neutral-11" :class="isMobile ? 'h-50' : 'h-72'">
-            <span class="kd-free-seat max-w-24 text-balance" :class="isMobile ? 'type-10-caps' : 'type-12-caps'">{{ $t('pvp.waitingForPlayer') }}</span>
+            <!-- a phone's narrow lanes have no room for it beside the VS -->
+            <span v-if="!isMobile || b.size === 2" class="kd-free-seat max-w-24 text-balance" :class="isMobile ? 'type-10-caps' : 'type-12-caps'">{{ $t('pvp.waitingForPlayer') }}</span>
           </div>
           <PvpReel
             v-else
@@ -508,17 +500,11 @@ const laneCols = computed(() => {
       <div ref="fxHost" class="pointer-events-none absolute inset-0 z-[11]" />
       <!-- The arena dims and the number stands in its middle. The stage stays in the page while seats fill, unseen, so its 3D
            label is ready before the first second -->
-      <div v-if="b.status === 'waiting' || countArmed || countdown > 0 || countFade" class="kd-countdown pointer-events-none absolute inset-0 grid place-items-center" :class="[countdown > 0 && countHome && 'is-on', countFade && 'is-fade', countSink && 'is-sink', splitVs && 'is-split']">
+      <div v-if="b.status === 'waiting' || countArmed || countdown > 0 || countFade" class="kd-countdown pointer-events-none absolute inset-0 grid place-items-center" :class="[countdown > 0 && countHome && 'is-on', countFade && 'is-fade', countSink && 'is-sink']">
         <div class="kd-count-stage relative grid size-40 place-items-center lg:size-52">
           <div ref="countEl" class="absolute inset-0" />
           <span v-if="!count3d && countShown" :key="countShown" class="kd-count-plain text-[56px] leading-none font-extrabold tabular-nums lg:text-[80px]">{{ countShown }}</span>
         </div>
-        <!-- three seats have two badges and none in the middle: the VS parts in two and each half slides onto its line -->
-        <template v-if="splitVs && countSink">
-          <span v-for="side in ['is-l', 'is-r']" :key="side" class="kd-count-twin absolute inset-0 grid place-items-center" :class="side">
-            <span class="kd-count-twin-vs type-12-caps grid size-9 place-items-center rounded-full">{{ $t('pvp.vs') }}</span>
-          </span>
-        </template>
       </div>
 
       <!-- The result, inside the arena: who took the pot, how much, and the same battle again -->
@@ -853,48 +839,6 @@ const laneCols = computed(() => {
   100% {
     opacity: 0;
     transform: scale(var(--home));
-  }
-}
-.kd-countdown.is-split.is-sink .kd-count-stage {
-  animation: kd-count-part 300ms var(--ease-out) both;
-}
-@keyframes kd-count-part {
-  to {
-    opacity: 0;
-    transform: scale(0.45);
-  }
-}
-.kd-count-twin {
-  z-index: 12;
-  animation: kd-count-twin-l 420ms cubic-bezier(0.65, 0, 0.35, 1) both;
-}
-.kd-count-twin.is-r {
-  animation-name: kd-count-twin-r;
-}
-.kd-count-twin-vs {
-  background: var(--color-neutral-2);
-  color: var(--color-neutral-13);
-  box-shadow: inset 0 0 0 1px var(--color-neutral-5);
-  animation: kd-count-twin-in 420ms cubic-bezier(0.65, 0, 0.35, 1) both;
-}
-/* a sixth of the arena each way: its two inner lines */
-@keyframes kd-count-twin-l {
-  to {
-    transform: translateX(-16.667%);
-  }
-}
-@keyframes kd-count-twin-r {
-  to {
-    transform: translateX(16.667%);
-  }
-}
-@keyframes kd-count-twin-in {
-  from {
-    opacity: 0;
-    transform: scale(2.4);
-  }
-  40% {
-    opacity: 1;
   }
 }
 .kd-countdown.is-fade::before {

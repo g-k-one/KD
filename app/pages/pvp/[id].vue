@@ -5,7 +5,8 @@ const route = useRoute()
 </script>
 
 <template>
-  <Suspense>
+  <!-- from room to room (Recreate) the old one holds until the new one is in; the skeleton only if that takes long -->
+  <Suspense :timeout="400">
     <PvpRoom :key="String(route.params.id)" />
     <template #fallback><PvpRoomSkeleton /></template>
   </Suspense>

@@ -29,7 +29,7 @@ const idle = computed(() => !(props.result || playing.value))
   <div
     class="kd-slot relative flex items-center"
     :class="[
-      compact ? ['flex-col justify-center rounded-2xl text-center', player ? 'gap-2 px-1 py-3' : 'gap-1 p-2', 'min-h-[110px]'] : ['h-16 gap-3 rounded-2xl pl-[9px]', player && !canKick && !canLeave ? 'pr-3' : 'pr-[15px]'],
+      compact ? ['flex-col justify-center rounded-2xl text-center', player ? 'gap-2 px-1 py-3' : 'gap-1 p-2', quiet ? 'min-h-[110px]' : 'min-h-[134px]'] : ['h-16 gap-3 rounded-2xl pl-[9px]', player && !canKick && !canLeave ? 'pr-3' : 'pr-[15px]'],
       quiet ? '' : winner ? 'is-winner' : lead ? 'is-lead' : '',
       compact && 'is-compact',
       idle && 'is-idle',

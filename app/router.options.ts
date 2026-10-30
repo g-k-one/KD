@@ -5,6 +5,8 @@ import type { RouterConfig } from 'nuxt/schema'
 export default <RouterConfig>{
   scrollBehavior(to, from, saved) {
     if (to.path === from.path) return false
+    // from one battle room to the next (Recreate): the same page, it stays where it is
+    if (to.name === from.name && to.path.startsWith('/pvp/')) return false
     const nuxtApp = useNuxtApp()
     return new Promise((resolve) => {
       nuxtApp.hooks.hookOnce('page:loading:end', () => resolve(saved ?? { left: 0, top: 0 }))
